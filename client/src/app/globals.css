@@ -125,8 +125,3 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
-[data-slot="Sidebar-wrapper"] {
-  width: auto !important;
-  min-height: auto !important;
-}
