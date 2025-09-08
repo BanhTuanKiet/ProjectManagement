@@ -1,0 +1,26 @@
+# Thư mục build & runtime
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.log
+*.pid
+*.tar.gz
+*.zip
+*.vs/
+.vscode/
+.DS_Store
+node_modules/
+
+
+# Thư viện cài qua NuGet
+packages/
+project.lock.json
+project.assets.json
+
+# appsettings.Development.json
+# appsettings.json
+secrets.json
+
+.env
