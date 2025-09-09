@@ -3,24 +3,24 @@
   "WorkspaceRootPath": "D:\\workspace\\ProjectManagement\\server\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\models\\projectmanagementcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\models\\projectmanagementcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\models\\task.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\models\\task.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\models\\applicationaspnet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\models\\applicationaspnet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\services\\task\\tasksservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\services\\task\\tasksservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\configs\\automapperconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\configs\\automapperconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\controllers\\taskscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\controllers\\taskscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\models\\activitylog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\models\\activitylog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|d:\\workspace\\projectmanagement\\server\\server\\dto\\taskdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B5ECB1-6176-4D85-BA3B-98897B26C67F}|server\\server.csproj|solutionrelative:server\\dto\\taskdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,72 +30,68 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "UsersController.cs",
-              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Controllers\\UsersController.cs",
-              "RelativeDocumentMoniker": "server\\Controllers\\UsersController.cs",
-              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Controllers\\UsersController.cs",
-              "RelativeToolTip": "server\\Controllers\\UsersController.cs",
-              "ViewState": "AgIAABMAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "Task.cs",
+              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\Task.cs",
+              "RelativeDocumentMoniker": "server\\Models\\Task.cs",
+              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\Task.cs",
+              "RelativeToolTip": "server\\Models\\Task.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAiwA0AAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-08T07:51:21.366Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ApplicationASPNET.cs",
-              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\ApplicationASPNET.cs",
-              "RelativeDocumentMoniker": "server\\Models\\ApplicationASPNET.cs",
-              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\ApplicationASPNET.cs",
-              "RelativeToolTip": "server\\Models\\ApplicationASPNET.cs",
-              "ViewState": "AgIAAB0AAAAAAAAAAAA2wB0AAABrAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-08T07:42:11.827Z",
+              "WhenOpened": "2025-09-08T16:08:52.382Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "ActivityLog.cs",
-              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\ActivityLog.cs",
-              "RelativeDocumentMoniker": "server\\Models\\ActivityLog.cs",
-              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\ActivityLog.cs",
-              "RelativeToolTip": "server\\Models\\ActivityLog.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAiAAAAAAAAAA==",
+              "Title": "TaskDTO.cs",
+              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\DTO\\TaskDTO.cs",
+              "RelativeDocumentMoniker": "server\\DTO\\TaskDTO.cs",
+              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\DTO\\TaskDTO.cs",
+              "RelativeToolTip": "server\\DTO\\TaskDTO.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAzwA4AAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-08T07:38:58.991Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "ProjectManagementContext.cs",
-              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\ProjectManagementContext.cs",
-              "RelativeDocumentMoniker": "server\\Models\\ProjectManagementContext.cs",
-              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Models\\ProjectManagementContext.cs",
-              "RelativeToolTip": "server\\Models\\ProjectManagementContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-08T06:44:45.821Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T16:07:55.679Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Program.cs",
-              "RelativeDocumentMoniker": "server\\Program.cs",
-              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Program.cs",
-              "RelativeToolTip": "server\\Program.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAAABkAAAAzAAAAAAAAAA==",
+              "Title": "TasksController.cs",
+              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Controllers\\TasksController.cs",
+              "RelativeDocumentMoniker": "server\\Controllers\\TasksController.cs",
+              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Controllers\\TasksController.cs",
+              "RelativeToolTip": "server\\Controllers\\TasksController.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAAABoAAABLAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-08T06:16:24.349Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-08T15:49:29.185Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TasksService.cs",
+              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Services\\Task\\TasksService.cs",
+              "RelativeDocumentMoniker": "server\\Services\\Task\\TasksService.cs",
+              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Services\\Task\\TasksService.cs",
+              "RelativeToolTip": "server\\Services\\Task\\TasksService.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAAABgAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-08T15:46:15.779Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AutoMapperConfig.cs",
+              "DocumentMoniker": "D:\\workspace\\ProjectManagement\\server\\server\\Configs\\AutoMapperConfig.cs",
+              "RelativeDocumentMoniker": "server\\Configs\\AutoMapperConfig.cs",
+              "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Configs\\AutoMapperConfig.cs",
+              "RelativeToolTip": "server\\Configs\\AutoMapperConfig.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAA4AAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-08T15:04:55.052Z"
             }
           ]
         }
