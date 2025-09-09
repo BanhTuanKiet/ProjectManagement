@@ -50,8 +50,7 @@
               "RelativeToolTip": "server\\Services\\User\\IUsers.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T11:21:35.336Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T11:21:35.336Z"
             },
             {
               "$type": "Document",
@@ -63,8 +62,7 @@
               "RelativeToolTip": "server\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAABWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T11:08:52.822Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T11:08:52.822Z"
             },
             {
               "$type": "Document",
@@ -76,8 +74,7 @@
               "RelativeToolTip": "server\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-09-09T11:08:22.051Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T11:08:22.051Z"
             },
             {
               "$type": "Document",
@@ -89,8 +86,7 @@
               "RelativeToolTip": "server\\Utils\\CookieUtils.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T10:45:10.199Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T10:45:10.199Z"
             },
             {
               "$type": "Document",
@@ -102,8 +98,7 @@
               "RelativeToolTip": "server\\Utils\\JWTUtils.cs",
               "ViewState": "AgIAAAUAAAAAAAAAAAArwBAAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T10:42:23.808Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T10:42:23.808Z"
             },
             {
               "$type": "Document",
@@ -113,7 +108,7 @@
               "RelativeDocumentMoniker": "server\\Configs\\JWTConfigs.cs",
               "ToolTip": "D:\\workspace\\ProjectManagement\\server\\server\\Configs\\JWTConfigs.cs",
               "RelativeToolTip": "server\\Configs\\JWTConfigs.cs",
-              "ViewState": "AgIAAHkAAAAAAAAAAAAuwIYAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAAG0AAAAAAAAAAAAuwH8AAABTAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-09T10:41:06.764Z",
               "EditorCaption": ""
@@ -128,8 +123,7 @@
               "RelativeToolTip": "server\\Configs\\AutoMapperConfig.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-09T10:40:20.095Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-09T10:40:20.095Z"
             }
           ]
         }

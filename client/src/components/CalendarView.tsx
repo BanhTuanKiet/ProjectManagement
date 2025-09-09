@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -9,14 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-react"
 import { getDaysInMonth } from "@/utils/dateUtils"
 import { BasicTask } from "@/utils/ITask"
+import TaskList from "./TaskList"
+import { getBorderColor, getCheckboxColor } from "@/utils/statusUtils"
 
 export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 8, 1))
   const [searchQuery, setSearchQuery] = useState("")
-
   const days = getDaysInMonth(currentDate)
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const [openTaskList, setOpenTaskList] = useState(false)
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -155,12 +157,12 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
                             <div
                               className={`
                                 flex items-center gap-2 p-2 bg-muted/50 rounded text-xs
-                                ${tasksForDay[0].status === "done" ? "border border-blue-500" : ""}
+                                ${getBorderColor(tasksForDay[0].status)}
                               `}
                             >
                               <Checkbox
-                                checked={tasksForDay[0].status === "done"}
-                                className="border-blue-500 data-[state=checked]:bg-blue-500 data-[state=checked]:text-white"
+                                checked={true}
+                                className={`h-4 w-4 appearance-none ${getCheckboxColor(tasksForDay[0].status)}`}
                               />
                               <span className="flex-1 truncate">{tasksForDay[0].title}</span>
                               {tasksForDay[0].assignee && (
@@ -178,14 +180,23 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
                           </div>
 
                           {tasksForDay.length > 1 && (
-                            <div className="text-xs text-muted-foreground pl-2">
-                              {tasksForDay.length - 1} more
+                            <div className="">
+                              <div
+                                className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
+                                onClick={() => setOpenTaskList(!openTaskList)}
+                              >
+                                <p className="p-2">{tasksForDay.length - 1} more</p>
+                              </div>
+                              {openTaskList && (
+                                <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
+                                  <TaskList tasks={tasksForDay} />
+                                </div>
+                              )}
                             </div>
                           )}
                         </>
                       )}
                     </div>
-
                   </>
                 )}
               </div>

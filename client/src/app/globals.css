@@ -125,3 +125,7 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+[data-state="checked"] svg {
+  display: none;
+}
