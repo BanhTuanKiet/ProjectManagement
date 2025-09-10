@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   MoreHorizontal,
@@ -16,7 +16,9 @@ import {
   Archive,
   Plus
 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import CalendarView from '@/components/CalendarView';
+import axios from "@/config/axiosConfig"
+import { BasicTask } from '@/utils/ITask';
 
 interface NavigationTab {
   id: string;
@@ -26,8 +28,7 @@ interface NavigationTab {
 }
 
 export default function ProjectInterface() {
-  const [activeTab, setActiveTab] = useState('board');
-
+  const [activeTab, setActiveTab] = useState('calendar');
   const navigationTabs: NavigationTab[] = [
     { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
     { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
@@ -36,7 +37,26 @@ export default function ProjectInterface() {
     { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
     { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },
     { id: 'archived', label: 'Archived work items', icon: <Archive className="w-4 h-4" /> },
-  ];
+  ]
+  const [tasks, setTasks] = useState<BasicTask[]>([])
+  const views: Record<string, React.ReactNode> = {
+    board: "",
+    calendar: <CalendarView tasks={tasks} />,
+    list: ""
+  }
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const resonse = await axios.get(`/tasks/${1}`)
+        setTasks(resonse.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    fetchProjects()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,26 +123,30 @@ export default function ProjectInterface() {
           </nav>
         </div>
       </div>
-
-      <div className="p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              {navigationTabs.find(tab => tab.id === activeTab)?.icon}
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {navigationTabs.find(tab => tab.id === activeTab)?.label}
-            </h3>
-            <p className="text-gray-500">
-              <div>
-                {activeTab === "board" && <BoardView />}
-                {activeTab === "calendar" && <CalendarView />}
-                {activeTab === "list" && <ListView />}
+      <div>
+        {(!tasks || !tasks.length)
+          ?
+          <div className="p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  {navigationTabs.find(tab => tab.id === activeTab)?.icon}
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {navigationTabs.find(tab => tab.id === activeTab)?.label}
+                </h3>
+                <p className='text-gray-500'>
+                  No tasks available. Start by creating a new task to see it here.
+                  <button className="ms-1 p-2 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-100">
+                    Add Task
+                  </button>
+                </p>
               </div>
-              Content for {navigationTabs.find(tab => tab.id === activeTab)?.label.toLowerCase()} will be displayed here
-            </p>
+            </div>
           </div>
-        </div>
+          : 
+          views[activeTab]
+        }
       </div>
     </div>
   )

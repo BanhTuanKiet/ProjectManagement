@@ -12,6 +12,11 @@ obj/
 .vscode/
 .DS_Store
 node_modules/
+.vs/
+*.bin
+*.suo
+*.v2
+*.vsidx
 
 
 # Thư viện cài qua NuGet
