@@ -19,6 +19,7 @@ import {
 import CalendarView from '@/components/CalendarView';
 import axios from "@/config/axiosConfig"
 import { BasicTask } from '@/utils/ITask';
+import ListPage from '@/components/ListPage';
 
 interface NavigationTab {
   id: string;
@@ -42,7 +43,7 @@ export default function ProjectInterface() {
   const views: Record<string, React.ReactNode> = {
     board: "",
     calendar: <CalendarView tasks={tasks} />,
-    list: ""
+    list: <ListPage />
   }
 
   useEffect(() => {
