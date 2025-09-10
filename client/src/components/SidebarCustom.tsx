@@ -14,6 +14,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import Link from "next/link"
 
 const mainItems = [
   {
@@ -66,13 +67,13 @@ export function SidebarCustom() {
 
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="w-full hover:bg-sidebar-accent">
-                  <a href="project/plan" className="flex items-center gap-3">
+                  <Link href="/project/plan" className="flex items-center gap-3">
                     <CreditCard className="h-4 w-4" />
                     <span className="text-sm font-medium">Plans</span>
                     <Badge variant="secondary" className="ml-auto bg-purple-600 text-white text-xs px-2 py-0.5">
                       PREMIUM
                     </Badge>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
