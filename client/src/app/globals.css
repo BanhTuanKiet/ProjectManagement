@@ -126,7 +126,6 @@ body {
   }
 }
 
-[data-slot="Sidebar-wrapper"] {
-  width: auto !important;
-  min-height: auto !important;
+[data-state="checked"] svg {
+  display: none;
 }
