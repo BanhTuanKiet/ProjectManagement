@@ -1,4 +1,6 @@
-import { User, Clock, CreditCard, FolderOpen, Users, ChevronRight, Plus, MoreHorizontal, Sparkles } from "lucide-react"
+'use client'
+
+import { User, Clock, CreditCard, FolderOpen, Users, ChevronRight, Plus, MoreHorizontal, Sparkles, FolderClosed } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +17,9 @@ import {
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
+import useSWR from 'swr'
+import { ProjectTitle } from "@/utils/IProject"
+import { useParams } from "next/navigation"
 
 const mainItems = [
   {
@@ -42,7 +47,15 @@ const projectsData = {
   ],
 }
 
+const fetcher = (url: string) =>
+  fetch(url)
+    .then(res => res.json())
+    .catch((error) => console.log(error))
+
 export function SidebarCustom() {
+  const { projectId } = useParams()
+  const { data } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
+
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar w-64">
       <SidebarContent className="p-2 h-full overflow-y-auto">
@@ -102,7 +115,7 @@ export function SidebarCustom() {
                         {projectsData?.starred?.map((project) => (
                           <SidebarMenuSubItem key={project.title}>
                             <SidebarMenuSubButton asChild className="hover:bg-sidebar-accent">
-                              <a href={`/project/${project.title}`} className="flex items-center gap-2">
+                              <a href={`/project/${project}`} className="flex items-center gap-2">
                                 <project.icon className="h-4 w-4 text-purple-400" />
                                 <span className="text-sm truncate">{project.title}</span>
                               </a>
@@ -113,16 +126,21 @@ export function SidebarCustom() {
 
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Recent</div>
-                        {projectsData?.recent?.map((project) => (
-                          <SidebarMenuSubItem key={project.title}>
-                            <SidebarMenuSubButton asChild className="hover:bg-sidebar-accent">
-                              <a href={`/project/${project.title}`} className="flex items-center gap-2">
-                                <project.icon className="h-4 w-4 text-blue-400" />
-                                <span className="text-sm">{project.title}</span>
-                              </a>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
+                        {data?.map((project) => {
+                          const Icon = Number(projectId) === project.projectId ? FolderOpen : FolderClosed
+
+                          return (
+                            <SidebarMenuSubItem key={project.projectId}>
+                              <SidebarMenuSubButton asChild className="hover:bg-sidebar-accent">
+                                <a href={`/project/${project.projectId.toString()}`} className="flex items-center gap-2">
+                                  <Icon className="h-4 w-4 text-blue-400" />
+
+                                  <span className="text-sm">{project.name}</span>
+                                </a>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )
+                        })}
                       </div>
                     </SidebarMenuSub>
                   </CollapsibleContent>
