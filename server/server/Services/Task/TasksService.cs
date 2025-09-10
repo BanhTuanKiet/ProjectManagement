@@ -22,6 +22,7 @@ namespace server.Services.Project
         {
             List<server.Models.Task> tasks = await _context.Tasks
                 .Include(t => t.Assignee)
+                .Include(t => t.CreatedBy)
                 .Where(t => t.ProjectId == projectId)
                 .ToListAsync();
 

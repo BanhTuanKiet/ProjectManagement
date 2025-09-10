@@ -10,7 +10,9 @@ namespace server.Configs
     {
       CreateMap<server.Models.Task, TaskDTO.BasicTask>()
           .ForMember(dest => dest.Assignee,
-                     opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null));
+                     opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
+          .ForMember(dest => dest.CreatedBy,
+                    otp => otp.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
     }
   }
 }

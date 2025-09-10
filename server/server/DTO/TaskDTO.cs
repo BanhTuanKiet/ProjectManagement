@@ -13,6 +13,7 @@
             public string? AssigneeId { get; set; }
             public string? Assignee { get; set; }
             public string CreatedBy { get; set; } = null!;
+            public string? CreatedName { get; set; }
             public DateTime CreatedAt { get; set; }
             public DateTime? Deadline { get; set; }
             public decimal? EstimateHours { get; set; }
