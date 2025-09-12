@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import Link from "next/link"
 import useSWR from 'swr'
 import { ProjectTitle } from "@/utils/IProject"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 const mainItems = [
   {
@@ -38,13 +38,6 @@ const projectsData = {
       url: "#",
     },
   ],
-  recent: [
-    {
-      title: "Project",
-      icon: FolderOpen,
-      url: "#",
-    },
-  ],
 }
 
 const fetcher = (url: string) =>
@@ -54,7 +47,13 @@ const fetcher = (url: string) =>
 
 export function SidebarCustom() {
   const { projectId } = useParams()
+  const router = useRouter()
   const { data } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
+
+  const handleClick = (id: number) => {
+    if (Number(projectId) === id) return
+    router.push(`/project/${id.toString()}`)
+  }
 
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar w-64">
@@ -132,11 +131,13 @@ export function SidebarCustom() {
                           return (
                             <SidebarMenuSubItem key={project.projectId}>
                               <SidebarMenuSubButton asChild className="hover:bg-sidebar-accent">
-                                <a href={`/project/${project.projectId.toString()}`} className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleClick(project.projectId)}
+                                  className="flex items-center gap-2 hover:bg-sidebar-accent rounded px-2 py-1"
+                                >
                                   <Icon className="h-4 w-4 text-blue-400" />
-
                                   <span className="text-sm">{project.name}</span>
-                                </a>
+                                </button>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           )

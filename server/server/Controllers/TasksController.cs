@@ -6,9 +6,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using server.DTO;
 using server.Models;
 using server.Services.Task;
+using static NuGet.Packaging.PackagingConstants;
+using static server.DTO.FilterDTO;
 
 namespace server.Controllers
 {
@@ -24,9 +27,13 @@ namespace server.Controllers
         }
 
         [HttpGet("{projectId}")]
-        public async Task<ActionResult> GetBasicTasksByMonth(int projectId)
+        public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int month, int year, string filters)
         {
-            List<TaskDTO.BasicTask> tasks = await _tasksService.GetBasicTasksByMonth(projectId);
+            FilterDTO.FilterCalendarView filterObj = !string.IsNullOrEmpty(filters)
+                ? JsonConvert.DeserializeObject<FilterDTO.FilterCalendarView>(filters)
+                : new FilterDTO.FilterCalendarView();
+
+            List<TaskDTO.BasicTask> tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
 
             return Ok(tasks);
         }
