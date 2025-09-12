@@ -22,8 +22,17 @@ namespace server.Services.Project
         {
             List<server.Models.Task> tasks = await _context.Tasks
                 .Include(t => t.Assignee)
-                .Include(t => t.CreatedBy)
+                // .Include(t => t.CreatedBy)
                 .Where(t => t.ProjectId == projectId)
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+        
+        public async Task<List<TaskDTO.BasicTask>> GetAllBasicTasks()
+        {
+            List<server.Models.Task> tasks = await _context.Tasks
+                .Include(t => t.Assignee)
                 .ToListAsync();
 
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
