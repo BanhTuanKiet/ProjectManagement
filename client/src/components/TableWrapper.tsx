@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import ColoredAvatar from "@/components/ColoredAvatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,18 +21,22 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 
+interface UserMini {
+  name: string;
+  avatar: string;
+  initials: string;
+}
+
 interface Task {
   id: string;
   key: string;
   summary: string;
   status: "To Do" | "Done" | "In Progress";
-  assignee?: {
-    name: string;
-    avatar: string;
-    initials: string;
-  };
+  assignee?: UserMini;
+  reporter?: UserMini;
   dueDate?: string;
-  type: "Task";
+  created?: string;
+  type: "Task" | "Bug" | "Story";
   [key: string]: any;
 }
 
@@ -59,13 +64,14 @@ interface TableWrapperProps {
   setEditingCell: React.Dispatch<
     React.SetStateAction<{ taskId: string; field: string } | null>
   >;
+  availableUsers?: UserMini[];
 }
 
-const users = [
-  { name: "Thái Bảo", avatar: "/diverse-user-avatars.png", initials: "TB" },
-  { name: "Unassigned", avatar: "", initials: "U" },
-  { name: "Nguyễn An", avatar: "/diverse-user-avatars.png", initials: "NA" },
-];
+// const users = [
+//   { name: "Thái Bảo", avatar: "/diverse-user-avatars.png", initials: "TB" },
+//   { name: "Unassigned", avatar: "", initials: "U" },
+//   { name: "Nguyễn An", avatar: "/diverse-user-avatars.png", initials: "NA" },
+// ];
 
 export default function TableWrapper({
   tasks,
@@ -81,7 +87,12 @@ export default function TableWrapper({
   handleDragOver,
   handleDrop,
   setEditingCell,
+  availableUsers = [],
 }: TableWrapperProps) {
+  tasks.forEach((task) => {
+    console.log("Task:", task.id, "Assignee:", task.assignee);
+  });
+
   return (
     <div style={{ width: totalWidth }}>
       {/* Header Row */}
@@ -264,14 +275,19 @@ export default function TableWrapper({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center gap-2 cursor-pointer">
-                      {task.assignee ? (
+                      {typeof task.assignee === "string" ? (
                         <>
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={task.assignee.avatar} />
-                            <AvatarFallback className="text-xs">
-                              {task.assignee.initials}
-                            </AvatarFallback>
-                          </Avatar>
+                          <ColoredAvatar name={task.assignee} size="sm" />
+                          <span className="text-sm">{task.assignee}</span>
+                        </>
+                      ) : task.assignee ? (
+                        <>
+                          <ColoredAvatar
+                            name={task.assignee.name}
+                            src={task.assignee.avatar}
+                            initials={task.assignee.initials}
+                            size="sm"
+                          />
                           <span className="text-sm">{task.assignee.name}</span>
                         </>
                       ) : (
@@ -282,28 +298,54 @@ export default function TableWrapper({
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    {users.map((u) => (
+                    <DropdownMenuItem
+                      key="unassigned"
+                      onClick={() =>
+                        handleCellEdit(task.id, "assignee", undefined)
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <ColoredAvatar name="Unassigned" size="sm" />
+                        <span>Unassigned</span>
+                      </div>
+                    </DropdownMenuItem>
+                    {availableUsers.map((u) => (
                       <DropdownMenuItem
                         key={u.name}
-                        onClick={() =>
-                          handleCellEdit(
-                            task.id,
-                            "assignee",
-                            u.name === "Unassigned" ? undefined : u
-                          )
-                        }
+                        onClick={() => handleCellEdit(task.id, "assignee", u)}
                       >
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={u.avatar} />
-                            <AvatarFallback>{u.initials}</AvatarFallback>
-                          </Avatar>
+                          <ColoredAvatar
+                            name={u.name}
+                            src={u.avatar}
+                            initials={u.initials}
+                            size="sm"
+                          />
                           <span>{u.name}</span>
                         </div>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+              )}
+
+              {/* Reporter */}
+              {col.key === "reporter" && (
+                <div className="flex items-center gap-2">
+                  {task.reporter ? (
+                    <>
+                      <ColoredAvatar
+                        name={task.reporter.name}
+                        src={task.reporter.avatar}
+                        initials={task.reporter.initials}
+                        size="sm"
+                      />
+                      <span className="text-sm">{task.reporter.name}</span>
+                    </>
+                  ) : (
+                    <span>-</span>
+                  )}
+                </div>
               )}
 
               {/* DueDate column */}
@@ -338,6 +380,15 @@ export default function TableWrapper({
                 </Popover>
               )}
 
+              {/* Created Date */}
+              {col.key === "created" && (
+                <span className="text-gray-600">
+                  {task.created
+                    ? format(new Date(task.created), "MMM dd, yyyy")
+                    : "-"}
+                </span>
+              )}
+
               {/* Default editable cells */}
               {![
                 "select",
@@ -346,7 +397,9 @@ export default function TableWrapper({
                 "summary",
                 "status",
                 "assignee",
+                "reporter",
                 "dueDate",
+                "created",
               ].includes(col.key) &&
                 (editingCell?.taskId === task.id &&
                 editingCell?.field === col.key ? (
