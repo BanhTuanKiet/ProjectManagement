@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   MoreHorizontal,
@@ -19,7 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CalendarView from '@/components/CalendarView';
 import BoardView from '@/components/BoardView';
-import MoreHorizontalDropdown  from '@/components/MorehorizonalDropdown';
+import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown';
 import axios from "@/config/axiosConfig"
 import { BasicTask } from '@/utils/ITask';
 import ListPage from '@/components/ListPage';
@@ -46,7 +46,21 @@ export default function ProjectInterface() {
   const { project_name } = useParams()
   const [activeTab, setActiveTab] = useState('calendar')
   const [currentDate, setCurrentDate] = useState(new Date())
-  
+  const [tasks, setTasks] = useState<BasicTask[]>([])
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const resonse = await axios.get(`/tasks/${1}`)
+        setTasks(resonse.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
   const views: Record<string, React.ReactNode> = {
     calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
     board: <BoardView tasks={tasks}/>,
@@ -118,27 +132,27 @@ export default function ProjectInterface() {
       </div>
       <div>
         {
-        // (!tasks || !tasks.length)
-        //   ?
-        //   <div className="p-6">
-        //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
-        //       <div className="text-center">
-        //         <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-        //           {navigationTabs.find(tab => tab.id === activeTab)?.icon}
-        //         </div>
-        //         <h3 className="text-lg font-medium text-gray-900 mb-2">
-        //           {navigationTabs.find(tab => tab.id === activeTab)?.label}
-        //         </h3>
-        //         <p className='text-gray-500'>
-        //           No tasks available. Start by creating a new task to see it here.
-        //           <button className="ms-1 p-2 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-100">
-        //             Add Task
-        //           </button>
-        //         </p>
-        //       </div>
-        //     </div>
-        //   </div>
-        //   :
+          // (!tasks || !tasks.length)
+          //   ?
+          //   <div className="p-6">
+          //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
+          //       <div className="text-center">
+          //         <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+          //           {navigationTabs.find(tab => tab.id === activeTab)?.icon}
+          //         </div>
+          //         <h3 className="text-lg font-medium text-gray-900 mb-2">
+          //           {navigationTabs.find(tab => tab.id === activeTab)?.label}
+          //         </h3>
+          //         <p className='text-gray-500'>
+          //           No tasks available. Start by creating a new task to see it here.
+          //           <button className="ms-1 p-2 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-100">
+          //             Add Task
+          //           </button>
+          //         </p>
+          //       </div>
+          //     </div>
+          //   </div>
+          //   :
           views[activeTab]
         }
       </div>

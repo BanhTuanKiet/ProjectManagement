@@ -48,7 +48,6 @@ export default function CalendarView({
 
     filterRef.current = setTimeout(async () => {
       try {
-        console.log(filterSelection)
         const response = await axios.get(`/tasks/${projectId}`, {
           params: {
             month: currentDate.getMonth() + 1,
@@ -56,7 +55,7 @@ export default function CalendarView({
             filters: JSON.stringify(filterSelection),
           },
         })
-        console.log(response.data)
+
         setTasks(response.data)
       } catch (error) {
         console.error(error)
@@ -93,7 +92,6 @@ export default function CalendarView({
     <div className="p-6 bg-background min-h-screen">
       <div className="flex items-center justify-between mb-6 gap-4">
         <div className="flex items-center gap-4">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -104,7 +102,6 @@ export default function CalendarView({
             />
           </div>
 
-          {/* Assignee */}
           <Select
             value={filterSelection.assignee}
             onValueChange={(val) => updateFilter("assignee", val)}
@@ -121,7 +118,6 @@ export default function CalendarView({
             </SelectContent>
           </Select>
 
-          {/* Status */}
           <Select
             value={filterSelection.status}
             onValueChange={(val) => updateFilter("status", val)}
@@ -138,7 +134,6 @@ export default function CalendarView({
             </SelectContent>
           </Select>
 
-          {/* Priority */}
           <Select
             value={filterSelection.priority}
             onValueChange={(val) => updateFilter("priority", val)}
@@ -156,7 +151,6 @@ export default function CalendarView({
           </Select>
         </div>
 
-        {/* Month navigation */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
@@ -181,7 +175,6 @@ export default function CalendarView({
         </div>
       </div>
 
-      {/* Calendar grid */}
       <div className="border border-border rounded-lg overflow-hidden bg-card">
         <div className="grid grid-cols-7 border-b border-border">
           {weekDays.map((day) => (

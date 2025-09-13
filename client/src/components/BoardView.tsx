@@ -141,11 +141,7 @@ import { BasicTask } from "@/utils/ITask";
 import { taskStatus, getBorderColor } from "@/utils/statusUtils";
 import { Plus, MoreHorizontal} from "lucide-react";
 
-interface BoardViewProps {
-  tasks: BasicTask[];
-}
-
-export default function BoardView({ tasks }: BoardViewProps) {
+export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
   return (
     <div className="grid grid-cols-5 gap-4 p-4">
       {taskStatus.map((status) => {
