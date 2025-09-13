@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using server.DTO;
 using server.Models;
 
 namespace server.Controllers
@@ -18,8 +19,16 @@ namespace server.Controllers
 
     public ProjectsController(IProjects projectsServices)
     {
-       _projectsServices = projectsServices;
+      _projectsServices = projectsServices;
     }
 
+    [HttpGet()]
+    public async Task<ActionResult> GetProjectsTitle()
+    {
+      List<ProjectDTO.ProjectTitile> projects =
+        await _projectsServices.GetProjectsTitle("user1") ?? throw new Exception("Errir");
+
+      return Ok(projects);
+    }
   }
 }

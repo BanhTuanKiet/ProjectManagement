@@ -13,6 +13,8 @@ namespace server.Configs
                      opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
           .ForMember(dest => dest.CreatedBy,
                     otp => otp.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
+
+      CreateMap<server.Models.Project, ProjectDTO.ProjectTitile>();
     }
   }
 }
