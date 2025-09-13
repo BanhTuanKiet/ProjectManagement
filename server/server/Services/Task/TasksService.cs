@@ -40,8 +40,10 @@ namespace server.Services.Project
             //if (!string.IsNullOrEmpty(filters.Priority))
             //    query = query.Where(t => t.Priority.ToString() == filters.Priority);
 
-            //if (!string.IsNullOrEmpty(filters.Search))
-            //    query = query.Where(t => t.Title.Contains(filters.Search));
+            if (!string.IsNullOrEmpty(filters.search))
+            {
+                query = query.Where(t => t.Title.Contains(filters.search) || t.Description.Contains(filters.search));
+            }
 
             var tasks = await query.ToListAsync();
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
