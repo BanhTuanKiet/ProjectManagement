@@ -37,5 +37,13 @@ namespace server.Controllers
 
             return Ok(tasks);
         }
+
+        [HttpGet("allbasictasks")]
+        public async Task<ActionResult> GetAllBasicTasks()
+        {
+            List<TaskDTO.BasicTask> tasks = await _tasksService.GetAllBasicTasks();
+
+            return Ok(tasks);
+        }
     }
 }

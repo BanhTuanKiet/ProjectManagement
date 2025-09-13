@@ -16,7 +16,12 @@ import {
   Archive,
   Plus
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CalendarView from '@/components/CalendarView';
+import BoardView from '@/components/BoardView';
+import MoreHorizontalDropdown  from '@/components/MorehorizonalDropdown';
+import axios from "@/config/axiosConfig"
+import { BasicTask } from '@/utils/ITask';
 import ListPage from '@/components/ListPage';
 import { useParams } from 'next/navigation';
 
@@ -43,8 +48,8 @@ export default function ProjectInterface() {
   const [currentDate, setCurrentDate] = useState(new Date())
   
   const views: Record<string, React.ReactNode> = {
-    board: "",
     calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
+    board: <BoardView tasks={tasks}/>,
     list: <ListPage />
   }
 
@@ -64,9 +69,7 @@ export default function ProjectInterface() {
                 <button className="p-1 hover:bg-gray-100 rounded">
                   <Users className="w-4 h-4 text-gray-500" />
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                </button>
+                <MoreHorizontalDropdown />
               </div>
             </div>
 
