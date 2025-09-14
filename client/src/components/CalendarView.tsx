@@ -1,49 +1,75 @@
-"use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ColoredAvatar from "@/components/ColoredAvatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Grid3X3,
-} from "lucide-react";
-import { getDaysInMonth } from "@/utils/dateUtils";
-import { BasicTask } from "@/utils/ITask";
-import TaskList from "./TaskList";
-import { getBorderColor, getCheckboxColor } from "@/utils/statusUtils";
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-react"
+import { getDaysInMonth } from "@/utils/dateUtils"
+import { BasicTask } from "@/utils/ITask"
+import TaskList from "./TaskList"
+import { getBorderColor, getCheckboxColor } from "@/utils/statusUtils"
+import axios from "@/config/axiosConfig"
+import { ParamValue } from "next/dist/server/request/params"
+import { FilterSelection } from "@/utils/IFilterSelection"
 
-export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 8, 1));
-  const [searchQuery, setSearchQuery] = useState("");
-  const days = getDaysInMonth(currentDate);
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const [openTaskList, setOpenTaskList] = useState(false);
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+export default function CalendarView({
+  projectId,
+  currentDate,
+  setCurrentDate
+}: {
+  projectId: ParamValue,
+  currentDate: Date,
+  setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
+}) {
+  const [tasks, setTasks] = useState<BasicTask[]>([])
+  const [filterSelection, setFilterSelection] = useState<FilterSelection>({})
+  const days = getDaysInMonth(currentDate)
+  const [openTaskList, setOpenTaskList] = useState(false)
+  const filterRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const assigneeOptions = ["all", "john doe", "jane smith"]
+  const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
+  const priorityOptions = ["all", "high", "medium", "low"]
+
+  const updateFilter = (key: keyof FilterSelection, value: string) => {
+    setFilterSelection((prev) => ({ ...prev, [key]: value }))
+  }
+
+  useEffect(() => {
+    if (filterRef.current) {
+      clearTimeout(filterRef.current)
+    }
+
+    filterRef.current = setTimeout(async () => {
+      try {
+        const response = await axios.get(`/tasks/${projectId}`, {
+          params: {
+            month: currentDate.getMonth() + 1,
+            year: currentDate.getFullYear(),
+            filters: JSON.stringify(filterSelection),
+          },
+        })
+
+        setTasks(response.data)
+      } catch (error) {
+        console.error(error)
+      }
+    }, 500)
+
+    return () => {
+      if (filterRef.current) {
+        clearTimeout(filterRef.current)
+      }
+    }
+  }, [projectId, currentDate, filterSelection])
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
@@ -72,53 +98,57 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search calendar"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={filterSelection?.search || ""}
+              onChange={(e) => updateFilter("search", e.target.value)}
               className="pl-10 w-64"
             />
           </div>
 
-          <Select>
+          <Select
+            value={filterSelection.assignee}
+            onValueChange={(val) => updateFilter("assignee", val)}
+          >
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Assignee" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="john">John Doe</SelectItem>
-              <SelectItem value="jane">Jane Smith</SelectItem>
+              {assigneeOptions.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select>
-            <SelectTrigger className="w-24">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="project">Project</SelectItem>
-              <SelectItem value="task">Task</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select>
+          <Select
+            value={filterSelection.status}
+            onValueChange={(val) => updateFilter("status", val)}
+          >
             <SelectTrigger className="w-28">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              {statusOptions.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="More filters" />
+          <Select
+            value={filterSelection.priority}
+            onValueChange={(val) => updateFilter("priority", val)}
+          >
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="priority">Priority</SelectItem>
-              <SelectItem value="deadline">Deadline</SelectItem>
-              <SelectItem value="category">Category</SelectItem>
+              {priorityOptions.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -168,9 +198,9 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
         </div>
 
         <div className="grid grid-cols-7">
-          {days.map((day, index) => {
-            const tasksForDay = day ? getTasksForDay(day) : [];
-            const isToday = day === new Date().getDate();
+          {days?.map((day, index) => {
+            const tasksForDay = day ? getTasksForDay(day) : []
+            const isToday = day === new Date().getDate()
 
             return (
               <div
@@ -179,16 +209,8 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
               >
                 {day && (
                   <>
-                    <div
-                      className={`text-sm font-medium mb-2 text-start flex items-center justify-between`}
-                    >
-                      <span
-                        className={`${
-                          isToday
-                            ? "bg-blue-500 text-white w-6 h-6 rounded px-2"
-                            : ""
-                        }`}
-                      >
+                    <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
+                      <span className={`${isToday ? "bg-blue-500 text-white w-6 h-6 rounded px-2" : ""}`}>
                         {day}
                       </span>
                       <span>+</span>
@@ -226,7 +248,7 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
                           </div>
 
                           {tasksForDay.length > 1 && (
-                            <div className="">
+                            <div>
                               <div
                                 className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
                                 onClick={() => setOpenTaskList(!openTaskList)}
@@ -253,5 +275,5 @@ export default function CalendarView({ tasks }: { tasks: BasicTask[] }) {
         </div>
       </div>
     </div>
-  );
+  )
 }

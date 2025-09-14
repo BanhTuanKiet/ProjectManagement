@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   MoreHorizontal,
@@ -14,12 +14,16 @@ import {
   List,
   FileText,
   Archive,
-  Plus,
-} from "lucide-react";
-import CalendarView from "@/components/CalendarView";
-import axios from "@/config/axiosConfig";
-import { BasicTask } from "@/utils/ITask";
-import ListPage from "@/components/ListPage";
+  Plus
+} from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import CalendarView from '@/components/CalendarView';
+import BoardView from '@/components/BoardView';
+import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown';
+import axios from "@/config/axiosConfig"
+import { BasicTask } from '@/utils/ITask';
+import ListPage from '@/components/ListPage';
+import { useParams } from 'next/navigation';
 
 interface NavigationTab {
   id: string;
@@ -28,52 +32,40 @@ interface NavigationTab {
   isActive?: boolean;
 }
 
+const navigationTabs: NavigationTab[] = [
+  { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
+  { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
+  { id: 'board', label: 'Board', icon: <div className="w-4 h-4 bg-blue-500 rounded-sm" /> },
+  { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
+  { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
+  { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },
+  { id: 'archived', label: 'Archived work items', icon: <Archive className="w-4 h-4" /> },
+]
+
 export default function ProjectInterface() {
-  const [activeTab, setActiveTab] = useState("calendar");
-  const navigationTabs: NavigationTab[] = [
-    { id: "summary", label: "Summary", icon: <Globe className="w-4 h-4" /> },
-    {
-      id: "timeline",
-      label: "Timeline",
-      icon: <BarChart3 className="w-4 h-4" />,
-    },
-    {
-      id: "board",
-      label: "Board",
-      icon: <div className="w-4 h-4 bg-blue-500 rounded-sm" />,
-    },
-    {
-      id: "calendar",
-      label: "Calendar",
-      icon: <Calendar className="w-4 h-4" />,
-    },
-    { id: "list", label: "List", icon: <List className="w-4 h-4" /> },
-    { id: "forms", label: "Forms", icon: <FileText className="w-4 h-4" /> },
-    {
-      id: "archived",
-      label: "Archived work items",
-      icon: <Archive className="w-4 h-4" />,
-    },
-  ];
-  const [tasks, setTasks] = useState<BasicTask[]>([]);
-  const views: Record<string, React.ReactNode> = {
-    board: "",
-    calendar: <CalendarView tasks={tasks} />,
-    list: <ListPage />,
-  };
+  const { project_name } = useParams()
+  const [activeTab, setActiveTab] = useState('calendar')
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [tasks, setTasks] = useState<BasicTask[]>([])
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const resonse = await axios.get(`/tasks/${1}`);
-        setTasks(resonse.data);
+        const resonse = await axios.get(`/tasks/${1}`)
+        setTasks(resonse.data)
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
-    };
+    }
 
-    fetchProjects();
-  }, []);
+    fetchProjects()
+  }, [])
+
+  const views: Record<string, React.ReactNode> = {
+    calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
+    board: <BoardView tasks={tasks}/>,
+    list: <ListPage />
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,9 +83,7 @@ export default function ProjectInterface() {
                 <button className="p-1 hover:bg-gray-100 rounded">
                   <Users className="w-4 h-4 text-gray-500" />
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                </button>
+                <MoreHorizontalDropdown />
               </div>
             </div>
 
@@ -124,11 +114,10 @@ export default function ProjectInterface() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
@@ -142,30 +131,31 @@ export default function ProjectInterface() {
         </div>
       </div>
       <div>
-        {!tasks || !tasks.length ? (
-          <div className="p-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  {navigationTabs.find((tab) => tab.id === activeTab)?.icon}
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {navigationTabs.find((tab) => tab.id === activeTab)?.label}
-                </h3>
-                <p className="text-gray-500">
-                  No tasks available. Start by creating a new task to see it
-                  here.
-                  <button className="ms-1 p-2 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-100">
-                    Add Task
-                  </button>
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
+        {
+          // (!tasks || !tasks.length)
+          //   ?
+          //   <div className="p-6">
+          //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
+          //       <div className="text-center">
+          //         <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+          //           {navigationTabs.find(tab => tab.id === activeTab)?.icon}
+          //         </div>
+          //         <h3 className="text-lg font-medium text-gray-900 mb-2">
+          //           {navigationTabs.find(tab => tab.id === activeTab)?.label}
+          //         </h3>
+          //         <p className='text-gray-500'>
+          //           No tasks available. Start by creating a new task to see it here.
+          //           <button className="ms-1 p-2 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-100">
+          //             Add Task
+          //           </button>
+          //         </p>
+          //       </div>
+          //     </div>
+          //   </div>
+          //   :
           views[activeTab]
-        )}
+        }
       </div>
     </div>
-  );
+  )
 }
