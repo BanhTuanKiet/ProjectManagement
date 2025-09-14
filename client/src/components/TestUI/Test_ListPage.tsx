@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import TableWrapper from "./TableWrapper";
+import TableWrapper from "../TableWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "@/config/axiosConfig";
