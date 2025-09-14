@@ -20,6 +20,7 @@ import CalendarView from "@/components/CalendarView";
 import axios from "@/config/axiosConfig";
 import { BasicTask } from "@/utils/ITask";
 import ListPage from "@/components/ListPage";
+import SummaryPage from "@/components/Summary";
 
 interface NavigationTab {
   id: string;
@@ -57,6 +58,7 @@ export default function ProjectInterface() {
   ];
   const [tasks, setTasks] = useState<BasicTask[]>([]);
   const views: Record<string, React.ReactNode> = {
+    summary: <SummaryPage />,
     board: "",
     calendar: <CalendarView tasks={tasks} />,
     list: <ListPage />,
