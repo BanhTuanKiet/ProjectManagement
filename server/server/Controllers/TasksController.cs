@@ -27,7 +27,7 @@ namespace server.Controllers
         {
             _tasksService = tasksService;   
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Doctor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int month, int year, string filters)
         {

@@ -20,6 +20,7 @@ import Link from "next/link"
 import useSWR from 'swr'
 import { ProjectTitle } from "@/utils/IProject"
 import { useParams, useRouter } from "next/navigation"
+import { fetcher } from "@/config/fetchConfig"
 
 const mainItems = [
   {
@@ -40,15 +41,10 @@ const projectsData = {
   ],
 }
 
-const fetcher = (url: string) =>
-  fetch(url)
-    .then(res => res.json())
-    .catch((error) => console.log(error))
-
 export function SidebarCustom() {
   const { projectId } = useParams()
   const router = useRouter()
-  const { data } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
+  const { data, error } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
 
   const handleClick = (id: number) => {
     if (Number(projectId) === id) return
@@ -125,7 +121,7 @@ export function SidebarCustom() {
 
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Recent</div>
-                        {data?.map((project) => {
+                        {data && data?.map((project) => {
                           const Icon = Number(projectId) === project.projectId ? FolderOpen : FolderClosed
 
                           return (

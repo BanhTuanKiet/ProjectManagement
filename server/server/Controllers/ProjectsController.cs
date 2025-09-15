@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using server.Configs;
 using server.DTO;
 using server.Models;
 
@@ -27,7 +28,7 @@ namespace server.Controllers
     public async Task<ActionResult> GetProjectsTitle()
     {
       List<ProjectDTO.ProjectTitile> projects =
-        await _projectsServices.GetProjectsTitle("user1") ?? throw new Exception("Errir");
+        await _projectsServices.GetProjectsTitle("user1") ?? throw new ErrorException(500, "Project not found");
 
       return Ok(projects);
     }
