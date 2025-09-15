@@ -48,18 +48,18 @@ export default function ProjectInterface() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [tasks, setTasks] = useState<BasicTask[]>([])
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const resonse = await axios.get(`/tasks/${1}`)
-        setTasks(resonse.data)
-      } catch (error) {
-        console.log(error)
-      }
-    }
+  // useEffect(() => {
+  //   const fetchProjects = async () => {
+  //     try {
+  //       const resonse = await axios.get(`/tasks/${1}`)
+  //       setTasks(resonse.data)
+  //     } catch (error) {
+  //       console.log(error)
+  //     }
+  //   }
 
-    fetchProjects()
-  }, [])
+  //   fetchProjects()
+  // }, [])
 
   const views: Record<string, React.ReactNode> = {
     calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,

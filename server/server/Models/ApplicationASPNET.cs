@@ -6,7 +6,7 @@ namespace server.Models
 {
     public class ApplicationUser : IdentityUser
     {
-
+        public string? RefreshToken { get; set; }
         public virtual ICollection<ApplicationUserRole> UserRoles { get; set; } = new List<ApplicationUserRole>();
         //ActivityLog
         public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();

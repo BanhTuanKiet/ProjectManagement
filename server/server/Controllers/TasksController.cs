@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Framework;
@@ -25,7 +27,7 @@ namespace server.Controllers
         {
             _tasksService = tasksService;   
         }
-
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Doctor")]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int month, int year, string filters)
         {

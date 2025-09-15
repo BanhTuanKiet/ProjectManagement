@@ -26,6 +26,7 @@ project.assets.json
 
 # appsettings.Development.json
 # appsettings.json
+server/appsettings.json
 secrets.json
 
 .env

@@ -1,11 +1,14 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Data;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using NuGet.Protocol;
+using server.DTO;
+using server.Models;
 using server.Services;
 using server.Util;
 
@@ -13,15 +16,9 @@ namespace server.Configs
 {
     public static class JWTConfigs
     {
-        public static void AddJWT(this IServiceCollection services, IConfiguration configuration)
+        public static AuthenticationBuilder AddJWT(this AuthenticationBuilder builder, IConfiguration configuration)
         {
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
+            return builder.AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -45,7 +42,7 @@ namespace server.Configs
                         {
                             context.Token = token;
                         }
-                        return Task.CompletedTask;
+                        return System.Threading.Tasks.Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
@@ -71,7 +68,7 @@ namespace server.Configs
                                 }
                             }
                         }
-                        return Task.CompletedTask;
+                        return System.Threading.Tasks.Task.CompletedTask;
                     },
                     OnForbidden = async context =>
                     {
@@ -91,43 +88,35 @@ namespace server.Configs
 
                         var token = context.Request.Cookies["token"];
                         var errorMessage = string.IsNullOrEmpty(token) ? "Vui lòng đăng nhập để tiếp tục!" : "Phiên đăng nhập đã hết hạn! Vui lòng đăng nhập lại!";
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = errorMessage }));
-                        return;
+
                         if (!string.IsNullOrEmpty(token))
                         {
-                            var jwtHandler = new JwtSecurityTokenHandler();
-                            var jwtToken = jwtHandler.ReadJwtToken(token);
+                            TokenDTO.DecodedToken decodedToken = DecodeToken(token);
 
-                            var nameIdClaim = jwtToken?.Claims.FirstOrDefault(c => c.Type == "nameid");
-                            var roleClaim = jwtToken?.Claims.FirstOrDefault(c => c.Type == "role");
-
-                            if (nameIdClaim != null && roleClaim != null)
+                            if (decodedToken.userId != null && decodedToken.roles != null)
                             {
-                                string userId = nameIdClaim.Value;
-                                string role = roleClaim.Value;
 
-                                JwtUtils jwtUtils = new JwtUtils();
-                                var authService = context.HttpContext.RequestServices.GetRequiredService<server.Services.User.UsersService>();
-                                var userService = context.HttpContext.RequestServices.GetRequiredService<UserManager<server.Models.ApplicationUser>>();
+                                var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                                var userService = context.HttpContext.RequestServices.GetRequiredService<IUsers>();
                                 var config = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
 
-                                //var newRefreshToken = await authService.GetRefreshToken(Convert.ToInt32(userId));
+                                var refreshToken = await userService.GetRefreshToken(decodedToken.userId);
 
-                                //if (string.IsNullOrEmpty(newRefreshToken))
-                                //{
-                                //    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Không tìm thấy refresh token." }));
-                                //    return;
-                                //}
+                                if (string.IsNullOrEmpty(refreshToken))
+                                {
+                                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Không tìm thấy refresh token." }));
+                                    return;
+                                }
 
-                                //if (!authService.VerifyToken(newRefreshToken))
-                                //{
-                                //    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." }));
-                                //    return;
-                                //}
+                                if (!VerifyToken(refreshToken, config))
+                                {
+                                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." }));
+                                    return;
+                                }
 
-                                var user = await userService.FindByIdAsync(userId);
-                                var newToken = JwtUtils.GenerateToken(user, new List<string> { role }, 1, config);
-                                CookieUtils.SetCookie(context.Response, "token", newToken, 1);
+                                var user = await userManager.FindByIdAsync(decodedToken.userId);
+                                var newToken = GenerateToken(user, decodedToken.roles, 1, config);
+                                CookieConfig.SetCookie(context.Response, "token", newToken, 1);
 
                                 await context.Response.WriteAsync(JsonSerializer.Serialize(new
                                 {
@@ -142,6 +131,77 @@ namespace server.Configs
                     },
                 };
             });
+        }
+
+        public static string GenerateToken(ApplicationUser user, List<string> roles, int timeExp, IConfiguration _configuration)
+        {
+            var key = Encoding.UTF8.GetBytes(_configuration["JWT:KEY"]);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+            claims.Add(new Claim(ClaimTypes.Role, "Member"));
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(timeExp),
+                Issuer = _configuration["JWT:ISSUSER"],
+                Audience = _configuration["JWT:AUDIENCE"],
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            string jwtToken = tokenHandler.WriteToken(token);
+
+            return jwtToken;
+        }
+
+        public static TokenDTO.DecodedToken DecodeToken(string token)
+        {
+            var jwtHandler = new JwtSecurityTokenHandler();
+            var jsonToken = jwtHandler.ReadJwtToken(token);
+
+            Claim nameIdClaim = jsonToken.Claims.FirstOrDefault(claim => claim.Type == "nameid");
+            List<string> roleClaims = jsonToken.Claims
+                                        .Where(c => c.Type == "role")
+                                        .Select(c => c.Value)
+                                        .ToList();
+
+            return new TokenDTO.DecodedToken { userId = nameIdClaim.Value, roles = roleClaims };
+        }
+
+        public static bool VerifyToken(string token, IConfiguration _configuration)
+        {
+            try
+            {
+                var jwtHandler = new JwtSecurityTokenHandler();
+                var jwtToken = jwtHandler.ReadJwtToken(token);
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = "http://127.0.0.1:5144",
+                    ValidAudience = "http://127.0.0.1:3000",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:KEY"])),
+                };
+                var claimsPrincipal = jwtHandler.ValidateToken(token, tokenValidationParameters, out var validatedToken);
+                var decodedToken = (JwtSecurityToken)validatedToken;
+
+                return true;
+            }
+            catch (SecurityTokenException ex)
+            {
+                return false;
+            }
         }
     }
 }
