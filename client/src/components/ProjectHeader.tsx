@@ -1,13 +1,21 @@
+"use client"
+
 import { Search, Plus, Bell, HelpCircle, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import axios from "@/config/axiosConfig";
 
 export function ProjectHeader({
   sidebarTrigger,
 }: {
   sidebarTrigger: React.ReactNode;
 }) {
+  const signinGG = async () => {
+    // const response = await axios.get(`/users/signin-google`)
+    window.location.href = "http://localhost:5144/users/signin-google"
+  }
+
   return (
     <>
       <header className="flex items-end justify-between px-4 py-2 bg-white border-b border-gray-200 z-50 relative max-w-7xl mx-auto w-full">
@@ -37,6 +45,7 @@ export function ProjectHeader({
           </div>
         </div>
         <div className="flex items-center gap-5">
+          <Button className="bg-red-500 hover:bg-red-700 text-white" onClick={signinGG}>Google</Button>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white">
             <Plus className="h-4 w-4 mr-2" />
             Create

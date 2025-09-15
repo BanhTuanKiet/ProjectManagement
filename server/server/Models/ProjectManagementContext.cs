@@ -66,16 +66,17 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasKey(e => e.Id).HasName("PK_AspNetRoles");
         });
 
+        modelBuilder.Entity<ApplicationUserRole>(entity =>
+        {
+            modelBuilder.Entity<ApplicationUserRole>().ToTable("AspNetUserRoles");
+
+            //entity.HasKey(e => e.UserId).HasName("PK_AspNetUserRoles");
+            entity.HasKey(r => new { r.UserId, r.RoleId });
+        });
 
         modelBuilder.Entity<ApplicationUserLogin>(entity =>
         {
             entity.HasKey(l => new { l.LoginProvider, l.ProviderKey });
-        });
-
-        // ApplicationUserRole: composite key
-        modelBuilder.Entity<ApplicationUserRole>(entity =>
-        {
-            entity.HasKey(r => new { r.UserId, r.RoleId });
         });
 
         // ApplicationUserToken: composite key

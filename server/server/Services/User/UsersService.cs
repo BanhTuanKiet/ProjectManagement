@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
 
@@ -7,16 +9,64 @@ namespace server.Services.User
     public class UsersService : IUsers
     {
         public readonly  ProjectManagementContext _context;
-        //private readonly IMapper _mapper;
+        private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UsersService(ProjectManagementContext context)
+        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager  )
         {
             _context = context;
-            //_mapper = mapper;
+            _mapper = mapper;
+            _userManager = userManager;
         }
         public async Task<List<ApplicationUser>> GetUsers()
         {
             return await _context.ApplicationUsers.ToListAsync();
+        }
+        public async Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            string formatedName = name.Replace(" ", "").ToLower();
+
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    Email = email,
+                    UserName = formatedName
+                };
+
+                var result = await _userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                {
+                    Console.WriteLine("Create user failed: "
+                        + string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+                
+                await _userManager.AddToRoleAsync(user, "User");
+            }
+
+            return user;
+        }
+
+        public async Task<string> GetRefreshToken(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            return user.RefreshToken;
+        }
+
+        public async Task<bool> SaveRefreshToken(string userId, string token)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return false;
+
+            user.RefreshToken = token;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }

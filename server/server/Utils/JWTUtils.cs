@@ -6,17 +6,11 @@ using server.Models;
 
 namespace server.Util
 {
-    public class JwtUtils
+    public static class JwtUtils
     {
-        public class DecodedToken
-        {
-            public string UserId { get; set; }
-            public string UserRole { get; set; }
-        }
-
         public static string GenerateToken(ApplicationUser user, IList<string> roles, int timeExp, IConfiguration _configuration)
         {
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]);
+            var key = Encoding.UTF8.GetBytes(_configuration["JWT:KEY"]);
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var claims = new List<Claim>
@@ -44,23 +38,7 @@ namespace server.Util
             return jwtToken;
         }
 
-        public DecodedToken DecodeToken(string token)
-        {
-            var jwtHandler = new JwtSecurityTokenHandler();
-            var jwtToken = jwtHandler.ReadJwtToken(token);
-
-            var nameIdClaim = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "nameid");
-            var roleClaim = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "role");
-
-            if (nameIdClaim == null && roleClaim == null) return null;
-
-            string userId = nameIdClaim.Value;
-            string userRole = roleClaim.Value;
-
-            return new DecodedToken { UserId = userId, UserRole = userRole };
-        }
-
-        public bool VerifyToken(string token, IConfiguration _configuration)
+        public static bool VerifyToken(string token, IConfiguration _configuration)
         {
             try
             {
