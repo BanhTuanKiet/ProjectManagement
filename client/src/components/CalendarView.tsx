@@ -120,7 +120,7 @@ export default function CalendarView({
           </div>
 
           <Select
-            value={filterSelection.assignee}
+            value={filterSelection.assignee ?? "all"}
             onValueChange={(val) => updateFilter("assignee", val)}
           >
             <SelectTrigger className="w-32">
@@ -146,7 +146,7 @@ export default function CalendarView({
           </Select>
 
           <Select
-            value={filterSelection.status}
+            value={filterSelection.status ?? "all"}
             onValueChange={(val) => updateFilter("status", val)}
           >
             <SelectTrigger className="w-28">
@@ -162,7 +162,7 @@ export default function CalendarView({
           </Select>
 
           <Select
-            value={filterSelection.priority}
+            value={filterSelection.priority ?? 'all'}
             onValueChange={(val) => updateFilter("priority", val)}
           >
             <SelectTrigger className="w-28">
@@ -242,52 +242,41 @@ export default function CalendarView({
                     </div>
 
                     <div className="space-y-2">
-                      {tasksForDay.length > 0 && (
+                      {tasksForDay && (
                         <>
-                          <div
-                            key={tasksForDay[0].taskId}
-                            className="space-y-1"
-                          >
-                            <div
-                              className={`
-                                flex items-center gap-2 p-2 bg-muted/50 rounded text-xs
-                                ${getBorderColor(tasksForDay[0].status)}
-                              `}
-                            >
-                              <Checkbox
-                                checked={true}
-                                className={`h-4 w-4 appearance-none ${getCheckboxColor(
-                                  tasksForDay[0].status
-                                )}`}
-                              />
-                              <span className="flex-1 truncate">
-                                {tasksForDay[0].title}
-                              </span>
-                              {tasksForDay[0].assignee && (
-                                <ColoredAvatar
-                                  name={tasksForDay[0].assignee}
-                                  size="sm"
+                          {(tasksForDay?.length <= 2 ? tasksForDay : tasksForDay.slice(0, 1)).map(task => (
+                            <div key={task.taskId} className="space-y-1">
+                              <div className={` flex items-center gap-2 p-2 bg-muted/50 rounded text-xs ${getBorderColor(task.status)}`}>
+                                <Checkbox
+                                  checked={true}
+                                  className={`h-4 w-4 appearance-none ${getCheckboxColor(task.status)}`}
                                 />
-                              )}
-                            </div>
-                          </div>
-
-                          {tasksForDay.length > 1 && (
-                            <div>
-                              <div
-                                className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
-                                onClick={() => setOpenTaskList(!openTaskList)}
-                              >
-                                <p className="p-2">{!openTaskList ? `${tasksForDay.length - 1} more` : "Close"}</p>
+                                <span className="flex-1 truncate">
+                                  {task.title}
+                                </span>
+                                {task.assignee && (
+                                  <ColoredAvatar name={task.assignee} size="sm" />
+                                )}
                               </div>
-                              {openTaskList && (
-                                <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
-                                  <TaskList tasks={tasksForDay} />
-                                </div>
-                              )}
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {tasksForDay.length > 2 && (
+                        <div>
+                          <div
+                            className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
+                            onClick={() => setOpenTaskList(!openTaskList)}
+                          >
+                            <p className="p-2">{!openTaskList ? `${tasksForDay.length - 1} more` : "Close"}</p>
+                          </div>
+                          {openTaskList && (
+                            <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
+                              <TaskList tasks={tasksForDay} />
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   </>

@@ -31,14 +31,14 @@ namespace server.Services.Project
                             && t.CreatedAt.Month == month
                             && t.CreatedAt.Year == year);
 
-            if (!string.IsNullOrEmpty(filters.status))
+            if (!string.IsNullOrEmpty(filters.status) && filters.status != "all")
                 query = query.Where(t => t.Status == filters.status);
 
-            if (!string.IsNullOrEmpty(filters.assignee))
+            if (!string.IsNullOrEmpty(filters.assignee) && filters.assignee != "all")
                 query = query.Where(t => t.Assignee.UserName == filters.assignee);
 
-            //if (!string.IsNullOrEmpty(filters.Priority))
-            //    query = query.Where(t => t.Priority.ToString() == filters.Priority);
+            //if (!string.IsNullOrEmpty(filters.Priority && filters.Priority != "all"))
+            //    query = query.Where(t => t.Priority.ToString() == filters.priority);
 
             if (!string.IsNullOrEmpty(filters.search))
             {
