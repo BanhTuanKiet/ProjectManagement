@@ -40,7 +40,6 @@ namespace server.Configs
                     context.Response.Redirect("http://localhost:3000/project");
                     context.HandleResponse();
                 };
-
             });
 
             return builder;

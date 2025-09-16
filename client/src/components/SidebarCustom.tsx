@@ -1,6 +1,6 @@
 'use client'
 
-import { User, Clock, CreditCard, FolderOpen, Users, ChevronRight, Plus, MoreHorizontal, Sparkles, FolderClosed } from "lucide-react"
+import { User, CreditCard, FolderOpen, Users, Plus, MoreHorizontal, Sparkles, FolderClosed } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,15 +20,8 @@ import Link from "next/link"
 import useSWR from 'swr'
 import { ProjectTitle } from "@/utils/IProject"
 import { useParams, useRouter } from "next/navigation"
-
-const mainItems = [
-  {
-    title: "For you",
-    url: "#",
-    icon: User,
-    isActive: true,
-  },
-]
+import { fetcher } from "@/config/fetchConfig"
+import { useState } from "react"
 
 const projectsData = {
   starred: [
@@ -40,19 +33,21 @@ const projectsData = {
   ],
 }
 
-const fetcher = (url: string) =>
-  fetch(url)
-    .then(res => res.json())
-    .catch((error) => console.log(error))
-
 export function SidebarCustom() {
-  const { projectId } = useParams()
+  const { project_name } = useParams()
+  const [activeTab, setActiveTab] = useState<string>()
   const router = useRouter()
-  const { data } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
+  const { data, error } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
 
   const handleClick = (id: number) => {
-    if (Number(projectId) === id) return
+    if (Number(project_name) === id) return
     router.push(`/project/${id.toString()}`)
+  }
+
+  const handleActiveTab = (tab: string) => {
+    return tab === activeTab
+      ? "bg-blue-100 text-blue-600 border border-blue-600"
+      : "hover:bg-sidebar-accent"
   }
 
   return (
@@ -61,33 +56,32 @@ export function SidebarCustom() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className={`w-full justify-between hover:bg-sidebar-accent ${item.isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : ""}`}
-                  >
-                    <a href={item.url} className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-3">
-                        <item.icon className="h-4 w-4" />
-                        <span className="text-sm font-medium">{item.title}</span>
-                      </div>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="w-full hover:bg-sidebar-accent">
-                  <Link href="/project/plan" className="flex items-center gap-3">
-                    <CreditCard className="h-4 w-4" />
-                    <span className="text-sm font-medium">Plans</span>
-                    <Badge variant="secondary" className="ml-auto bg-purple-600 text-white text-xs px-2 py-0.5">
-                      PREMIUM
-                    </Badge>
+                <SidebarMenuButton
+                  asChild
+                  className={`w-full justify-start ${handleActiveTab("")}`}
+                  onClick={() => setActiveTab("")}
+                >
+                  <Link href="/project" className="flex items-center gap-3 rounded px-2 py-1">
+                    <User className="h-4 w-4" />
+                    <span className="text-sm font-medium">For you</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              <SidebarMenuButton
+                asChild
+                className={`w-full ${handleActiveTab("plans")}`}
+                onClick={() => setActiveTab("plans")}
+              >
+                <Link href="/project/plan" className="flex items-center gap-3">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="text-sm font-medium">Plans</span>
+                  <Badge variant="secondary" className="ml-auto bg-purple-600 text-white text-xs px-2 py-0.5">
+                    PREMIUM
+                  </Badge>
+                </Link>
+              </SidebarMenuButton>
 
               <SidebarMenuItem>
                 <Collapsible defaultOpen className="group/collapsible">
@@ -125,8 +119,8 @@ export function SidebarCustom() {
 
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Recent</div>
-                        {data?.map((project) => {
-                          const Icon = Number(projectId) === project.projectId ? FolderOpen : FolderClosed
+                        {data && data?.map((project) => {
+                          const Icon = Number(project_name) === project.projectId ? FolderOpen : FolderClosed
 
                           return (
                             <SidebarMenuSubItem key={project.projectId}>
