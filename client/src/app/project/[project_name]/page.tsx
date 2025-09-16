@@ -61,10 +61,24 @@ export default function ProjectInterface() {
   //   fetchProjects()
   // }, [])
 
+
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const resonse = await axios.get(`/tasks/allbasictasks`)
+        setTasks(resonse.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    fetchProjects()
+  }, [])
   const views: Record<string, React.ReactNode> = {
     calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
-    board: <BoardView tasks={tasks}/>,
-    list: <ListPage />
+    board: <BoardView tasks={tasks} />,
+    list: <ListPage tasksNormal={tasks} />,
   }
 
   return (
