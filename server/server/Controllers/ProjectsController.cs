@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -31,6 +32,20 @@ namespace server.Controllers
         await _projectsServices.GetProjectsTitle("user1") ?? throw new ErrorException(500, "Project not found");
 
       return Ok(projects);
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("member/{projectId}")]
+    public async Task<ActionResult> GetProjectMembers(int projectId)
+    {
+      string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
+
+      List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
+
+
+
+      return Ok(projectMembers);
     }
   }
 }

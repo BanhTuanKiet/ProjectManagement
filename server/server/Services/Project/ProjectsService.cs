@@ -26,5 +26,23 @@ namespace server.Services.Project
 
       return _mapper.Map<List<ProjectDTO.ProjectTitile>>(projects);
     }
+
+    public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId)
+    {
+      var projectMembers = await _context.ProjectMembers
+          .Include(pm => pm.User)
+          .Where(pm => pm.ProjectId == projectId)
+          .ToListAsync();
+            foreach (var pm in projectMembers)
+            {
+                Console.WriteLine($"UserId={pm.UserId}, Role={pm.RoleInProject}, JoinedAt={pm.JoinedAt}");
+            }
+            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+    }
+
+    public async Task<server.Models.Project> FindProjectById(int projectId)
+    {
+      return await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+    }
   }
 }

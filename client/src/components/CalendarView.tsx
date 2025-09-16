@@ -10,10 +10,12 @@ import { Search, ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-rea
 import { getDaysInMonth } from "@/utils/dateUtils"
 import { BasicTask } from "@/utils/ITask"
 import TaskList from "./TaskList"
-import { getBorderColor, getCheckboxColor } from "@/utils/statusUtils"
+import { getBorderColor, getCheckboxColor, getRoleBadge } from "@/utils/statusUtils"
 import axios from "@/config/axiosConfig"
 import { ParamValue } from "next/dist/server/request/params"
 import { FilterSelection } from "@/utils/IFilterSelection"
+import { Member } from "@/utils/IUser"
+import { capitalizeFirstLetter } from "@/utils/dataUtils"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -32,14 +34,27 @@ export default function CalendarView({
   const days = getDaysInMonth(currentDate)
   const [openTaskList, setOpenTaskList] = useState(false)
   const filterRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [members, setMembers] = useState<Member[]>()
 
-  const assigneeOptions = ["all", "john doe", "jane smith"]
   const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
   const priorityOptions = ["all", "high", "medium", "low"]
 
   const updateFilter = (key: keyof FilterSelection, value: string) => {
     setFilterSelection((prev) => ({ ...prev, [key]: value }))
   }
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await axios.get(`/projects/member/${projectId}`)
+        setMembers(response.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    fetchMembers()
+  }, [projectId])
 
   useEffect(() => {
     if (filterRef.current) {
@@ -110,9 +125,19 @@ export default function CalendarView({
               <SelectValue placeholder="Assignee" />
             </SelectTrigger>
             <SelectContent>
-              {assigneeOptions.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              <SelectItem key={"all"} value="all">
+                All
+              </SelectItem>
+              {members && members?.map(member => (
+                <SelectItem key={member.userId} value={member.userId}>
+                  <div className="flex items-center gap-2">
+                    <span>{capitalizeFirstLetter(member.name)}</span>
+                    {member.role && (
+                      <span className={getRoleBadge(member.role)}>
+                        {member.role}
+                      </span>
+                    )}
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -238,7 +263,7 @@ export default function CalendarView({
                                 className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
                                 onClick={() => setOpenTaskList(!openTaskList)}
                               >
-                                <p className="p-2">{tasksForDay.length - 1} more</p>
+                                <p className="p-2">{!openTaskList ? `${tasksForDay.length - 1} more` : "Close"}</p>
                               </div>
                               {openTaskList && (
                                 <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
