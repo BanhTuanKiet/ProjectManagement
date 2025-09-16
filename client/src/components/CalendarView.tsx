@@ -1,9 +1,11 @@
+
 "use client"
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import ColoredAvatar from "@/components/ColoredAvatar";
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-react"
@@ -86,22 +88,22 @@ export default function CalendarView({
 
   const navigateMonth = (direction: "prev" | "next") => {
     setCurrentDate((prev) => {
-      const newDate = new Date(prev)
+      const newDate = new Date(prev);
       if (direction === "prev") {
-        newDate.setMonth(prev.getMonth() - 1)
+        newDate.setMonth(prev.getMonth() - 1);
       } else {
-        newDate.setMonth(prev.getMonth() + 1)
+        newDate.setMonth(prev.getMonth() + 1);
       }
-      return newDate
-    })
-  }
+      return newDate;
+    });
+  };
 
   const getTasksForDay = (day: number) => {
     return tasks?.filter((task) => {
-      const createdDate = new Date(task.createdAt)
-      return createdDate.getDate() === day
-    })
-  }
+      const createdDate = new Date(task.createdAt);
+      return createdDate.getDate() === day;
+    });
+  };
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -178,13 +180,21 @@ export default function CalendarView({
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateMonth("prev")}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="font-medium min-w-24 text-center">
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </span>
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateMonth("next")}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -203,7 +213,10 @@ export default function CalendarView({
       <div className="border border-border rounded-lg overflow-hidden bg-card">
         <div className="grid grid-cols-7 border-b border-border">
           {weekDays.map((day) => (
-            <div key={day} className="p-4 text-center font-medium text-muted-foreground bg-muted/50">
+            <div
+              key={day}
+              className="p-4 text-center font-medium text-muted-foreground bg-muted/50"
+            >
               {day}
             </div>
           ))}
@@ -231,7 +244,10 @@ export default function CalendarView({
                     <div className="space-y-2">
                       {tasksForDay.length > 0 && (
                         <>
-                          <div key={tasksForDay[0].taskId} className="space-y-1">
+                          <div
+                            key={tasksForDay[0].taskId}
+                            className="space-y-1"
+                          >
                             <div
                               className={`
                                 flex items-center gap-2 p-2 bg-muted/50 rounded text-xs
@@ -240,19 +256,18 @@ export default function CalendarView({
                             >
                               <Checkbox
                                 checked={true}
-                                className={`h-4 w-4 appearance-none ${getCheckboxColor(tasksForDay[0].status)}`}
+                                className={`h-4 w-4 appearance-none ${getCheckboxColor(
+                                  tasksForDay[0].status
+                                )}`}
                               />
-                              <span className="flex-1 truncate">{tasksForDay[0].title}</span>
+                              <span className="flex-1 truncate">
+                                {tasksForDay[0].title}
+                              </span>
                               {tasksForDay[0].assignee && (
-                                <Avatar className="h-4 w-4">
-                                  <AvatarFallback className="text-xs bg-blue-500 text-white">
-                                    {tasksForDay[0].assignee
-                                      ?.split(" ")
-                                      .map((word) => word[0])
-                                      .join("")
-                                      .toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <ColoredAvatar
+                                  name={tasksForDay[0].assignee}
+                                  size="sm"
+                                />
                               )}
                             </div>
                           </div>
@@ -278,7 +293,7 @@ export default function CalendarView({
                   </>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </div>
