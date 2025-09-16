@@ -5,7 +5,8 @@ import TableWrapper from "./TableWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "@/config/axiosConfig";
-import { UserMini } from "@/utils/IUserMini";
+import { UserMini } from "@/utils/IUser";
+import { mapApiTaskToTask, mapApiUserToUserMini } from "@/utils/mapperUtil";
 import {
   Search,
   ChevronDown,
@@ -20,291 +21,258 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BasicTask } from "@/utils/ITask";
+import { initialColumns, Column } from "@/config/columsConfig";
+import { useTaskTable } from "@/hooks/useResizableColumns";
+// interface Task {
+//   id: string;
+//   key: string;
+//   summary: string;
+//   status: "To Do" | "Done" | "In Progress";
+//   assignee?: { name: string; avatar: string; initials: string };
+//   dueDate?: string;
+//   type: "Task";
+//   [key: string]: any;
+// }
 
-interface Task {
-  id: string;
-  key: string;
-  summary: string;
-  status: "To Do" | "Done" | "In Progress";
-  assignee?: { name: string; avatar: string; initials: string };
-  dueDate?: string;
-  type: "Task";
-  [key: string]: any;
-}
+// interface Column {
+//   key: string;
+//   title: string;
+//   width: number;
+//   minWidth: number;
+//   resizable: boolean;
+// }
 
-interface Column {
-  key: string;
-  title: string;
-  width: number;
-  minWidth: number;
-  resizable: boolean;
-}
+// const initialColumns: Column[] = [
+//   { key: "select", title: "", width: 65, minWidth: 65, resizable: false },
+//   { key: "type", title: "Type", width: 110, minWidth: 80, resizable: true },
+//   { key: "key", title: "Key", width: 120, minWidth: 80, resizable: true },
+//   {
+//     key: "summary",
+//     title: "Summary",
+//     width: 400,
+//     minWidth: 200,
+//     resizable: true,
+//   },
+//   {
+//     key: "status",
+//     title: "Status",
+//     width: 120,
+//     minWidth: 100,
+//     resizable: true,
+//   },
+//   {
+//     key: "assignee",
+//     title: "Assignee",
+//     width: 180,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   {
+//     key: "dueDate",
+//     title: "Due date",
+//     width: 145,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   {
+//     key: "priority",
+//     title: "Priority",
+//     width: 120,
+//     minWidth: 100,
+//     resizable: true,
+//   },
+//   {
+//     key: "comments",
+//     title: "Comments",
+//     width: 145,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   {
+//     key: "labels",
+//     title: "Labels",
+//     width: 170,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   {
+//     key: "created",
+//     title: "Created",
+//     width: 145,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   {
+//     key: "updated",
+//     title: "Updated",
+//     width: 145,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   {
+//     key: "reporter",
+//     title: "Reporter",
+//     width: 180,
+//     minWidth: 120,
+//     resizable: true,
+//   },
+//   { key: "team", title: "Team", width: 160, minWidth: 120, resizable: true },
+// ];
 
-const initialColumns: Column[] = [
-  { key: "select", title: "", width: 65, minWidth: 65, resizable: false },
-  { key: "type", title: "Type", width: 110, minWidth: 80, resizable: true },
-  { key: "key", title: "Key", width: 120, minWidth: 80, resizable: true },
-  {
-    key: "summary",
-    title: "Summary",
-    width: 400,
-    minWidth: 200,
-    resizable: true,
-  },
-  {
-    key: "status",
-    title: "Status",
-    width: 120,
-    minWidth: 100,
-    resizable: true,
-  },
-  {
-    key: "assignee",
-    title: "Assignee",
-    width: 180,
-    minWidth: 120,
-    resizable: true,
-  },
-  {
-    key: "dueDate",
-    title: "Due date",
-    width: 145,
-    minWidth: 120,
-    resizable: true,
-  },
-  {
-    key: "priority",
-    title: "Priority",
-    width: 120,
-    minWidth: 100,
-    resizable: true,
-  },
-  {
-    key: "comments",
-    title: "Comments",
-    width: 145,
-    minWidth: 120,
-    resizable: true,
-  },
-  {
-    key: "labels",
-    title: "Labels",
-    width: 170,
-    minWidth: 120,
-    resizable: true,
-  },
-  {
-    key: "created",
-    title: "Created",
-    width: 145,
-    minWidth: 120,
-    resizable: true,
-  },
-  {
-    key: "updated",
-    title: "Updated",
-    width: 145,
-    minWidth: 120,
-    resizable: true,
-  },
-  {
-    key: "reporter",
-    title: "Reporter",
-    width: 180,
-    minWidth: 120,
-    resizable: true,
-  },
-  { key: "team", title: "Team", width: 160, minWidth: 120, resizable: true },
-];
+export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }) {
+  // const [tasks, setTasks] = useState<Task[]>([]);
+  // const [availableUsers, setAvailableUsers] = useState<UserMini[]>([]);
+  // const [columns, setColumns] = useState<Column[]>(initialColumns);
+  // const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  // const [searchQuery, setSearchQuery] = useState("");
+  // const [editingCell, setEditingCell] = useState<{
+  //   taskId: string;
+  //   field: string;
+  // } | null>(null);
+  // const [draggedTask, setDraggedTask] = useState<string | null>(null);
 
-export default function ListPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [availableUsers, setAvailableUsers] = useState<UserMini[]>([]);
-  const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
-  const [editingCell, setEditingCell] = useState<{
-    taskId: string;
-    field: string;
-  } | null>(null);
-  const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  // Kết hợp fetch tasks và users
+  // để tránh gọi API nhiều lần
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const response = await axios.get("/users");
+  //       console.log("Fetched users:", response.data);
 
-  //MapAPI
-  const mapApiTaskToTask = (apiTask: any): Task => {
-    const assigneeName = apiTask.assignee || null;
-    const reporterName = apiTask.createdBy || null;
+  //       const mappedUsers = response.data.map(mapApiUserToUserMini);
+  //       const mappedTasks = tasksnomal.map(mapApiTaskToTask);
 
-    return {
-      id: String(apiTask.taskId),
-      key: `TASK-${apiTask.taskId}`,
-      summary: apiTask.title,
-      status: apiTask.status,
-      assignee: assigneeName
-        ? {
-            name: assigneeName,
-            avatar: "", // có thể lấy từ API sau
-            initials: assigneeName.charAt(0).toUpperCase(),
-          }
-        : undefined,
-      dueDate: apiTask.deadline
-        ? new Date(apiTask.deadline).toISOString().split("T")[0]
-        : undefined,
-      created: apiTask.createdAt
-        ? new Date(apiTask.createdAt).toISOString().split("T")[0]
-        : undefined,
-      reporter: reporterName
-        ? {
-            name: reporterName,
-            avatar: "",
-            initials: reporterName.charAt(0).toUpperCase(),
-          }
-        : undefined,
-      type: "Task",
-      ...apiTask,
-    };
-  };
+  //       setTasks(mappedTasks);
+  //       setAvailableUsers(mappedUsers);
+  //     } catch (error) {
+  //       console.log("Error fetching users:", error);
+  //     }
+  //   };
 
-  // Fetch tasks từ API
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await axios.get(`/tasks/${1}`);
-        console.log(response.data);
-        const mappedTasks = response.data.map(mapApiTaskToTask);
-        setTasks(mappedTasks);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchTasks();
-  }, []);
-  // Fetch users từ API
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("/users");
-        console.log("Fetched users:", response.data);
-        const mappedUsers = response.data.map((u: any) => ({
-          name: u.userName, // tuỳ API
-          avatar: u.avatarUrl || "",
-          initials: (u.userName || "?")
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")
-            .toUpperCase(),
-        }));
+  //   fetchUsers();
+  // }, []);
 
-        setAvailableUsers(mappedUsers);
-      } catch (error) {
-        console.log("Error fetching users:", error);
-      }
-    };
+  // // ... giữ nguyên code resize, drag, edit, filter ...
+  // const resizingColumn = useRef<{
+  //   index: number;
+  //   startX: number;
+  //   startWidth: number;
+  // } | null>(null);
 
-    fetchUsers();
-  }, []);
+  // // Resize cột
+  // const handleMouseDown = useCallback(
+  //   (e: React.MouseEvent, columnIndex: number) => {
+  //     e.preventDefault();
+  //     const startX = e.clientX;
+  //     const startWidth = columns[columnIndex].width;
 
-  // ... giữ nguyên code resize, drag, edit, filter ...
-  const resizingColumn = useRef<{
-    index: number;
-    startX: number;
-    startWidth: number;
-  } | null>(null);
+  //     resizingColumn.current = { index: columnIndex, startX, startWidth };
 
-  // Resize cột
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent, columnIndex: number) => {
-      e.preventDefault();
-      const startX = e.clientX;
-      const startWidth = columns[columnIndex].width;
+  //     const handleMouseMove = (e: MouseEvent) => {
+  //       if (!resizingColumn.current) return;
+  //       const { index, startX, startWidth } = resizingColumn.current;
+  //       const deltaX = e.clientX - startX;
+  //       const newWidth = Math.max(columns[index].minWidth, startWidth + deltaX);
 
-      resizingColumn.current = { index: columnIndex, startX, startWidth };
+  //       setColumns((prev) =>
+  //         prev.map((col, i) =>
+  //           i === index ? { ...col, width: newWidth } : col
+  //         )
+  //       );
+  //     };
 
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!resizingColumn.current) return;
-        const { index, startX, startWidth } = resizingColumn.current;
-        const deltaX = e.clientX - startX;
-        const newWidth = Math.max(columns[index].minWidth, startWidth + deltaX);
+  //     const handleMouseUp = () => {
+  //       resizingColumn.current = null;
+  //       document.removeEventListener("mousemove", handleMouseMove);
+  //       document.removeEventListener("mouseup", handleMouseUp);
+  //     };
 
-        setColumns((prev) =>
-          prev.map((col, i) =>
-            i === index ? { ...col, width: newWidth } : col
-          )
-        );
-      };
+  //     document.addEventListener("mousemove", handleMouseMove);
+  //     document.addEventListener("mouseup", handleMouseUp);
+  //   },
+  //   [columns]
+  // );
 
-      const handleMouseUp = () => {
-        resizingColumn.current = null;
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
+  // // Chọn task
+  // const toggleTaskSelection = (taskId: string) => {
+  //   setSelectedTasks((prev) => {
+  //     const newSet = new Set(prev);
+  //     if (newSet.has(taskId)) newSet.delete(taskId);
+  //     else newSet.add(taskId);
+  //     return newSet;
+  //   });
+  // };
 
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    },
-    [columns]
-  );
+  // const toggleAllTasks = () => {
+  //   if (selectedTasks.size === tasks.length) {
+  //     setSelectedTasks(new Set());
+  //   } else {
+  //     setSelectedTasks(new Set(tasks.map((t) => t.id)));
+  //   }
+  // };
 
-  // Chọn task
-  const toggleTaskSelection = (taskId: string) => {
-    setSelectedTasks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(taskId)) newSet.delete(taskId);
-      else newSet.add(taskId);
-      return newSet;
-    });
-  };
+  // // Edit trực tiếp
+  // const handleCellEdit = (taskId: string, field: string, value: string) => {
+  //   setTasks((prev) =>
+  //     prev.map((t) => (t.id === taskId ? { ...t, [field]: value } : t))
+  //   );
+  //   setEditingCell(null);
+  // };
 
-  const toggleAllTasks = () => {
-    if (selectedTasks.size === tasks.length) {
-      setSelectedTasks(new Set());
-    } else {
-      setSelectedTasks(new Set(tasks.map((t) => t.id)));
-    }
-  };
+  // // Kéo thả reorder
+  // const handleDragStart = (e: React.DragEvent, taskId: string) => {
+  //   setDraggedTask(taskId);
+  //   e.dataTransfer.effectAllowed = "move";
+  // };
+  // const handleDragOver = (e: React.DragEvent) => {
+  //   e.preventDefault();
+  //   e.dataTransfer.dropEffect = "move";
+  // };
+  // const handleDrop = (e: React.DragEvent, targetTaskId: string) => {
+  //   e.preventDefault();
+  //   if (!draggedTask || draggedTask === targetTaskId) return;
+  //   const draggedIndex = tasks.findIndex((t) => t.id === draggedTask);
+  //   const targetIndex = tasks.findIndex((t) => t.id === targetTaskId);
 
-  // Edit trực tiếp
-  const handleCellEdit = (taskId: string, field: string, value: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, [field]: value } : t))
-    );
-    setEditingCell(null);
-  };
+  //   const newTasks = [...tasks];
+  //   const [draggedItem] = newTasks.splice(draggedIndex, 1);
+  //   newTasks.splice(targetIndex, 0, draggedItem);
 
-  // Kéo thả reorder
-  const handleDragStart = (e: React.DragEvent, taskId: string) => {
-    setDraggedTask(taskId);
-    e.dataTransfer.effectAllowed = "move";
-  };
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-  const handleDrop = (e: React.DragEvent, targetTaskId: string) => {
-    e.preventDefault();
-    if (!draggedTask || draggedTask === targetTaskId) return;
-    const draggedIndex = tasks.findIndex((t) => t.id === draggedTask);
-    const targetIndex = tasks.findIndex((t) => t.id === targetTaskId);
+  //   setTasks(newTasks);
+  //   setDraggedTask(null);
+  // };
 
-    const newTasks = [...tasks];
-    const [draggedItem] = newTasks.splice(draggedIndex, 1);
-    newTasks.splice(targetIndex, 0, draggedItem);
+  // // Filter
+  // const filteredTasks = tasks.filter((t) => {
+  //   const summary = t.summary?.toLowerCase() || "";
+  //   const key = t.key?.toLowerCase() || "";
+  //   return (
+  //     summary.includes(searchQuery.toLowerCase()) ||
+  //     key.includes(searchQuery.toLowerCase())
+  //   );
+  // });
 
-    setTasks(newTasks);
-    setDraggedTask(null);
-  };
-
-  // Filter
-  const filteredTasks = tasks.filter((t) => {
-    const summary = t.summary?.toLowerCase() || "";
-    const key = t.key?.toLowerCase() || "";
-    return (
-      summary.includes(searchQuery.toLowerCase()) ||
-      key.includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const totalWidth = columns.reduce((s, c) => s + c.width, 0);
-
+  // const totalWidth = columns.reduce((s, c) => s + c.width, 0);
+  const {
+    tasks,
+    availableUsers,
+    columns,
+    selectedTasks,
+    searchQuery,
+    editingCell,
+    filteredTasks,
+    totalWidth,
+    setSearchQuery,
+    setEditingCell,
+    handleMouseDown,
+    toggleAllTasks,
+    toggleTaskSelection,
+    handleCellEdit,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+  } = useTaskTable(tasksNormal);
   return (
     <div className="flex flex-col h-full overflow-hidden max-w-7xl mx-auto w-full">
       {/* Header cố định */}
