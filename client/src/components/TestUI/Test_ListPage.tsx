@@ -5,7 +5,7 @@ import TableWrapper from "../TableWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "@/config/axiosConfig";
-import { UserMini } from "@/utils/IUserMini";
+import { UserMini } from "@/utils/IUser";
 import {
   Search,
   ChevronDown,

@@ -4,3 +4,9 @@ export interface Member {
   role: string
   isOwner: boolean
 }
+
+export interface UserMini {
+  name: string;
+  avatar: string;
+  initials: string;
+}
