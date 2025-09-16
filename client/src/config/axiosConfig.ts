@@ -1,5 +1,5 @@
 import axios from "axios"
-// import { SuccessNotify, WarningNotify, ErrorNotify } from "./ToastConfig"
+import { SuccessNotify, WarningNotify, ErrorNotify } from "@/utils/toastUtils"
 
 const instance = axios.create({
     baseURL: "http://localhost:5144",
@@ -21,7 +21,7 @@ instance.interceptors.response.use(function (response) {
 // Do something with response data
   if (response.status === 200 && response.data.message) {
     const message = response.data.message
-    // SuccessNotify(message)
+    SuccessNotify(message)
   }
 
   return response
@@ -32,7 +32,7 @@ instance.interceptors.response.use(function (response) {
     const errorMessage = error.response.data.ErrorMessage || error.response.data.errorMessage
     const statusCode = error.response.status
     console.log(error)
-    // console.log(statusCode, error.response.data?.RetryRequest)
+    console.log(statusCode, error.response.data?.RetryRequest)
     if (statusCode === 401 && error.response.data?.RetryRequest && !error.config.retry) {
       console.log(error.config)
       console.log(error.config.retry)
@@ -44,25 +44,25 @@ instance.interceptors.response.use(function (response) {
     switch (statusCode) {
       case 400:
       case 404:
-        // WarningNotify(errorMessage)
+        WarningNotify(errorMessage)
         break
       case 403:
-        // WarningNotify(errorMessage)
+        WarningNotify(errorMessage)
         break
       case 500:
-        // ErrorNotify(errorMessage)
+        ErrorNotify(errorMessage)
         break
       case 401:
         const currentPath = window.location.pathname + window.location.search
         localStorage.setItem("prevPage", currentPath)
-        // WarningNotify(errorMessage)
+        WarningNotify(errorMessage)
   
         setTimeout(() => {
-          // window.location.href = "/"
+          window.location.href = "/"
         }, 1700)
         break
       default:
-        // ErrorNotify(errorMessage)
+        ErrorNotify(errorMessage)
     } 
   }
 
