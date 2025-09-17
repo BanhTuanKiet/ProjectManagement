@@ -35,7 +35,7 @@ interface NavigationTab {
 const navigationTabs: NavigationTab[] = [
   { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
   { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
-  { id: 'board', label: 'Board', icon: <div className="w-4 h-4 bg-blue-500 rounded-sm" /> },
+  { id: 'board', label: 'Board', icon: <div className="w-4 h-4 border-2 border-blue-500 rounded-sm" /> },
   { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
   { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
   { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },

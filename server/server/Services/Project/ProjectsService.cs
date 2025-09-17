@@ -33,16 +33,22 @@ namespace server.Services.Project
           .Include(pm => pm.User)
           .Where(pm => pm.ProjectId == projectId)
           .ToListAsync();
-            foreach (var pm in projectMembers)
-            {
-                Console.WriteLine($"UserId={pm.UserId}, Role={pm.RoleInProject}, JoinedAt={pm.JoinedAt}");
-            }
-            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+      foreach (var pm in projectMembers)
+      {
+        Console.WriteLine($"UserId={pm.UserId}, Role={pm.RoleInProject}, JoinedAt={pm.JoinedAt}");
+      }
+      return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
     }
 
     public async Task<server.Models.Project> FindProjectById(int projectId)
     {
       return await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+    }
+
+    public async Task<string> GetProjectRole(string userId, int projectId)
+    {
+      var projectMember = await _context.ProjectMembers.FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == projectId);
+      return projectMember.RoleInProject;
     }
   }
 }

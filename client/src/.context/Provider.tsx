@@ -23,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           }
         },
         onSuccess: (data) => {
-          console.log(data)
+          // console.log(data)
         }
       }}
     >

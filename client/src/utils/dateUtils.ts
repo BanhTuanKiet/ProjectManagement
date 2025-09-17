@@ -18,3 +18,14 @@ export const getDaysInMonth = (date: Date) => {
 
   return days
 }
+
+export const formattedDate = (selectedDay: number, currentDate: Date) => {
+  return selectedDay
+    ? new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+    : ""
+}

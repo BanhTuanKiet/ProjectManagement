@@ -12,7 +12,12 @@ import { getRoleBadge } from "@/utils/statusUtils"
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
-const priorityOptions = ["all", "high", "medium", "low"]
+const priorityOptions = {
+  all: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+}
 
 export default function TaskFilterView({
   members,
@@ -99,16 +104,16 @@ export default function TaskFilterView({
         </Select>
 
         <Select
-          value={filterSelection.priority ?? 'all'}
+          value={filterSelection.priority ?? '0'}
           onValueChange={(val) => updateFilter("priority", val)}
         >
           <SelectTrigger className="w-28">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
-            {priorityOptions.map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {opt.charAt(0).toUpperCase() + opt.slice(1)}
+            {Object.entries(priorityOptions).map(([key, value]) => (
+              <SelectItem key={key} value={String(value)}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
               </SelectItem>
             ))}
           </SelectContent>

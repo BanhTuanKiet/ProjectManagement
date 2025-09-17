@@ -40,7 +40,7 @@ instance.interceptors.response.use(function (response) {
       error.config.retry = true
       return instance(error.config)
     }
-    console.log(errorMessage)
+
     switch (statusCode) {
       case 400:
       case 404:
@@ -57,9 +57,9 @@ instance.interceptors.response.use(function (response) {
         localStorage.setItem("prevPage", currentPath)
         WarningNotify(errorMessage)
   
-        setTimeout(() => {
-          window.location.href = "/"
-        }, 1700)
+        // setTimeout(() => {
+        //   window.location.href = "/"
+        // }, 1700)
         break
       default:
         ErrorNotify(errorMessage)

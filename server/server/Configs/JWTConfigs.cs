@@ -171,7 +171,6 @@ namespace server.Configs
             };
         }
 
-
         public static bool VerifyToken(string token, IConfiguration _configuration)
         {
             try

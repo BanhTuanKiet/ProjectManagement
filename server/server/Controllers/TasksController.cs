@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -25,8 +26,9 @@ namespace server.Controllers
 
         public TasksController(ITasks tasksService)
         {
-            _tasksService = tasksService;   
+            _tasksService = tasksService;
         }
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int month, int year, string filters)
@@ -38,6 +40,29 @@ namespace server.Controllers
             List<TaskDTO.BasicTask> tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
 
             return Ok(tasks);
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("view/{projectId}")]
+        public async Task<ActionResult> AddTaskView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
+        {
+            Console.WriteLine("ADd new task");
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            Models.Task formatedTask = new Models.Task
+            {
+                ProjectId = projectId,
+                Title = newTask.Title,
+                Description = newTask.Description,
+                AssigneeId = newTask.AssigneeId,
+                Priority = newTask.Priority,
+                CreatedBy = userId,
+                Status = "Todo"
+            };
+
+            Models.Task addedTask = await _tasksService.AddNewTaskView(formatedTask);
+
+            return Ok(new { message = "Add new task successful!" });
         }
 
         [HttpGet("allbasictasks")]
