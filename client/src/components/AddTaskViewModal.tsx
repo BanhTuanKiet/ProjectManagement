@@ -45,10 +45,9 @@ export default function AddTaskViewModal({
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!taskTitle.trim() || !selectedDay) return
-
     try {
       const projectId = project_name
+      console.log(task)
       const response = await axios.post(`/tasks/view/${projectId}`, task)
 
       setTasks((prev) => [...prev, response.data])
@@ -60,7 +59,7 @@ export default function AddTaskViewModal({
 
   const handleTask = (name: string, value: string) => {
     setTask(prev => ({
-      ...prev, [name]: value
+      ...prev, [name]: name === "Priority" ? Number(value) : value
     }))
   }
 
@@ -85,7 +84,7 @@ export default function AddTaskViewModal({
                 <Input
                   placeholder="Enter task title..."
                   value={task?.Title}
-                  onChange={(e) => handleTask("Tittle", e.target.value)}
+                  onChange={(e) => handleTask("Title", e.target.value)}
                   required
                 />
               </div>
@@ -158,7 +157,7 @@ export default function AddTaskViewModal({
                 <Button type="button" variant="outline" onClick={handleCloseModal} className="flex-1 bg-transparent">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1" disabled={!taskTitle.trim()}>
+                <Button type="submit" className="flex-1 cursor-pointer" disabled={false} onClick={(e) => handleCreateTask(e)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Task
                 </Button>

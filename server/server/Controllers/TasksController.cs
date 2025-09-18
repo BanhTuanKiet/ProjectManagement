@@ -57,7 +57,8 @@ namespace server.Controllers
                 AssigneeId = newTask.AssigneeId,
                 Priority = newTask.Priority,
                 CreatedBy = userId,
-                Status = "Todo"
+                Status = "Todo",
+                Deadline = DateTime.Parse(newTask.Deadline)
             };
 
             Models.Task addedTask = await _tasksService.AddNewTaskView(formatedTask);

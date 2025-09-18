@@ -121,7 +121,7 @@ export default function CalendarView({
                 {day && (
                   <>
                     <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
-                      <span className={`${isToday ? "bg-blue-500 text-white w-6 h-6 rounded flex items-center justify-center" : ""}`}>
+                      <span className={`w-6 h-6 ${isToday ? "bg-blue-500 text-white rounded flex items-center justify-center" : ""}`}>
                         {day}
                       </span>
                       <span

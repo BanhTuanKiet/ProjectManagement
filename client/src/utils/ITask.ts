@@ -17,6 +17,6 @@ export interface NewTaskView {
   Title: string
   Description: string
   AssigneeId: string
-  Priority: string
+  Priority: number
   Deadline: string   
 }

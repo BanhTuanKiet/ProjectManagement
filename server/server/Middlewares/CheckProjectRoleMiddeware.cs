@@ -33,7 +33,7 @@ public class CheckProjectRoleMiddleware
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Bad request: Cannot find projectId in route" }));
-                    return; // dừng luôn
+                    return;
                 }
 
                 var projectMember = await dbContext.ProjectMembers
