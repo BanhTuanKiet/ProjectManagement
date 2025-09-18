@@ -40,6 +40,8 @@ interface TableWrapperProps {
     React.SetStateAction<{ taskId: string; field: string } | null>
   >;
   availableUsers?: UserMini[];
+  copySelectedTasks: () => void;
+  deleteSelectedTasks: () => void;
 }
 
 export default function TableWrapper({
@@ -57,6 +59,8 @@ export default function TableWrapper({
   handleDrop,
   setEditingCell,
   availableUsers = [],
+  copySelectedTasks,
+  deleteSelectedTasks,
 }: TableWrapperProps) {
   // ----- Render Header -----
   const renderHeader = () => (
@@ -94,13 +98,14 @@ export default function TableWrapper({
     switch (col.key) {
       case "select":
         return (
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-6 w-6 cursor-grab">
+          <div className="flex items-center gap-2 h-10">
+            <Button variant="ghost" size="icon" className="h-6 w-6 cursor-grab flex items-center justify-center">
               <GripVertical className="h-4 w-4" />
             </Button>
             <Checkbox
               checked={selectedTasks.has(task.id)}
               onCheckedChange={() => toggleTaskSelection(task.id)}
+              className="h-5 w-5 rounded-sm border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 data-[state=checked]:text-white data-[state=indeterminate]:bg-blue-600 data-[state=indeterminate]:border-blue-600 data-[state=indeterminate]:text-white flex items-center justify-center"
             />
           </div>
         );
@@ -149,6 +154,27 @@ export default function TableWrapper({
             className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
           >
             {task.summary}
+          </span>
+        );
+
+      case "description":
+        return isEditing ? (
+          <Input
+            defaultValue={task.description}
+            onBlur={(e) => handleCellEdit(task.id, "description", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCellEdit(task.id, "description", e.currentTarget.value);
+              if (e.key === "Escape") setEditingCell(null);
+            }}
+            autoFocus
+            className="h-6 text-sm"
+          />
+        ) : (
+          <span
+            onClick={() => setEditingCell({ taskId: task.id, field: "description" })}
+            className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+          >
+            {task.description}
           </span>
         );
 
@@ -308,6 +334,13 @@ export default function TableWrapper({
           ))}
         </div>
       ))}
+      {selectedTasks.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 flex items-center gap-4 z-50">
+          <span>{selectedTasks.size} work items selected</span>
+          <Button variant="outline" onClick={copySelectedTasks}>Copy</Button>
+          <Button variant="destructive" onClick={deleteSelectedTasks}>Delete</Button>
+        </div>
+      )}
     </div>
   );
 }

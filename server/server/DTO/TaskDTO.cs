@@ -27,5 +27,16 @@
             public DateTime? Deadline { get; set; }
             public decimal? EstimateHours { get; set; }
         }
+
+        public class NewTaskListView
+        {
+            public string Title { get; set; } = null!;
+            public string Status { get; set; } = null!;
+        }
+        public class BulkDeleteTasksDto
+        {
+            public int ProjectId { get; set; }
+            public List<int> Ids { get; set; } = new List<int>();
+        }
     }
 }
