@@ -165,6 +165,44 @@ const handleCellEdit = useCallback(
     });
   }, [tasks, searchQuery]);
 
+  const addTask = useCallback((newTask: Task) => {
+    setTasks((prev) => [...prev, newTask]);
+  }, []);
+
+  // Copy các task được chọn
+  const copySelectedTasks = useCallback(() => {
+    const tasksToCopy = tasks.filter((t) => selectedTasks.has(t.id));
+    if (tasksToCopy.length === 0) return;
+
+    // Clone task với id mới (FE giả lập hoặc gọi BE tạo task mới)
+    const clonedTasks = tasksToCopy.map((t) => ({
+      ...t,
+      id: crypto.randomUUID(), // tạo id tạm, hoặc gọi API BE để add mới
+      key: `${t.key}-COPY`
+    }));
+
+    setTasks((prev) => [...prev, ...clonedTasks]);
+  }, [tasks, selectedTasks]);
+
+  // Delete các task được chọn
+  const deleteSelectedTasks = useCallback(async () => {
+    const toDelete = Array.from(selectedTasks);
+    if (toDelete.length === 0) return;
+
+    try {
+      // Gọi API BE xóa nhiều task (nếu có)
+      await axios.delete("/tasks/bulk-delete", { data: { projectId: 1, ids: toDelete } });
+
+      // Xóa trên FE
+      setTasks((prev) => prev.filter((t) => !selectedTasks.has(t.id)));
+      setSelectedTasks(new Set()); // clear selection
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  }, [selectedTasks, tasks]);
+
+
+
   const totalWidth = useMemo(() => columns.reduce((s, c) => s + c.width, 0), [columns]);
 
   return {
@@ -185,5 +223,8 @@ const handleCellEdit = useCallback(
     handleDragStart,
     handleDragOver,
     handleDrop,
+    addTask,
+    copySelectedTasks,
+    deleteSelectedTasks,
   };
 };

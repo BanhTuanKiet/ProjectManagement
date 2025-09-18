@@ -58,7 +58,7 @@ namespace server.Services.Project
 
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
-        
+
         public async Task<List<TaskDTO.BasicTask>> GetAllBasicTasks()
         {
             List<server.Models.Task> tasks = await _context.Tasks
@@ -67,7 +67,7 @@ namespace server.Services.Project
 
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
-    
+
         // public async Task<List<TaskDTO.BasicTask>> UpdateBasicTasksById(List<TaskDTO.BasicTask> updatedTasks, int projectId)
         // {
         //     var taskIds = updatedTasks.Select(t => t.TaskId).ToList();
@@ -157,6 +157,25 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return _mapper.Map<TaskDTO.BasicTask>(task);
         }
+        public async Task<Models.Task> AddNewTaskListView(Models.Task newTask)
+        {
+            await _context.Tasks.AddAsync(newTask);
+            await _context.SaveChangesAsync();
+            return newTask;
+        }
 
+        public async Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids)
+        {
+            var tasks = await _context.Tasks
+                .Where(t => ids.Contains(t.TaskId) && t.ProjectId == projectId)
+                .ToListAsync();
+
+            if (tasks.Count == 0) return 0;
+
+            _context.Tasks.RemoveRange(tasks);
+            await _context.SaveChangesAsync();
+
+            return tasks.Count; // trả về số lượng đã xoá
+        }
     }
 }

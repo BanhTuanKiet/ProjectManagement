@@ -272,7 +272,13 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
     handleDragStart,
     handleDragOver,
     handleDrop,
+    addTask,
+    copySelectedTasks,
+    deleteSelectedTasks,
   } = useTaskTable(tasksNormal);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+
   return (
     <div className="flex flex-col h-full overflow-hidden max-w-7xl mx-auto w-full">
       {/* Header cố định */}
@@ -349,16 +355,82 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
             handleDrop={handleDrop}
             setEditingCell={setEditingCell}
             availableUsers={availableUsers}
+            copySelectedTasks={copySelectedTasks}
+            deleteSelectedTasks={deleteSelectedTasks}
           />
         </div>
       </div>
 
       {/* Footer cố định */}
       <div className="border-t p-4 shrink-0 bg-white">
-        <Button variant="ghost" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create
-        </Button>
+        {isCreating ? (
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Enter task summary..."
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault(); // chặn xuống dòng
+                  if (!newTaskTitle.trim()) return;
+                  try {
+                    const projectId = 1; // 👈 tuỳ props/state
+                    const res = await axios.post(`/tasks/list/${projectId}`, {
+                      title: newTaskTitle,
+                      status: "To Do",
+                    });
+                    const createdTask = mapApiTaskToTask(res.data);
+                    addTask(createdTask);
+                    setNewTaskTitle("");
+                    setIsCreating(false);
+                  } catch (err) {
+                    console.error("Error creating task:", err);
+                  }
+                }
+              }}
+              className="w-64"
+            />
+            <Button
+              onClick={async () => {
+                if (!newTaskTitle.trim()) return;
+                try {
+                  const projectId = 1; // 👈 tuỳ props/state
+                  console.log("title", newTaskTitle);
+                  const res = await axios.post(`/tasks/list/${projectId}`, {
+                    title: newTaskTitle,
+                    status: "To Do",
+                  });
+                  const createdTask = mapApiTaskToTask(res.data);
+                  addTask(createdTask);
+                  setNewTaskTitle("");
+                  setIsCreating(false);
+                } catch (err) {
+                  console.error("Error creating task:", err);
+                }
+              }}
+            >
+              Save
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsCreating(false);
+                setNewTaskTitle("");
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            className="gap-2"
+            onClick={() => setIsCreating(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Create
+          </Button>
+        )}
       </div>
     </div>
   );

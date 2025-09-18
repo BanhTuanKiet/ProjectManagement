@@ -9,5 +9,7 @@ namespace server.Services.Task
         Task<List<TaskDTO.BasicTask>> GetAllBasicTasks();
         // Task<List<TaskDTO.BasicTask>> UpdateBasicTasksById(List<TaskDTO.BasicTask> updatedTasks, int projectId);
         Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates);
+        Task<Models.Task> AddNewTaskListView(Models.Task newTask);
+        Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids);
     }
 }

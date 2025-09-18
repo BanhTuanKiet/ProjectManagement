@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Security.Claims;
 using server.DTO;
 using server.Models;
 using server.Services.Task;
@@ -72,10 +73,7 @@ namespace server.Controllers
         // }
         // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
-        public async Task<IActionResult> PatchTaskField(
-            int projectId,
-            int taskId,
-            [FromBody] Dictionary<string, object> updates)
+        public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
             Console.WriteLine("==== PATCH REQUEST START ====");
             Console.WriteLine($"ProjectId: {projectId}, TaskId: {taskId}");
@@ -105,6 +103,44 @@ namespace server.Controllers
             Console.WriteLine("========================");
 
             return Ok(result);
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("list/{projectId}")]
+        public async Task<ActionResult> AddTaskView([FromRoute] int projectId, [FromBody] TaskDTO.NewTaskListView newTask)
+        {
+            Console.WriteLine("Add new task");
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
+
+            var formatedTask = new Models.Task
+            {
+                ProjectId = projectId,
+                Title = newTask.Title,
+                CreatedBy = userId,
+                Status = newTask.Status ?? "To Do"
+            };
+
+            var addedTask = await _tasksService.AddNewTaskListView(formatedTask);
+
+            return Ok(addedTask); // 👈 FE sẽ nhận object Task đầy đủ
+        }
+        
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpDelete("bulk-delete")]
+        public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
+        {
+            if (dto.Ids == null || !dto.Ids.Any())
+            {
+                return BadRequest(new { message = "No IDs provided." });
+            }
+
+            var deletedCount = await _tasksService.BulkDeleteTasksAsync(dto.ProjectId, dto.Ids);
+
+            return Ok(new
+            {
+                message = $"Deleted {deletedCount} tasks.",
+                count = deletedCount
+            });
         }
     }
 }
