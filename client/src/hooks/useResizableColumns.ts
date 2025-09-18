@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "@/config/axiosConfig";
 import { UserMini } from "@/utils/IUser";
-import { mapApiTaskToTask, mapApiUserToUserMini, Task } from "@/utils/mapperUtil";
+import { mapApiTaskToTask, mapApiUserToUserMini, Task, mapTaskToApiUpdatePayload } from "@/utils/mapperUtil";
 import { BasicTask } from "@/utils/ITask";
 import { Column, initialColumns } from "@/config/columsConfig";
 
@@ -21,8 +21,11 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get("/users");
+        //console.log("Fetched users:", response.data);
         const mappedUsers = response.data.map(mapApiUserToUserMini);
+        //console.log("Mapped users:", mappedUsers);
         const mappedTasks = tasksnomal.map(mapApiTaskToTask);
+          //console.log("Mapped tasks:", mappedTasks);
         setTasks(mappedTasks);
         setAvailableUsers(mappedUsers);
       } catch (error) {
@@ -84,10 +87,42 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
   }, [tasks]);
 
   // Edit cell
-  const handleCellEdit = useCallback((taskId: string, field: string, value: string) => {
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, [field]: value } : t)));
-    setEditingCell(null);
-  }, []);
+const handleCellEdit = useCallback(
+  async (taskId: string, field: string, value: any) => {
+    try {
+      const projectId = 1; // 👈 lấy từ props/state
+
+      // Lấy task hiện tại trong state
+      const currentTask = tasks.find((t) => t.id === taskId);
+      if (!currentTask) return;
+
+      // Clone và update field vừa sửa
+      const updatedTask = { ...currentTask, [field]: value };
+
+      // Map sang payload cho BE
+      const payload = mapTaskToApiUpdatePayload(updatedTask);
+
+      const url = `/tasks/${projectId}/tasks/${taskId}/update`;
+
+      //console.log("Sending update:", { url, payload });
+
+      const res = await axios.patch(url, payload);
+      //console.log("Server response:", res.data);
+
+      // Update lại state FE (giữ nguyên field FE: summary, dueDate, ...)
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? updatedTask : t))
+      );
+    } catch (error) {
+      //console.error("Error updating task:", error);
+    } finally {
+      setEditingCell(null);
+    }
+  },
+  [tasks] // cần depend vào tasks để lấy task hiện tại
+);
+
+
 
   // Drag & Drop
   const handleDragStart = useCallback((e: React.DragEvent, taskId: string) => {

@@ -6,6 +6,7 @@ export interface Member {
 }
 
 export interface UserMini {
+  id?: string;
   name: string;
   avatar: string;
   initials: string;

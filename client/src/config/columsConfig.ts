@@ -47,7 +47,7 @@ export const initialColumns: Column[] = [
     resizable: true,
   },
   {
-    key: "comments",
+    key: "description",
     title: "Comments",
     width: 145,
     minWidth: 120,

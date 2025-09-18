@@ -66,8 +66,8 @@ export default function ProjectInterface() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const resonse = await axios.get(`/tasks/allbasictasks`)
-        setTasks(resonse.data)
+        const response = await axios.get(`/tasks/${1}/list`)
+        setTasks(response.data)
       } catch (error) {
         console.log(error)
       }

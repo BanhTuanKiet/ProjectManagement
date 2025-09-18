@@ -152,6 +152,27 @@ export default function TableWrapper({
           </span>
         );
 
+      case "description":
+        return isEditing ? (
+          <Input
+            defaultValue={task.description}
+            onBlur={(e) => handleCellEdit(task.id, "description", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCellEdit(task.id, "description", e.currentTarget.value);
+              if (e.key === "Escape") setEditingCell(null);
+            }}
+            autoFocus
+            className="h-6 text-sm"
+          />
+        ) : (
+          <span
+            onClick={() => setEditingCell({ taskId: task.id, field: "description" })}
+            className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+          >
+            {task.description}
+          </span>
+        );
+
       case "status":
         return (
           <DropdownMenu>
