@@ -6,5 +6,6 @@ namespace server.Services.Task
     {
         Task<List<TaskDTO.BasicTask>> GetBasicTasksByMonth(int projectId, int month, int year, FilterDTO.FilterCalendarView filterCalendarView);
         Task<List<TaskDTO.BasicTask>> GetAllBasicTasks();
+        Task<Models.Task> AddNewTaskView(Models.Task newTask);
     }
 }

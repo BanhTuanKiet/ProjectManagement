@@ -1,5 +1,5 @@
 export const taskStatus = [
-  { id: 1, name: 'Todo', color: '#6B7280' },      // gray
+  { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
   { id: 2, name: 'In Progress', color: '#F59E0B' }, // yellow
   { id: 3, name: 'Done', color: '#10B981' },       // green
   { id: 4, name: 'Cancel', color: '#9CA3AF' },     // gray-400
@@ -9,7 +9,7 @@ export const taskStatus = [
 export const getBorderColor = (status: string) => {
   switch (status) {
     case 'Todo':
-      return 'border border-gray-500'
+      return 'border border-blue-500'
     case 'In Progress':
       return 'border border-yellow-500'
     case 'Done':
@@ -26,7 +26,7 @@ export const getBorderColor = (status: string) => {
 export const getCheckboxColor = (status: string) => {
   switch (status) {
     case 'Todo':
-      return 'border-gray-500 data-[state=checked]:bg-gray-500'
+      return 'border-blue-500 data-[state=checked]:bg-blue-500'
     case 'In Progress':
       return 'border-yellow-500 data-[state=checked]:bg-yellow-500'
     case 'Done':

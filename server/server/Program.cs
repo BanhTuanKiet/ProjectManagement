@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
@@ -29,8 +30,8 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddGoogleAuth(builder.Configuration)
 .AddJWT(builder.Configuration)
@@ -52,14 +53,15 @@ if (app.Environment.IsDevelopment())
 {
   app.MapOpenApi();
 }
-//middleware
-app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("_allowSpecificOrigins");
-app.UseAuthentication();
+app.UseAuthentication();    
 app.UseAuthorization();
+
+//middleware
+app.MiddlewareCustom();
 
 app.MapControllers();
 
