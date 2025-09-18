@@ -37,8 +37,8 @@ namespace server.Services.Project
             if (!string.IsNullOrEmpty(filters.assignee) && filters.assignee != "all")
                 query = query.Where(t => t.Assignee.UserName == filters.assignee);
 
-            //if (!string.IsNullOrEmpty(filters.Priority && filters.Priority != "all"))
-            //    query = query.Where(t => t.Priority.ToString() == filters.priority);
+            if (!string.IsNullOrEmpty(filters.priority))
+               query = query.Where(t => t.Priority == Int32.Parse(filters.priority));
 
             if (!string.IsNullOrEmpty(filters.search))
             {
@@ -164,6 +164,13 @@ namespace server.Services.Project
             return newTask;
         }
 
+        public async Task<Models.Task> AddNewTaskView(Models.Task newTask)
+
+        {
+            await _context.Tasks.AddAsync(newTask);
+            await _context.SaveChangesAsync();
+            return newTask;
+        }
         public async Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids)
         {
             var tasks = await _context.Tasks

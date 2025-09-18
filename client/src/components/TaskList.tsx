@@ -10,8 +10,7 @@ import {
 import { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { BasicTask } from '@/utils/ITask'
-import { Checkbox } from '@/components/ui/checkbox'
-import { getCheckboxColor, taskStatus } from '@/utils/statusUtils'
+import { taskStatus } from '@/utils/statusUtils'
 import {
   DropdownMenu,
   DropdownMenuContent,

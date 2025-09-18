@@ -8,7 +8,15 @@ export interface BasicTask {
   assigneeId?: string
   assignee: string
   createdBy: string
-  createdAt: string   // ISO datetime (từ BE)
-  deadline?: string   // ISO datetime
+  createdAt: string   
+  deadline?: string  
   estimateHours?: number
+}
+
+export interface NewTaskView {
+  Title: string
+  Description: string
+  AssigneeId: string
+  Priority: number
+  Deadline: string   
 }

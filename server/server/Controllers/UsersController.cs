@@ -62,7 +62,6 @@ namespace server.Controllers
                 GoogleDefaults.AuthenticationScheme);
         }
 
-
         [HttpGet("")]
         public async Task<ActionResult> GetUsers()
         {

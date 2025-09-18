@@ -11,5 +11,6 @@ namespace server.Services.Task
         Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates);
         Task<Models.Task> AddNewTaskListView(Models.Task newTask);
         Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids);
+        Task<Models.Task> AddNewTaskView(Models.Task newTask);
     }
 }

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   Users,
-  MoreHorizontal,
   Maximize2,
   Share2,
   Link2,
@@ -14,16 +13,16 @@ import {
   List,
   FileText,
   Archive,
-  Plus
+  Plus,
+  Square
 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import CalendarView from '@/components/CalendarView';
 import BoardView from '@/components/BoardView';
 import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown';
-import axios from "@/config/axiosConfig"
 import { BasicTask } from '@/utils/ITask';
 import ListPage from '@/components/ListPage';
 import { useParams } from 'next/navigation';
+import axios from '@/config/axiosConfig';
 
 interface NavigationTab {
   id: string;
@@ -35,7 +34,7 @@ interface NavigationTab {
 const navigationTabs: NavigationTab[] = [
   { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
   { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
-  { id: 'board', label: 'Board', icon: <div className="w-4 h-4 bg-blue-500 rounded-sm" /> },
+  { id: 'board', label: 'Board', icon: <Square className="w-4 h-4" /> },
   { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
   { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
   { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },
@@ -60,8 +59,6 @@ export default function ProjectInterface() {
 
   //   fetchProjects()
   // }, [])
-
-
 
   useEffect(() => {
     const fetchProjects = async () => {
