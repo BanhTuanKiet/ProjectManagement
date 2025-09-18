@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   Maximize2,
@@ -22,6 +22,7 @@ import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown';
 import { BasicTask } from '@/utils/ITask';
 import ListPage from '@/components/ListPage';
 import { useParams } from 'next/navigation';
+import axios from '@/config/axiosConfig';
 
 interface NavigationTab {
   id: string;
@@ -58,8 +59,6 @@ export default function ProjectInterface() {
 
   //   fetchProjects()
   // }, [])
-
-
 
   useEffect(() => {
     const fetchProjects = async () => {
