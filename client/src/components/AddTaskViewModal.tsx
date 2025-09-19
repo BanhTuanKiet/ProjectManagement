@@ -34,11 +34,9 @@ export default function AddTaskViewModal({
 }) {
   const { project_name } = useParams()
   const [task, setTask] = useState<Partial<NewTaskView>>()
-  const [taskTitle, setTaskTitle] = useState("")
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    setTaskTitle("")
     setTask({})
   }
 
@@ -117,7 +115,6 @@ export default function AddTaskViewModal({
                   <Select
                     value={task?.AssigneeId}
                     onValueChange={(value) => handleTask("AssigneeId", value)}
-                    name='AssigneeId'
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select assignee" />

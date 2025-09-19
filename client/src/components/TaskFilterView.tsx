@@ -8,7 +8,7 @@ import { capitalizeFirstLetter } from "@/utils/dataUtils"
 import React from "react"
 import { FilterSelection } from "@/utils/IFilterSelection"
 import { Member } from "@/utils/IUser"
-import { getRoleBadge } from "@/utils/statusUtils"
+import { getPriorityBadge, getRoleBadge, getTaskStatusBadge } from "@/utils/statusUtils"
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
@@ -65,7 +65,7 @@ export default function TaskFilterView({
           value={filterSelection.assignee ?? "all"}
           onValueChange={(val) => updateFilter("assignee", val)}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-28">
             <SelectValue placeholder="Assignee" />
           </SelectTrigger>
           <SelectContent>
@@ -97,7 +97,9 @@ export default function TaskFilterView({
           <SelectContent>
             {statusOptions.map((opt) => (
               <SelectItem key={opt} value={opt}>
-                {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                <span className={`${getTaskStatusBadge(opt)}`}>
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -113,7 +115,9 @@ export default function TaskFilterView({
           <SelectContent>
             {Object.entries(priorityOptions).map(([key, value]) => (
               <SelectItem key={key} value={String(value)}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
+                <span className={`${getPriorityBadge(key)}`}>
+                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
