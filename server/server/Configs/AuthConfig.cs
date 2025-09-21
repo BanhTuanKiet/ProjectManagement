@@ -34,7 +34,7 @@ namespace server.Configs
                     var accessToken = JwtUtils.GenerateToken(user, roles, 1, configuration);
                     var refreshToken = JwtUtils.GenerateToken(user, roles, 24, configuration);
 
-                    CookieConfig.SetCookie(context.Response, "token", accessToken, 2);
+                    CookieConfig.SetCookie(context.Response, "token", accessToken, 24);
                     await userService.SaveRefreshToken(user.Id, refreshToken);
 
                     context.Response.Redirect("http://localhost:3000/project");

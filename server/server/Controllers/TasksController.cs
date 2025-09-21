@@ -16,6 +16,8 @@ using server.Models;
 using server.Services.Task;
 using static NuGet.Packaging.PackagingConstants;
 using static server.DTO.FilterDTO;
+using server.Configs;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 
 namespace server.Controllers
 {
@@ -51,7 +53,7 @@ namespace server.Controllers
 
             return Ok(tasks);
         }
-        
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("view/{projectId}")]
         public async Task<ActionResult> AddTaskView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
@@ -83,6 +85,7 @@ namespace server.Controllers
 
             return Ok(tasks);
         }
+
         // [HttpPut("{projectId}/tasks/update")]
         // public async Task<IActionResult> UpdateBasicTasksById(
         //     int projectId,
@@ -96,7 +99,8 @@ namespace server.Controllers
         //     var result = await _tasksService.UpdateBasicTasksById(updatedTasks, projectId);
 
         //     return Ok(result);
-        // }
+        // }    
+
         // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
@@ -150,7 +154,7 @@ namespace server.Controllers
 
             return Ok(addedTask); // 👈 FE sẽ nhận object Task đầy đủ
         }
-        
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
@@ -168,5 +172,23 @@ namespace server.Controllers
                 count = deletedCount
             });
         }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("{projectId}/{taskId}")]
+        public async Task<ActionResult> UpdateStatusTask(int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            string newStatus = updates["status"]?.ToString() ?? task.Status;
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskStatus(taskId, newStatus);
+
+            if (updatedTask.Status != newStatus || updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            return Ok(new { message = "Update task successful!" });
+        }
+        
     }
 }

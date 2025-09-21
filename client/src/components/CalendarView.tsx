@@ -52,7 +52,7 @@ export default function CalendarView({
     if (filterRef.current) {
       clearTimeout(filterRef.current)
     }
-    console.log(filterSelection)
+
     filterRef.current = setTimeout(async () => {
       try {
         const response = await axios.get(`/tasks/${projectId}`, {

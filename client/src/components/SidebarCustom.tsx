@@ -107,7 +107,7 @@ export function SidebarCustom() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                          className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation()
                             // Handle add project
@@ -118,11 +118,11 @@ export function SidebarCustom() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                          className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200 cursor-pointer"
                         >
                           <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
                         </Button>
-                        <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isProjectsOpen ? 'rotate-90' : ''}`} />
+                        <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform duration-200 cursor-pointer ${isProjectsOpen ? 'rotate-90' : ''}`} />
                       </div>
                     </SidebarMenuButton>
                   </CollapsibleTrigger>

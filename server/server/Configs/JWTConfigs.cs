@@ -76,7 +76,7 @@ namespace server.Configs
                         context.Response.ContentType = "application/json";
 
                         var token = context.Request.Cookies["token"];
-                        var errorMessage = string.IsNullOrEmpty(token) ? "Vui lòng đăng nhập để tiếp tục!" : "Phiên đăng nhập đã hết hạn! Vui lòng đăng nhập lại!";
+                        var errorMessage = string.IsNullOrEmpty(token) ? "Please login to continue!" : "Your session has expired. Please log in again.";
 
                         if (!string.IsNullOrEmpty(token))
                         {
@@ -93,13 +93,13 @@ namespace server.Configs
 
                                 if (string.IsNullOrEmpty(refreshToken))
                                 {
-                                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Không tìm thấy refresh token." }));
+                                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Refresh token not found." }));
                                     return;
                                 }
 
                                 if (!VerifyToken(refreshToken, config))
                                 {
-                                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." }));
+                                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Your session has expired. Please log in again." }));
                                     return;
                                 }
 

@@ -38,7 +38,7 @@ namespace server.Services.Project
                 query = query.Where(t => t.Assignee.UserName == filters.assignee);
 
             if (!string.IsNullOrEmpty(filters.priority))
-               query = query.Where(t => t.Priority == Int32.Parse(filters.priority));
+                query = query.Where(t => t.Priority == Int32.Parse(filters.priority));
 
             if (!string.IsNullOrEmpty(filters.search))
             {
@@ -183,6 +183,24 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
 
             return tasks.Count; // trả về số lượng đã xoá
+        }
+
+        public async Task<Models.Task> GetTaskById(int taskId)
+        {
+            return await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+        }
+
+        public async Task<Models.Task?> UpdateTaskStatus(int taskId, string newStatus)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+
+            task.Status = newStatus;
+
+            await _context.SaveChangesAsync();
+
+            return task;
         }
     }
 }
