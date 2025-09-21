@@ -145,7 +145,7 @@ export default function CalendarView({
                                   className={`h-4 w-4 appearance-none ${getCheckboxColor(task.status)}`}
                                 />
                                 <span className="flex-1 truncate">{task.title}</span>
-                                {task.assignee && <ColoredAvatar name={task.assignee} size="sm" />}
+                                {task.assignee && <ColoredAvatar id={task.assigneeId || ''} name={task.assignee} size="sm" />}
                               </div>
                             </div>
                           ))}

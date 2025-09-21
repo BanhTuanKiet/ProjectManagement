@@ -16,6 +16,7 @@ namespace server.Configs
                 options.ClientId = configuration["Authentication:Google:ClientId"];
                 options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
                 options.CallbackPath = "/users/signin-google/google-callback";
+
                 options.SaveTokens = true;
                 options.AccessType = "offline";
                 options.Scope.Add("email");
@@ -31,14 +32,22 @@ namespace server.Configs
 
                     var user = await userService.FindOrCreateUserByEmailAsync(email, name);
                     var roles = await userManager.GetRolesAsync(user);
+
                     var accessToken = JwtUtils.GenerateToken(user, roles, 1, configuration);
                     var refreshToken = JwtUtils.GenerateToken(user, roles, 24, configuration);
 
                     CookieConfig.SetCookie(context.Response, "token", accessToken, 24);
                     await userService.SaveRefreshToken(user.Id, refreshToken);
 
-                    context.Response.Redirect("http://localhost:3000/project");
+                    context.Response.Redirect("http://localhost:3000/project?success=true");
                     context.HandleResponse();
+                };
+
+                options.Events.OnRemoteFailure = context =>
+                {
+                    context.Response.Redirect("http://localhost:3000/project?success=false");
+                    context.HandleResponse();
+                    return System.Threading.Tasks.Task.CompletedTask;
                 };
             });
 

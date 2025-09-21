@@ -6,7 +6,12 @@ import { Search, Plus, Bell, Settings, User, Cog, Users, LogOut, Sun, Moon } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { usePresence } from "../app/.context/OnlineMembers"
+import axios from "@/config/axiosConfig"
+import { useSearchParams } from "next/navigation"
+import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
+import { useRouter } from 'next/navigation'
 
 export function ProjectHeader({
     sidebarTrigger,
@@ -15,8 +20,32 @@ export function ProjectHeader({
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [theme, setTheme] = useState(false)
+    const { connectSignalR } = usePresence()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+
+    useEffect(() => {
+        const success = searchParams.get("success")
+
+        if (success === "false") return WarningNotify("Signin via Google failed")
+        if (success === "true") SuccessNotify("Signin via Google successful")
+
+        const fetchToken = async () => {
+            try {
+                const reponse = await axios.get(`/users/token`)
+                const token: string = reponse.data ?? ''
+                console.log(token)
+                if (reponse.data) connectSignalR(token)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchToken()
+        router.replace("/project")
+    }, [])
+
     const signinGG = async () => {
-        // const response = await axios.get(`/users/signin-google`)
         window.location.href = "http://localhost:5144/users/signin-google"
     }
 
