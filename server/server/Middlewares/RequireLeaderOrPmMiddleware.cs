@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.Models;
 
-public class CheckProjectRoleMiddleware
+public class RequireLeaderOrPmMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<CheckProjectRoleMiddleware> _logger;
+    private readonly ILogger<RequireLeaderOrPmMiddleware> _logger;
 
-    public CheckProjectRoleMiddleware(RequestDelegate next, ILogger<CheckProjectRoleMiddleware> logger)
+    public RequireLeaderOrPmMiddleware(RequestDelegate next, ILogger<RequireLeaderOrPmMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -25,7 +25,6 @@ public class CheckProjectRoleMiddleware
             try
             {
                 var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
                 var pathSegments = context.Request.Path.Value?.Split("/", StringSplitOptions.RemoveEmptyEntries);
                 string? projectIdStr = pathSegments?.FirstOrDefault(s => int.TryParse(s, out _));
 
@@ -35,7 +34,7 @@ public class CheckProjectRoleMiddleware
                     await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Bad request: Cannot find projectId in route" }));
                     return;
                 }
-
+                
                 var projectMember = await dbContext.ProjectMembers
                     .FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == projectId);
 
@@ -58,12 +57,10 @@ public class CheckProjectRoleMiddleware
                 _logger.LogError(ex, "Error in CheckProjectRoleMiddleware");
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Internal Server Error in CheckProjectRoleMiddleware" }));
-                return; // lỗi thì cũng dừng
+                return;
             }
         }
 
-        // luôn gọi tiếp các middleware/controller còn lại
         await _next(context);
     }
-
 }

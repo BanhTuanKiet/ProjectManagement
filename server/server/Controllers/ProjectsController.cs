@@ -43,8 +43,6 @@ namespace server.Controllers
 
       List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
 
-
-
       return Ok(projectMembers);
     }
   }
