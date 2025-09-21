@@ -1,7 +1,8 @@
 "use client"
 
 import { SWRConfig } from "swr"
-import { fetcher } from "../config/fetchConfig"
+import { fetcher } from "@/config/fetchConfig"
+import { PresenceProvider } from "./OnlineMembers";
 
 type FetcherError = Error & {
   status?: number
@@ -28,7 +29,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       {/* <AuthProvider> */}
+      <PresenceProvider>
         {children}
+      </PresenceProvider>
       {/* </AuthProvider> */}
     </SWRConfig>
   )

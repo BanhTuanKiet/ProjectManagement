@@ -41,6 +41,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IUsers, UsersService>();
 builder.Services.AddScoped<IProjects, ProjectsService>();
 builder.Services.AddScoped<ITasks, TasksService>();
+builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
 
@@ -64,5 +65,6 @@ app.UseAuthorization();
 app.MiddlewareCustom();
 
 app.MapControllers();
+app.MapHub<PresenceHubConfig>("/hubs/presence");
 
 app.Run();

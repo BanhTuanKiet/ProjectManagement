@@ -13,6 +13,9 @@ using server.Services.User;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using server.Configs;
+using server.Util;
 
 namespace server.Controllers
 {
@@ -21,9 +24,13 @@ namespace server.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUsers _userServices;
-        public UsersController(IUsers userServices)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
+        public UsersController(IUsers userServices, UserManager<ApplicationUser> userManager, IConfiguration configuration)
         {
             _userServices = userServices;
+            _userManager = userManager;
+            _configuration = configuration;
         }
 
         [HttpGet("signin-google")]
@@ -37,24 +44,15 @@ namespace server.Controllers
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        //[HttpGet("google-callback")]
-        //public async Task<IActionResult> GoogleCallback(string returnUrl)
-        //{
-        //    Console.WriteLine("AAAAAAAAAAAAAA");
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("token")]
+        public ActionResult GetToken()
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        //    var authResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        //    if (!authResult.Succeeded)
-        //        return BadRequest("Google authentication failed");
-
-        //    var email = authResult.Principal.FindFirstValue(ClaimTypes.Email);
-        //    var name = authResult.Principal.FindFirstValue(ClaimTypes.Name);
-
-        //    Console.WriteLine(email);
-        //    Console.WriteLine(name);
-
-        //    return Redirect(returnUrl ?? "http://localhost:3000/project");
-        //}
-
+            return Ok(userId ?? null);
+        }
+        
         [HttpGet("signout")]
         public IActionResult Logout()
         {
