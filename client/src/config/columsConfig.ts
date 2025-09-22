@@ -8,8 +8,8 @@ export interface Column {
 }
 
 export const initialColumns: Column[] = [
-  { key: "select", title: "", width: 65, minWidth: 65, resizable: false },
-  { key: "type", title: "Type", width: 110, minWidth: 80, resizable: true },
+  { key: "select", title: "", width: 80, minWidth: 80, resizable: false },
+  { key: "type", title: "Type", width: 120, minWidth: 80, resizable: true },
   { key: "key", title: "Key", width: 120, minWidth: 80, resizable: true },
   {
     key: "summary",

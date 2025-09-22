@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.Models;
+using server.Services.SubTask;
 using server.Services.Project;
 using server.Services.Task;
 using server.Services.User;
@@ -41,6 +42,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IUsers, UsersService>();
 builder.Services.AddScoped<IProjects, ProjectsService>();
 builder.Services.AddScoped<ITasks, TasksService>();
+builder.Services.AddScoped<ISubTasks, SubTaskService>();
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
