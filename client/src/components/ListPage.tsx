@@ -121,8 +121,11 @@ import TaskDetailDrawer from "./TaskDetailDrawer";
 //   },
 //   { key: "team", title: "Team", width: 160, minWidth: 120, resizable: true },
 // ];
-
-export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }) {
+interface ListPageProps {
+  tasksNormal: BasicTask[];
+  projectId: number | string;
+}
+export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   // const [tasks, setTasks] = useState<Task[]>([]);
   // const [availableUsers, setAvailableUsers] = useState<UserMini[]>([]);
   // const [columns, setColumns] = useState<Column[]>(initialColumns);
@@ -345,6 +348,7 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
         <div className="flex-1 overflow-auto">
           <TableWrapper
             tasks={filteredTasks}
+            projectId={Number(projectId)}
             columns={columns}
             totalWidth={totalWidth}
             selectedTasks={selectedTasks}
