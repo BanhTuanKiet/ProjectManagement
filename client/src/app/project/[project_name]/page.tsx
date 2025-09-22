@@ -75,7 +75,7 @@ export default function ProjectInterface() {
   const views: Record<string, React.ReactNode> = {
     calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
     board: <BoardView tasks={tasks} />,
-    list: <ListPage tasksNormal={tasks} />,
+    list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
   }
 
   return (
