@@ -42,6 +42,7 @@ interface TableWrapperProps {
     availableUsers?: UserMini[];
     copySelectedTasks: () => void;
     deleteSelectedTasks: () => void;
+    onTaskClick: (task: Task) => void;
 }
 
 export default function TableWrapper({
@@ -61,6 +62,7 @@ export default function TableWrapper({
     availableUsers = [],
     copySelectedTasks,
     deleteSelectedTasks,
+    onTaskClick,
 }: TableWrapperProps) {
     // ----- Render Header -----
     const renderHeader = () => (
@@ -131,9 +133,9 @@ export default function TableWrapper({
 
             case "key":
                 return (
-                    <a href={`/browse/${task.key}`} className="text-blue-600 hover:underline">
+                    <span className="text-blue-600 hover:underline cursor-pointer" onClick={() => onTaskClick(task)}>
                         {task.key}
-                    </a>
+                    </span>
                 );
 
             case "summary":

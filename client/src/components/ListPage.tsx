@@ -24,6 +24,8 @@ import {
 import { BasicTask } from "@/utils/ITask";
 import { initialColumns, Column } from "@/config/columsConfig";
 import { useTaskTable } from "@/hooks/useResizableColumns";
+import { Task } from "@/utils/mapperUtil";
+import TaskDetailDrawer from "./TaskDetailDrawer";
 // interface Task {
 //   id: string;
 //   key: string;
@@ -278,6 +280,7 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
   } = useTaskTable(tasksNormal);
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   return (
     <div className="flex flex-col h-full overflow-hidden max-w-7xl mx-auto w-full">
@@ -357,6 +360,12 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
             availableUsers={availableUsers}
             copySelectedTasks={copySelectedTasks}
             deleteSelectedTasks={deleteSelectedTasks}
+            onTaskClick={setSelectedTask}
+          />
+          {/* Drawer hiển thị chi tiết */}
+          <TaskDetailDrawer
+            task={selectedTask}
+            onClose={() => setSelectedTask(null)}
           />
         </div>
       </div>
