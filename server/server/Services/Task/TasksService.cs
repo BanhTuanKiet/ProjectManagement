@@ -157,15 +157,7 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return _mapper.Map<TaskDTO.BasicTask>(task);
         }
-        public async Task<Models.Task> AddNewTaskListView(Models.Task newTask)
-        {
-            await _context.Tasks.AddAsync(newTask);
-            await _context.SaveChangesAsync();
-            return newTask;
-        }
-
-        public async Task<Models.Task> AddNewTaskView(Models.Task newTask)
-
+        public async Task<Models.Task> AddNewTask(Models.Task newTask)
         {
             await _context.Tasks.AddAsync(newTask);
             await _context.SaveChangesAsync();

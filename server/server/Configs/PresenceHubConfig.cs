@@ -19,5 +19,10 @@ namespace server.Configs
 
             await base.OnConnectedAsync();
         }
+
+        public async Task GetUsersOnline()
+        {
+            await Clients.Caller.SendAsync("OnlineUsers", OnlineUsers.Keys);
+        }
     }
 }

@@ -160,7 +160,7 @@ export function SidebarCustom() {
                                 <SidebarMenuSubButton asChild>
                                   <button
                                     onClick={() => handleClick(project.projectId)}
-                                    className={`flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 ${
+                                    className={`flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 cursor-pointer ${
                                       isActive 
                                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600' 
                                         : 'hover:bg-gray-50 text-gray-700'
