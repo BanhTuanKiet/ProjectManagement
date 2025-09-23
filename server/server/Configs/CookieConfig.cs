@@ -5,28 +5,28 @@ namespace server.Configs
 {
     public static class CookieConfig
     {
-        public static AuthenticationBuilder AddAppCookie(this AuthenticationBuilder builder)
-        {
-            builder.AddCookie(options =>
-            {
-                options.Cookie.SameSite = SameSiteMode.None;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        // public static AuthenticationBuilder AddAppCookie(this AuthenticationBuilder builder)
+        // {
+        //     builder.AddCookie(options =>
+        //     {
+        //         options.Cookie.SameSite = SameSiteMode.None;
+        //         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
-                options.Events.OnRedirectToLogin = context =>
-                {
-                    context.Response.StatusCode = 401;
-                    return Task.CompletedTask;
-                };
+        //         options.Events.OnRedirectToLogin = context =>
+        //         {
+        //             context.Response.StatusCode = 401;
+        //             return Task.CompletedTask;
+        //         };
 
-                options.Events.OnRedirectToAccessDenied = context =>
-                {
-                    context.Response.StatusCode = 403;
-                    return Task.CompletedTask;
-                };
-            });
+        //         options.Events.OnRedirectToAccessDenied = context =>
+        //         {
+        //             context.Response.StatusCode = 403;
+        //             return Task.CompletedTask;
+        //         };
+        //     });
 
-            return builder;
-        }
+        //     return builder;
+        // }
         public static void SetCookie(HttpResponse response, string key, string value, int expireTime)
         {
             CookieOptions option = new CookieOptions()

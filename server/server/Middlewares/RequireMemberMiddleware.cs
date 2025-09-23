@@ -26,7 +26,7 @@ public class RequireMemberMiddleware
             if (!int.TryParse(projectIdStr, out int projectId))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Bad request: Cannot find projectId in route" }));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Cannot find projectId in route" }));
                 return;
             }
 
@@ -36,7 +36,7 @@ public class RequireMemberMiddleware
             if (projectMember == null)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Forbidden: User is not a member of this project" }));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "User is not a member of this project" }));
                 return;
             }
         }

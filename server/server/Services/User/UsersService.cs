@@ -8,11 +8,11 @@ namespace server.Services.User
 {
     public class UsersService : IUsers
     {
-        public readonly  ProjectManagementContext _context;
+        public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager  )
+        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _mapper = mapper;
@@ -36,12 +36,15 @@ namespace server.Services.User
                 };
 
                 var result = await _userManager.CreateAsync(user);
+
                 if (!result.Succeeded)
                 {
-                    Console.WriteLine("Create user failed: "
-                        + string.Join(", ", result.Errors.Select(e => e.Description)));
+                    foreach (var error in result.Errors)
+                    {
+                        Console.WriteLine($"Error: {error.Code} - {error.Description}");
+                    }
                 }
-                
+
                 await _userManager.AddToRoleAsync(user, "User");
             }
 
