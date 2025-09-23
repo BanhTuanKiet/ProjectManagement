@@ -18,6 +18,7 @@ using static NuGet.Packaging.PackagingConstants;
 using static server.DTO.FilterDTO;
 using server.Configs;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace server.Controllers
 {
@@ -28,12 +29,17 @@ namespace server.Controllers
         private readonly ProjectManagementContext _context;
         private readonly ITasks _tasksService;
         private readonly INotifications _notificationsService;
-
-        public TasksController(ProjectManagementContext context, ITasks tasksService, INotifications notificationsService)
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public TasksController(
+            ProjectManagementContext context,
+            ITasks tasksService,
+            INotifications notificationsService,
+            IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _tasksService = tasksService;
             _notificationsService = notificationsService;
+            _hubContext = hubContext;
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -89,9 +95,11 @@ namespace server.Controllers
                         ProjectId = formatedTask.ProjectId,
                         Message = $"A new task {formatedTask.Title} has been assigned to you by {formatedTask.CreatedBy}",
                         IsRead = false,
+                        CreatedAt = new DateTime()
                     };
 
                     await _notificationsService.SaveNotification(notification);
+                    await _hubContext.Clients.User(notification.UserId).SendAsync("TaskAssigned", notification);
                     await transaction.CommitAsync();
                     return Ok(new { message = "Add new task successful!" });
                 }

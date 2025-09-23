@@ -24,5 +24,10 @@ namespace server.Services.Project
 
             return notification;
         }
+
+        public async Task<List<Notification>> GetNotificationsByUserId(string userId)
+        {
+            return await _context.Notifications.Where(n => n.UserId == userId).ToListAsync();
+        }
     }
 }

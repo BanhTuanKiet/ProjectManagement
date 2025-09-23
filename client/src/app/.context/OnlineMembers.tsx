@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
+import { useNotification } from "../.context/Notfication"
 
 type PresenceContextType = {
     connection: signalR.HubConnection | null
@@ -24,7 +25,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
             })
             .withAutomaticReconnect()
             .build()
-
+        
         setConnection(conn)
     }
 

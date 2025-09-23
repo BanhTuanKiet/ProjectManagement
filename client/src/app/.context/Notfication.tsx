@@ -1,0 +1,61 @@
+import React, { createContext, useContext, useEffect, useState } from "react"
+import * as signalR from "@microsoft/signalr"
+import axios from "../../config/axiosConfig"
+import { Notification } from "@/utils/INotifications"
+
+type NotificationContextType = {
+    connection: signalR.HubConnection | null
+    notifications: Notification[]
+    connectNotificationSignalR: (token: string) => void
+    setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>
+}
+
+const NotificationContext = createContext<NotificationContextType>({
+    connection: null,
+    notifications: [],
+    connectNotificationSignalR: (_token: string) => { },
+    setNotifications: () => {}
+})
+
+export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
+    const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
+    const [notifications, setNotifications] = useState<Notification[]>([])
+
+    const connectNotificationSignalR = (token: string) => {
+        const conn = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5144/hubs/notification", {
+                accessTokenFactory: () => token
+            })
+            .withAutomaticReconnect()
+            .build()
+
+        setConnection(conn)
+    }
+
+    useEffect(() => {
+        if (!connection) return
+
+        connection.start().then(async () => {
+            console.log("Connected to NotificationHub")
+
+            const response = await axios.get(`/notifications`)
+            setNotifications(response.data)
+        })
+
+        connection.on("TaskAssigned", (notification: Notification) => {
+            setNotifications(prev => [notification, ...prev])
+        })
+
+        return () => {
+            connection?.stop()
+        }
+    }, [connection])
+
+    return (
+        <NotificationContext.Provider value={{ connection, notifications, setNotifications, connectNotificationSignalR }}>
+            {children}
+        </NotificationContext.Provider>
+    )
+}
+
+export const useNotification = () => useContext(NotificationContext)
