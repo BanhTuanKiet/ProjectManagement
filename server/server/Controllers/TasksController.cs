@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -25,11 +25,15 @@ namespace server.Controllers
     [ApiController]
     public class TasksController : ControllerBase
     {
+        private readonly ProjectManagementContext _context;
         private readonly ITasks _tasksService;
+        private readonly INotifications _notificationsService;
 
-        public TasksController(ITasks tasksService)
+        public TasksController(ProjectManagementContext context, ITasks tasksService, INotifications notificationsService)
         {
+            _context = context;
             _tasksService = tasksService;
+            _notificationsService = notificationsService;
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -56,26 +60,47 @@ namespace server.Controllers
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("view/{projectId}")]
-        public async Task<ActionResult> AddTaskView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
+        public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
         {
-            Console.WriteLine("ADd new task");
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            Models.Task formatedTask = new Models.Task
+            return await strategy.ExecuteAsync(async () =>
             {
-                ProjectId = projectId,
-                Title = newTask.Title,
-                Description = newTask.Description,
-                AssigneeId = newTask.AssigneeId,
-                Priority = newTask.Priority,
-                CreatedBy = userId,
-                Status = "Todo",
-                Deadline = DateTime.Parse(newTask.Deadline)
-            };
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    Models.Task formatedTask = new Models.Task
+                    {
+                        ProjectId = projectId,
+                        Title = newTask.Title,
+                        Description = newTask.Description,
+                        AssigneeId = newTask.AssigneeId,
+                        Priority = newTask.Priority,
+                        CreatedBy = userId,
+                        Status = "Todo",
+                        Deadline = DateTime.Parse(newTask.Deadline)
+                    };
 
-            Models.Task addedTask = await _tasksService.AddNewTaskView(formatedTask);
+                    Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
+                    Notification notification = new Notification
+                    {
+                        UserId = formatedTask.AssigneeId,
+                        ProjectId = formatedTask.ProjectId,
+                        Message = $"A new task {formatedTask.Title} has been assigned to you by {formatedTask.CreatedBy}",
+                        IsRead = false,
+                    };
 
-            return Ok(new { message = "Add new task successful!" });
+                    await _notificationsService.SaveNotification(notification);
+                    await transaction.CommitAsync();
+                    return Ok(new { message = "Add new task successful!" });
+                }
+                catch (ErrorException ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new ErrorException(500, ex.Message);
+                }
+            });
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -140,7 +165,6 @@ namespace server.Controllers
         [HttpPost("list/{projectId}")]
         public async Task<ActionResult> AddTaskView([FromRoute] int projectId, [FromBody] TaskDTO.NewTaskListView newTask)
         {
-            Console.WriteLine("Add new task");
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
 
             var formatedTask = new Models.Task
@@ -148,12 +172,12 @@ namespace server.Controllers
                 ProjectId = projectId,
                 Title = newTask.Title,
                 CreatedBy = userId,
-                Status = newTask.Status ?? "To Do"
+                Status = newTask.Status ?? "Todo"
             };
 
-            var addedTask = await _tasksService.AddNewTaskListView(formatedTask);
+            var addedTask = await _tasksService.AddNewTask(formatedTask);
 
-            return Ok(addedTask); // 👈 FE sẽ nhận object Task đầy đủ
+            return Ok(addedTask);
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

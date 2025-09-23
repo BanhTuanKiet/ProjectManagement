@@ -1,7 +1,7 @@
 "use client"
+
 import { useEffect, useRef, useState } from "react"
 import type React from "react"
-
 import ColoredAvatar from "@/components/ColoredAvatar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { getDaysInMonth } from "@/utils/dateUtils"

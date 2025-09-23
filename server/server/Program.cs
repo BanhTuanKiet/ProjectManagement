@@ -41,6 +41,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IUsers, UsersService>();
 builder.Services.AddScoped<IProjects, ProjectsService>();
 builder.Services.AddScoped<ITasks, TasksService>();
+builder.Services.AddScoped<INotifications, NotificationsService>();
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
