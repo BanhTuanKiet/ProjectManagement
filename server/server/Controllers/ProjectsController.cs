@@ -14,36 +14,38 @@ using server.Models;
 
 namespace server.Controllers
 {
-  [Route("[controller]")]
-  [ApiController]
-  public class ProjectsController : ControllerBase
-  {
-    private readonly IProjects _projectsServices;
-
-    public ProjectsController(IProjects projectsServices)
+    [Route("[controller]")]
+    [ApiController]
+    public class ProjectsController : ControllerBase
     {
-      _projectsServices = projectsServices;
+        private readonly IProjects _projectsServices;
+
+        public ProjectsController(IProjects projectsServices)
+        {
+            _projectsServices = projectsServices;
+        }
+
+        [Authorize()]
+        [HttpGet()]
+        public async Task<ActionResult> GetProjectsTitle()
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<ProjectDTO.ProjectTitile> projects =
+              await _projectsServices.GetProjectsTitle("user1") ?? throw new ErrorException(500, "Project not found");
+
+            return Ok(projects);
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("member/{projectId}")]
+        public async Task<ActionResult> GetProjectMembers(int projectId)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
+
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
+
+            return Ok(projectMembers);
+        }
     }
-
-    [HttpGet()]
-    public async Task<ActionResult> GetProjectsTitle()
-    {
-      List<ProjectDTO.ProjectTitile> projects =
-        await _projectsServices.GetProjectsTitle("user1") ?? throw new ErrorException(500, "Project not found");
-
-      return Ok(projects);
-    }
-
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpGet("member/{projectId}")]
-    public async Task<ActionResult> GetProjectMembers(int projectId)
-    {
-      string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-      Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
-
-      List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
-
-      return Ok(projectMembers);
-    }
-  }
 }

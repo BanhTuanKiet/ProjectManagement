@@ -78,6 +78,7 @@ namespace server.Controllers
             return Ok(new { message = "Add new task successful!" });
         }
 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("allbasictasks")]
         public async Task<ActionResult> GetAllBasicTasks()
         {
@@ -101,7 +102,7 @@ namespace server.Controllers
         //     return Ok(result);
         // }    
 
-        // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -189,6 +190,6 @@ namespace server.Controllers
 
             return Ok(new { message = "Update task successful!" });
         }
-        
+
     }
 }

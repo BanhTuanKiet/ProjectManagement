@@ -31,7 +31,7 @@ public class RequireLeaderOrPmMiddleware
                 if (!int.TryParse(projectIdStr, out int projectId))
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Bad request: Cannot find projectId in route" }));
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Cannot find projectId in route" }));
                     return;
                 }
                 
@@ -41,14 +41,14 @@ public class RequireLeaderOrPmMiddleware
                 if (projectMember == null)
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Forbidden: User is not a member of this project" }));
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "User is not a member of this project" }));
                     return;
                 }
 
                 if (projectMember.RoleInProject != "Project Manager" && projectMember.RoleInProject != "Leader")
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Forbidden: You do not have permission for this action" }));
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "You do not have permission for this action" }));
                     return;
                 }
             }

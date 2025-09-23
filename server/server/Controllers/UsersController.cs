@@ -44,7 +44,6 @@ namespace server.Controllers
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("token")]
         public ActionResult GetToken()
         {

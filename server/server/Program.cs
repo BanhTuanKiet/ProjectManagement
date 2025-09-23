@@ -35,8 +35,8 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddGoogleAuth(builder.Configuration)
-.AddJWT(builder.Configuration)
-.AddAppCookie();
+.AddJWT(builder.Configuration);
+// .AddAppCookie();
 
 // Add services to the container.
 builder.Services.AddScoped<IUsers, UsersService>();

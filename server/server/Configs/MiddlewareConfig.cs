@@ -8,19 +8,21 @@ namespace server.Configs
         {
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/tasks"), branch =>
-            {
-                branch.UseMiddleware<RequireLeaderOrPmMiddleware>();
-            });
-
             app.UseWhen(ctx =>
+                ctx.Request.Path.StartsWithSegments("/tasks") ||
                 ctx.Request.Path.StartsWithSegments("/comments") ||
-                ctx.Request.Path.StartsWithSegments("/files") || 
+                ctx.Request.Path.StartsWithSegments("/files") ||
                 ctx.Request.Path.StartsWithSegments("/folders"),
                 branch =>
                 {
                     branch.UseMiddleware<RequireMemberMiddleware>();
-                });
+                }
+            );
+
+            app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/tasks"), branch =>
+            {
+                branch.UseMiddleware<RequireLeaderOrPmMiddleware>();
+            });
         }
     }
 }
