@@ -8,7 +8,6 @@ namespace server.Configs
         private static ConcurrentDictionary<string, string> OnlineUsers = new();
         public override async Task OnConnectedAsync()
         {
-            Console.WriteLine("Presence hub");
             var userId = Context.UserIdentifier ?? Context.ConnectionId;
             Console.WriteLine("Presence hub: " + userId);
 

@@ -41,7 +41,6 @@ export default function ColoredAvatar({
     showOnlineStatus?: boolean
 }) {
     const { onlineUsers } = usePresence()
-    console.log(onlineUsers)
     const isOnline = onlineUsers?.includes(id) || false
 
     const fallbackInitials =
@@ -54,15 +53,10 @@ export default function ColoredAvatar({
                 .toUpperCase()
             : "?")
 
-    // Luôn tạo ra 1 màu ổn định cho từng user, không cần cache
     const bgColor = stringToColor(name || "?")
-
     const sizeClasses = size === "sm" ? "h-6 w-6 text-xs" : size === "md" ? "h-8 w-8 text-sm" : "h-12 w-12 text-base"
-
     const indicatorSize = "h-2.5 w-2.5"
-
-    const indicatorPosition =
-        size === "sm" ? "-top-0.5 -right-0.5" : size === "md" ? "-top-0.5 -right-0.5" : "-top-1 -right-1"
+    const indicatorPosition = size === "sm" ? "-top-0.5 -right-0.5" : size === "md" ? "-top-0.5 -right-0.5" : "-top-1 -right-1"
 
     return (
         <div className="relative inline-block" title={`${name} is ${isOnline ? "online" : "offline"}`}>

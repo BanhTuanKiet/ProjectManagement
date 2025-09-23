@@ -1,27 +1,19 @@
 import React from 'react'
 import { Button } from './ui/button'
 import { Check, Users } from 'lucide-react'
+import { Notification } from '@/utils/INotifications'
 
-interface notification {
-    id: number
-    title: string
-    message: string
-    time: string
-    isRead: boolean,
-    type: string
-}
-
-export default function Notification({
+export default function NotificationRealtime({
     notifications,
     unreadCount,
     setNotifications
 }: {
-    notifications: notification[]
+    notifications: Notification[]
     unreadCount: number
-    setNotifications: React.Dispatch<React.SetStateAction<notification[]>>
+    setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>
 }) {
     const markAsRead = (id: number) => {
-        setNotifications((prev) => prev.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif)))
+        setNotifications((prev) => prev.map((notif) => (notif.NotificationId === id ? { ...notif, isRead: true } : notif)))
     }
 
     const markAllAsRead = () => {
@@ -51,26 +43,26 @@ export default function Notification({
                     ) : (
                         notifications.map((notification) => (
                             <div
-                                key={notification.id}
-                                className={`p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${!notification.isRead ? "bg-blue-50" : ""
+                                key={notification.NotificationId}
+                                className={`p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${!notification.IsRead ? "bg-blue-50" : ""
                                     }`}
-                                onClick={() => markAsRead(notification.id)}
+                                onClick={() => markAsRead(notification.NotificationId)}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
                                             <h4
-                                                className={`text-sm font-medium ${!notification.isRead ? "text-gray-900" : "text-gray-700"
+                                                className={`text-sm font-medium ${!notification.IsRead ? "text-gray-900" : "text-gray-700"
                                                     }`}
                                             >
-                                                {notification.title}
+                                                {notification.Message}
                                             </h4>
-                                            {!notification.isRead && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
+                                            {!notification.IsRead && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
                                         </div>
-                                        <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                                        <p className="text-xs text-gray-400 mt-2">{notification.time}</p>
+                                        <p className="text-sm text-gray-600 mt-1">{notification.Message}</p>
+                                        <p className="text-xs text-gray-400 mt-2">{notification.CreatedAt?.toLocaleDateString()}</p>
                                     </div>
-                                    <div className="flex items-center gap-1 ml-2">
+                                    {/* <div className="flex items-center gap-1 ml-2">
                                         {notification.type === "task" && (
                                             <div className="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
                                                 <Check className="h-3 w-3 text-green-600" />
@@ -91,7 +83,7 @@ export default function Notification({
                                                 <Users className="h-3 w-3 text-orange-600" />
                                             </div>
                                         )}
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         ))
