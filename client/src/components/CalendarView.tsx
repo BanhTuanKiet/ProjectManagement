@@ -14,6 +14,7 @@ import type { FilterSelection } from "@/utils/IFilterSelection"
 import type { Member } from "@/utils/IUser"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
+import TaskDetailDrawer from "./TaskDetailDrawer"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -34,6 +35,7 @@ export default function CalendarView({
   const [members, setMembers] = useState<Member[]>()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null)
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -139,6 +141,7 @@ export default function CalendarView({
                             <div key={task.taskId} className="space-y-1">
                               <div
                                 className={` flex items-center gap-2 p-1 bg-muted/50 rounded text-xs ${getBorderColor(task.status)}`}
+                                onClick={() => setSelectedTask(task)}
                               >
                                 <Checkbox
                                   checked={true}
@@ -187,6 +190,13 @@ export default function CalendarView({
           setTasks={setTasks}
         />
       }
+      {selectedTask && (
+        <TaskDetailDrawer
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
+
     </div>
   )
 }

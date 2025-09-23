@@ -24,6 +24,8 @@ import {
 import { BasicTask } from "@/utils/ITask";
 import { initialColumns, Column } from "@/config/columsConfig";
 import { useTaskTable } from "@/hooks/useResizableColumns";
+import { Task } from "@/utils/mapperUtil";
+import TaskDetailDrawer from "./TaskDetailDrawer";
 // interface Task {
 //   id: string;
 //   key: string;
@@ -119,8 +121,11 @@ import { useTaskTable } from "@/hooks/useResizableColumns";
 //   },
 //   { key: "team", title: "Team", width: 160, minWidth: 120, resizable: true },
 // ];
-
-export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }) {
+interface ListPageProps {
+  tasksNormal: BasicTask[];
+  projectId: number | string;
+}
+export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   // const [tasks, setTasks] = useState<Task[]>([]);
   // const [availableUsers, setAvailableUsers] = useState<UserMini[]>([]);
   // const [columns, setColumns] = useState<Column[]>(initialColumns);
@@ -278,6 +283,7 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
   } = useTaskTable(tasksNormal);
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   return (
     <div className="flex flex-col h-full overflow-hidden max-w-7xl mx-auto w-full">
@@ -342,6 +348,7 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
         <div className="flex-1 overflow-auto">
           <TableWrapper
             tasks={filteredTasks}
+            projectId={Number(projectId)}
             columns={columns}
             totalWidth={totalWidth}
             selectedTasks={selectedTasks}
@@ -357,6 +364,12 @@ export default function ListPage({ tasksNormal, }: { tasksNormal: BasicTask[]; }
             availableUsers={availableUsers}
             copySelectedTasks={copySelectedTasks}
             deleteSelectedTasks={deleteSelectedTasks}
+            onTaskClick={setSelectedTask}
+          />
+          {/* Drawer hiển thị chi tiết */}
+          <TaskDetailDrawer
+            task={selectedTask}
+            onClose={() => setSelectedTask(null)}
           />
         </div>
       </div>

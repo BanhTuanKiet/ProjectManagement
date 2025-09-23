@@ -24,6 +24,14 @@ namespace server.Configs
                 .ForMember(dest => dest.isOwner,
                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"));
 
+       // Mapping SubTask -> SubTaskDTO.BasicSubTask
+            CreateMap<SubTask, SubTaskDTO.BasicSubTask>()
+                .ForMember(dest => dest.Assignee,
+                           opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null));
+
+            // ----- Mapping CreateSubTaskDTO -> SubTask -----
+            CreateMap<SubTaskDTO.CreateSubTask, SubTask>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
         }
     }
 }

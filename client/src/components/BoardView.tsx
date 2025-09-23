@@ -139,9 +139,14 @@
 
 import { BasicTask } from "@/utils/ITask";
 import { taskStatus, getBorderColor } from "@/utils/statusUtils";
-import { Plus, MoreHorizontal} from "lucide-react";
+import { Plus, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import TaskDetailDrawer from "./TaskDetailDrawer";
+import { Task } from "@/utils/mapperUtil";
 
 export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
   return (
     <div className="grid grid-cols-5 gap-4 p-4">
       {taskStatus.map((status) => {
@@ -190,12 +195,18 @@ export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
                 <Plus className="inline-block mr-1 size-4" /> Create
               </button>
               <button className="p-1 hover:bg-gray-100 rounded">
-                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                </button>
+                <MoreHorizontal className="w-4 h-4 text-gray-500" />
+              </button>
             </div>
           </div>
         );
       })}
+      {selectedTask && (
+        <TaskDetailDrawer
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   );
 }
