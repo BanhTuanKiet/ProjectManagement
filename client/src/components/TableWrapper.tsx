@@ -33,6 +33,9 @@ interface TableWrapperProps {
     handleDragStart: (e: React.DragEvent, taskId: string) => void
     handleDragOver: (e: React.DragEvent) => void
     handleDrop: (e: React.DragEvent, targetTaskId: string) => void
+    handleColumnDragStart: (e: React.DragEvent, columnIndex: number) => void
+    handleColumnDragOver: (e: React.DragEvent) => void
+    handleColumnDrop: (e: React.DragEvent, targetColumnIndex: number) => void
     setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: string; field: string } | null>>
     availableUsers?: UserMini[]
     copySelectedTasks: () => void
@@ -54,6 +57,9 @@ export default function TableWrapper({
     handleDragStart,
     handleDragOver,
     handleDrop,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
     setEditingCell,
     availableUsers = [],
     copySelectedTasks,
@@ -133,6 +139,10 @@ export default function TableWrapper({
             {columns.map((col, i) => (
                 <div
                     key={col.key}
+                    draggable
+                    onDragStart={(e) => handleColumnDragStart(e, i)}
+                    onDragOver={handleColumnDragOver}
+                    onDrop={(e) => handleColumnDrop(e, i)}
                     className="relative flex items-center px-3 py-2 border-r text-sm font-medium text-gray-700"
                     style={{ width: col.width, minWidth: col.minWidth }}
                 >
