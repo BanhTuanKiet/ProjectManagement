@@ -10,8 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 
+import { useState } from "react"
+import { set } from "date-fns"
+import * as Dialog from "@radix-ui/react-dialog" 
+import BackgroundPicker from "./ChangeBackground"
+
 export default function ProjectMenu() {
+  const [bgOpen, setBgOpen] = useState(false);
   return (
+  <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
@@ -48,8 +55,9 @@ export default function ProjectMenu() {
           <div className="p-1 rounded-sm bg-green-100">
             <ImageIcon className="h-4 w-4 text-green-600" />
           </div>
-          <span className="text-sm font-medium">Set project background</span>
+          <span className="text-sm font-medium" onClick={() => setBgOpen(true)}>Set project background</span>
         </DropdownMenuItem>
+        
 
         <DropdownMenuSeparator className="my-2" />
 
@@ -68,5 +76,25 @@ export default function ProjectMenu() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <Dialog.Root open={bgOpen} onOpenChange={setBgOpen}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg w-full max-w-md max-h-[85vh] overflow-auto">
+          <div className="p-6">
+            <Dialog.Title className="text-lg font-semibold mb-4">
+              Project background
+            </Dialog.Title>
+            <BackgroundPicker />
+          </div>
+          <Dialog.Close asChild>
+            <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-1">
+              ×
+            </button>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+    </>
   )
 }
