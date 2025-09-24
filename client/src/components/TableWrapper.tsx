@@ -15,7 +15,9 @@ import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import React, { useState, useEffect, useRef } from "react"
 import axios from "@/config/axiosConfig"
+import DueDateCell from "./DueDateCell"
 import { mapApiTaskToTask } from "@/utils/mapperUtil"
+import { getDeadlineStyle } from "@/config/dateConfig"
 
 interface TableWrapperProps {
     tasks: Task[]
@@ -176,13 +178,13 @@ export default function TableWrapper({
             case "type":
                 return (
                     <div
-                        className="flex items-center justify-between relative w-full"
+                        className="flex items-center gap-2 relative w-full"
                         onMouseEnter={() => setHoveredTaskId(task.id)}
                         onMouseLeave={() => setHoveredTaskId(null)}
                     >
                         {/* Hiện khi hover */}
                         {hoveredTaskId === task.id && (
-                            <div className="flex items-center ml-2">
+                            <div className="flex items-center">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleExpand(task.id)}>
                                     {expandedTasks.has(task.id) ? (
                                         <ChevronDown className="h-4 w-4 rotate-180 transition-transform" />
@@ -211,7 +213,7 @@ export default function TableWrapper({
 
                         {/* Dấu + bên phải cell */}
                         {hoveredTaskId === task.id && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6 ml-2" onClick={() => setAddingSubtaskFor(task.id)}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAddingSubtaskFor(task.id)}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         )}
@@ -371,23 +373,10 @@ export default function TableWrapper({
                     <span>-</span>
                 )
 
-            case "dueDate":
-                return (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal bg-transparent">
-                                {task.dueDate ? format(new Date(task.dueDate), "MMM dd, yyyy") : "Set date"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0">
-                            <Calendar
-                                mode="single"
-                                selected={task.dueDate ? new Date(task.dueDate) : undefined}
-                                onSelect={(date) => handleCellEdit(task.id, "dueDate", date ? date.toISOString().split("T")[0] : "")}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                )
+            case "dueDate": {
+                return <DueDateCell task={task} handleCellEdit={handleCellEdit} />
+            }
+
 
             case "created":
                 return (
@@ -436,7 +425,7 @@ export default function TableWrapper({
                         {columns.map((col) => (
                             <div
                                 key={`${task.id}-${col.key}`}
-                                className="relative flex items-center px-3 py-2 border-r text-sm"
+                                className="relative flex items-center justify-center px-3 py-2 border-r text-sm"
                                 style={{ width: col.width, minWidth: col.minWidth }}
                             >
                                 {renderCell(task, col)}

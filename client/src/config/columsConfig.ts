@@ -9,7 +9,7 @@ export interface Column {
 
 export const initialColumns: Column[] = [
   { key: "select", title: "", width: 80, minWidth: 80, resizable: false },
-  { key: "type", title: "Type", width: 120, minWidth: 80, resizable: true },
+  { key: "type", title: "Type", width: 170, minWidth: 50, resizable: true },
   { key: "key", title: "Key", width: 120, minWidth: 80, resizable: true },
   {
     key: "summary",
@@ -35,7 +35,7 @@ export const initialColumns: Column[] = [
   {
     key: "dueDate",
     title: "Due date",
-    width: 145,
+    width: 170,
     minWidth: 120,
     resizable: true,
   },
