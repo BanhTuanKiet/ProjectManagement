@@ -2,7 +2,7 @@ import type { BasicTask } from "@/utils/ITask"
 import type { UserMini } from "@/utils/IUser"
 
 export interface Task {
-  id: string
+  id: number
   key: string
   summary: string
   status: "To Do" | "Done" | "In Progress"
@@ -25,7 +25,7 @@ export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
   const reporterName = apiTask.createdBy || null
   // console.log("Mapping API Task:", apiTask);
   return {
-    id: String(apiTask.taskId),
+    id: apiTask.taskId,
     key: `TASK-${apiTask.taskId}`,
     summary: apiTask.title,
     status: apiTask.status as "To Do" | "Done" | "In Progress",

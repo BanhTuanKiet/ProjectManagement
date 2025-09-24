@@ -9,6 +9,8 @@ using server.Services.SubTask;
 using server.Services.Project;
 using server.Services.Task;
 using server.Services.User;
+using server.Services.Comment;
+using server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -44,6 +46,7 @@ builder.Services.AddScoped<IProjects, ProjectsService>();
 builder.Services.AddScoped<ITasks, TasksService>();
 builder.Services.AddScoped<INotifications, NotificationsService>();
 builder.Services.AddScoped<ISubTasks, SubTaskService>();
+builder.Services.AddScoped<IComment, CommentService>();
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
