@@ -9,7 +9,7 @@ export interface BasicTask {
   assignee: string
   createdBy: string
   createdAt: string   
-  deadline?: string  
+  deadline: string  
   estimateHours?: number
 }
 

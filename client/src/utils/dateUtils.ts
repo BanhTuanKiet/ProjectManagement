@@ -29,3 +29,9 @@ export const formattedDate = (selectedDay: number, currentDate: Date) => {
     })
     : ""
 }
+
+export const setDefaultDeadline = () => {
+    const defaultDeadline = new Date()
+    defaultDeadline.setHours(defaultDeadline.getHours() + 7);
+    return defaultDeadline
+}

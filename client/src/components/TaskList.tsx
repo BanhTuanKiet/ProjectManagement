@@ -98,7 +98,7 @@ const TaskList = ({ tasks }: { tasks: BasicTask[] }) => {
                                                 className={`h-4 w-4 appearance-none rounded ${getCheckboxColor(feature.status)}`}
                                             />
                                             <span className="flex-1 truncate">{feature.title}</span>
-                                            {feature.assignee && <ColoredAvatar name={feature.assignee} size="sm" />}
+                                            {feature.assignee && <ColoredAvatar id={feature.assigneeId ?? ""} name={feature.assignee} size="sm" />}
                                         </div>
                                     </div>
                                 </ListItem>

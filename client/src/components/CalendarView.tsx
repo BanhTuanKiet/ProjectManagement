@@ -80,7 +80,7 @@ export default function CalendarView({
 
   const getTasksForDay = (day: number) => {
     return tasks?.filter((task) => {
-      const createdDate = new Date(task.createdAt)
+      const createdDate = new Date(task.deadline)
       return createdDate.getDate() === day
     })
   }

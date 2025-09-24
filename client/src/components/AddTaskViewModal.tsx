@@ -15,7 +15,7 @@ import axios from '@/config/axiosConfig'
 import { Member } from '@/utils/IUser'
 import { useParams } from 'next/navigation'
 import { BasicTask, NewTaskView } from '@/utils/ITask'
-import { formattedDate } from '@/utils/dateUtils'
+import { formattedDate, setDefaultDeadline } from '@/utils/dateUtils'
 
 export default function AddTaskViewModal({
   isModalOpen,
@@ -59,7 +59,7 @@ export default function AddTaskViewModal({
       ...prev, [name]: name === "Priority" ? Number(value) : value
     }))
   }
-
+console.log(new Date().toISOString().slice(0,11))
   return (
     <>
       {isModalOpen && (
@@ -101,7 +101,7 @@ export default function AddTaskViewModal({
                 <label className="text-sm font-medium">Due Date & Time</label>
                 <Input
                   type="datetime-local"
-                  value={task?.Deadline}
+                  value={task?.Deadline ?? setDefaultDeadline().toISOString ().slice(0,16)}
                   name='Deadline'
                   onChange={(e) => handleTask("Deadline", e.target.value)}
                   className="w-full"
