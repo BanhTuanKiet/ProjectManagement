@@ -24,19 +24,19 @@ interface TableWrapperProps {
     projectId: number
     columns: Column[]
     totalWidth: number
-    selectedTasks: Set<string>
-    editingCell: { taskId: string; field: string } | null
+    selectedTasks: Set<number>
+    editingCell: { taskId: number; field: string } | null
     handleMouseDown: (e: React.MouseEvent, columnIndex: number) => void
     toggleAllTasks: () => void
-    toggleTaskSelection: (taskId: string) => void
-    handleCellEdit: (taskId: string, field: string, value: any) => void
-    handleDragStart: (e: React.DragEvent, taskId: string) => void
+    toggleTaskSelection: (taskId: number) => void
+    handleCellEdit: (taskId: number, field: string, value: any) => void
+    handleDragStart: (e: React.DragEvent, taskId: number) => void
     handleDragOver: (e: React.DragEvent) => void
-    handleDrop: (e: React.DragEvent, targetTaskId: string) => void
+    handleDrop: (e: React.DragEvent, targetTaskId: number) => void
     handleColumnDragStart: (e: React.DragEvent, columnIndex: number) => void
     handleColumnDragOver: (e: React.DragEvent) => void
     handleColumnDrop: (e: React.DragEvent, targetColumnIndex: number) => void
-    setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: string; field: string } | null>>
+    setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: number; field: string } | null>>
     availableUsers?: UserMini[]
     copySelectedTasks: () => void
     deleteSelectedTasks: () => void
@@ -67,10 +67,10 @@ export default function TableWrapper({
     onTaskClick,
 }: TableWrapperProps) {
     const inputRowRef = useRef<HTMLDivElement | null>(null)
-    const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null)
-    const [addingSubtaskFor, setAddingSubtaskFor] = useState<string | null>(null)
+    const [hoveredTaskId, setHoveredTaskId] = useState<number | null>(null)
+    const [addingSubtaskFor, setAddingSubtaskFor] = useState<number | null>(null)
     const [newSubSummary, setNewSubSummary] = useState("")
-    const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
+    const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set())
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -86,7 +86,7 @@ export default function TableWrapper({
         }
     }, [addingSubtaskFor])
 
-    const toggleExpand = async (taskId: string) => {
+    const toggleExpand = async (taskId: number) => {
         if (expandedTasks.has(taskId)) {
             setExpandedTasks((prev) => {
                 const newSet = new Set(prev)
@@ -102,7 +102,7 @@ export default function TableWrapper({
         }
     }
 
-    const handleCreateSubtask = async (parentId: string, projectId: number) => {
+    const handleCreateSubtask = async (parentId: number, projectId: number) => {
         if (!newSubSummary.trim()) return
         try {
             const res = await axios.post(`/subtasks`, {
@@ -121,7 +121,7 @@ export default function TableWrapper({
         }
     }
 
-    const fetchSubtasks = async (taskId: string) => {
+    const fetchSubtasks = async (taskId: number) => {
         try {
             const res = await axios.get(`/subtasks/byTask/${taskId}`)
             console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)

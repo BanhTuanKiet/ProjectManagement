@@ -11,10 +11,10 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserMini[]>([]);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
-  const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  const [editingCell, setEditingCell] = useState<{ taskId: number; field: string } | null>(null);
+  const [draggedTask, setDraggedTask] = useState<number | null>(null);
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
 
   // Fetch users + tasks
@@ -71,7 +71,7 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
   );
 
   // Select tasks
-  const toggleTaskSelection = useCallback((taskId: string) => {
+  const toggleTaskSelection = useCallback((taskId: number) => {
     setSelectedTasks((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) newSet.delete(taskId);
@@ -89,7 +89,7 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
 
   // Edit cell
 const handleCellEdit = useCallback(
-  async (taskId: string, field: string, value: any) => {
+  async (taskId: number, field: string, value: any) => {
     try {
       const projectId = 1; // 👈 lấy từ props/state
 
@@ -126,7 +126,7 @@ const handleCellEdit = useCallback(
 
 
   // Drag & Drop
-  const handleDragStart = useCallback((e: React.DragEvent, taskId: string) => {
+  const handleDragStart = useCallback((e: React.DragEvent, taskId: number) => {
     setDraggedTask(taskId);
     e.dataTransfer.effectAllowed = "move";
   }, []);
@@ -137,7 +137,7 @@ const handleCellEdit = useCallback(
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent, targetTaskId: string) => {
+    (e: React.DragEvent, targetTaskId: number) => {
       e.preventDefault();
       if (!draggedTask || draggedTask === targetTaskId) return;
 
@@ -204,7 +204,7 @@ const handleCellEdit = useCallback(
     // Clone task với id mới (FE giả lập hoặc gọi BE tạo task mới)
     const clonedTasks = tasksToCopy.map((t) => ({
       ...t,
-      id: crypto.randomUUID(), // tạo id tạm, hoặc gọi API BE để add mới
+      id: -Math.floor(Math.random() * 1000000), // tạo id tạm, hoặc gọi API BE để add mới
       key: `${t.key}-COPY`
     }));
 

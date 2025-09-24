@@ -51,12 +51,10 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
     console.log("Task in drawer:", task);
     useEffect(() => {
         if (task) {
-            const taskId = Number(("taskId" in task ? task.taskId : task.id));
-            if (!isNaN(taskId)) {
-                axios.get(`/comment/task/${taskId}`).then(res => {
-                    setComments(res.data);
-                });
-            }
+            const taskId = ("taskId" in task ? task.taskId : task.id);
+            axios.get(`/comment/task/${taskId}`).then(res => {
+                setComments(res.data);
+            });
         }
     }, [task]);
 
@@ -65,9 +63,7 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
     // thêm comment
     const handleAddComment = async () => {
         if (!comment.trim() || !task) return
-        const taskId = Number(("taskId" in task ? task.taskId : task.id))
-        if (isNaN(taskId)) return
-
+        const taskId = ("taskId" in task ? task.taskId : task.id)
         if (editingCommentId) {
             // đang edit
             const res = await axios.put(`/comment/${editingCommentId}`, { content: comment.trim() })
