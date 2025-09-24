@@ -277,6 +277,9 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
     handleDragStart,
     handleDragOver,
     handleDrop,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
     addTask,
     copySelectedTasks,
     deleteSelectedTasks,
@@ -360,6 +363,9 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
             handleDragStart={handleDragStart}
             handleDragOver={handleDragOver}
             handleDrop={handleDrop}
+            handleColumnDragStart={handleColumnDragStart}
+            handleColumnDragOver={handleColumnDragOver}
+            handleColumnDrop={handleColumnDrop}
             setEditingCell={setEditingCell}
             availableUsers={availableUsers}
             copySelectedTasks={copySelectedTasks}

@@ -15,6 +15,7 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCell, setEditingCell] = useState<{ taskId: string; field: string } | null>(null);
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
 
   // Fetch users + tasks
   useEffect(() => {
@@ -153,6 +154,32 @@ const handleCellEdit = useCallback(
     [draggedTask, tasks]
   );
 
+  // Column Drag & Drop
+  const handleColumnDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDraggedColumnIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const handleColumnDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleColumnDrop = useCallback(
+    (e: React.DragEvent, targetIndex: number) => {
+      e.preventDefault();
+      if (draggedColumnIndex === null || draggedColumnIndex === targetIndex) return;
+
+      const newColumns = [...columns];
+      const [moved] = newColumns.splice(draggedColumnIndex, 1);
+      newColumns.splice(targetIndex, 0, moved);
+
+      setColumns(newColumns);
+      setDraggedColumnIndex(null);
+    },
+    [draggedColumnIndex, columns]
+  );
+
   // Filter
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
@@ -223,6 +250,9 @@ const handleCellEdit = useCallback(
     handleDragStart,
     handleDragOver,
     handleDrop,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
     addTask,
     copySelectedTasks,
     deleteSelectedTasks,
