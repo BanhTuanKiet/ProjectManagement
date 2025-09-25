@@ -39,7 +39,7 @@ export function ProjectHeader({
                 const reponse = await axios.get(`/users/token`)
                 const token: string = reponse.data ?? ""
                 if (reponse.data) {
-                    // connectSignalR(token)
+                    connectSignalR(token)
                     connectNotificationSignalR(token)
                 }
             } catch (error) {
@@ -55,7 +55,7 @@ export function ProjectHeader({
         window.location.href = "http://localhost:5144/users/signin-google"
     }
 
-    const unreadCount = notifications.filter(n => !n.IsRead).length
+    const unreadCount = notifications.filter(n => !n.isRead).length
 
     return (
         <>

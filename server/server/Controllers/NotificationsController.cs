@@ -42,5 +42,26 @@ namespace server.Controllers
             return Ok(notifications);
         }
 
+        [Authorize]
+        [HttpPut("read/{notifiId}")]
+        public async Task<ActionResult> MarkReadNotfify(int notifiId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Notification notification = await _notificationService.GetNotificationById(notifiId);
+
+            if (notification == null)
+            {
+                throw new ErrorException(404, "Notification not found");
+            }
+
+            if (notification.UserId != userId)
+            {
+                throw new ErrorException(403, "This notification does not belong to you");
+            }
+
+            int countUpdated = await _notificationService.MarkRead(notification.NotificationId);
+            if (countUpdated == 0) return null;
+            return Ok();
+        }
     }
 }

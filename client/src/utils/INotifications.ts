@@ -1,9 +1,10 @@
 export interface Notification {
-    NotificationId: number
-    UserId: string
-    ProjectId: number
-    Message: string
-    Link?: string
-    IsRead: boolean
-    CreatedAt: Date
+    notificationId: number
+    userId: string
+    projectId: number
+    message: string
+    link?: string
+    isRead: boolean
+    createdAt: string   
+    type?: string
 }

@@ -1,3 +1,5 @@
+import { Bell, Check, MessageCircle, Users, Shrink as Sprint } from "lucide-react"
+
 export const taskStatus = [
     { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
     { id: 2, name: 'In Progress', color: '#FACC15' }, // yellow
@@ -82,5 +84,40 @@ export const getTaskStatusBadge = (status: string) => {
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
         default:
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
+    }
+}
+
+export const getNotificationIcon = (type: string) => {
+    switch (type.toLocaleLowerCase()) {
+        case "task":
+            return (
+                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Check className="h-4 w-4 text-emerald-600" />
+                </div>
+            )
+        case "comment":
+            return (
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <MessageCircle className="h-4 w-4 text-blue-600" />
+                </div>
+            )
+        case "sprint":
+            return (
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Sprint className="h-4 w-4 text-purple-600" />
+                </div>
+            )
+        case "team":
+            return (
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Users className="h-4 w-4 text-orange-600" />
+                </div>
+            )
+        default:
+            return (
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Bell className="h-4 w-4 text-gray-600" />
+                </div>
+            )
     }
 }

@@ -40,6 +40,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
             const response = await axios.get(`/notifications`)
             setNotifications(response.data)
+            console.log(response.data)
         })
 
         connection.on("TaskAssigned", (notification: Notification) => {
