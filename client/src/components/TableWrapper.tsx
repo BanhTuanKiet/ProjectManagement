@@ -15,23 +15,28 @@ import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import React, { useState, useEffect, useRef } from "react"
 import axios from "@/config/axiosConfig"
+import DueDateCell from "./DueDateCell"
 import { mapApiTaskToTask } from "@/utils/mapperUtil"
+import { getDeadlineStyle } from "@/config/dateConfig"
 
 interface TableWrapperProps {
     tasks: Task[]
     projectId: number
     columns: Column[]
     totalWidth: number
-    selectedTasks: Set<string>
-    editingCell: { taskId: string; field: string } | null
+    selectedTasks: Set<number>
+    editingCell: { taskId: number; field: string } | null
     handleMouseDown: (e: React.MouseEvent, columnIndex: number) => void
     toggleAllTasks: () => void
-    toggleTaskSelection: (taskId: string) => void
-    handleCellEdit: (taskId: string, field: string, value: any) => void
-    handleDragStart: (e: React.DragEvent, taskId: string) => void
+    toggleTaskSelection: (taskId: number) => void
+    handleCellEdit: (taskId: number, field: string, value: any) => void
+    handleDragStart: (e: React.DragEvent, taskId: number) => void
     handleDragOver: (e: React.DragEvent) => void
-    handleDrop: (e: React.DragEvent, targetTaskId: string) => void
-    setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: string; field: string } | null>>
+    handleDrop: (e: React.DragEvent, targetTaskId: number) => void
+    handleColumnDragStart: (e: React.DragEvent, columnIndex: number) => void
+    handleColumnDragOver: (e: React.DragEvent) => void
+    handleColumnDrop: (e: React.DragEvent, targetColumnIndex: number) => void
+    setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: number; field: string } | null>>
     availableUsers?: UserMini[]
     copySelectedTasks: () => void
     deleteSelectedTasks: () => void
@@ -52,6 +57,9 @@ export default function TableWrapper({
     handleDragStart,
     handleDragOver,
     handleDrop,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
     setEditingCell,
     availableUsers = [],
     copySelectedTasks,
@@ -59,10 +67,10 @@ export default function TableWrapper({
     onTaskClick,
 }: TableWrapperProps) {
     const inputRowRef = useRef<HTMLDivElement | null>(null)
-    const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null)
-    const [addingSubtaskFor, setAddingSubtaskFor] = useState<string | null>(null)
+    const [hoveredTaskId, setHoveredTaskId] = useState<number | null>(null)
+    const [addingSubtaskFor, setAddingSubtaskFor] = useState<number | null>(null)
     const [newSubSummary, setNewSubSummary] = useState("")
-    const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
+    const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set())
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -78,7 +86,7 @@ export default function TableWrapper({
         }
     }, [addingSubtaskFor])
 
-    const toggleExpand = async (taskId: string) => {
+    const toggleExpand = async (taskId: number) => {
         if (expandedTasks.has(taskId)) {
             setExpandedTasks((prev) => {
                 const newSet = new Set(prev)
@@ -94,7 +102,7 @@ export default function TableWrapper({
         }
     }
 
-    const handleCreateSubtask = async (parentId: string, projectId: number) => {
+    const handleCreateSubtask = async (parentId: number, projectId: number) => {
         if (!newSubSummary.trim()) return
         try {
             const res = await axios.post(`/subtasks`, {
@@ -113,7 +121,7 @@ export default function TableWrapper({
         }
     }
 
-    const fetchSubtasks = async (taskId: string) => {
+    const fetchSubtasks = async (taskId: number) => {
         try {
             const res = await axios.get(`/subtasks/byTask/${taskId}`)
             console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
@@ -131,6 +139,10 @@ export default function TableWrapper({
             {columns.map((col, i) => (
                 <div
                     key={col.key}
+                    draggable
+                    onDragStart={(e) => handleColumnDragStart(e, i)}
+                    onDragOver={handleColumnDragOver}
+                    onDrop={(e) => handleColumnDrop(e, i)}
                     className="relative flex items-center px-3 py-2 border-r text-sm font-medium text-gray-700"
                     style={{ width: col.width, minWidth: col.minWidth }}
                 >
@@ -176,13 +188,13 @@ export default function TableWrapper({
             case "type":
                 return (
                     <div
-                        className="flex items-center justify-between relative w-full"
+                        className="flex items-center gap-2 relative w-full"
                         onMouseEnter={() => setHoveredTaskId(task.id)}
                         onMouseLeave={() => setHoveredTaskId(null)}
                     >
                         {/* Hiện khi hover */}
                         {hoveredTaskId === task.id && (
-                            <div className="flex items-center ml-2">
+                            <div className="flex items-center">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleExpand(task.id)}>
                                     {expandedTasks.has(task.id) ? (
                                         <ChevronDown className="h-4 w-4 rotate-180 transition-transform" />
@@ -211,7 +223,7 @@ export default function TableWrapper({
 
                         {/* Dấu + bên phải cell */}
                         {hoveredTaskId === task.id && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6 ml-2" onClick={() => setAddingSubtaskFor(task.id)}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAddingSubtaskFor(task.id)}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         )}
@@ -371,23 +383,10 @@ export default function TableWrapper({
                     <span>-</span>
                 )
 
-            case "dueDate":
-                return (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal bg-transparent">
-                                {task.dueDate ? format(new Date(task.dueDate), "MMM dd, yyyy") : "Set date"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0">
-                            <Calendar
-                                mode="single"
-                                selected={task.dueDate ? new Date(task.dueDate) : undefined}
-                                onSelect={(date) => handleCellEdit(task.id, "dueDate", date ? date.toISOString().split("T")[0] : "")}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                )
+            case "dueDate": {
+                return <DueDateCell task={task} handleCellEdit={handleCellEdit} />
+            }
+
 
             case "created":
                 return (
@@ -436,7 +435,7 @@ export default function TableWrapper({
                         {columns.map((col) => (
                             <div
                                 key={`${task.id}-${col.key}`}
-                                className="relative flex items-center px-3 py-2 border-r text-sm"
+                                className="relative flex items-center justify-center px-3 py-2 border-r text-sm"
                                 style={{ width: col.width, minWidth: col.minWidth }}
                             >
                                 {renderCell(task, col)}
