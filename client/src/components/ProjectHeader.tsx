@@ -12,7 +12,7 @@ import axios from "@/config/axiosConfig"
 import { useSearchParams } from "next/navigation"
 import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
 import { useRouter } from "next/navigation"
-import Notification from "@/components/NotificationRealtime"
+import NotificationRealtime from "@/components/NotificationRealtime"
 import { useNotification } from "@/app/.context/Notfication"
 
 export function ProjectHeader({
@@ -55,7 +55,7 @@ export function ProjectHeader({
         window.location.href = "http://localhost:5144/users/signin-google"
     }
 
-    const unreadCount = notifications.filter(n => !n.isRead).length
+    const unreadCount = notifications?.filter(n => !n.isRead).length
 
     return (
         <>
@@ -108,7 +108,7 @@ export function ProjectHeader({
                         </Button>
 
                         {isNotificationOpen && (
-                            <Notification notifications={notifications} unreadCount={unreadCount} setNotifications={setNotifications} />
+                            <NotificationRealtime notifications={notifications} unreadCount={unreadCount} setNotifications={setNotifications} />
                         )}
                     </div>
                     <div className="relative">

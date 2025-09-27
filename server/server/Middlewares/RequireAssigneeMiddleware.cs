@@ -29,8 +29,8 @@ public class RequireAssigneeMiddleware
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Only members assigned this task can perform this operation" }));
                 return;
             }
-
-            await _next(context);
         }
+
+        await _next(context);
     }
 }

@@ -184,8 +184,8 @@ namespace server.Configs
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = "http://127.0.0.1:5144",
-                    ValidAudience = "http://127.0.0.1:3000",
+                    ValidIssuer = _configuration["JWT:ISSUSER"],
+                    ValidAudience = _configuration["JWT:AUDIENCE"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:KEY"])),
                 };
                 var claimsPrincipal = jwtHandler.ValidateToken(token, tokenValidationParameters, out var validatedToken);

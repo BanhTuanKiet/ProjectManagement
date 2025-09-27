@@ -15,188 +15,191 @@ import type { Member } from "@/utils/IUser"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
 import TaskDetailDrawer from "./TaskDetailDrawer"
+import { useNotification } from "@/app/.context/Notfication"
+import TaskDetailModal from "./TaskDetailModal"
+import { useParams } from "next/navigation"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export default function CalendarView({
-  projectId,
-  currentDate,
-  setCurrentDate,
+    projectId,
+    currentDate,
+    setCurrentDate,
 }: {
-  projectId: ParamValue
-  currentDate: Date
-  setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
+    projectId: ParamValue
+    currentDate: Date
+    setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
 }) {
-  const [tasks, setTasks] = useState<BasicTask[]>([])
-  const [filterSelection, setFilterSelection] = useState<FilterSelection>({})
-  const days = getDaysInMonth(currentDate)
-  const [openTaskList, setOpenTaskList] = useState(false)
-  const filterRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [members, setMembers] = useState<Member[]>()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null)
+    const [tasks, setTasks] = useState<BasicTask[]>([])
+    const [filterSelection, setFilterSelection] = useState<FilterSelection>({})
+    const days = getDaysInMonth(currentDate)
+    const [openTaskList, setOpenTaskList] = useState(false)
+    const filterRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [members, setMembers] = useState<Member[]>()
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [selectedDay, setSelectedDay] = useState<number | null>(null)
+    const { selectedTask, setSelectedTask } = useNotification()
+    const { project_name } = useParams<{ project_name: string }>()
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const response = await axios.get(`/projects/member/${projectId}`)
-        setMembers(response.data)
-      } catch (error) {
-        console.log(error)
-      }
-    }
+    useEffect(() => {
+        const fetchMembers = async () => {
+            try {
+                const response = await axios.get(`/projects/member/${projectId}`)
+                setMembers(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
 
-    fetchMembers()
-  }, [projectId])
+        fetchMembers()
+    }, [projectId])
 
-  useEffect(() => {
-    if (filterRef.current) {
-      clearTimeout(filterRef.current)
-    }
+    useEffect(() => {
+        if (filterRef.current) {
+            clearTimeout(filterRef.current)
+        }
 
-    filterRef.current = setTimeout(async () => {
-      try {
-        const response = await axios.get(`/tasks/${projectId}`, {
-          params: {
-            month: currentDate.getMonth() + 1,
-            year: currentDate.getFullYear(),
-            filters: JSON.stringify(filterSelection),
-          },
+        filterRef.current = setTimeout(async () => {
+            try {
+                const response = await axios.get(`/tasks/${projectId}`, {
+                    params: {
+                        month: currentDate.getMonth() + 1,
+                        year: currentDate.getFullYear(),
+                        filters: JSON.stringify(filterSelection),
+                    },
+                })
+
+                setTasks(response.data)
+            } catch (error) {
+                console.error(error)
+            }
+        }, 500)
+
+        return () => {
+            if (filterRef.current) {
+                clearTimeout(filterRef.current)
+            }
+        }
+    }, [projectId, currentDate, filterSelection])
+
+    const getTasksForDay = (day: number) => {
+        return tasks?.filter((task) => {
+            const createdDate = new Date(task.deadline)
+            return createdDate.getDate() === day
         })
-
-        setTasks(response.data)
-      } catch (error) {
-        console.error(error)
-      }
-    }, 500)
-
-    return () => {
-      if (filterRef.current) {
-        clearTimeout(filterRef.current)
-      }
     }
-  }, [projectId, currentDate, filterSelection])
 
-  const getTasksForDay = (day: number) => {
-    return tasks?.filter((task) => {
-      const createdDate = new Date(task.deadline)
-      return createdDate.getDate() === day
-    })
-  }
+    const handleDayClick = (day: number) => {
+        setSelectedDay(day)
+        setIsModalOpen(true)
+    }
 
-  const handleDayClick = (day: number) => {
-    setSelectedDay(day)
-    setIsModalOpen(true)
-  }
+    return (
+        <div className="p-6 bg-background min-h-screen">
+            <TaskFilterView
+                members={members ?? []}
+                currentDate={currentDate}
+                setCurrentDate={setCurrentDate}
+                filterSelection={filterSelection}
+                setFilterSelection={setFilterSelection}
+            />
 
-  return (
-    <div className="p-6 bg-background min-h-screen">
-      <TaskFilterView
-        members={members ?? []}
-        currentDate={currentDate}
-        setCurrentDate={setCurrentDate}
-        filterSelection={filterSelection}
-        setFilterSelection={setFilterSelection}
-      />
-
-      <div className="border border-border rounded-lg overflow-hidden bg-card">
-        <div className="grid grid-cols-7 border-b border-border">
-          {weekDays.map((day) => (
-            <div key={day} className="p-1 text-center font-medium text-muted-foreground bg-muted/50">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7">
-          {days?.map((day, index) => {
-            const tasksForDay = day ? getTasksForDay(day) : []
-            const isToday = day === new Date().getDate()
-
-            return (
-              <div
-                key={index}
-                className="min-h-32 border-r border-b border-border p-3 bg-card"
-              // onClick={() => day && handleDayClick(day)}
-              >
-                {day && (
-                  <>
-                    <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
-                      <span className={`w-6 h-6 ${isToday ? "bg-blue-500 text-white rounded flex items-center justify-center" : ""}`}>
-                        {day}
-                      </span>
-                      <span
-                        className="px-1 hover:bg-gray-200 hover:rounded transition-colors cursor-pointer"
-                        onClick={() => day && handleDayClick(day)}
-                      >
-                        +
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      {tasksForDay && (
-                        <>
-                          {(tasksForDay?.length <= 2 ? tasksForDay : tasksForDay.slice(0, 1)).map((task) => (
-                            <div key={task.taskId} className="space-y-1">
-                              <div
-                                className={` flex items-center gap-2 p-1 bg-muted/50 rounded text-xs ${getBorderColor(task.status)}`}
-                                onClick={() => setSelectedTask(task)}
-                              >
-                                <Checkbox
-                                  checked={true}
-                                  className={`h-4 w-4 appearance-none ${getCheckboxColor(task.status)}`}
-                                />
-                                <span className="flex-1 truncate">{task.title}</span>
-                                {task.assignee && <ColoredAvatar id={task.assigneeId || ''} name={task.assignee} size="sm" />}
-                              </div>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {tasksForDay.length > 2 && (
-                        <div>
-                          <div
-                            className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
-                            onClick={() => setOpenTaskList(!openTaskList)}
-                          >
-                            <p className="p-2">{!openTaskList ? `${tasksForDay.length - 1} more` : "Close"}</p>
-                          </div>
-                          {openTaskList && (
-                            <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
-                              <TaskList tasks={tasksForDay} />
-                            </div>
-                          )}
+            <div className="border border-border rounded-lg overflow-hidden bg-card">
+                <div className="grid grid-cols-7 border-b border-border">
+                    {weekDays.map((day) => (
+                        <div key={day} className="p-1 text-center font-medium text-muted-foreground bg-muted/50">
+                            {day}
                         </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })}
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-7">
+                    {days?.map((day, index) => {
+                        const tasksForDay = day ? getTasksForDay(day) : []
+                        const isToday = day === new Date().getDate()
+
+                        return (
+                            <div
+                                key={index}
+                                className="min-h-32 border-r border-b border-border p-3 bg-card"
+                            >
+                                {day && (
+                                    <>
+                                        <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
+                                            <span className={`w-6 h-6 ${isToday ? "bg-blue-500 text-white rounded flex items-center justify-center" : ""}`}>
+                                                {day}
+                                            </span>
+                                            <span
+                                                className="px-1 hover:bg-gray-200 hover:rounded transition-colors cursor-pointer"
+                                                onClick={() => day && handleDayClick(day)}
+                                            >
+                                                +
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {tasksForDay && (
+                                                <>
+                                                    {(tasksForDay?.length <= 2 ? tasksForDay : tasksForDay.slice(0, 1)).map((task) => (
+                                                        <div key={task.taskId} className="space-y-1">
+                                                            <div
+                                                                className={` flex items-center gap-2 p-1 bg-muted/50 rounded text-xs ${getBorderColor(task.status)}`}
+                                                                onClick={() => setSelectedTask(task.taskId)}
+                                                            >
+                                                                <Checkbox
+                                                                    checked={true}
+                                                                    className={`h-4 w-4 appearance-none ${getCheckboxColor(task.status)}`}
+                                                                />
+                                                                <span className="flex-1 truncate">{task.title}</span>
+                                                                {task.assignee && <ColoredAvatar id={task.assigneeId || ''} name={task.assignee} size="sm" />}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            )}
+
+                                            {tasksForDay.length > 2 && (
+                                                <div>
+                                                    <div
+                                                        className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
+                                                        onClick={() => setOpenTaskList(!openTaskList)}
+                                                    >
+                                                        <p className="p-2">{!openTaskList ? `${tasksForDay.length - 1} more` : "Close"}</p>
+                                                    </div>
+                                                    {openTaskList && (
+                                                        <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
+                                                            <TaskList tasks={tasksForDay} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+
+            </div>
+
+            {isModalOpen &&
+                <AddTaskViewModal
+                    isModalOpen={isModalOpen}
+                    members={members ?? []}
+                    currentDate={currentDate}
+                    selectedDay={selectedDay ?? currentDate.getDay()}
+                    setIsModalOpen={setIsModalOpen}
+                    setTasks={setTasks}
+                />
+            }
+            {selectedTask && (
+                // <TaskDetailDrawer
+                //     task={selectedTask}
+                //     onClose={() => setSelectedTask(null)}
+                // />
+                <TaskDetailModal projectId={parseInt(project_name)} taskId={selectedTask} onClose={() => setSelectedTask(null)} />
+            )}
         </div>
-
-      </div>
-
-      {isModalOpen &&
-        <AddTaskViewModal
-          isModalOpen={isModalOpen}
-          members={members ?? []}
-          currentDate={currentDate}
-          selectedDay={selectedDay ?? currentDate.getDay()}
-          setIsModalOpen={setIsModalOpen}
-          setTasks={setTasks}
-        />
-      }
-      {selectedTask && (
-        <TaskDetailDrawer
-          task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
-
-    </div>
-  )
+    )
 }

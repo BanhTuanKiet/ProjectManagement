@@ -45,7 +45,6 @@ export default function AddTaskViewModal({
 
         try {
             const projectId = project_name
-            console.log(task)
             const response = await axios.post(`/tasks/view/${projectId}`, task)
 
             setTasks((prev) => [...prev, response.data])

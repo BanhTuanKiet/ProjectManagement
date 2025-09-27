@@ -1,4 +1,4 @@
-import { Bell, Check, MessageCircle, Users, Shrink as Sprint } from "lucide-react"
+import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag } from "lucide-react"
 
 export const taskStatus = [
     { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
@@ -119,5 +119,18 @@ export const getNotificationIcon = (type: string) => {
                     <Bell className="h-4 w-4 text-gray-600" />
                 </div>
             )
+    }
+}
+
+export const getPriorityIcon = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+        case "high":
+            return <Flag className="h-4 w-4 text-red-500" />
+        case "medium":
+            return <Flag className="h-4 w-4 text-orange-500" />
+        case "low":
+            return <Flag className="h-4 w-4 text-green-500" />
+        default:
+            return <Flag className="h-4 w-4 text-orange-500" />
     }
 }

@@ -4,17 +4,17 @@ using server.Models;
 
 namespace server.Configs
 {
-  public class AutoMapperConfig : Profile
-  {
-    public AutoMapperConfig()
+    public class AutoMapperConfig : Profile
     {
-      CreateMap<server.Models.Task, TaskDTO.BasicTask>()
-          .ForMember(dest => dest.Assignee,
-                    opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
-          .ForMember(dest => dest.CreatedBy,
-                    otp => otp.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
+        public AutoMapperConfig()
+        {
+            CreateMap<server.Models.Task, TaskDTO.BasicTask>()
+                .ForMember(dest => dest.Assignee,
+                          opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
+                .ForMember(dest => dest.CreatedBy,
+                          otp => otp.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
 
-      CreateMap<server.Models.Project, ProjectDTO.ProjectTitile>();
+            CreateMap<server.Models.Project, ProjectDTO.ProjectTitile>();
 
             CreateMap<ProjectMember, ProjectDTO.ProjectMembers>()
                 .ForMember(dest => dest.name,
@@ -24,7 +24,7 @@ namespace server.Configs
                 .ForMember(dest => dest.isOwner,
                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"));
 
-       // Mapping SubTask -> SubTaskDTO.BasicSubTask
+            // Mapping SubTask -> SubTaskDTO.BasicSubTask
             CreateMap<SubTask, SubTaskDTO.BasicSubTask>()
                 .ForMember(dest => dest.Assignee,
                            opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null));
@@ -32,6 +32,8 @@ namespace server.Configs
             // ----- Mapping CreateSubTaskDTO -> SubTask -----
             CreateMap<SubTaskDTO.CreateSubTask, SubTask>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+            CreateMap<NotificationDTO.NotificationBasic, Notification>();
         }
     }
 }

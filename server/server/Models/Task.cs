@@ -21,7 +21,7 @@ public partial class Task
 
     public string CreatedBy { get; set; } = null!;
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  
 
     public DateTime? Deadline { get; set; }
 

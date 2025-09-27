@@ -21,6 +21,7 @@ public class RequireMemberMiddleware
 
         if (projectMember == null)
         {
+            Console.WriteLine("Member not found");
             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "User is not a member of this project" }));
             return;

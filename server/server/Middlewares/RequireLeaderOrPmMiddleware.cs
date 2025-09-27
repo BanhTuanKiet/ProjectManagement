@@ -21,16 +21,16 @@ public class RequireLeaderOrPmMiddleware
             || context.Request.Method == HttpMethods.Post)
         {
             var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var projectMember = context.Items["Project"] as ProjectMember;
-
+            var projectMember = context.Items["ProjectMember"] as ProjectMember;
+                
             if (projectMember == null || projectMember.RoleInProject != "Project Manager" && projectMember.RoleInProject != "Leader")
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "You do not have permission for this action" }));
                 return;
             }
-
-            await _next(context);
         }
+
+        await _next(context);
     }
 }

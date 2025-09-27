@@ -1,5 +1,7 @@
 "use client"
 
+import axios from '@/config/axiosConfig'
+import React, { useEffect } from 'react'
 import {
     X,
     ChevronDown,
@@ -22,19 +24,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
-import { BasicTask } from "@/utils/ITask"
+import { BasicTask, TaskDetail } from "@/utils/ITask"
 import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils"
 
-interface TaskDetailDrawerProps {
-    task: Task | BasicTask | null
-    onClose: () => void
-}
-
-export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProps) {
+export default function TaskDetailModal({ projectId, taskId, onClose }: { projectId: number, taskId: number, onClose: () => void }) {
     const [activeTab, setActiveTab] = useState("all")
     const [comment, setComment] = useState("")
+    const [task, setTask] = useState<TaskDetail>()
 
-    if (!task) return null
+    useEffect(() => {
+        const fetchTaskDetail = async () => {
+            try {
+                console.log("AAAAAAAAA")
+                const response = await axios.get(`/tasks/detail/${projectId}/${taskId}`)
+                console.log(response.data)
+                setTask(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchTaskDetail()
+    }, [projectId, taskId])
+
+    if (!task) return
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -49,11 +62,11 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                         </Button>
                         <span className="text-gray-400">/</span>
                         <div className="flex items-center gap-2">
-                            {"key" in task ? (
+                            {/* {"key" in task ? (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                     {task.key}
                                 </Badge>
-                            ) : null}
+                            ) : null} */}
 
                         </div>
                     </div>
@@ -80,7 +93,7 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                     <div className="flex-1 overflow-auto">
                         <div className="p-6 space-y-6">
                             <div className="flex items-center justify-between">
-                                <h1 className="text-xl font-medium text-gray-900 flex-1 mr-4">{("summary" in task ? task.summary : "") || "No title"}</h1>
+                                {/* <h1 className="text-xl font-medium text-gray-900 flex-1 mr-4">{("summary" in task ? task.summary : "") || "No title"}</h1> */}
                                 <div className="flex items-center gap-2">
                                     <Badge className={`${getTaskStatusBadge(task.status)} border`}>
                                         {task.status}
@@ -255,7 +268,7 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                                                 <label className="text-xs font-medium text-gray-700 block mb-2">Due date</label>
                                                 <button className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2">
                                                     <Calendar className="h-4 w-4" />
-                                                    {("dueDate" in task ? task.dueDate : null) || "Add due date"}
+                                                    {("dueDate" in task ? task.deadline : null) || "Add due date"}
                                                 </button>
                                             </div>
 

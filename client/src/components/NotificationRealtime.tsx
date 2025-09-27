@@ -8,7 +8,8 @@ import ColoredAvatar from "./ColoredAvatar"
 import { formatSentTime } from "@/utils/dateUtils"
 import { useRef } from "react"
 import axios from "@/config/axiosConfig"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import { useNotification } from "@/app/.context/Notfication"
 
 export default function NotificationRealtime({
     notifications,
@@ -21,16 +22,26 @@ export default function NotificationRealtime({
 }) {
     const { proejct_name } = useParams()
     const notificationsRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const { setSelectedTask } = useNotification()
+    const router = useRouter()
 
     const markAsRead = (notification: Notification) => {
         if (notificationsRef.current) clearTimeout(notificationsRef.current)
 
         notificationsRef.current = setTimeout(async () => {
             try {
-                console.log("timeout")
-                // const response = await axios.put(`/notifications/projects/${proejct_name}/tasks/${3}/comments/{commentId}/notifications/{notificationId}/read`)
-                await axios.put(`/notifications/read/${notification.notificationId}`)
+                const response = await axios.put(`/notifications/read/${notification.notificationId}`)
                 setNotifications((prev) => prev.map((notif) => (notif.notificationId === notification.notificationId ? { ...notif, isRead: true } : notif)))
+                console.log(response.data)
+                if (typeof response.data === "string" && response.data.startsWith("/tasks/")) {
+                    const taskId = parseInt(response.data.split("/")[2])
+                    if (!isNaN(taskId)) {
+                        setSelectedTask(taskId)
+                    }
+                    console.log(taskId)
+                }
+                
+                router.push(`/project/${notification.projectId}`)
             } catch (error) {
                 console.log(error)
             }
