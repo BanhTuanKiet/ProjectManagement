@@ -1,5 +1,7 @@
 "use client"
 
+import axios from '@/config/axiosConfig'
+import React, { useEffect } from 'react'
 import {
     X,
     ChevronDown,
@@ -21,84 +23,31 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Textarea } from "@/components/ui/textarea"
-import { BasicTask } from "@/utils/ITask"
+import { useState } from "react"
+import { BasicTask, TaskDetail } from "@/utils/ITask"
 import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils"
-import { useEffect, useState } from "react"
-import axios from "@/config/axiosConfig"
-import ColoredAvatar from "./ColoredAvatar"
 
-interface TaskDetailDrawerProps {
-    task: Task | BasicTask | null
-    onClose: () => void
-}
-
-interface Comment {
-    commentId: number
-    taskId: number
-    userId: string
-    content: string
-    createdAt: string
-    isEdited: boolean
-    userName?: string
-}
-
-
-export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProps) {
+export default function TaskDetailModal({ projectId, taskId, onClose }: { projectId: number, taskId: number, onClose: () => void }) {
     const [activeTab, setActiveTab] = useState("all")
     const [comment, setComment] = useState("")
-    const [comments, setComments] = useState<Comment[]>([])
-    const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+    const [task, setTask] = useState<TaskDetail>()
 
-    console.log("Task in drawer:", task);
     useEffect(() => {
-        if (task) {
-            const taskId = ("taskId" in task ? task.taskId : task.id);
-            axios.get(`/comment/task/${taskId}`).then(res => {
-                setComments(res.data);
-            });
-        }
-    }, [task]);
-
-    console.log("Comments:", comments);
-
-    // thêm comment
-    const handleAddComment = async () => {
-        if (!comment.trim() || !task) return
-        const taskId = ("taskId" in task ? task.taskId : task.id)
-        if (editingCommentId) {
-            // đang edit
-            const res = await axios.put(`/comment/${editingCommentId}`, { content: comment.trim() })
-            setComments(prev => prev.map(c => c.commentId === editingCommentId ? res.data : c))
-            setEditingCommentId(null)
-        } else {
-            // tạo mới
-            const newComment = {
-                TaskId: taskId,
-                Content: comment.trim(),
+        const fetchTaskDetail = async () => {
+            try {
+                console.log("AAAAAAAAA")
+                const response = await axios.get(`/tasks/detail/${projectId}/${taskId}`)
+                console.log(response.data)
+                setTask(response.data)
+            } catch (error) {
+                console.log(error)
             }
-            const res = await axios.post(`/comment`, newComment)
-            setComments(prev => [res.data, ...prev])
         }
 
-        setComment("")
-    }
+        fetchTaskDetail()
+    }, [projectId, taskId])
 
-
-    if (!task) return null;
-
-    // sửa comment
-    const handleEditClick = (c: Comment) => {
-        setComment(c.content)            // fill data lên textarea
-        setEditingCommentId(c.commentId) // bật chế độ edit
-    }
-
-
-    // xóa comment
-    const handleDeleteComment = async (id: number) => {
-        await axios.delete(`/comment/${id}`)
-        setComments((prev) => prev.filter((c) => c.commentId !== id))
-    }
-
+    if (!task) return
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -113,11 +62,11 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                         </Button>
                         <span className="text-gray-400">/</span>
                         <div className="flex items-center gap-2">
-                            {"key" in task ? (
+                            {/* {"key" in task ? (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                     {task.key}
                                 </Badge>
-                            ) : null}
+                            ) : null} */}
 
                         </div>
                     </div>
@@ -144,7 +93,7 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                     <div className="flex-1 overflow-auto">
                         <div className="p-6 space-y-6">
                             <div className="flex items-center justify-between">
-                                <h1 className="text-xl font-medium text-gray-900 flex-1 mr-4">{("summary" in task ? task.summary : "") || "No title"}</h1>
+                                {/* <h1 className="text-xl font-medium text-gray-900 flex-1 mr-4">{("summary" in task ? task.summary : "") || "No title"}</h1> */}
                                 <div className="flex items-center gap-2">
                                     <Badge className={`${getTaskStatusBadge(task.status)} border`}>
                                         {task.status}
@@ -219,45 +168,28 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                                             </div>
                                         </div>
 
-                                        {comments.map((c) => (
-                                            <div key={c.commentId} className="flex gap-3 pb-3">
-                                                {/* Avatar có màu + initials */}
-                                                <ColoredAvatar
-                                                    id={c.userId}
-                                                    name={c.userName ?? "User"}
-                                                    size="md"
-                                                    showOnlineStatus={true}
-                                                />
-                                            
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <span className="font-medium">{c.userName ?? "User"}</span>
-                                                        {/* action mô tả comment (có thể thay đổi text tùy history/comment/worklog) */}
-                                                        <span className="text-gray-500">commented</span>
-                                                    </div>
-
-                                                    {/* Thời gian tạo */}
-                                                    <div className="text-xs text-gray-500 mt-0.5">
-                                                        {new Date(c.createdAt).toLocaleString()}
-                                                    </div>
-
-                                                    {/* Nội dung comment */}
-                                                    <div className="text-sm text-gray-700 mt-1">{c.content}</div>
-
-                                                    {/* Hiển thị “(edited)” nếu có */}
-                                                    {c.isEdited && (
-                                                        <span className="text-xs text-gray-400">(edited)</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </TabsContent>
-
-                                    <TabsContent value="comments" className="mt-4 space-y-4">
-                                        {/* form thêm comment */}
                                         <div className="flex gap-3">
                                             <Avatar className="h-8 w-8">
-                                                <AvatarFallback className="bg-red-500 text-white text-xs">ME</AvatarFallback>
+                                                <AvatarFallback className="bg-red-500 text-white text-xs">TB</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <span className="font-medium">Thái Bảo</span>
+                                                    <span className="text-gray-500">created the</span>
+                                                    <span className="font-medium">Work item</span>
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1">September 7, 2025 at 1:34 PM</div>
+                                                <Badge variant="outline" className="mt-2 text-xs">
+                                                    HISTORY
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </TabsContent>
+
+                                    <TabsContent value="comments" className="mt-4">
+                                        <div className="flex gap-3">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarFallback className="bg-red-500 text-white text-xs">TB</AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1">
                                                 <Textarea
@@ -265,102 +197,32 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                                                     value={comment}
                                                     onChange={(e) => setComment(e.target.value)}
                                                     className="min-h-[80px] resize-none"
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter" && !e.shiftKey) {
-                                                            e.preventDefault()
-                                                            handleAddComment()
-                                                        }
-                                                    }}
                                                 />
                                                 <div className="flex items-center gap-2 mt-2">
-                                                    <Button size="sm" onClick={handleAddComment}>
-                                                        {editingCommentId ? "Update" : "Comment"}
-                                                    </Button>
-                                                    {editingCommentId && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => {
-                                                                setEditingCommentId(null)
-                                                                setComment("")
-                                                            }}
-                                                        >
-                                                            Cancel
+                                                    <div className="flex gap-1">
+                                                        <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto">
+                                                            🎉 Looks good!
                                                         </Button>
-                                                    )}
+                                                        <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto">
+                                                            👋 Need help?
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto">
+                                                            🚫 This is blocked...
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto">
+                                                            🔍 Can you clarify...?
+                                                        </Button>
+                                                    </div>
                                                 </div>
-
+                                                <div className="text-xs text-gray-500 mt-2">
+                                                    Pro tip: press <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">M</kbd> to comment
+                                                </div>
                                             </div>
                                         </div>
-
-                                        {/* danh sách comment */}
-                                        {comments.map((c) => (
-                                            <div key={c.commentId} className="flex gap-3 border-b pb-3">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="bg-gray-500 text-white text-xs">
-                                                        {c.userName?.[0] ?? "U"}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-medium">{c.userName ?? "User"}</span>
-                                                        <span className="text-xs text-gray-400">
-                                                            {new Date(c.createdAt).toLocaleString()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-sm text-gray-700 mt-1">{c.content}</div>
-                                                    {c.isEdited && (
-                                                        <span className="text-xs text-gray-400 ml-1">(edited)</span>
-                                                    )}
-
-                                                    <div className="flex gap-2 text-xs text-blue-600 mt-1">
-                                                        <button onClick={() => handleEditClick(c)}>
-                                                            Edit
-                                                        </button>
-                                                        <button onClick={() => handleDeleteComment(c.commentId)}>
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
                                     </TabsContent>
 
-
                                     <TabsContent value="history" className="mt-4">
-                                        {comments.map((c) => (
-                                            <div key={c.commentId} className="flex gap-3 pb-3">
-                                                {/* Avatar có màu + initials */}
-                                                <ColoredAvatar
-                                                    id={c.userId}
-                                                    name={c.userName ?? "User"}
-                                                    size="md"
-                                                    showOnlineStatus={true}
-                                                />
-
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <span className="font-medium">{c.userName ?? "User"}</span>
-                                                        {/* action mô tả comment (có thể thay đổi text tùy history/comment/worklog) */}
-                                                        <span className="text-gray-500">commented</span>
-                                                    </div>
-
-                                                    {/* Thời gian tạo */}
-                                                    <div className="text-xs text-gray-500 mt-0.5">
-                                                        {new Date(c.createdAt).toLocaleString()}
-                                                    </div>
-
-                                                    {/* Nội dung comment */}
-                                                    <div className="text-sm text-gray-700 mt-1">{c.content}</div>
-
-                                                    {/* Hiển thị “(edited)” nếu có */}
-                                                    {c.isEdited && (
-                                                        <span className="text-xs text-gray-400">(edited)</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-
+                                        <div className="text-sm text-gray-500">History items will appear here</div>
                                     </TabsContent>
 
                                     <TabsContent value="worklog" className="mt-4">
@@ -406,7 +268,7 @@ export default function TaskDetailDrawer({ task, onClose }: TaskDetailDrawerProp
                                                 <label className="text-xs font-medium text-gray-700 block mb-2">Due date</label>
                                                 <button className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2">
                                                     <Calendar className="h-4 w-4" />
-                                                    {("dueDate" in task ? task.dueDate : null) || "Add due date"}
+                                                    {("dueDate" in task ? task.deadline : null) || "Add due date"}
                                                 </button>
                                             </div>
 

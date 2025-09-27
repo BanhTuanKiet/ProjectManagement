@@ -29,5 +29,19 @@ namespace server.Services.Project
         {
             return await _context.Notifications.Where(n => n.UserId == userId).ToListAsync();
         }
+
+        public async Task<Notification> GetNotificationById(long notificationId)
+        {
+            return await _context.Notifications.FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+        }
+
+        public async Task<int> MarkRead(long notifyId)
+        {
+            return await _context.Notifications
+                .Where(n => n.NotificationId == notifyId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(n => n.IsRead, true)
+                );
+        }
     }
 }

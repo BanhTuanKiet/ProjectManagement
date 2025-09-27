@@ -63,6 +63,13 @@ namespace server.Controllers
             return Ok(tasks);
         }
 
+        [HttpGet("detail/{projectId}/{taskId}")]
+        public async Task<ActionResult> GetDetailTaskById(int taskId)
+        {
+            Models.Task task = await _tasksService.GetTaskById(taskId) ?? throw new ErrorException(404, "Task not found");
+            return Ok(task);
+        }
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("view/{projectId}")]
         public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
@@ -94,11 +101,13 @@ namespace server.Controllers
                         ProjectId = formatedTask.ProjectId,
                         Message = $"A new task {formatedTask.Title} has been assigned to you by {formatedTask.CreatedBy}",
                         IsRead = false,
-                        CreatedAt = new DateTime()
+                        CreatedAt = DateTime.UtcNow,
+                        Link = $"/tasks/{formatedTask.TaskId}"
                     };
 
                     await _notificationsService.SaveNotification(notification);
-                    await _hubContext.Clients.User(notification.UserId).SendAsync("TaskAssigned", notification);
+                    await _hubContext.Clients.User(notification.UserId).SendAsync("NotifyTaskAssigned", notification);
+                    await _hubContext.Clients.User(notification.UserId).SendAsync("TaskAssigned", addedTask);
                     await transaction.CommitAsync();
                     return Ok(new { message = "Add new task successful!" });
                 }

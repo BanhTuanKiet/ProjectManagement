@@ -19,7 +19,7 @@ public partial class ProjectHistory
 
     public string CreatedBy { get; set; } = null!;
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  
 
     public string ChangedBy { get; set; } = null!;
 

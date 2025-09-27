@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.Models;
 
-public class RequireLeaderOrPmMiddleware
+public class RequireAssigneeMiddleware
 {
     private readonly RequestDelegate _next;
 
-    public RequireLeaderOrPmMiddleware(RequestDelegate next)
+    public RequireAssigneeMiddleware(RequestDelegate next)
     {
         _next = next;
     }
@@ -21,12 +21,12 @@ public class RequireLeaderOrPmMiddleware
             || context.Request.Method == HttpMethods.Post)
         {
             var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var projectMember = context.Items["ProjectMember"] as ProjectMember;
-                
-            if (projectMember == null || projectMember.RoleInProject != "Project Manager" && projectMember.RoleInProject != "Leader")
+            var task = context.Items["Task"] as server.Models.Task;
+
+            if (task == null || task.AssigneeId != userId)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "You do not have permission for this action" }));
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Only members assigned this task can perform this operation" }));
                 return;
             }
         }

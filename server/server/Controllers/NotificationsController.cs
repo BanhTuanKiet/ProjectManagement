@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using server.Configs;
 using server.Util;
+using server.DTO;
+using AutoMapper;
 
 namespace server.Controllers
 {
@@ -26,14 +28,16 @@ namespace server.Controllers
         private readonly INotifications _notificationService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        public NotificationsController(INotifications notificationService, UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        private readonly IMapper _mapper;
+        public NotificationsController(INotifications notificationService, UserManager<ApplicationUser> userManager, IConfiguration configuration, IMapper mapper)
         {
             _notificationService = notificationService;
             _userManager = userManager;
             _configuration = configuration;
+            _mapper = mapper;
         }
 
-        [Authorize()]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet()]
         public async Task<ActionResult> GetNotifications()
         {
@@ -42,5 +46,22 @@ namespace server.Controllers
             return Ok(notifications);
         }
 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("read/{notifiId}")]
+        public async Task<ActionResult> MarkReadNotfify(int notifiId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Notification notification = await _notificationService.GetNotificationById(notifiId);
+        
+            if (notification == null)  throw new ErrorException(404, "Notification not found");
+
+            if (notification.UserId != userId) throw new ErrorException(403, "This notification does not belong to you");
+
+            if (notification.IsRead) return Ok(notification.Link);
+
+            await _notificationService.MarkRead(notification.NotificationId);
+
+            return Ok(notification.Link);
+        }
     }
 }
