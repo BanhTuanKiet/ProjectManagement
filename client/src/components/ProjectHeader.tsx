@@ -39,7 +39,7 @@ export function ProjectHeader({
                 const reponse = await axios.get(`/users/token`)
                 const token: string = reponse.data ?? ""
                 if (reponse.data) {
-                    // connectSignalR(token)
+                    connectSignalR(token)
                     connectNotificationSignalR(token)
                 }
             } catch (error) {

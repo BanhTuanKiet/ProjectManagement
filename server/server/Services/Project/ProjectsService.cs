@@ -50,5 +50,31 @@ namespace server.Services.Project
       var projectMember = await _context.ProjectMembers.FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == projectId);
       return projectMember.RoleInProject;
     }
+
+    public async Task<bool> ChangeStatusIsStarred(int projectId, bool isStarred)
+    {
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+        if (project == null)
+        {
+            throw new Exception("Project not found");
+        }
+
+        project.IsStarred = isStarred;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> GetStatusIsStarred(int projectId)
+    {
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+        if (project == null)
+        {
+            throw new Exception("Project not found");
+        }
+
+        return project.IsStarred;
+    }
   }
 }

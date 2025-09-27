@@ -6,6 +6,7 @@ namespace server.DTO
     {
       public int ProjectId { get; set; }
       public string Name { get; set; } = null!;
+      public bool IsStarred { get; set; }
     }
 
     public class ProjectMembers

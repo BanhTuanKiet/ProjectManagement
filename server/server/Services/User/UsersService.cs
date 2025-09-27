@@ -71,5 +71,22 @@ namespace server.Services.User
 
             return true;
         }
+
+        public async Task<bool> CheckLogin(string email, string password)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                    return false;
+
+                return await _userManager.CheckPasswordAsync(user, password);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi check login: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

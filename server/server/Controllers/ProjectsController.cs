@@ -47,5 +47,19 @@ namespace server.Controllers
 
             return Ok(projectMembers);
         }
+
+        [HttpPut("starred/{projectId}/{isStarred}")]
+        public async Task<ActionResult> ChangeStatusIsStarred(int projectId, bool isStarred)
+        {
+            await _projectsServices.ChangeStatusIsStarred(projectId, isStarred);
+            return NoContent();
+        }
+
+        [HttpGet("statusStarred/{projectId}")]
+        public async Task<ActionResult> GetStatusIsStarred(int projectId)
+        {
+            bool isStarred = await _projectsServices.GetStatusIsStarred(projectId);
+            return Ok(isStarred);
+        }
     }
 }
