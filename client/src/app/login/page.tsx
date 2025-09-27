@@ -1,9 +1,41 @@
+'use client'
+
 import { Computer, Settings,UsersRound, Contact, Megaphone, Wand, BadgeCent, Mountain} from "lucide-react"
 import { Input } from "@/components/ui/input";
 import Image from 'next/image';
 import Jira from "@/app/Images/Jira.png"
+import { useState } from "react"
+import axios from "@/config/axiosConfig"
+import { useRouter } from "next/navigation"
 
-export default function Home() {
+
+export default function Login() {
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+
+    const router = useRouter()
+
+    const signinGG = async () => {
+        window.location.href = "http://localhost:5144/users/signin-google"
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        try {
+            console.log(email, password)
+            const res = await axios.post("/users/login", {
+                email,
+                password,
+            })
+            
+            console.log("Login success: ", res.data)
+            localStorage.setItem("token", res.data.token)
+            router.push("/project")
+
+        } catch (err: any) {
+            console.error("Login failed:", err.response?.data || err.message)
+        }
+    }
     return (
         <>
         <div className="bg-blue-100">
@@ -48,13 +80,31 @@ export default function Home() {
                 <div className="p-4 border-r border-gray-300">
                     <h1 className="text-6xl font-bold text-black">Connect every team, task and project together with Jira</h1> <br />
                     <strong className="text-sm text-black">Work email</strong>
-                    <Input className = "bg-white mt-2 mb-2 rounded-full" type="email"
-                        placeholder="you@company.com" />
-                    <p className="text-sm text-gray-500">Using a work email helps find teammates and boost collaboration.</p> <br />
-                    <div className="space-y-4">
-            <button className="bg-sky-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-sky-700 transition duration-200 w-full shadow-sm">
-                Sign up
-            </button>
+                    <form onSubmit={handleSubmit}>
+                        <Input
+                            className="bg-white mt-2 mb-2 rounded-full"
+                            type="email"
+                            placeholder="you@company.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <p className="text-sm text-gray-500 text-right">Forgot password?</p>
+                        <Input
+                            className="bg-white mt-2 mb-2 rounded-full"
+                            type="password"
+                            placeholder="your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <p className="text-sm text-gray-500 text-right">Show password</p>    
+                        <p className="text-sm text-gray-500">Using a work email helps find teammates and boost collaboration.</p> <br />
+                        <button className="bg-sky-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-sky-700 transition duration-200 w-full shadow-sm">
+                            Sign up
+                        </button>
+                    </form>
+                    
+                <div className="space-y-4">
+            
             
             <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -66,7 +116,7 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-                <button className="bg-white border border-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-50 transition duration-200 flex items-center justify-center gap-2">
+                <button className="bg-white border border-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-50 transition duration-200 flex items-center justify-center gap-2" onClick={signinGG}>
                     {/* Thêm icon Google ở đây nếu có */}
                     <span>Google</span>
                 </button>

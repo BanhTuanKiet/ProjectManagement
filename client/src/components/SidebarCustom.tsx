@@ -21,7 +21,7 @@ import useSWR from 'swr'
 import { ProjectTitle } from "@/utils/IProject"
 import { useParams, useRouter } from "next/navigation"
 import { fetcher } from "@/config/fetchConfig"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 const projectsData = {
   starred: [
@@ -50,6 +50,12 @@ export function SidebarCustom() {
       ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-l-4 border-blue-600 shadow-sm"
       : "hover:bg-gray-50 hover:text-gray-900 transition-all duration-200"
   }
+
+  const { starredProjects, recentProjects } = useMemo(() => {
+    const starred = data?.filter(p => p.isStarred) ?? []
+    const recent = data?.filter(p => !p.isStarred) ?? []
+    return { starredProjects: starred, recentProjects: recent }
+  }, [data])
 
   return (
     <Sidebar className="border-r border-gray-200 bg-white w-64 shadow-sm">
@@ -133,13 +139,16 @@ export function SidebarCustom() {
                         <div className="text-xs font-semibold text-gray-500 mb-3 px-2 uppercase tracking-wide">
                           Starred
                         </div>
-                        {projectsData?.starred?.map((project) => (
-                          <SidebarMenuSubItem key={project.title}>
+                        {starredProjects.map((project) => (
+                          <SidebarMenuSubItem key={project.projectId}>
                             <SidebarMenuSubButton asChild className="hover:bg-gray-50 rounded-md transition-all duration-200">
-                              <a href={`/project/${project}`} className="flex items-center gap-3 px-3 py-2">
-                                <project.icon className="h-4 w-4 text-yellow-500" />
-                                <span className="text-sm text-gray-700 truncate">{project.title}</span>
-                              </a>
+                              <button
+                                onClick={() => handleClick(project.projectId)}
+                                className="flex items-center gap-3 px-3 py-2 w-full"
+                              >
+                                <Sparkles className="h-4 w-4 text-yellow-500" />
+                                <span className="text-sm text-gray-700 truncate">{project.name}</span>
+                              </button>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -151,9 +160,12 @@ export function SidebarCustom() {
                           Recent
                         </div>
                         <div className="space-y-1">
-                          {data && data?.map((project) => {
+                          {recentProjects.map((project) => {
                             const Icon = Number(project_name) === project.projectId ? FolderOpen : FolderClosed
                             const isActive = Number(project_name) === project.projectId
+                          {/* {data && data?.map((project) => {
+                            const Icon = Number(project_name) === project.projectId ? FolderOpen : FolderClosed
+                            const isActive = Number(project_name) === project.projectId */}
 
                             return (
                               <SidebarMenuSubItem key={project.projectId}>

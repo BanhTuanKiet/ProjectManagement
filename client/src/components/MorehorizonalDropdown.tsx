@@ -9,14 +9,44 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-
-import { useState } from "react"
-import { set } from "date-fns"
+import { useEffect, useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog" 
 import BackgroundPicker from "./ChangeBackground"
+import axios from "@/config/axiosConfig"
+import { useParams } from "next/navigation"
+import { ProjectTitle } from "@/utils/IProject"
+import useSWR, { mutate } from "swr"
+import { fetcher } from "@/config/fetchConfig"
+
 
 export default function ProjectMenu() {
+  const { project_name } = useParams()
+  const projectId = Number(project_name)
+
+  const { data, error } = useSWR<ProjectTitle[]>('http://localhost:5144/projects', fetcher, { revalidateOnReconnect: true })
+
+  const currentProject = data?.find(p => p.projectId === projectId)
+
+  useEffect(() => {
+    if (currentProject) {
+      setIsStarred(currentProject.isStarred)
+    }
+  }, [currentProject])
+
+  const [isStarred, setIsStarred] = useState(currentProject?.isStarred)
   const [bgOpen, setBgOpen] = useState(false);
+
+  const toggleStarred = async () => {
+    try {
+      const reponse = await axios.put(`/projects/starred/${projectId}/${!isStarred}`)
+      console.log(reponse.data)
+      setIsStarred(!isStarred)
+      mutate("http://localhost:5144/projects")
+    } catch (err) {
+      console.error("Error updating starred status", err)
+    }
+  }
+
   return (
   <>
     <DropdownMenu>
@@ -30,11 +60,16 @@ export default function ProjectMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64 p-2 shadow-lg border border-gray-200 rounded-lg">
-        <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-yellow-50 hover:text-yellow-700 transition-colors duration-200 cursor-pointer">
+        <DropdownMenuItem
+          onClick={toggleStarred}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-yellow-50 hover:text-yellow-700 transition-colors duration-200 cursor-pointer"
+        >
           <div className="p-1 rounded-sm bg-yellow-100">
-            <Star className="h-4 w-4 text-yellow-600" />
+            <Star className={`h-4 w-4 ${isStarred ? "text-yellow-600" : "text-gray-400"}`} />
           </div>
-          <span className="text-sm font-medium">Add to starred</span>
+          <span className="text-sm font-medium">
+            {isStarred ? "Remove from starred" : "Add to starred"}
+          </span>
         </DropdownMenuItem>
 
         <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 cursor-pointer">

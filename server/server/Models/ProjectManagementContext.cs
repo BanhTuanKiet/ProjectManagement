@@ -235,6 +235,9 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.CreatedBy).HasMaxLength(128);
             entity.Property(e => e.Name).HasMaxLength(300);
+            entity.Property(e => e.IsStarred)
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.CreatedBy)

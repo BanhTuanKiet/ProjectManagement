@@ -21,6 +21,8 @@ public partial class Project
 
     public bool IsArchived { get; set; }
 
+    public bool IsStarred { get; set; }
+
     public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
 
     public virtual ApplicationUser CreatedByNavigation { get; set; } = null!;

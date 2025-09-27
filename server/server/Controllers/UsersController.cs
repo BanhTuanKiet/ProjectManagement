@@ -16,6 +16,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using server.Configs;
 using server.Util;
+using server.DTO;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace server.Controllers
 {
@@ -64,6 +67,26 @@ namespace server.Controllers
         {
             List<ApplicationUser> users = await _userServices.GetUsers();
             return Ok(users);
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult> Login([FromBody] LoginForm request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+            //if (!isPasswordValid)
+            //    throw new ("Sai mật khẩu!");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = JwtUtils.GenerateToken(user, roles, 1, _configuration);
+            var refreshToken = JwtUtils.GenerateToken(user, roles, 8, _configuration);
+            
+            CookieUtils.SetCookie(Response, "token", token, 8);
+
+            //await _auth.SaveRefreshToken(user, refreshToken);
+
+            return Ok(new { message = "Đăng nhập thành công!" });
         }
     }
 }
