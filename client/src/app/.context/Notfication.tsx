@@ -62,7 +62,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             connection?.stop()
         }
     }, [connection])
-console.log(selectedTask)
+
     return (
         <NotificationContext.Provider value={{ connection, notifications, setNotifications, selectedTask, setSelectedTask, connectNotificationSignalR }}>
             {children}

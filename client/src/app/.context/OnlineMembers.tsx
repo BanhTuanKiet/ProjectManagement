@@ -1,22 +1,24 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
-import { useNotification } from "../.context/Notfication"
 
 type PresenceContextType = {
     connection: signalR.HubConnection | null
     onlineUsers: string[]
+    tokenStored: string
     connectSignalR: (token: string) => void
 }
 
 const PresenceContext = createContext<PresenceContextType>({
     connection: null,
     onlineUsers: [],
+    tokenStored: "",
     connectSignalR: (_token: string) => { }
 })
 
 export const PresenceProvider = ({ children }: { children: React.ReactNode }) => {
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
     const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+    const [tokenStored, setTokenStored] = useState<string>("")
 
     const connectSignalR = (token: string) => {
         const conn = new signalR.HubConnectionBuilder()
@@ -27,6 +29,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
             .build()
         
         setConnection(conn)
+        setTokenStored(token)
     }
 
     useEffect(() => {
@@ -59,7 +62,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
     }, [connection])
 
     return (
-        <PresenceContext.Provider value={{ connection, onlineUsers, connectSignalR }}>
+        <PresenceContext.Provider value={{ connection, onlineUsers, tokenStored, connectSignalR }}>
             {children}
         </PresenceContext.Provider>
     )

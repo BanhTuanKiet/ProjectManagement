@@ -15,7 +15,7 @@ import axios from '@/config/axiosConfig'
 import { Member } from '@/utils/IUser'
 import { useParams } from 'next/navigation'
 import { BasicTask, NewTaskView } from '@/utils/ITask'
-import { formattedDate, setDefaultDeadline } from '@/utils/dateUtils'
+import { formattedDate, getDeadlineFromSelectedDay, setDefaultDeadline } from '@/utils/dateUtils'
 
 export default function AddTaskViewModal({
     isModalOpen,
@@ -33,7 +33,9 @@ export default function AddTaskViewModal({
     setTasks: React.Dispatch<React.SetStateAction<BasicTask[]>>
 }) {
     const { project_name } = useParams()
-    const [task, setTask] = useState<Partial<NewTaskView>>()
+    const [task, setTask] = useState<Partial<NewTaskView>>({
+        Deadline: getDeadlineFromSelectedDay(selectedDay, currentDate).toISOString()
+    })
 
     const handleCloseModal = () => {
         setIsModalOpen(false)
@@ -99,20 +101,24 @@ export default function AddTaskViewModal({
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Due Date & Time</label>
-                                <Input
-                                    type="datetime-local"
-                                    value={
-                                        task?.Deadline
-                                            ? new Date(task.Deadline).toISOString().slice(0, 16)
-                                            : setDefaultDeadline().toISOString().slice(0, 16)
-                                    }
-                                    onChange={(e) =>
-                                        setTask(prev => ({
-                                            ...prev,
-                                            Deadline: e.target.value
-                                        }))
-                                    }
-                                />
+                                <div className="space-y-2">
+                                    <Input
+                                        type="time"
+                                        value={
+                                            task.Deadline
+                                                ? new Date(task.Deadline).toISOString().slice(11, 16)
+                                                : "09:00"
+                                        }
+                                        onChange={(e) =>
+                                            setTask(prev => {
+                                                const baseDate = getDeadlineFromSelectedDay(selectedDay, currentDate)
+                                                const [hours, minutes] = e.target.value.split(":")
+                                                baseDate.setHours(Number(hours) + 7, Number(minutes))
+                                                return { ...prev, Deadline: baseDate.toISOString() }
+                                            })
+                                        }
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
