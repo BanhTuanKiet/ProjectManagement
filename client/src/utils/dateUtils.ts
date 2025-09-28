@@ -46,3 +46,10 @@ export const formatSentTime = (dateString: string) => {
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
     return date.toLocaleDateString()
 }
+
+export function getDeadlineFromSelectedDay(selectedDay: number, currentDate: Date): Date {
+    const baseDate = new Date(currentDate)
+    baseDate.setDate(selectedDay)
+    baseDate.setHours(16, 0, 0, 0)  
+    return baseDate
+}

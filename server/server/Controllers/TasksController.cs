@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using server.DTO;
 using server.Models;
 using server.Services.Task;
-using static NuGet.Packaging.PackagingConstants;
-using static server.DTO.FilterDTO;
 using server.Configs;
-using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.AspNetCore.SignalR;
 
 namespace server.Controllers
@@ -107,7 +98,6 @@ namespace server.Controllers
 
                     await _notificationsService.SaveNotification(notification);
                     await _hubContext.Clients.User(notification.UserId).SendAsync("NotifyTaskAssigned", notification);
-                    await _hubContext.Clients.User(notification.UserId).SendAsync("TaskAssigned", addedTask);
                     await transaction.CommitAsync();
                     return Ok(new { message = "Add new task successful!" });
                 }

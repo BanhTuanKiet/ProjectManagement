@@ -51,12 +51,14 @@ namespace server.Configs
 
                         var principal = context.Principal;
                         var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                        var name = principal.FindFirstValue(ClaimTypes.Name);
                         var roles = principal.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
 
                         Console.WriteLine($"UserId: {userId}, Roles: {string.Join(",", roles)}");
 
                         context.HttpContext.Items["UserId"] = userId;
                         context.HttpContext.Items["Roles"] = roles;
+                        context.HttpContext.Items["name"] = name;
 
                         return System.Threading.Tasks.Task.CompletedTask;
                     },

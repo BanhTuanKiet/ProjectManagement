@@ -11,3 +11,9 @@ export interface UserMini {
   avatar: string;
   initials: string;
 }
+
+export interface ActiveUser {
+    id: string
+    name: string
+    taskId: number
+}

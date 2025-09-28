@@ -73,5 +73,6 @@ app.MiddlewareCustom();
 app.MapControllers();
 app.MapHub<PresenceHubConfig>("/hubs/presence");
 app.MapHub<NotificationHub>("/hubs/notification");
+app.MapHub<TaskHub>("/hubs/task");
 
 app.Run();
