@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace server.Configs
 {
-    public class TaskHub : Hub
+    public class TaskHubConfig : Hub
     {
         private static ConcurrentDictionary<string, ActiveUser> ActiveUsers = new();
 
