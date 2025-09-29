@@ -30,6 +30,15 @@ namespace server.Services.Project
             return await _context.Notifications.Where(n => n.UserId == userId).ToListAsync();
         }
 
+        public async Task<List<Notification>> GetUserNotificationsLast7Days(string userId, int countDay)
+        {
+            var flagDay = DateTime.UtcNow.AddDays(-countDay);
+            return await _context.Notifications
+                .Where(n => n.UserId == userId && n.CreatedAt >= flagDay)
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<Notification> GetNotificationById(long notificationId)
         {
             return await _context.Notifications.FirstOrDefaultAsync(n => n.NotificationId == notificationId);
@@ -42,6 +51,13 @@ namespace server.Services.Project
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(n => n.IsRead, true)
                 );
+        }
+
+        public async Task<int> DeleteNotify(long notifyId)
+        {
+            return await _context.Notifications
+                .Where(n => n.NotificationId == notifyId)
+                .ExecuteDeleteAsync();
         }
     }
 }

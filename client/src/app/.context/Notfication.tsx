@@ -46,7 +46,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         connection.start().then(async () => {
             console.log("Connected to NotificationHub")
 
-            const response = await axios.get(`/notifications`)
+            const response = await axios.get(`/notifications/${7}`)
             setNotifications(response.data)
         }).catch(error => console.log(error))
 
