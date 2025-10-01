@@ -51,11 +51,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
             })
         })
 
-        connection.on("OnlineUsers", (users) => {
-            console.log(users)
-            setOnlineUsers(users)
-        })
-
         return () => {
             connection?.stop()
         }

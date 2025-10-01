@@ -23,16 +23,6 @@ import { useParams, useRouter } from "next/navigation"
 import { fetcher } from "@/config/fetchConfig"
 import { useMemo, useState } from "react"
 
-const projectsData = {
-  starred: [
-    {
-      title: "(Learn) Jira Premium benefits in ...",
-      icon: Sparkles,
-      url: "#",
-    },
-  ],
-}
-
 export function SidebarCustom() {
   const { project_name } = useParams()
   const [activeTab, setActiveTab] = useState<string>()

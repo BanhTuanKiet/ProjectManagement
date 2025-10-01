@@ -20,6 +20,7 @@ namespace server.Models
         public virtual ICollection<FolderSnapshot> FolderSnapshots { get; set; } = new List<FolderSnapshot>();
         //Notification
         public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public virtual ICollection<Notification> CreatedNotifications { get; set; } = new List<Notification>();
         //Project
         public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
         //ProjectFileSnapshot
