@@ -99,8 +99,9 @@ namespace server.Controllers
                     };
 
                     await _notificationsService.SaveNotification(notification);
-                    await _hubContext.Clients.User(notification.UserId).SendAsync("NotifyTaskAssigned", notification);
+                    await NotificationHub.SendTask(_hubContext, notification.UserId, notification);
                     await transaction.CommitAsync();
+                    
                     return Ok(new { message = "Add new task successful!" });
                 }
                 catch (ErrorException ex)

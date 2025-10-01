@@ -18,8 +18,8 @@ type NotificationContextType = {
 const NotificationContext = createContext<NotificationContextType>({
     connection: null,
     notifications: [],
-    connectNotificationSignalR: (_token: string) => { },
-    setNotifications: () => { },
+    connectNotificationSignalR: (_token: string) => {},
+    setNotifications: () => {},
     selectedTask: null,
     setSelectedTask: () => {}
 })
