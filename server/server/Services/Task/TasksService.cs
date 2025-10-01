@@ -20,19 +20,23 @@ namespace server.Services.Project
 
         public async Task<List<TaskDTO.BasicTask>> GetBasicTasksByMonth(
             int projectId,
-            int month,
-            int year,
-            FilterDTO.FilterCalendarView filters)
+            int? month,
+            int? year,
+            FilterDTO.FilterCalendarView? filters)
         {
             var query = _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.CreatedByNavigation)
-                .Where(t => t.ProjectId == projectId
-                            && t.CreatedAt.Month == month
-                            && t.CreatedAt.Year == year);
+                .Where(t => t.ProjectId == projectId);
+ 
+            if (month.HasValue)
+                query = query.Where(t => t.CreatedAt.Month == month);
+
+            if (year.HasValue)
+                query = query.Where(t => t.CreatedAt.Year == year);
 
             if (!string.IsNullOrEmpty(filters.status) && filters.status != "all")
-                query = query.Where(t => t.Status == filters.status);
+                    query = query.Where(t => t.Status == filters.status);
 
             if (!string.IsNullOrEmpty(filters.assignee) && filters.assignee != "all")
                 query = query.Where(t => t.Assignee.UserName == filters.assignee);

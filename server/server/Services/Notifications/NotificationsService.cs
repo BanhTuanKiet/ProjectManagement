@@ -30,13 +30,17 @@ namespace server.Services.Project
             return await _context.Notifications.Where(n => n.UserId == userId).ToListAsync();
         }
 
-        public async Task<List<Notification>> GetUserNotificationsLast7Days(string userId, int countDay)
+        public async Task<List<NotificationDTO.NotificationBasic>> GetUserNotificationsLast7Days(string userId, int countDay)
         {
             var flagDay = DateTime.UtcNow.AddDays(-countDay);
-            return await _context.Notifications
+            var notifications = await _context.Notifications
+                .Include(n => n.User)
+                .Include(n => n.CreatedBy)
                 .Where(n => n.UserId == userId && n.CreatedAt >= flagDay)
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
+
+            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(notifications);
         }
 
         public async Task<Notification> GetNotificationById(long notificationId)

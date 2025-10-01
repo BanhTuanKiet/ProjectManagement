@@ -47,20 +47,16 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
             })
 
             connection.on("UserOffline", (userId: string) => {
+                console.log("UserOffline: ", userId)
                 setOnlineUsers(prev => prev.filter(u => u !== userId))
             })
-        })
-
-        connection.on("OnlineUsers", (users) => {
-            console.log(users)
-            setOnlineUsers(users)
         })
 
         return () => {
             connection?.stop()
         }
     }, [connection])
-
+console.log("usser: awfqwf", onlineUsers)
     return (
         <PresenceContext.Provider value={{ connection, onlineUsers, tokenStored, connectSignalR }}>
             {children}

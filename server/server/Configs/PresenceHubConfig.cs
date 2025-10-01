@@ -19,9 +19,22 @@ namespace server.Configs
             await base.OnConnectedAsync();
         }
 
-        public async Task GetUsersOnline()
+        // public override async Task OnDisconnectedAsync(Exception? exception)
+        // {
+        //     var userId = Context.UserIdentifier ?? Context.ConnectionId;
+        //     if (OnlineUsers.TryRemove(userId, out var connectionId))
+        //     {
+        //         await Clients.All.SendAsync("UserOffline", userId);
+        //         await base.OnDisconnectedAsync(exception);
+        //     }
+        // }
+
+        public static async Task Signout(IHubContext<PresenceHubConfig> hubContext, string userId)
         {
-            await Clients.Caller.SendAsync("OnlineUsers", OnlineUsers.Keys);
+            if (OnlineUsers.TryRemove(userId, out var connectionId))
+            {
+                await hubContext.Clients.All.SendAsync("UserOffline", userId);
+            }
         }
     }
 }

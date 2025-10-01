@@ -42,7 +42,7 @@ namespace server.Controllers
         public async Task<ActionResult> GetNotifications(int countDay)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            List<Notification> notifications = await _notificationService.GetUserNotificationsLast7Days(userId, countDay);
+            List<NotificationDTO.NotificationBasic> notifications = await _notificationService.GetUserNotificationsLast7Days(userId, countDay);
             return Ok(notifications);
         }
 

@@ -1,6 +1,9 @@
 export interface Notification {
     notificationId: number
-    userId: string
+    assigneeId: string
+    assignee: string
+    createdId: string
+    createdBy: string
     projectId: number
     message: string
     link?: string

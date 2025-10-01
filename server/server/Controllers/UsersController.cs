@@ -19,6 +19,7 @@ using server.Util;
 using server.DTO;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 
 namespace server.Controllers
 {
@@ -29,11 +30,17 @@ namespace server.Controllers
         private readonly IUsers _userServices;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        public UsersController(IUsers userServices, UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        private readonly IHubContext<PresenceHubConfig> _hubContext;
+        public UsersController(
+            IUsers userServices,
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration,
+            IHubContext<PresenceHubConfig> hubContext)
         {
             _userServices = userServices;
             _userManager = userManager;
             _configuration = configuration;
+            _hubContext = hubContext;
         }
 
         [HttpGet("signin-google")]
@@ -54,12 +61,14 @@ namespace server.Controllers
 
             return Ok(userId ?? null);
         }
-        
+
         [HttpGet("signout")]
-        public IActionResult Logout()
+        public async Task<ActionResult> Signout()
         {
-            return SignOut(new AuthenticationProperties { RedirectUri = "/" },
-                GoogleDefaults.AuthenticationScheme);
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            CookieConfig.RemoveCookie(Response, "token");
+            await PresenceHubConfig.Signout(_hubContext, userId);
+            return Ok(new { message = "Logout successful" });
         }
 
         [HttpGet("")]

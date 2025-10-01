@@ -54,10 +54,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             setNotifications(prev => [notification, ...prev])
         })
 
-        // connection.on("TaskAssigned", (basicTask: BasicTask) => {
-        //     setSelectedTask(basicTask)
-        // })
-
         return () => {
             connection?.stop()
         }
