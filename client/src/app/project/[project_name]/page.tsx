@@ -142,30 +142,7 @@ export default function ProjectInterface() {
                 </div>
             </div>
             <div>
-                {
-                    // (!tasks || !tasks.length)
-                    //   ?
-                    //   <div className="p-6">
-                    //     <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-96 flex items-center justify-center">
-                    //       <div className="text-center">
-                    //         <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    //           {navigationTabs.find(tab => tab.id === activeTab)?.icon}
-                    //         </div>
-                    //         <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    //           {navigationTabs.find(tab => tab.id === activeTab)?.label}
-                    //         </h3>
-                    //         <p className='text-gray-500'>
-                    //           No tasks available. Start by creating a new task to see it here.
-                    //           <button className="ms-1 p-2 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-100">
-                    //             Add Task
-                    //           </button>
-                    //         </p>
-                    //       </div>
-                    //     </div>
-                    //   </div>
-                    //   :
-                    views[activeTab]
-                }
+                {views[activeTab]}
             </div>
         </div>
     )

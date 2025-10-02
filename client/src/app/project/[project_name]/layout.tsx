@@ -1,0 +1,11 @@
+"use client"
+
+import { TaskProvider } from "@/app/.context/Task"
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+    return (
+        <TaskProvider>
+            <main className="flex-1 overflow-auto">{children}</main>
+        </TaskProvider>
+    )
+}

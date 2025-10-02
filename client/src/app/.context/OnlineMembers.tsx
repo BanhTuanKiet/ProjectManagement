@@ -70,8 +70,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, [connection])
 
-
-    console.log(onlineUsers)
     return (
         <PresenceContext.Provider value={{ connection, onlineUsers, tokenStored, connectSignalR }}>
             {children}
