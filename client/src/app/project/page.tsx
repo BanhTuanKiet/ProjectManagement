@@ -35,7 +35,7 @@ export default function Page() {
   ]
 
   return (
-    <div className="max-w-6xl mx-3 p-6 bg-white min-h-screen">
+    <div className="w-full p-6 bg-white min-h-screen">
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">For you</h1>
 
       <div className="mb-8">
@@ -64,16 +64,16 @@ export default function Page() {
 
               <div className="space-y-3">
                 <h4 className="text-sm font-medium text-gray-700">Quick links</h4>
-                
+
                 <div className="flex items-center justify-between py-1">
                   <span className="text-sm text-gray-700">My open work items</span>
                   <span className="text-sm font-medium text-gray-900">{project.openItems}</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between py-1">
                   <span className="text-sm text-gray-700">Done work items</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between py-1">
                   <button className="flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900">
                     <span>{project.boards} board</span>
@@ -91,11 +91,10 @@ export default function Page() {
           {tabs.map((tab) => (
             <button
               key={tab.name}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                tab.active
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${tab.active
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               {tab.name}
               {tab.count && (

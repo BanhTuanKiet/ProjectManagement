@@ -23,7 +23,7 @@ import { useParams, useRouter } from "next/navigation"
 import { fetcher } from "@/config/fetchConfig"
 import { useMemo, useState } from "react"
 
-export function SidebarCustom() {
+export function SidebarCustom({ className }: { className?: string }) {
   const { project_name } = useParams()
   const [activeTab, setActiveTab] = useState<string>()
   const [isProjectsOpen, setIsProjectsOpen] = useState(true)
@@ -48,7 +48,7 @@ export function SidebarCustom() {
   }, [data])
 
   return (
-    <Sidebar className="border-r border-gray-200 bg-white w-64 shadow-sm">
+    <Sidebar className={`w-64 h-full border-r border-gray-200 bg-white shadow-sm ${className || ""}`}>
       <SidebarContent className="p-3 h-full overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -100,9 +100,9 @@ export function SidebarCustom() {
                         <span className="text-sm font-medium">Projects</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation()
@@ -111,9 +111,9 @@ export function SidebarCustom() {
                         >
                           <Plus className="h-3.5 w-3.5 text-gray-600" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200 cursor-pointer"
                         >
                           <MoreHorizontal className="h-3.5 w-3.5 text-gray-600" />
@@ -153,7 +153,7 @@ export function SidebarCustom() {
                           {recentProjects.map((project) => {
                             const Icon = Number(project_name) === project.projectId ? FolderOpen : FolderClosed
                             const isActive = Number(project_name) === project.projectId
-                          {/* {data && data?.map((project) => {
+                            {/* {data && data?.map((project) => {
                             const Icon = Number(project_name) === project.projectId ? FolderOpen : FolderClosed
                             const isActive = Number(project_name) === project.projectId */}
 
@@ -162,11 +162,10 @@ export function SidebarCustom() {
                                 <SidebarMenuSubButton asChild>
                                   <button
                                     onClick={() => handleClick(project.projectId)}
-                                    className={`flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 cursor-pointer ${
-                                      isActive 
-                                        ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600' 
-                                        : 'hover:bg-gray-50 text-gray-700'
-                                    }`}
+                                    className={`flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 cursor-pointer ${isActive
+                                      ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                                      : 'hover:bg-gray-50 text-gray-700'
+                                      }`}
                                   >
                                     <Icon className={`h-4 w-4 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
                                     <span className="text-sm font-medium truncate">{project.name}</span>
@@ -192,9 +191,9 @@ export function SidebarCustom() {
                       </div>
                       <span className="text-sm font-medium">Teams</span>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors duration-200"
                     >
                       <Plus className="h-3.5 w-3.5 text-gray-600" />

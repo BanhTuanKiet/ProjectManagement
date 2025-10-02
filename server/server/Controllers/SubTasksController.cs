@@ -50,5 +50,24 @@ namespace server.Controllers
             Console.WriteLine("Subtasks for TaskId " + taskId + ": " + subtasks);
             return Ok(subtasks);
         }
+
+        [HttpPut("{subTaskId}/update")]
+        public async Task<IActionResult> UpdateSubTask(int subTaskId, [FromBody] SubTaskDTO.UpdateSubTask dto)
+        {
+            Console.WriteLine("Updating subtask AAAAAAAAAAAAAAAAAAAAAAAAAAAAA:", dto);
+            if (subTaskId != dto.SubTaskId)
+                return BadRequest("SubtaskId mismatch");
+
+            try
+            {
+                var updated = await _subTasksService.UpdateSubTaskAsync(dto);
+                var result = _mapper.Map<SubTaskDTO.BasicSubTask>(updated);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }

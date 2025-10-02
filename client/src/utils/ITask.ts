@@ -73,6 +73,8 @@ export interface BasicTask {
   createdAt: string   
   deadline: string  
   estimateHours?: number
+  subTaskId?: number // nếu là subtask thì có, còn ko thì undefined
+  id?: number // giữ lại id gốc nếu cần
 }
 
 export interface NewTaskView {

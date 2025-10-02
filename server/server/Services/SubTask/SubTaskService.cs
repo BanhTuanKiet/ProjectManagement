@@ -38,5 +38,17 @@ namespace server.Services.SubTask
                 .ToListAsync();
             return _mapper.Map<List<SubTaskDTO.BasicSubTask>>(subtasks);
         }
+        public async Task<Models.SubTask> UpdateSubTaskAsync(SubTaskDTO.UpdateSubTask dto)
+        {
+            var subTask = await _context.SubTasks
+                .FirstOrDefaultAsync(st => st.SubTaskId == dto.SubTaskId && st.TaskId == dto.TaskId);
+
+            if (subTask == null)
+                throw new KeyNotFoundException("Subtask not found.");
+
+            _mapper.Map(dto, subTask);
+            await _context.SaveChangesAsync();
+            return subTask;
+        }
     }
 }

@@ -16,8 +16,10 @@ import type { Column } from "@/config/columsConfig"
 import React, { useState, useEffect, useRef } from "react"
 import axios from "@/config/axiosConfig"
 import DueDateCell from "./DueDateCell"
-import { mapApiTaskToTask } from "@/utils/mapperUtil"
+import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import { getDeadlineStyle } from "@/config/dateConfig"
+import SubtaskList from "./SubtaskList"
+import { getPriorityIcon } from "@/utils/statusUtils"
 
 interface TableWrapperProps {
     tasks: Task[]
@@ -102,7 +104,7 @@ export default function TableWrapper({
         }
     }
 
-    const handleCreateSubtask = async (parentId: number, projectId: number) => {
+    const handleCreateSubtask = async (parentId: number, newSubSummary: string) => {
         if (!newSubSummary.trim()) return
         try {
             const res = await axios.post(`/subtasks`, {
@@ -117,7 +119,7 @@ export default function TableWrapper({
             setNewSubSummary("")
             setAddingSubtaskFor(null)
         } catch (err) {
-            console.error("Error creating subtask", err)
+            console.error("Error creating task", err)
         }
     }
 
@@ -387,6 +389,54 @@ export default function TableWrapper({
                 return <DueDateCell task={task} handleCellEdit={handleCellEdit} />
             }
 
+            case "priority":
+                // Map priority FE string hợp lệ từ BE number hoặc string
+                const priorityStr: "Low" | "Medium" | "High" =
+                    typeof task.priority === "number"
+                        ? mapPriorityFromApi(task.priority) ?? "Low" // BE number -> FE string
+                        : typeof task.priority === "string"
+                            ? task.priority as "Low" | "Medium" | "High"
+                            : "Low";
+
+                // Màu cho badge/menu item
+                const priorityColorMap: Record<"Low" | "Medium" | "High", string> = {
+                    Low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+                    Medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+                    High: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+                };
+
+                return (
+                    <div
+                        key={`${task.id}-${col.key}`}
+                        className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
+                        style={{ width: col.width, minWidth: col.minWidth }}
+                    >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <span className="flex items-center gap-1 cursor-pointer">
+                                    {getPriorityIcon(priorityStr)}
+                                    <Badge className={priorityColorMap[priorityStr]}>{priorityStr}</Badge>
+                                </span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {(["Low", "Medium", "High"] as const).map((p) => (
+                                    <DropdownMenuItem
+                                        key={p}
+                                        onClick={() => {
+                                            // Update local state + gửi BE
+                                            handleCellEdit(task.id, "priority", p)
+                                        }}
+                                        className={`flex items-center gap-2 ${priorityColorMap[p]}`}
+                                    >
+                                        {getPriorityIcon(p)}
+                                        <span>{p}</span>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+
 
             case "created":
                 return (
@@ -443,87 +493,20 @@ export default function TableWrapper({
                         ))}
                     </div>
                     {/* Hiện subtasks nếu expand */}
-                    {expandedTasks.has(task.id) &&
-                        task.subtasks &&
-                        task.subtasks.length > 0 &&
-                        task.subtasks.map((sub) => (
-                            <div key={sub.id} className="flex border-b bg-gray-50 pl-10" style={{ width: totalWidth }}>
-                                {columns.map((col) => (
-                                    <div
-                                        key={`${sub.id}-${col.key}`}
-                                        className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
-                                        style={{ width: col.width, minWidth: col.minWidth }}
-                                    >
-                                        {col.key === "summary" ? (
-                                            <span className="pl-4">↳ {sub.summary}</span>
-                                        ) : col.key === "status" ? (
-                                            <Badge
-                                                className={
-                                                    sub.status === "Done"
-                                                        ? "bg-green-100 text-green-800"
-                                                        : sub.status === "In Progress"
-                                                            ? "bg-blue-100 text-blue-800"
-                                                            : "bg-gray-100 text-gray-800"
-                                                }
-                                            >
-                                                {sub.status}
-                                            </Badge>
-                                        ) : col.key === "assignee" && sub.assignee ? (
-                                            <div className="flex items-center gap-2">
-                                                <ColoredAvatar
-                                                    id={sub.assignee.id || ""}
-                                                    name={sub.assignee.name}
-                                                    src={sub.assignee.avatar}
-                                                    initials={sub.assignee.initials}
-                                                    size="sm"
-                                                />
-                                                <span className="text-sm">{sub.assignee.name}</span>
-                                            </div>
-                                        ) : col.key === "key" ? (
-                                            <span className="text-blue-600">{sub.key}</span>
-                                        ) : col.key === "select" ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6" />
-                                                <Checkbox
-                                                    checked={selectedTasks.has(sub.id)}
-                                                    onCheckedChange={() => toggleTaskSelection(sub.id)}
-                                                    className="h-5 w-5"
-                                                />
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-
-                    {/* row phụ thêm subtask */}
-                    {addingSubtaskFor === task.id && (
-                        <div ref={inputRowRef} className="flex border-b bg-gray-50" style={{ width: totalWidth }}>
-                            <div className="px-3 py-2 w-full flex gap-2">
-                                <Input
-                                    placeholder="Enter subtask summary..."
-                                    value={newSubSummary}
-                                    onChange={(e) => setNewSubSummary(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" && newSubSummary.trim()) {
-                                            handleCreateSubtask(task.id, projectId)
-                                        }
-                                    }}
-                                    className="flex-1"
-                                />
-                                <Button onClick={() => handleCreateSubtask(task.id, projectId)}>Create</Button>
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => {
-                                        setAddingSubtaskFor(null)
-                                        setNewSubSummary("")
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
-                        </div>
+                    {expandedTasks.has(task.id) && (
+                        <SubtaskList
+                            parentTaskId={task.id}
+                            projectId={projectId}
+                            subtasks={task.subtasks || []}
+                            columns={columns}
+                            totalWidth={totalWidth}
+                            selectedTasks={selectedTasks}
+                            toggleTaskSelection={toggleTaskSelection} onCreateSubtask={handleCreateSubtask}
+                            onCancelCreate={() => setAddingSubtaskFor(null)}
+                            isAdding={addingSubtaskFor === task.id}
+                        />
                     )}
+
                 </React.Fragment>
             ))}
             {selectedTasks.size > 0 && (

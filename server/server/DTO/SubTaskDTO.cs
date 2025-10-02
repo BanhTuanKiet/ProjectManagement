@@ -19,5 +19,13 @@ namespace server.DTO
             public string? Status { get; set; }
             public string? AssigneeId { get; set; }
         }
+        public class UpdateSubTask
+        {
+            public int SubTaskId { get; set; }
+            public int TaskId { get; set; }
+            public string? Summary { get; set; }
+            public string? Status { get; set; }
+            public int? AssigneeId { get; set; }
+        }
     }
 }

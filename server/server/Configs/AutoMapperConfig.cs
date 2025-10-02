@@ -31,6 +31,17 @@ namespace server.Configs
             CreateMap<SubTaskDTO.CreateSubTask, SubTask>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
+            CreateMap<SubTaskDTO.UpdateSubTask, SubTask>()
+                .ForMember(dest => dest.Title,
+                        opt => opt.Condition(src => src.Summary != null)) // chỉ map nếu có giá trị
+                .ForMember(dest => dest.Status,
+                        opt => opt.Condition(src => src.Status != null))
+                .ForMember(dest => dest.AssigneeId,
+                        opt => opt.Condition(src => src.AssigneeId != null))
+                .ForMember(dest => dest.Assignee, opt => opt.Ignore()) // tránh map navigation
+                .ForMember(dest => dest.Task, opt => opt.Ignore());
+
+
             CreateMap<Notification, NotificationDTO.NotificationBasic>()
                 .ForMember(dest => dest.AssigneeId,
                             opt => opt.MapFrom(src => src.User.Id))
