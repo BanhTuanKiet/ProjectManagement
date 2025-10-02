@@ -23,6 +23,7 @@ import { BasicTask } from '@/utils/ITask';
 import ListPage from '@/components/ListPage';
 import { useParams } from 'next/navigation';
 import axios from '@/config/axiosConfig';
+import BacklogView from '@/components/BacklogView';
 
 interface NavigationTab {
     id: string;
@@ -34,6 +35,7 @@ interface NavigationTab {
 const navigationTabs: NavigationTab[] = [
     { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
     { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'backlog', label: 'Backlog', icon: <Square className="w-4 h-4" /> },
     { id: 'board', label: 'Board', icon: <Square className="w-4 h-4" /> },
     { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
     { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
@@ -70,6 +72,7 @@ export default function ProjectInterface() {
     }, [project_name])
 
     const views: Record<string, React.ReactNode> = {
+        backlog: <BacklogView />,
         calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
         board: <BoardView tasks={tasks} />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
