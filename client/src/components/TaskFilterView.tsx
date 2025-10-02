@@ -9,6 +9,7 @@ import React from "react"
 import { FilterSelection } from "@/utils/IFilterSelection"
 import { Member } from "@/utils/IUser"
 import { getPriorityBadge, getRoleBadge, getTaskStatusBadge } from "@/utils/statusUtils"
+import ColoredAvatar from "./ColoredAvatar"
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
@@ -74,6 +75,7 @@ export default function TaskFilterView({
             </SelectItem>
             {members && members?.map(member => (
               <SelectItem key={member.userId} value={member.userId}>
+                <ColoredAvatar id={member.userId} name={member.name} />
                 <div className="flex items-center gap-2">
                   <span>{capitalizeFirstLetter(member.name)}</span>
                   {member.role && (

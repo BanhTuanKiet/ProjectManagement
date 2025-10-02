@@ -41,7 +41,7 @@ export default function ColoredAvatar({
     showOnlineStatus?: boolean
 }) {
     const { onlineUsers } = usePresence()
-    const isOnline = onlineUsers?.includes(id) || false
+    const isOnline = (onlineUsers[id] && onlineUsers[id].userId === id) || false
 
     const fallbackInitials =
         initials ||

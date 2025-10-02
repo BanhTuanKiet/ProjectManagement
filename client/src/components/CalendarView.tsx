@@ -192,13 +192,6 @@ export default function CalendarView({
                     setTasks={setTasks}
                 />
             }
-            {selectedTask && (
-                // <TaskDetailDrawer
-                //     task={selectedTask}
-                //     onClose={() => setSelectedTask(null)}
-                // />
-                <TaskDetailModal projectId={parseInt(project_name)} taskId={selectedTask} onClose={() => setSelectedTask(null)} />
-            )}
         </div>
     )
 }

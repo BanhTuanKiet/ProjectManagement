@@ -57,9 +57,8 @@ namespace server.Controllers
         [HttpGet("token")]
         public ActionResult GetToken()
         {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            return Ok(userId ?? null);
+            var token = Request.Cookies["token"];
+            return Ok(token ?? null);
         }
 
         [HttpGet("signout")]
@@ -90,7 +89,7 @@ namespace server.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var token = JwtUtils.GenerateToken(user, roles, 1, _configuration);
             var refreshToken = JwtUtils.GenerateToken(user, roles, 8, _configuration);
-            
+
             CookieUtils.SetCookie(Response, "token", token, 8);
 
             //await _auth.SaveRefreshToken(user, refreshToken);
