@@ -37,6 +37,7 @@ export function ProjectHeader({
         const fetchToken = async () => {
             try {
                 const reponse = await axios.get(`/users/token`)
+                console.log(reponse.data)
                 const token: string = reponse.data ?? ""
                 if (reponse.data) {
                     connectSignalR(token)
