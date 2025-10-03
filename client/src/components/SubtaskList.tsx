@@ -13,6 +13,7 @@ import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon } from "@/utils/statusUtils"
+import { UserMini } from "@/utils/IUser"
 
 
 interface SubtaskListProps {
@@ -26,6 +27,7 @@ interface SubtaskListProps {
     onCreateSubtask: (parentId: number, summary: string) => Promise<void>
     onCancelCreate: () => void
     isAdding: boolean
+    availableUsers?: UserMini[]
 }
 
 export default function SubtaskList({
@@ -39,6 +41,7 @@ export default function SubtaskList({
     onCreateSubtask,
     onCancelCreate,
     isAdding,
+    availableUsers = [],
 }: SubtaskListProps) {
     const inputRowRef = useRef<HTMLDivElement | null>(null)
     const [newSubSummary, setNewSubSummary] = useState("")
@@ -193,28 +196,58 @@ export default function SubtaskList({
                                     </div>
                                 )
 
+
                             case "assignee":
                                 return (
-                                    <div
-                                        key={`${subtask.id}-${col.key}`}
-                                        className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
-                                        style={{ width: col.width, minWidth: col.minWidth }}
-                                    >
-                                        {subtask.assignee ? (
-                                            <div className="flex items-center gap-2">
-                                                <ColoredAvatar
-                                                    id={subtask.assignee.id || ""}
-                                                    name={subtask.assignee.name}
-                                                    src={subtask.assignee.avatar}
-                                                    initials={subtask.assignee.initials}
-                                                    size="sm"
-                                                />
-                                                <span className="text-sm">{subtask.assignee.name}</span>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <div className="flex items-center gap-2 cursor-pointer">
+                                                {typeof subtask.assignee === "string" ? (
+                                                    <>
+                                                        <ColoredAvatar id={subtask.raw.assigneeId ?? ""} name={subtask.assignee} size="sm" />
+                                                        <span className="text-sm">{subtask.assignee}</span>
+                                                    </>
+                                                ) : subtask.assignee ? (
+                                                    <>
+                                                        <ColoredAvatar
+                                                            id={subtask.raw.assigneeId ?? ""}
+                                                            name={subtask.assignee.name}
+                                                            src={subtask.assignee.avatar}
+                                                            initials={subtask.assignee.initials}
+                                                            size="sm"
+                                                        />
+                                                        <span className="text-sm">{subtask.assignee.name}</span>
+                                                    </>
+                                                ) : (
+                                                    <Button variant="ghost" size="sm">
+                                                        Assign
+                                                    </Button>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <span className="text-gray-400">Unassigned</span>
-                                        )}
-                                    </div>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "assignee", undefined)}>
+                                                <div className="flex items-center gap-2">
+                                                    <ColoredAvatar id={subtask.raw.assigneeId ?? ""} name="Unassigned" size="sm" />
+                                                    <span>Unassigned</span>
+                                                </div>
+                                            </DropdownMenuItem>
+                                            {availableUsers.map((u) => (
+                                                <DropdownMenuItem key={u.name} onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "assignee", u)}>
+                                                    <div className="flex items-center gap-2">
+                                                        <ColoredAvatar
+                                                            id={subtask.raw.assigneeId ?? ""}
+                                                            name={u.name}
+                                                            src={u.avatar}
+                                                            initials={u.initials}
+                                                            size="sm"
+                                                        />
+                                                        <span>{u.name}</span>
+                                                    </div>
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 )
                             case "priority":
                                 // Map priority FE string hợp lệ từ BE number hoặc string

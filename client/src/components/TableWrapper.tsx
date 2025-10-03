@@ -501,9 +501,11 @@ export default function TableWrapper({
                             columns={columns}
                             totalWidth={totalWidth}
                             selectedTasks={selectedTasks}
-                            toggleTaskSelection={toggleTaskSelection} onCreateSubtask={handleCreateSubtask}
+                            toggleTaskSelection={toggleTaskSelection}
+                            onCreateSubtask={handleCreateSubtask}
                             onCancelCreate={() => setAddingSubtaskFor(null)}
                             isAdding={addingSubtaskFor === task.id}
+                            availableUsers={availableUsers}
                         />
                     )}
 

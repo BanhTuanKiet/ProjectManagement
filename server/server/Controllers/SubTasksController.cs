@@ -24,12 +24,12 @@ namespace server.Controllers
         {
             try
             {
-                Console.WriteLine("Data Đầu vào: ", subTask.AssigneeId);
+                Console.WriteLine("Data Đầu vào: ", subTask.Title);
                 var subtask = _mapper.Map<Models.SubTask>(subTask);
                 Console.WriteLine("Creating subtask: ", subtask);
-                // var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
-                // return Ok(createdSubTask);
-                return Ok("Subtask created successfully");
+                var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
+                return Ok(createdSubTask);
+                // return Ok("Subtask created successfully");
             }
             catch (KeyNotFoundException ex)
             {
