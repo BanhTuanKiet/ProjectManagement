@@ -11,6 +11,15 @@
             public string? Deadline { get; set; }
         }
 
+        public class CreateNewTask
+        {
+            public string Title { get; set; } = null!;
+            public string? Description { get; set; }
+            public string AssigneeId { get; set; }
+            public byte Priority { get; set; }
+            public DateTime? Deadline { get; set; }
+        }
+
         public class BasicTask
         {
             public int TaskId { get; set; }

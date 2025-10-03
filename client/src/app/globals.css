@@ -129,3 +129,7 @@ body {
 [data-state="checked"] svg {
   display: none;
 }
+
+.bg-dynamic {
+  background-color: var(--app-background, #ffffff) !important;
+}

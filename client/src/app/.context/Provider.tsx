@@ -4,6 +4,7 @@ import { SWRConfig } from "swr"
 import { fetcher } from "@/config/fetchConfig"
 import { PresenceProvider } from "./OnlineMembers";
 import { NotificationProvider } from "./Notfication";
+import { ThemeProvider } from "@/app/.context/ThemeContext"
 
 type FetcherError = Error & {
     status?: number
@@ -30,11 +31,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
             }}
         >
             {/* <AuthProvider> */}
+            <ThemeProvider>
             <PresenceProvider>
                 <NotificationProvider>
                     {children}
                 </NotificationProvider>
             </PresenceProvider>
+            </ThemeProvider>
             {/* </AuthProvider> */}
         </SWRConfig>
     )

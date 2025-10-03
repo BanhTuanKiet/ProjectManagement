@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen bg-dynamic`}">
       <SidebarProvider>
         <div className="flex h-full">
           <SidebarCustom />
