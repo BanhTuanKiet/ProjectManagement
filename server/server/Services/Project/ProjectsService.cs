@@ -82,56 +82,56 @@ namespace server.Services.Project
 
             return project.IsStarred;
         }
+
+
+        public async Task<bool> InviteMemberToProject(string toEmail, string inviterName, string projectName, int projectId) {
+            // var token = Guid.NewGuid();
+            //  var invitation = new ProjectInvitation
+            //     {
+            //         ProjectId = projectId,
+            //         Email = toEmail,
+            //         RoleInProject = "Member",
+            //         Token = token,
+            //         IsAccepted = false
+            //     };
+            //     _db.ProjectInvitations.Add(invitation);
+            //     await _db.SaveChangesAsync()
+
+        string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
+
+            string body = $@"
+            <div style='font-family:Arial,sans-serif; text-align:center;'>
+                <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
+                <h2>{inviterName} invited you to <b>{projectName}</b></h2>
+                <a href='http://localhost:3000' 
+                style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
+                    Join the Project
+                </a>
+                <hr style='margin:30px 0;'/>
+                <h3>Use your app to...</h3>
+                <div style='display:flex; justify-content:center; gap:20px;'>
+                    <div style='max-width:200px;'>
+                        <img src='https://cdn-icons-png.flaticon.com/512/1828/1828961.png' width='50'/>
+                        <p>Collaborate, align, and deliver work, all in <b>one place</b></p>
+                    </div>
+                    <div style='max-width:200px;'>
+                        <img src='https://cdn-icons-png.flaticon.com/512/1828/1828859.png' width='50'/>
+                        <p>View work your way using the list, board, calendar and timeline views</p>
+                    </div>
+                    <div style='max-width:200px;'>
+                        <img src='https://cdn-icons-png.flaticon.com/512/1828/1828940.png' width='50'/>
+                        <p>Collect and send work to other teams using <b>forms</b></p>
+                    </div>
+                </div>
+            </div>";
+
+            Console.WriteLine("Sending email to: " + toEmail);
+
+            await EmailUtils.SendEmailAsync(_configuration, toEmail, subject, body);
+            Console.WriteLine("Email sent successfully!");
+
+            return true;
+        }
     }
-
-
-    public async Task<bool> InviteMemberToProject(string toEmail, string inviterName, string projectName, int projectId) {
-// var token = Guid.NewGuid();
-//  var invitation = new ProjectInvitation
-//     {
-//         ProjectId = projectId,
-//         Email = toEmail,
-//         RoleInProject = "Member",
-//         Token = token,
-//         IsAccepted = false
-//     };
-//     _db.ProjectInvitations.Add(invitation);
-//     await _db.SaveChangesAsync()
-
-      string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
-
-        string body = $@"
-        <div style='font-family:Arial,sans-serif; text-align:center;'>
-            <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
-            <h2>{inviterName} invited you to <b>{projectName}</b></h2>
-            <a href='http://localhost:3000' 
-               style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
-                Join the Project
-            </a>
-            <hr style='margin:30px 0;'/>
-            <h3>Use your app to...</h3>
-            <div style='display:flex; justify-content:center; gap:20px;'>
-                <div style='max-width:200px;'>
-                    <img src='https://cdn-icons-png.flaticon.com/512/1828/1828961.png' width='50'/>
-                    <p>Collaborate, align, and deliver work, all in <b>one place</b></p>
-                </div>
-                <div style='max-width:200px;'>
-                    <img src='https://cdn-icons-png.flaticon.com/512/1828/1828859.png' width='50'/>
-                    <p>View work your way using the list, board, calendar and timeline views</p>
-                </div>
-                <div style='max-width:200px;'>
-                    <img src='https://cdn-icons-png.flaticon.com/512/1828/1828940.png' width='50'/>
-                    <p>Collect and send work to other teams using <b>forms</b></p>
-                </div>
-            </div>
-        </div>";
-
-      Console.WriteLine("Sending email to: " + toEmail);
-
-      await EmailUtils.SendEmailAsync(_configuration, toEmail, subject, body);
-      Console.WriteLine("Email sent successfully!");
-
-      return true;
-    }
-  }
 }
+
