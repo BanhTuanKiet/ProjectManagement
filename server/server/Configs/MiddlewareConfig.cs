@@ -23,5 +23,7 @@ public static class MiddlewareConfig
         app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/tasks"),
             branch => branch.UseMiddleware<RequireLeaderOrPmMiddleware>()
         );
+
+
     }
 }
