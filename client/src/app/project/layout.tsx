@@ -6,6 +6,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Providers } from "@/app/.context/Provider"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+
     return (
         <SidebarProvider>
             <div className="w-full h-screen flex flex-col">

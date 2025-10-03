@@ -94,7 +94,7 @@ export default function CalendarView({
     }
 
     return (
-        <div className="p-6 bg-background min-h-screen">
+        <div className="p-6 bg-background min-h-screen bg-dynamic">
             <TaskFilterView
                 members={members ?? []}
                 currentDate={currentDate}
@@ -103,7 +103,7 @@ export default function CalendarView({
                 setFilterSelection={setFilterSelection}
             />
 
-            <div className="border border-border rounded-lg overflow-hidden bg-card">
+            <div className="border border-border rounded-lg overflow-hidden bg-card bg-dynamic">
                 <div className="grid grid-cols-7 border-b border-border">
                     {weekDays.map((day) => (
                         <div key={day} className="p-1 text-center font-medium text-muted-foreground bg-muted/50">
@@ -192,13 +192,6 @@ export default function CalendarView({
                     setTasks={setTasks}
                 />
             }
-            {selectedTask && (
-                // <TaskDetailDrawer
-                //     task={selectedTask}
-                //     onClose={() => setSelectedTask(null)}
-                // />
-                <TaskDetailModal projectId={parseInt(project_name)} taskId={selectedTask} onClose={() => setSelectedTask(null)} />
-            )}
         </div>
     )
 }

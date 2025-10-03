@@ -224,5 +224,28 @@ namespace server.Controllers
             return Ok(new { message = "Update task successful!" });
         }
 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("createTask/{projectId}")]
+        public async Task<ActionResult> CreateTask([FromBody] TaskDTO.CreateNewTask newTask, int projectId)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
+
+            var formatedTask = new Models.Task
+            {
+                ProjectId = projectId,
+                Title = newTask.Title,
+                Description = newTask.Description,
+                Status = "In process",
+                AssigneeId = newTask.AssigneeId,
+                Priority = newTask.Priority,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow,
+                Deadline = newTask.Deadline
+            };
+
+            Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
+
+            return Ok(new { message = "Add new task successful!" });
+        }
     }
 }

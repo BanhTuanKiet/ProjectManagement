@@ -1,23 +1,28 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
 
+type OnlineUser = {
+    userId: string
+    projects: string[]   // danh sách project mà user này đang tham gia
+}
+
 type PresenceContextType = {
     connection: signalR.HubConnection | null
-    onlineUsers: string[]
+    onlineUsers: Record<string, OnlineUser>
     tokenStored: string
     connectSignalR: (token: string) => void
 }
 
 const PresenceContext = createContext<PresenceContextType>({
     connection: null,
-    onlineUsers: [],
+    onlineUsers: {},
     tokenStored: "",
     connectSignalR: (_token: string) => { }
 })
 
 export const PresenceProvider = ({ children }: { children: React.ReactNode }) => {
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
-    const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+    const [onlineUsers, setOnlineUsers] = useState<Record<string, OnlineUser>>({})
     const [tokenStored, setTokenStored] = useState<string>("")
 
     const connectSignalR = (token: string) => {
@@ -27,7 +32,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
             })
             .withAutomaticReconnect()
             .build()
-        
+
         setConnection(conn)
         setTokenStored(token)
     }
@@ -38,16 +43,25 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
         connection.start().then(() => {
             console.log("Connected to PresenceHub")
 
-            connection.on("OnlineUsers", (users: string[]) => {
-                setOnlineUsers(users)
+            connection.on("OnlineUsers", (users: OnlineUser[]) => {
+                const map: Record<string, OnlineUser> = {}
+                users.forEach(u => { map[u.userId] = u })
+                setOnlineUsers(map)
             })
 
-            connection.on("UserOnline", (userId: string) => {
-                setOnlineUsers(prev => [...prev, userId])
+            connection.on("UserOnline", (user: OnlineUser) => {
+                setOnlineUsers(prev => ({
+                    ...prev,
+                    [user.userId]: user
+                }))
             })
 
             connection.on("UserOffline", (userId: string) => {
-                setOnlineUsers(prev => prev.filter(u => u !== userId))
+                setOnlineUsers(prev => {
+                    const newMap = { ...prev }
+                    delete newMap[userId]
+                    return newMap
+                })
             })
         })
 

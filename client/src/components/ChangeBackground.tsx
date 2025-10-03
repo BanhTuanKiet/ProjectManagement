@@ -1,6 +1,8 @@
 // components/ChangeBackground.tsx
 "use client"
 
+import { useTheme } from "@/app/.context/ThemeContext"
+
 interface BackgroundOption {
   color: string
   name: string
