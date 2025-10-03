@@ -37,6 +37,7 @@ export function ProjectHeader({
         const fetchToken = async () => {
             try {
                 const reponse = await axios.get(`/users/token`)
+                console.log(reponse.data)
                 const token: string = reponse.data ?? ""
                 if (reponse.data) {
                     connectSignalR(token)
@@ -53,6 +54,15 @@ export function ProjectHeader({
 
     const signinGG = async () => {
         window.location.href = "http://localhost:5144/users/signin-google"
+    }
+
+    const handleLogout = async () => {
+        try {
+            const reponse = await axios.get(`/users/signout`)
+            console.log(reponse.data)
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     const unreadCount = notifications?.filter(n => !n.isRead).length
@@ -165,7 +175,10 @@ export function ProjectHeader({
                                         <Users className="h-4 w-4" />
                                         <span>Switch account</span>
                                     </button>
-                                    <button className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700">
+                                    <button 
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
+                                        onClick={() => handleLogout()}
+                                    >
                                         <LogOut className="h-4 w-4" />
                                         <span>Log out</span>
                                     </button>

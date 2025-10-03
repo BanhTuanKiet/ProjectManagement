@@ -4,7 +4,14 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace server.Configs
 {
-    public class TaskHub : Hub
+    public class ActiveUser
+    {
+        public string UserId { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public int TaskId { get; set; }
+    }
+    
+    public class TaskHubConfig : Hub
     {
         private static ConcurrentDictionary<string, ActiveUser> ActiveUsers = new();
 
@@ -53,12 +60,5 @@ namespace server.Configs
 
             await Clients.Caller.SendAsync("ActiveUsersInTask", usersInTask);
         }
-    }
-
-    public class ActiveUser
-    {
-        public string UserId { get; set; } = null!;
-        public string Name { get; set; } = null!;
-        public int TaskId { get; set; }
     }
 }

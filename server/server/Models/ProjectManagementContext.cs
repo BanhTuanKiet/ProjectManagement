@@ -216,6 +216,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.Link).HasMaxLength(1000);
             entity.Property(e => e.Message).HasMaxLength(1000);
             entity.Property(e => e.UserId).HasMaxLength(128);
+            entity.Property(e => e.CreatedId).HasMaxLength(128);
 
             entity.HasOne(d => d.Project).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.ProjectId)
@@ -226,6 +227,11 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Notifications_User");
+
+            entity.HasOne(d => d.CreatedBy).WithMany(p => p.CreatedNotifications)
+                .HasForeignKey(d => d.CreatedId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+                // .HasConstraintName("FK_Notification_AspNetUsers_CreatedId");
         });
 
         modelBuilder.Entity<Project>(entity =>

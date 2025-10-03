@@ -1,27 +1,69 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
+using server.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace server.Configs
 {
+    public class OnlineUser
+    {
+        public string UserId { get; set; } = default!;
+        public string ConnectionId { get; set; } = default!;
+        public List<int> Projects { get; set; } = new();
+    }
+
     public class PresenceHubConfig : Hub
     {
-        private static ConcurrentDictionary<string, string> OnlineUsers = new();
-        public override async Task OnConnectedAsync()
+        private readonly ProjectManagementContext _context;
+
+        public PresenceHubConfig(ProjectManagementContext context)
+        {
+            _context = context;
+        }
+        private static ConcurrentDictionary<string, OnlineUser> OnlineUsers = new();
+
+        public override async System.Threading.Tasks.Task OnConnectedAsync()
         {
             var userId = Context.UserIdentifier ?? Context.ConnectionId;
-            Console.WriteLine("Presence hub: " + userId);
 
-            OnlineUsers[userId] = Context.ConnectionId;
+            var projects = await _context.ProjectMembers
+                .Where(pm => pm.UserId == userId)
+                .Select(pm => pm.ProjectId)
+                .ToListAsync();
 
-            await Clients.Others.SendAsync("UserOnline", userId);
-            await Clients.Caller.SendAsync("OnlineUsers", OnlineUsers.Keys);
+            var onlineUser = new OnlineUser
+            {
+                UserId = userId,
+                ConnectionId = Context.ConnectionId,
+                Projects = projects
+            };
+
+            OnlineUsers[userId] = onlineUser;
+
+            await Clients.Others.SendAsync("UserOnline", onlineUser);
+            await Clients.Caller.SendAsync("OnlineUsers", OnlineUsers.Values);
 
             await base.OnConnectedAsync();
         }
 
-        public async Task GetUsersOnline()
+        // public override async Task OnDisconnectedAsync(Exception? exception)
+        // {
+        //     var userId = Context.UserIdentifier ?? Context.ConnectionId;
+
+        //     if (OnlineUsers.TryRemove(userId, out var removedUser))
+        //     {
+        //         await Clients.All.SendAsync("UserOffline", removedUser.UserId);
+        //     }
+
+        //     await base.OnDisconnectedAsync(exception);
+        // }
+
+        public static async System.Threading.Tasks.Task Signout(IHubContext<PresenceHubConfig> hubContext, string userId)
         {
-            await Clients.Caller.SendAsync("OnlineUsers", OnlineUsers.Keys);
+            if (OnlineUsers.TryRemove(userId, out var removedUser))
+            {
+                await hubContext.Clients.All.SendAsync("UserOffline", removedUser.UserId);
+            }
         }
     }
 }

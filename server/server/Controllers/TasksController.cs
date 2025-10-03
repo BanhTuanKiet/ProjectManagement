@@ -34,7 +34,7 @@ namespace server.Controllers
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{projectId}")]
-        public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int month, int year, string filters)
+        public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)
         {
             FilterDTO.FilterCalendarView filterObj = !string.IsNullOrEmpty(filters)
                 ? JsonConvert.DeserializeObject<FilterDTO.FilterCalendarView>(filters)
@@ -66,6 +66,7 @@ namespace server.Controllers
         public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string name = User.FindFirst(ClaimTypes.Name)?.Value;
             var strategy = _context.Database.CreateExecutionStrategy();
 
             return await strategy.ExecuteAsync(async () =>
@@ -90,15 +91,17 @@ namespace server.Controllers
                     {
                         UserId = formatedTask.AssigneeId,
                         ProjectId = formatedTask.ProjectId,
-                        Message = $"A new task {formatedTask.Title} has been assigned to you by {formatedTask.CreatedBy}",
+                        Message = $"A new task {formatedTask.Title} has been assigned to you by {name}",
                         IsRead = false,
                         CreatedAt = DateTime.UtcNow,
-                        Link = $"/tasks/{formatedTask.TaskId}"
+                        Link = $"/tasks/{formatedTask.TaskId}",
+                        CreatedId = userId
                     };
 
                     await _notificationsService.SaveNotification(notification);
-                    await _hubContext.Clients.User(notification.UserId).SendAsync("NotifyTaskAssigned", notification);
+                    await NotificationHub.SendTask(_hubContext, notification.UserId, notification);
                     await transaction.CommitAsync();
+                    
                     return Ok(new { message = "Add new task successful!" });
                 }
                 catch (ErrorException ex)

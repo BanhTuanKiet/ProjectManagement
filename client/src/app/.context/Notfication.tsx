@@ -18,8 +18,8 @@ type NotificationContextType = {
 const NotificationContext = createContext<NotificationContextType>({
     connection: null,
     notifications: [],
-    connectNotificationSignalR: (_token: string) => { },
-    setNotifications: () => { },
+    connectNotificationSignalR: (_token: string) => {},
+    setNotifications: () => {},
     selectedTask: null,
     setSelectedTask: () => {}
 })
@@ -46,17 +46,13 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         connection.start().then(async () => {
             console.log("Connected to NotificationHub")
 
-            const response = await axios.get(`/notifications`)
+            const response = await axios.get(`/notifications/${7}`)
             setNotifications(response.data)
         }).catch(error => console.log(error))
 
         connection.on("NotifyTaskAssigned", (notification: Notification) => {
             setNotifications(prev => [notification, ...prev])
         })
-
-        // connection.on("TaskAssigned", (basicTask: BasicTask) => {
-        //     setSelectedTask(basicTask)
-        // })
 
         return () => {
             connection?.stop()

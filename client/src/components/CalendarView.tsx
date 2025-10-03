@@ -14,7 +14,6 @@ import type { FilterSelection } from "@/utils/IFilterSelection"
 import type { Member } from "@/utils/IUser"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
-import TaskDetailDrawer from "./TaskDetailDrawer"
 import { useNotification } from "@/app/.context/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
 import { useParams } from "next/navigation"
@@ -193,13 +192,6 @@ export default function CalendarView({
                     setTasks={setTasks}
                 />
             }
-            {selectedTask && (
-                // <TaskDetailDrawer
-                //     task={selectedTask}
-                //     onClose={() => setSelectedTask(null)}
-                // />
-                <TaskDetailModal projectId={parseInt(project_name)} taskId={selectedTask} onClose={() => setSelectedTask(null)} />
-            )}
         </div>
     )
 }

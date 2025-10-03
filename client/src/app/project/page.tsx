@@ -36,10 +36,8 @@ export default function Page() {
 
   return (
     <div className="max-w-6xl mx-3 p-6 bg-white min-h-screen">
-      {/* Header */}
       <h1 className="text-2xl font-semibold text-gray-900 mb-8">For you</h1>
 
-      {/* Recent Projects Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-medium text-gray-900">Recent projects</h2>
@@ -48,14 +46,12 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Project Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {projects.map((project) => (
             <div
               key={project.id}
               className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
             >
-              {/* Project Header */}
               <div className="flex items-start gap-3 mb-4">
                 <div className={`w-8 h-8 rounded ${project.avatarBg} flex items-center justify-center text-sm`}>
                   {project.avatar}
@@ -66,7 +62,6 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* Quick Links */}
               <div className="space-y-3">
                 <h4 className="text-sm font-medium text-gray-700">Quick links</h4>
                 
@@ -91,7 +86,6 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8">
           {tabs.map((tab) => (

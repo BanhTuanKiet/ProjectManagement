@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.Models;
@@ -73,6 +71,6 @@ app.MiddlewareCustom();
 app.MapControllers();
 app.MapHub<PresenceHubConfig>("/hubs/presence");
 app.MapHub<NotificationHub>("/hubs/notification");
-app.MapHub<TaskHub>("/hubs/task");
+app.MapHub<TaskHubConfig>("/hubs/task");
 
 app.Run();

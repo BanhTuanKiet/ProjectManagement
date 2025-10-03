@@ -38,11 +38,11 @@ namespace server.Controllers
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpGet()]
-        public async Task<ActionResult> GetNotifications()
+        [HttpGet("{countDay}")]
+        public async Task<ActionResult> GetNotifications(int countDay)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            List<Notification> notifications = await _notificationService.GetNotificationsByUserId(userId);
+            List<NotificationDTO.NotificationBasic> notifications = await _notificationService.GetUserNotificationsLast7Days(userId, countDay);
             return Ok(notifications);
         }
 
@@ -52,8 +52,8 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Notification notification = await _notificationService.GetNotificationById(notifiId);
-        
-            if (notification == null)  throw new ErrorException(404, "Notification not found");
+
+            if (notification == null) throw new ErrorException(404, "Notification not found");
 
             if (notification.UserId != userId) throw new ErrorException(403, "This notification does not belong to you");
 
@@ -62,6 +62,24 @@ namespace server.Controllers
             await _notificationService.MarkRead(notification.NotificationId);
 
             return Ok(notification.Link);
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpDelete("{notifiId}")]
+        public async Task<ActionResult> DeleteNotify(int notifiId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Notification notification = await _notificationService.GetNotificationById(notifiId);
+
+            if (notification == null) throw new ErrorException(404, "Notification not found");
+
+            if (notification.UserId != userId) throw new ErrorException(403, "This notification does not belong to you");
+
+            int isDeleted = await _notificationService.DeleteNotify(notifiId);
+
+            if (isDeleted <=0 ) throw new ErrorException(400, "Delete failed");
+
+            return Ok(new { message = "Delete successful" });
         }
     }
 }
