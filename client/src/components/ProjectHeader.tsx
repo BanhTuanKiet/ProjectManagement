@@ -69,7 +69,7 @@ export function ProjectHeader({
 
     return (
         <>
-            <header className="flex items-end justify-between px-4 py-2 bg-white border-b border-gray-200 z-50 relative max-w-7xl mx-auto w-full">
+            <header className="flex items-end justify-between px-4 py-2 bg-white border-b border-gray-200 z-50 relative max-w-7xl mx-auto w-full bg-dynamic">
                 {" "}
                 <div className="flex items-center gap-5">
                     <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">

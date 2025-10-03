@@ -12,6 +12,7 @@ using server.Configs;
 using server.DTO;
 using server.Models;
 
+
 namespace server.Controllers
 {
     [Route("[controller]")]
@@ -19,6 +20,7 @@ namespace server.Controllers
     public class ProjectsController : ControllerBase
     {
         private readonly IProjects _projectsServices;
+        
 
         public ProjectsController(IProjects projectsServices)
         {
@@ -60,6 +62,22 @@ namespace server.Controllers
         {
             bool isStarred = await _projectsServices.GetStatusIsStarred(projectId);
             return Ok(isStarred);
+        }
+
+        [HttpPost("inviteMember/{projectId}")]
+        public async Task<ActionResult> SendProjectInviteEmail([FromBody] InvitePeopleForm invitePeopleDTO)
+        {
+            Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Dự án không tồn tại");
+            string projectName = project.Name;
+            try
+            {
+               await _projectsServices.InviteMemberToProject(invitePeopleDTO.ToEmail, "phamtung3328@gmail.com", projectName, invitePeopleDTO.ProjectId);
+            }
+            catch (Exception ex)
+            {
+                //throw new ErrorHandlingException(500, $"Không thể gửi email: {ex.Message}");
+            }
+             return Ok(new { message = "Mời thành viên thành công!" });
         }
     }
 }
