@@ -10,6 +10,7 @@ namespace server.Services.SubTask
         Task<Models.SubTask> CreateSubTaskAsync(Models.SubTask subTask);
         Task<List<SubTaskDTO.BasicSubTask>> GetAllSubTasks();
         Task<List<SubTaskDTO.BasicSubTask>> GetSubTasksByTaskIdAsync(int taskId);
+        Task<Models.SubTask> UpdateSubTaskAsync(SubTaskDTO.UpdateSubTask dto);
 
     }
 }

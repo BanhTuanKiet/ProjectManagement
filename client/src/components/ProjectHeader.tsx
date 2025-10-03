@@ -175,7 +175,7 @@ export function ProjectHeader({
                                         <Users className="h-4 w-4" />
                                         <span>Switch account</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
                                         onClick={() => handleLogout()}
                                     >

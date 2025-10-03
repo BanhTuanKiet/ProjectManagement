@@ -24,12 +24,12 @@ namespace server.Controllers
         {
             try
             {
-                Console.WriteLine("Data Đầu vào: ", subTask.AssigneeId);
+                Console.WriteLine("Data Đầu vào: ", subTask.Title);
                 var subtask = _mapper.Map<Models.SubTask>(subTask);
                 Console.WriteLine("Creating subtask: ", subtask);
-                // var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
-                // return Ok(createdSubTask);
-                return Ok("Subtask created successfully");
+                var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
+                return Ok(createdSubTask);
+                // return Ok("Subtask created successfully");
             }
             catch (KeyNotFoundException ex)
             {
@@ -49,6 +49,25 @@ namespace server.Controllers
             var subtasks = await _subTasksService.GetSubTasksByTaskIdAsync(taskId);
             Console.WriteLine("Subtasks for TaskId " + taskId + ": " + subtasks);
             return Ok(subtasks);
+        }
+
+        [HttpPut("{subTaskId}/update")]
+        public async Task<IActionResult> UpdateSubTask(int subTaskId, [FromBody] SubTaskDTO.UpdateSubTask dto)
+        {
+            Console.WriteLine("Updating subtask AAAAAAAAAAAAAAAAAAAAAAAAAAAAA:", dto);
+            if (subTaskId != dto.SubTaskId)
+                return BadRequest("SubtaskId mismatch");
+
+            try
+            {
+                var updated = await _subTasksService.UpdateSubTaskAsync(dto);
+                var result = _mapper.Map<SubTaskDTO.BasicSubTask>(updated);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
     }
 }
