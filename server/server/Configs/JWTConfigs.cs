@@ -68,7 +68,7 @@ namespace server.Configs
                         context.Response.StatusCode = 403;
                         context.Response.ContentType = "application/json";
 
-                        var response = new { ErrorMessage = "Bạn không có quyền truy cập API này!" };
+                        var response = new { ErrorMessage = "Only members have access!" };
                         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
                     },
                     OnChallenge = async context =>

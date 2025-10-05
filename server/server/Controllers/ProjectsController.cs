@@ -17,10 +17,11 @@ namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "MemberRequirement")]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjects _projectsServices;
-        
+
 
         public ProjectsController(IProjects projectsServices)
         {
@@ -71,13 +72,13 @@ namespace server.Controllers
             string projectName = project.Name;
             try
             {
-               await _projectsServices.InviteMemberToProject(invitePeopleDTO.ToEmail, "phamtung3328@gmail.com", projectName, invitePeopleDTO.ProjectId);
+                await _projectsServices.InviteMemberToProject(invitePeopleDTO.ToEmail, "phamtung3328@gmail.com", projectName, invitePeopleDTO.ProjectId);
             }
             catch (Exception ex)
             {
                 //throw new ErrorHandlingException(500, $"Không thể gửi email: {ex.Message}");
             }
-             return Ok(new { message = "Mời thành viên thành công!" });
+            return Ok(new { message = "Mời thành viên thành công!" });
         }
     }
 }

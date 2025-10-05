@@ -49,7 +49,6 @@ instance.interceptors.response.use(function (response) {
         ErrorNotify(errorMessage)
         break
       case 401:
-        console.log("AAAAAAAAAAAAAAAAAAAAAAA")
         const currentPath = window.location.pathname + window.location.search
         localStorage.setItem("prevPage", currentPath)
         WarningNotify(errorMessage)

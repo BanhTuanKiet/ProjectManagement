@@ -9,6 +9,7 @@ using server.Services.Task;
 using server.Services.User;
 using server.Services.Comment;
 using server.Services;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -36,7 +37,11 @@ builder.Services.AddAuthentication(options =>
 })
 .AddGoogleAuth(builder.Configuration)
 .AddJWT(builder.Configuration);
-// .AddAppCookie();
+
+builder.Services.AddHttpContextAccessor();
+
+//Add authorization config
+builder.Services.AuthorizationPolicy();
 
 // Add services to the container.
 builder.Services.AddScoped<IUsers, UsersService>();
@@ -56,19 +61,21 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-  app.MapOpenApi();
+    app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("_allowSpecificOrigins");
-app.UseAuthentication();    
+app.UseAuthentication();
 app.UseAuthorization();
 
 //middleware
 app.MiddlewareCustom();
 
 app.MapControllers();
+
+//signalr
 app.MapHub<PresenceHubConfig>("/hubs/presence");
 app.MapHub<NotificationHub>("/hubs/notification");
 app.MapHub<TaskHubConfig>("/hubs/task");
