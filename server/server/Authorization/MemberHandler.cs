@@ -14,12 +14,14 @@ public class MemberHandler : AuthorizationHandler<RoleRequirement>
     {
         var httpContext = _httpContextAccessor.HttpContext;
         var projectMember = httpContext?.Items["ProjectMember"] as ProjectMember;
-
+        Console.WriteLine("Projectmemberrrrrrrrrrrrrrrrrrrr: " + projectMember);
         if (projectMember != null)
         {
             context.Succeed(requirement);
+            return System.Threading.Tasks.Task.CompletedTask;
         }
 
+        // context.Fail();
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }

@@ -28,7 +28,7 @@ public class AssigneeHandler : AuthorizationHandler<RoleRequirement>
         if (task == null)
         {
             httpContext!.Items["AuthorizeErrorMessage"] = "Task not found in context.";
-            context.Fail();
+            // context.Fail();
             return System.Threading.Tasks.Task.CompletedTask;
         }
 
@@ -39,7 +39,7 @@ public class AssigneeHandler : AuthorizationHandler<RoleRequirement>
         }
 
         httpContext!.Items["AuthorizeErrorMessage"] = "Only members assigned to this task can perform this operation.";
-        context.Fail();
+        // context.Fail();
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }

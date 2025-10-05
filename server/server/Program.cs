@@ -41,7 +41,10 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddHttpContextAccessor();
 
 //Add authorization config
-builder.Services.AuthorizationPolicy();
+builder.Services.AddAuthorizationBuilder().AddCustomPolicies();
+
+builder.Services.AddSingleton<IAuthorizationHandler, MemberHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, AssigneeHandler>();
 
 // Add services to the container.
 builder.Services.AddScoped<IUsers, UsersService>();
@@ -50,6 +53,7 @@ builder.Services.AddScoped<ITasks, TasksService>();
 builder.Services.AddScoped<INotifications, NotificationsService>();
 builder.Services.AddScoped<ISubTasks, SubTaskService>();
 builder.Services.AddScoped<IComment, CommentService>();
+
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
@@ -68,10 +72,11 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("_allowSpecificOrigins");
 app.UseAuthentication();
+app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<LoadContextMiddleware>();
 app.UseAuthorization();
-
-//middleware
-app.MiddlewareCustom();
+app.UseMiddleware<CustomAuthorizationMiddleware>();
+// app.MiddlewareCustom();
 
 app.MapControllers();
 

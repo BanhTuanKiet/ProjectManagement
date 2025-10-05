@@ -24,12 +24,14 @@ public class LoadContextMiddleware
             var routeValues = context.Request.RouteValues;
             int? projectId = routeValues.TryGetValue("projectId", out var pid) && int.TryParse(pid?.ToString(), out var p) ? p : null;
             int? taskId = routeValues.TryGetValue("taskId", out var tid) && int.TryParse(tid?.ToString(), out var t) ? t : null;
-
+            Console.WriteLine("LOADDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd");
+            Console.WriteLine(userId);
+            Console.WriteLine(projectId + "AAAAAAAAAAAAAAAAAAAAAAAAAA");
             if (projectId != null)
             {
                 var projectMember = await dbContext.ProjectMembers
                     .FirstOrDefaultAsync(m => m.ProjectId == projectId && m.UserId == userId);
-
+                Console.WriteLine(projectMember.RoleInProject);
                 context.Items["ProjectId"] = projectId;
                 context.Items["ProjectMember"] = projectMember;
             }

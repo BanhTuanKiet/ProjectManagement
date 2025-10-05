@@ -14,8 +14,7 @@ namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Policy = "MemberRequirement")]
-    [Authorize(Policy = "AssigneeRequirement")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class TasksController : ControllerBase
     {
         private readonly ProjectManagementContext _context;
@@ -34,7 +33,7 @@ namespace server.Controllers
             _hubContext = hubContext;
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "MemberRequirement")]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)
         {
@@ -47,7 +46,7 @@ namespace server.Controllers
             return Ok(tasks);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "MemberRequirement")]
         [HttpGet("{projectId}/list")]
         public async Task<ActionResult> GetBasicTasksById(int projectId)
         {
@@ -56,6 +55,7 @@ namespace server.Controllers
             return Ok(tasks);
         }
 
+        [Authorize(Policy = "MemberRequirement")]
         [HttpGet("detail/{projectId}/{taskId}")]
         public async Task<ActionResult> GetDetailTaskById(int taskId)
         {
@@ -63,7 +63,7 @@ namespace server.Controllers
             return Ok(task);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("view/{projectId}")]
         public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
         {
@@ -114,7 +114,7 @@ namespace server.Controllers
             });
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "MemberRequirement")]
         [HttpGet("allbasictasks")]
         public async Task<ActionResult> GetAllBasicTasks()
         {
@@ -122,7 +122,7 @@ namespace server.Controllers
 
             return Ok(tasks);
         }
-
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         // [HttpPut("{projectId}/tasks/update")]
         // public async Task<IActionResult> UpdateBasicTasksById(
         //     int projectId,
@@ -138,7 +138,7 @@ namespace server.Controllers
         //     return Ok(result);
         // }    
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -172,7 +172,7 @@ namespace server.Controllers
             return Ok(result);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("list/{projectId}")]
         public async Task<ActionResult> AddTaskView([FromRoute] int projectId, [FromBody] TaskDTO.NewTaskListView newTask)
         {
@@ -191,7 +191,7 @@ namespace server.Controllers
             return Ok(addedTask);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
@@ -209,7 +209,7 @@ namespace server.Controllers
             });
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -226,7 +226,7 @@ namespace server.Controllers
             return Ok(new { message = "Update task successful!" });
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("createTask/{projectId}")]
         public async Task<ActionResult> CreateTask([FromBody] TaskDTO.CreateNewTask newTask, int projectId)
         {

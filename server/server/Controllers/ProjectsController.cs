@@ -17,7 +17,7 @@ namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Policy = "MemberRequirement")]
+    // [Authorize(Policy = "MemberRequirement")]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjects _projectsServices;
