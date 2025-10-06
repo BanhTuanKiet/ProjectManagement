@@ -17,7 +17,7 @@ namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    // [Authorize(Policy = "MemberRequirement")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjects _projectsServices;
@@ -39,7 +39,6 @@ namespace server.Controllers
             return Ok(projects);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("member/{projectId}")]
         public async Task<ActionResult> GetProjectMembers(int projectId)
         {
@@ -68,7 +67,7 @@ namespace server.Controllers
         [HttpPost("inviteMember/{projectId}")]
         public async Task<ActionResult> SendProjectInviteEmail([FromBody] InvitePeopleForm invitePeopleDTO)
         {
-            Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Dự án không tồn tại");
+            Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
             try
             {
@@ -78,7 +77,7 @@ namespace server.Controllers
             {
                 //throw new ErrorHandlingException(500, $"Không thể gửi email: {ex.Message}");
             }
-            return Ok(new { message = "Mời thành viên thành công!" });
+            return Ok(new { message = "Invited member successfully!" });
         }
     }
 }

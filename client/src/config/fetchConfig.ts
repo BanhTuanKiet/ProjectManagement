@@ -8,7 +8,7 @@ export const fetcher = async <T>(url: string): Promise<T> => {
 
   if (!res.ok) {
     const error: FetcherError = new Error("Fetch error")
-    console.log("Erorrrrrrrrrr")
+    console.log(error)
     error.status = res.status
     try {
       error.info = await res.json()
