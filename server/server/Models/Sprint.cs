@@ -16,4 +16,6 @@ public partial class Sprint
     public DateOnly? EndDate { get; set; }
 
     public virtual Project Project { get; set; } = null!;
+    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
+
 }

@@ -13,5 +13,6 @@ namespace server.Services.Task
         Task<Models.Task> AddNewTask(Models.Task newTask);
         Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids);
         Task<Models.Task> UpdateTaskStatus(int taskId, string newStatus);
+        Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId);
     }
 }

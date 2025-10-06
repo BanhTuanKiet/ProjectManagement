@@ -27,6 +27,14 @@ public partial class Task
 
     public decimal? EstimateHours { get; set; }
 
+ // === New properties for Sprint & Backlog ===
+    public int? SprintId { get; set; }
+    public int? BacklogId { get; set; }
+
+    // === Navigation properties ===
+    public virtual Sprint? Sprint { get; set; }
+    public virtual Backlog? Backlog { get; set; }
+    
     public virtual ApplicationUser? Assignee { get; set; }
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

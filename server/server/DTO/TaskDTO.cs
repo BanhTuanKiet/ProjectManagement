@@ -35,12 +35,16 @@
             public DateTime CreatedAt { get; set; }
             public DateTime? Deadline { get; set; }
             public decimal? EstimateHours { get; set; }
+            public int? SprintId { get; set; }
+            public int? BacklogId { get; set; }
         }
 
         public class NewTaskListView
         {
             public string Title { get; set; } = null!;
             public string Status { get; set; } = null!;
+            public int? SprintId { get; set; }
+            public int? BacklogId { get; set; }
         }
         public class BulkDeleteTasksDto
         {
