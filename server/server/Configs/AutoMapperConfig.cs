@@ -51,6 +51,24 @@ namespace server.Configs
                             opt => opt.MapFrom(src => src.CreatedBy.Id))
                 .ForMember(dest => dest.CreatedBy,
                             opt => opt.MapFrom(src => src.CreatedBy.UserName));
+
+            CreateMap<Sprint, SprintDTO.BasicSprint>();
+            CreateMap<SprintDTO.Create, Sprint>()
+                .ForMember(dest => dest.SprintId, opt => opt.Ignore()) // để DB tự tăng
+                .ForMember(dest => dest.Project, opt => opt.Ignore()); // tránh map navigation
+
+            CreateMap<SprintDTO.Update, Sprint>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+                
+                // ---- ✅ BACKLOG ----
+            CreateMap<Backlog, BacklogDTO.BasicBacklog>();
+
+            CreateMap<BacklogDTO.Create, Backlog>()
+                .ForMember(dest => dest.BacklogId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateOnly.FromDateTime(DateTime.UtcNow)));
+
+            CreateMap<BacklogDTO.Update, Backlog>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

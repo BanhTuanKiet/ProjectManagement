@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 import {
     Users,
     Maximize2,
@@ -15,21 +15,21 @@ import {
     Archive,
     Plus,
     Square
-} from 'lucide-react';
-import CalendarView from '@/components/CalendarView';
-import BoardView from '@/components/BoardView';
-import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown';
-import { BasicTask } from '@/utils/ITask';
-import ListPage from '@/components/ListPage';
-import { useParams } from 'next/navigation';
-import axios from '@/config/axiosConfig';
-import BacklogView from '@/components/BacklogView';
+} from 'lucide-react'
+import CalendarView from '@/components/CalendarView'
+import BoardView from '@/components/BoardView'
+import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown'
+import { BasicTask } from '@/utils/ITask'
+import ListPage from '@/components/ListPage'
+import { useParams } from 'next/navigation'
+import axios from '@/config/axiosConfig'
+import BacklogView from '@/components/BacklogView'
 
 interface NavigationTab {
-    id: string;
-    label: string;
-    icon: React.ReactNode;
-    isActive?: boolean;
+    id: string
+    label: string
+    icon: React.ReactNode
+    isActive?: boolean
 }
 
 const navigationTabs: NavigationTab[] = [
@@ -52,16 +52,13 @@ export default function ProjectInterface() {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const response = await axios.get(`/tasks/${project_name}`,
-                    {
-                        params: {
-                            month: null,
-                            year: null,
-                            filters: null,
-                        },
-                    }
-                )
-                console.log(response.data)
+                const response = await axios.get(`/tasks/${project_name}`, {
+                    params: {
+                        month: null,
+                        year: null,
+                        filters: null,
+                    },
+                })
                 setTasks(response.data)
             } catch (error) {
                 console.log(error)
@@ -72,15 +69,16 @@ export default function ProjectInterface() {
     }, [project_name])
 
     const views: Record<string, React.ReactNode> = {
-        backlog: <BacklogView />,
+        backlog: <BacklogView projectId={project_name} />,
         calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
         board: <BoardView tasks={tasks} />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="bg-white border-b border-gray-200">
+        <div className="h-screen flex flex-col bg-gray-50">
+            {/* Header cố định */}
+            <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -119,8 +117,9 @@ export default function ProjectInterface() {
                     </div>
                 </div>
 
-                <div className="px-6">
-                    <nav className="flex space-x-8 border-b border-gray-200">
+                {/* Nav tab cố định ngay dưới header */}
+                <div className="px-6 bg-white border-t border-gray-200">
+                    <nav className="flex space-x-8 border-b border-gray-200 overflow-x-auto">
                         {navigationTabs.map((tab) => (
                             <button
                                 key={tab.id}
@@ -134,14 +133,15 @@ export default function ProjectInterface() {
                                 <span>{tab.label}</span>
                             </button>
                         ))}
-
                         <button className="flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded">
                             <Plus className="w-4 h-4" />
                         </button>
                     </nav>
                 </div>
             </div>
-            <div>
+
+            {/* Nội dung cuộn được */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
                 {views[activeTab]}
             </div>
         </div>

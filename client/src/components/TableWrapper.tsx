@@ -145,7 +145,7 @@ export default function TableWrapper({
                     onDragStart={(e) => handleColumnDragStart(e, i)}
                     onDragOver={handleColumnDragOver}
                     onDrop={(e) => handleColumnDrop(e, i)}
-                    className="relative flex items-center px-3 py-2 border-r text-sm font-medium text-gray-700"
+                    className="relative flex items-center px-3 py-2 border-r border-l text-sm font-medium text-gray-700"
                     style={{ width: col.width, minWidth: col.minWidth }}
                 >
                     {col.key === "select" ? (
@@ -473,7 +473,7 @@ export default function TableWrapper({
                 <React.Fragment key={task.id}>
                     {/* row chính */}
                     <div
-                        className={`flex border-b hover:bg-gray-50 ${selectedTasks.has(task.id) ? "bg-blue-50" : ""}`}
+                        className={`flex border-b border-l hover:bg-gray-200 ${selectedTasks.has(task.id) ? "bg-blue-50" : ""}`}
                         style={{ width: totalWidth }}
                         draggable
                         onDragStart={(e) => handleDragStart(e, task.id)}

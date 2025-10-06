@@ -1,361 +1,643 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Search, Filter, ChevronDown, ChevronRight, Plus, MoreHorizontal, TrendingUp, Settings, Calendar, Minus } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import axios from '@/config/axiosConfig'
+import { useParams } from 'next/navigation'
+import type { ParamValue } from 'next/dist/server/request/params'
+import TaskDetailModal from './TaskDetailModal'
+import {
+  Search, Filter, ChevronDown, ChevronRight,
+  Plus, MoreHorizontal, TrendingUp, Settings
+} from 'lucide-react'
 
-// Types
 interface WorkItem {
-  id: string
+  id: number
   key: string
   title: string
   status: 'TO DO' | 'IN PROGRESS' | 'DONE'
   assignee?: string
   assigneeColor?: string
+  sprintId?: number | null
 }
 
 interface Sprint {
-  id: string
+  sprintId: number
   name: string
+  projectId: number
   startDate?: string
   endDate?: string
-  status: 'active' | 'planned' | 'completed'
+  status?: 'active' | 'planned' | 'completed'
   workItems: WorkItem[]
 }
 
-// Mock Data
-const mockSprints: Sprint[] = [
-  {
-    id: '1',
-    name: 'RTPTMS Sprint 1',
-    startDate: '27 Sep',
-    endDate: '11 Oct',
-    status: 'active',
-    workItems: [
-      {
-        id: '1',
-        key: 'RTPTMS-2',
-        title: '12312123',
-        status: 'TO DO',
-        assignee: '',
-        assigneeColor: '#6B7280'
-      },
-      {
-        id: '2',
-        key: 'RTPTMS-3',
-        title: '123123123',
-        status: 'TO DO',
-        assignee: 'BK',
-        assigneeColor: '#6366F1'
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: 'RTPTMS Sprint 2',
-    status: 'planned',
-    workItems: []
-  }
-]
-
-const mockUsers = [
-  { id: '1', name: 'BK', color: '#6366F1' },
-  { id: '2', name: '', color: '#1F2937' },
-  { id: '3', name: 'FB', color: '#DC2626' }
-]
-
-export default function BacklogView() {
-  const [sprints, setSprints] = useState<Sprint[]>(mockSprints)
+export default function BacklogView({ projectId }: { projectId: ParamValue }) {
+  const [sprints, setSprints] = useState<Sprint[]>([])
   const [backlogItems, setBacklogItems] = useState<WorkItem[]>([])
-  const [expandedSprints, setExpandedSprints] = useState<Set<string>>(new Set(['1', '2', 'backlog']))
+  const [expandedSprints, setExpandedSprints] = useState<Set<string>>(new Set(['backlog']))
   const [searchQuery, setSearchQuery] = useState('')
+  const { project_name } = useParams<{ project_name: string }>()
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>('');
+  const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [isCreating, setIsCreating] = useState<false | number | "backlog">(false);
+  const [newTaskTitles, setNewTaskTitles] = useState<{ [key: string]: string }>({});
+
+
+
+  useEffect(() => {
+    if (!projectId) return
+    fetchData()
+  }, [projectId])
+
+  const fetchData = async () => {
+    try {
+      const [sprintRes, backlogRes, taskRes] = await Promise.all([
+        axios.get(`/sprints/${projectId}`),
+        axios.get(`/backlogs/${projectId}`),
+        axios.get(`/tasks/${projectId}/list`)
+      ])
+
+      const sprintData: Sprint[] = sprintRes.data || []
+      const allTasks: WorkItem[] = taskRes.data.map((t: any) => ({
+        id: t.taskId,
+        key: t.key || `TASK-${t.taskId}`,
+        title: t.title,
+        status: (t.status || 'TO DO').toUpperCase(),
+        sprintId: t.sprintId,
+        assignee: t.assigneeName || '',
+        assigneeColor: '#6366F1'
+      }))
+
+      const sprintMap = sprintData.map(s => ({
+        ...s,
+        workItems: allTasks.filter(t => t.sprintId === s.sprintId)
+      }))
+
+      const backlogTasks = allTasks.filter(t => !t.sprintId)
+
+      setSprints(sprintMap)
+      setBacklogItems(backlogTasks)
+    } catch (err) {
+      console.error('❌ Fetch failed:', err)
+    }
+  }
+
+  const createTask = async (sprintId?: number) => {
+    const key = sprintId ? sprintId.toString() : "backlog";
+    const title = newTaskTitles[key];
+    if (!title?.trim()) return;
+
+    try {
+      // 1️⃣ Gửi yêu cầu tạo task
+      const body: any = {
+        title,
+        status: "TO DO",
+      };
+      if (sprintId) body.sprintId = sprintId;
+
+      const res = await axios.post(`/tasks/list/${projectId}`, body);
+      const taskId = res.data.taskId;
+
+      // 2️⃣ Gọi API lấy chi tiết task vừa tạo
+      const detailRes = await axios.get(`/tasks/detail/${projectId}/${taskId}`);
+      const data = detailRes.data;
+
+      // 3️⃣ Chuẩn hóa dữ liệu để thêm vào UI
+      const newTask: WorkItem = {
+        id: data.taskId,
+        key: data.key || `TASK-${data.taskId}`,
+        title: data.title,
+        status: (data.status || "TO DO").toUpperCase(),
+        sprintId: data.sprintId || null,
+        assignee: data.assigneeName || "",
+        assigneeColor: "#6366F1",
+      };
+
+      // 4️⃣ Cập nhật UI (Sprint hoặc Backlog)
+      if (sprintId) {
+        setSprints((prev) =>
+          prev.map((s) =>
+            s.sprintId === sprintId
+              ? { ...s, workItems: [...s.workItems, newTask] }
+              : s
+          )
+        );
+      } else {
+        setBacklogItems((prev) => [...prev, newTask]);
+      }
+
+      // 5️⃣ Reset form
+      setNewTaskTitles((prev) => ({ ...prev, [key]: "" }));
+      setIsCreating(false);
+
+    } catch (err) {
+      console.error("❌ Error creating task:", err);
+    }
+  };
+
+
+
+
 
   const toggleSprint = (sprintId: string) => {
     setExpandedSprints(prev => {
       const newSet = new Set(prev)
-      if (newSet.has(sprintId)) {
-        newSet.delete(sprintId)
-      } else {
-        newSet.add(sprintId)
-      }
+      newSet.has(sprintId) ? newSet.delete(sprintId) : newSet.add(sprintId)
       return newSet
     })
   }
 
-  const getStatusCounts = (items: WorkItem[]) => {
-    return {
-      todo: items.filter(i => i.status === 'TO DO').length,
-      inProgress: items.filter(i => i.status === 'IN PROGRESS').length,
-      done: items.filter(i => i.status === 'DONE').length
+  const getStatusCounts = (items: WorkItem[]) => ({
+    todo: items.filter(i => i.status === 'TO DO').length,
+    inProgress: items.filter(i => i.status === 'IN PROGRESS').length,
+    done: items.filter(i => i.status === 'DONE').length
+  })
+
+  const handleUpdateTask = async (taskId: number) => {
+    try {
+      await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, {
+        title: editingTitle,
+      });
+
+      setSprints((prev) =>
+        prev.map((s) => ({
+          ...s,
+          workItems: s.workItems.map((t) =>
+            t.id === taskId ? { ...t, title: editingTitle } : t
+          ),
+        }))
+      );
+
+      setBacklogItems((prev) =>
+        prev.map((t) =>
+          t.id === taskId ? { ...t, title: editingTitle } : t
+        )
+      );
+    } catch (error) {
+      console.error('❌ Update task failed:', error);
+    } finally {
+      setEditingTaskId(null);
     }
-  }
+  };
+
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm">
       {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search backlog"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-64 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* User Avatars */}
-            <div className="flex items-center gap-1">
-              <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </button>
-              {mockUsers.map((user, idx) => (
-                <button
-                  key={idx}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold hover:opacity-80"
-                  style={{ backgroundColor: user.color }}
-                >
-                  {user.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Filter */}
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
-              <Filter className="w-4 h-4" />
-              Filter
-            </button>
+      <div className="border-b sticky top-0 z-40 border-gray-200 px-6 py-4 flex items-center justify-between bg-white">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search backlog"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-64 text-sm focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded">
-              <TrendingUp className="w-5 h-5 text-gray-600" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded">
-              <Settings className="w-5 h-5 text-gray-600" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded">
-              <MoreHorizontal className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
+          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+            <Filter className="w-4 h-4" />
+            Filter
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button className="p-2 hover:bg-gray-100 rounded"><TrendingUp className="w-5 h-5" /></button>
+          <button className="p-2 hover:bg-gray-100 rounded"><Settings className="w-5 h-5" /></button>
+          <button className="p-2 hover:bg-gray-100 rounded"><MoreHorizontal className="w-5 h-5" /></button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-6 py-4">
-        {/* Sprints */}
+      {/* Scrollable content (the only scroll layer) */}
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Sprint list */}
         {sprints.map((sprint) => {
           const counts = getStatusCounts(sprint.workItems)
-          const isExpanded = expandedSprints.has(sprint.id)
-          
+          const isExpanded = expandedSprints.has(sprint.sprintId.toString())
+
           return (
-            <div key={sprint.id} className="mb-6">
+            <div key={sprint.sprintId} className="mb-6 border-b border-gray-100 pb-4">
               {/* Sprint Header */}
-              <div className="flex items-center justify-between py-3 group">
+              <div className="flex items-center justify-between py-3 group relative">
                 <div className="flex items-center gap-3">
-                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
                   <button
-                    onClick={() => toggleSprint(sprint.id)}
+                    onClick={() => toggleSprint(sprint.sprintId.toString())}
                     className="hover:bg-gray-100 p-1 rounded"
                   >
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
+                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </button>
-                  <h2 className="font-semibold text-gray-900">{sprint.name}</h2>
-                  {sprint.startDate && sprint.endDate && (
-                    <span className="text-sm text-gray-500">
-                      {sprint.startDate} – {sprint.endDate}
-                    </span>
-                  )}
-                  {!sprint.startDate && (
-                    <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-                      <Calendar className="w-4 h-4" />
-                      Add dates
+
+                  {/* Sprint name + Edit icon */}
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-semibold">{sprint.name}</h2>
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200"
+                      title="Edit sprint name"
+                    >
+                      {/* Pencil/Edit icon */}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L7.5 21H3v-4.5L16.732 3.732z" />
+                      </svg>
                     </button>
-                  )}
+                  </div>
+
                   <span className="text-sm text-gray-500">
                     ({sprint.workItems.length} work items)
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {/* Status Counts */}
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">
-                      {counts.todo}
-                    </span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">
-                      {counts.inProgress}
-                    </span>
-                    <span className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">
-                      {counts.done}
-                    </span>
+                    <span className="px-2 py-1 bg-gray-100 rounded text-sm">{counts.todo}</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">{counts.inProgress}</span>
+                    <span className="px-2 py-1 bg-gray-100 rounded text-sm">{counts.done}</span>
                   </div>
-
-                  {sprint.status === 'active' ? (
-                    <button className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded">
-                      Complete sprint
-                    </button>
-                  ) : (
-                    <button className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded">
-                      Start sprint
-                    </button>
-                  )}
-
-                  <button className="p-1 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100">
-                    <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                  <button className="px-3 py-1 text-sm border rounded hover:bg-gray-50">
+                    {sprint.status === 'active' ? 'Complete sprint' : 'Start sprint'}
                   </button>
                 </div>
               </div>
 
               {/* Sprint Items */}
               {isExpanded && (
-                <div className="ml-12 space-y-2">
-                  {sprint.workItems.length > 0 ? (
-                    sprint.workItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between py-2 px-4 hover:bg-gray-50 rounded group"
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
-                          <span className="text-sm font-medium text-gray-700">{item.key}</span>
+                <div className="ml-8 space-y-2">
+                  {sprint.workItems.length > 0 ? sprint.workItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group flex items-center justify-between py-2 px-4 rounded hover:bg-blue-50 cursor-pointer transition"
+                      onClick={(e) => {
+                        // Chỉ mở modal khi không click checkbox
+                        if ((e.target as HTMLElement).tagName !== 'INPUT') {
+                          setSelectedTaskId(item.id);
+                        }
+                      }}
+
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedTasks.has(item.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setSelectedTasks(prev => {
+                              const newSet = new Set(prev);
+                              if (e.target.checked) newSet.add(item.id);
+                              else newSet.delete(item.id);
+                              return newSet;
+                            });
+                          }}
+                          className="w-4 h-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm font-medium text-gray-700">{item.key}</span>
+                        {editingTaskId === item.id ? (
+                          <input
+                            type="text"
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onBlur={() => handleUpdateTask(item.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateTask(item.id)
+                              if (e.key === 'Escape') setEditingTaskId(null)
+                            }}
+                            className="border rounded px-1 text-sm"
+                            autoFocus
+                          />
+                        ) : (
                           <span className="text-sm text-gray-600">{item.title}</span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <select className="px-3 py-1 text-sm border-0 bg-gray-100 rounded hover:bg-gray-200 focus:outline-none">
-                            <option>TO DO</option>
-                            <option>IN PROGRESS</option>
-                            <option>DONE</option>
-                          </select>
-
-                          <button className="p-1 hover:bg-gray-200 rounded">
-                            <Minus className="w-4 h-4 text-gray-400" />
-                          </button>
-
-                          {item.assignee ? (
-                            <button
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                              style={{ backgroundColor: item.assigneeColor }}
-                            >
-                              {item.assignee}
-                            </button>
-                          ) : (
-                            <button className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
+                        )}
+                        {/* ✏️ Edit icon - hiện khi hover dòng */}
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200"
+                          title="Edit task"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTaskId(item.id);
+                            setEditingTitle(item.title);
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                            className="w-4 h-4 text-gray-600"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M15.232 5.232l3.536 3.536m-2.036-5.036 a2.5 2.5 0 113.536 3.536L7.5 21H3v-4.5 L16.732 3.732z" />
+                          </svg>
+                        </button>
                       </div>
-                    ))
-                  ) : (
-                    <div className="py-8 border-2 border-dashed border-gray-200 rounded-lg text-center">
-                      <p className="text-sm text-gray-500">
-                        Plan a sprint by dragging work items into it, or by dragging the sprint footer.
-                      </p>
+
+
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Eye button */}
+                        <button className="p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+
+                        {/* More button */}
+                        <button className="p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h.01M12 12h.01M18 12h.01" />
+                          </svg>
+                        </button>
+
+                        <select
+                          className="px-2 py-1 text-sm bg-gray-100 rounded"
+                          value={item.status}
+                          onChange={(e) => { e.stopPropagation(); }}
+                        >
+                          <option>TO DO</option>
+                          <option>IN PROGRESS</option>
+                          <option>DONE</option>
+                        </select>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="py-4 text-gray-500 text-sm italic">
+                      No work items in this sprint.
                     </div>
                   )}
-
-                  <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 py-2">
-                    <Plus className="w-4 h-4" />
-                    Create
-                  </button>
+                  {isCreating === sprint.sprintId ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <input
+                        type="text"
+                        placeholder="Enter task summary..."
+                        value={newTaskTitles[sprint.sprintId] || ""}
+                        onChange={(e) =>
+                          setNewTaskTitles((prev) => ({
+                            ...prev,
+                            [sprint.sprintId]: e.target.value,
+                          }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") createTask(sprint.sprintId);
+                          if (e.key === "Escape") {
+                            setIsCreating(false);
+                            setNewTaskTitles((prev) => ({ ...prev, [sprint.sprintId]: "" }));
+                          }
+                        }}
+                        className="border rounded px-2 py-1 text-sm w-64"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => createTask(sprint.sprintId)}
+                        className="bg-black text-white px-3 py-1 rounded text-sm"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsCreating(false);
+                          setNewTaskTitles((prev) => ({ ...prev, [sprint.sprintId]: "" }));
+                        }}
+                        className="text-sm text-gray-500"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIsCreating(sprint.sprintId)}
+                      className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mt-2"
+                    >
+                      <Plus className="w-4 h-4" /> Create
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           )
         })}
 
-        {/* Divider */}
-        <div className="flex items-center justify-center py-6">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="h-px bg-gray-200 w-full"></div>
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-            </svg>
-            <div className="h-px bg-gray-200 w-full"></div>
-          </div>
-        </div>
-
         {/* Backlog Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between py-3 group">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => toggleSprint('backlog')}
-                className="hover:bg-gray-100 p-1 rounded"
-              >
-                {expandedSprints.has('backlog') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
+              <button onClick={() => toggleSprint('backlog')} className="hover:bg-gray-100 p-1 rounded">
+                {expandedSprints.has('backlog')
+                  ? <ChevronDown className="w-4 h-4" />
+                  : <ChevronRight className="w-4 h-4" />}
               </button>
-              <h2 className="font-semibold text-gray-900">Backlog</h2>
-              <span className="text-sm text-gray-500">({backlogItems.length} work items)</span>
+
+              {/* Backlog title + Edit icon */}
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold">Backlog</h2>
+                <button
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200"
+                  title="Edit backlog name"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L7.5 21H3v-4.5L16.732 3.732z" />
+                  </svg>
+                </button>
+              </div>
+
+              <span className="text-sm text-gray-500">
+                ({backlogItems.length} work items)
+              </span>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">0</span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">0</span>
-                <span className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">0</span>
-              </div>
-              <button className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded">
-                Create sprint
-              </button>
-            </div>
+            <button className="px-3 py-1 text-sm border rounded hover:bg-gray-50">Create sprint</button>
           </div>
 
           {expandedSprints.has('backlog') && (
-            <div className="ml-12">
-              {backlogItems.length === 0 ? (
-                <div className="py-8 border-2 border-dashed border-gray-200 rounded-lg text-center">
-                  <p className="text-sm text-gray-500">Your backlog is empty.</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {backlogItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between py-2 px-4 hover:bg-gray-50 rounded"
+            <div className="ml-8 space-y-2">
+              {backlogItems.length > 0 ? backlogItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="group flex items-center justify-between py-2 px-4 rounded hover:bg-gray-100 cursor-pointer transition"
+                  onClick={(e) => {
+                    // Chỉ mở modal khi không click checkbox
+                    if ((e.target as HTMLElement).tagName !== 'INPUT') {
+                      setSelectedTaskId(item.id);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedTasks.has(item.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSelectedTasks(prev => {
+                          const newSet = new Set(prev);
+                          if (e.target.checked) newSet.add(item.id);
+                          else newSet.delete(item.id);
+                          return newSet;
+                        });
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-sm font-medium text-gray-700">{item.key}</span>
+
+                    {editingTaskId === item.id ? (
+                      <input
+                        type="text"
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onBlur={() => handleUpdateTask(item.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleUpdateTask(item.id)
+                          if (e.key === 'Escape') setEditingTaskId(null)
+                        }}
+                        className="border rounded px-1 text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="text-sm text-gray-600">{item.title}</span>
+                    )}
+
+                    {/* ✏️ Edit icon - hiện khi hover dòng */}
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200"
+                      title="Edit task"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTaskId(item.id);
+                        setEditingTitle(item.title);
+                      }}
                     >
-                      <div className="flex items-center gap-3">
-                        <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
-                        <span className="text-sm font-medium text-gray-700">{item.key}</span>
-                        <span className="text-sm text-gray-600">{item.title}</span>
-                      </div>
-                    </div>
-                  ))}
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4 text-gray-600"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036
+           a2.5 2.5 0 113.536 3.536L7.5 21H3v-4.5
+           L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
+
+
+
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+
+                    <button className="p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h.01M12 12h.01M18 12h.01" />
+                      </svg>
+                    </button>
+
+                    <select
+                      className="px-2 py-1 text-sm bg-gray-100 rounded"
+                      value={item.status}
+                      onChange={(e) => { e.stopPropagation(); }}
+                    >
+                      <option>TO DO</option>
+                      <option>IN PROGRESS</option>
+                      <option>DONE</option>
+                    </select>
+                  </div>
                 </div>
+              )) : (
+                <div className="py-4 text-gray-500 text-sm italic">Your backlog is empty.</div>
               )}
 
-              <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 py-2 mt-2">
-                <Plus className="w-4 h-4" />
-                Create
-              </button>
+              {isCreating === "backlog" ? (
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Enter task summary..."
+                    value={newTaskTitles["backlog"] || ""}
+                    onChange={(e) =>
+                      setNewTaskTitles((prev) => ({
+                        ...prev,
+                        backlog: e.target.value,
+                      }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") createTask();
+                      if (e.key === "Escape") {
+                        setIsCreating(false);
+                        setNewTaskTitles((prev) => ({ ...prev, backlog: "" }));
+                      }
+                    }}
+                    className="border rounded px-2 py-1 text-sm w-64"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => createTask()}
+                    className="bg-black text-white px-3 py-1 rounded text-sm"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCreating(false);
+                      setNewTaskTitles((prev) => ({ ...prev, backlog: "" }));
+                    }}
+                    className="text-sm text-gray-500"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsCreating("backlog")}
+                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mt-2"
+                >
+                  <Plus className="w-4 h-4" /> Create
+                </button>
+              )}
+
             </div>
           )}
         </div>
 
-        {/* Footer Stats */}
-        <div className="flex items-center justify-end gap-4 text-sm text-gray-500 py-4">
-          <span>0 of 0 work items visible</span>
-          <span>|</span>
-          {/* <span>Estimate: <strong>0</strong> of <strong>0</strong></span> */}
-        </div>
       </div>
+      {selectedTaskId && (
+        <TaskDetailModal
+          projectId={Number(projectId)}
+          taskId={selectedTaskId}
+          onClose={() => setSelectedTaskId(null)}
+        />
+      )}
+      {selectedTasks.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 flex items-center gap-4 z-50">
+          <span>{selectedTasks.size} work items selected</span>
+          <button
+            className="border px-3 py-1 rounded hover:bg-gray-50"
+            onClick={() => {
+              navigator.clipboard.writeText([...selectedTasks].join(', '));
+            }}
+          >
+            Copy
+          </button>
+          <button
+            className="border px-3 py-1 rounded hover:bg-red-50 text-red-600"
+            onClick={() => {
+              setSprints(prev => prev.map(s => ({
+                ...s,
+                workItems: s.workItems.filter(t => !selectedTasks.has(t.id))
+              })));
+              setBacklogItems(prev => prev.filter(t => !selectedTasks.has(t.id)));
+              setSelectedTasks(new Set());
+            }}
+          >
+            Delete
+          </button>
+          <button
+            className="border px-3 py-1 rounded hover:bg-gray-50"
+            onClick={() => setSelectedTasks(new Set())}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   )
 }
