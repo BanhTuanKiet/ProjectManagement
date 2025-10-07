@@ -17,9 +17,9 @@ public static class AuthorizationConfig
             policy.Requirements.Add(new OnlyPMRequirement()));
 
         builder.Services.AddSingleton<IAuthorizationHandler, MemberHandler>();
-        // builder.Services.AddSingleton<IAuthorizationHandler, AssigneeHandler>();
-        // builder.Services.AddSingleton<IAuthorizationHandler, PMorLeaderHandler>();
-        // builder.Services.AddSingleton<IAuthorizationHandler, ProjectManagerHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, AssigneeHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, PMorLeaderHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, ProjectManagerHandler>();
 
         return builder;
     }

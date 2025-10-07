@@ -27,11 +27,11 @@ public class OnlyAssigneeRequirement : RoleRequirement
 public class OnlyPMOrLeaderRequirement : RoleRequirement
 {
     public OnlyPMOrLeaderRequirement()
-        : base(new[] { "ProjectManager", "Leader" }, new[] { "POST", "PUT", "DELETE" }) { }
+        : base(new[] { "ProjectManager", "Leader" }, new[] { "POST", "PUT", "PATCH", "DELETE" }) { }
 }
 
 public class OnlyPMRequirement : RoleRequirement
 {
     public OnlyPMRequirement()
-        : base(new[] { "ProjectManager", }, new[] { "POST", "PUT", "DELETE" }) { }
+        : base(new[] { "ProjectManager", }, new[] { "POST", "PUT", "PATCH", "DELETE" }) { }
 }
