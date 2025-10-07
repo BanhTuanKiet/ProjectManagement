@@ -56,7 +56,7 @@ export default function ProjectMenu() {
     const formData = {
       toEmail: email,
       projectId: projectId,
-      role: role
+      roleInProject: role
     };
 
     const res = await axios.post(`/projects/inviteMember/${projectId}`, formData);
@@ -178,9 +178,9 @@ export default function ProjectMenu() {
             onChange={(e) => setRole(e.target.value)}
             className="w-full border border-gray-300 rounded-md p-2 mb-4"
           >
-            <option value="Administrator">Administrator</option>
+            <option value="Manager">Manager</option>
             <option value="Member">Member</option>
-            <option value="Viewer">Viewer</option>
+            <option value="User">User</option>
           </select>
 
           {/* Buttons */}

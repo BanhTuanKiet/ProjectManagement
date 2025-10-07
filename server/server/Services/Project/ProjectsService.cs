@@ -84,18 +84,22 @@ namespace server.Services.Project
         }
 
 
-        public async Task<bool> InviteMemberToProject(string toEmail, string inviterName, string projectName, int projectId) {
-            // var token = Guid.NewGuid();
-            //  var invitation = new ProjectInvitation
-            //     {
-            //         ProjectId = projectId,
-            //         Email = toEmail,
-            //         RoleInProject = "Member",
-            //         Token = token,
-            //         IsAccepted = false
-            //     };
-            //     _db.ProjectInvitations.Add(invitation);
-            //     await _db.SaveChangesAsync()
+        public async Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName) {
+            var token = Guid.NewGuid();
+            Console.WriteLine("Invitation record created with token: " + token);
+             var invitation = new ProjectInvitations
+                {
+                    ProjectId = invitePeopleDTO.ProjectId,
+                    Email = invitePeopleDTO.ToEmail,
+                    RoleInProject = invitePeopleDTO.RoleInProject,
+                    Token = token,
+                    IsAccepted = false,
+                    InvitedAt = DateTime.UtcNow
+                };
+                await _context.ProjectInvitations.AddAsync(invitation);
+                Console.WriteLine("Invitation record added to context.");
+                await _context.SaveChangesAsync();
+                
 
         string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
 
@@ -103,7 +107,7 @@ namespace server.Services.Project
             <div style='font-family:Arial,sans-serif; text-align:center;'>
                 <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
                 <h2>{inviterName} invited you to <b>{projectName}</b></h2>
-                <a href='http://localhost:3000' 
+                <a href='http://localhost:3000/login?token={token}'  
                 style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
                     Join the Project
                 </a>
@@ -125,9 +129,9 @@ namespace server.Services.Project
                 </div>
             </div>";
 
-            Console.WriteLine("Sending email to: " + toEmail);
+            Console.WriteLine("Sending email to: " + invitePeopleDTO.ToEmail);
 
-            await EmailUtils.SendEmailAsync(_configuration, toEmail, subject, body);
+            await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
             Console.WriteLine("Email sent successfully!");
 
             return true;

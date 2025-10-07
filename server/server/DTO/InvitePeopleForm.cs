@@ -3,6 +3,6 @@ namespace server.DTO {
     {
         public string ToEmail { get; set; }
         public int ProjectId { get; set; }
-        public string Role { get; set; }
+        public string RoleInProject { get; set; }
     }
 }

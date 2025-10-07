@@ -10,6 +10,6 @@ namespace server.Models
     Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId);
     Task<bool> ChangeStatusIsStarred(int projectId, bool isStarred);
     Task<bool> GetStatusIsStarred(int projectId);
-    Task<bool> InviteMemberToProject(string toEmail, string inviterName, string projectName, int projectId);
+    Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName);
   }
 }
