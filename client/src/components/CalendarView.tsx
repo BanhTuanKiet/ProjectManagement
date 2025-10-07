@@ -2,12 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import type React from "react"
-import ColoredAvatar from "@/components/ColoredAvatar"
-import { Checkbox } from "@/components/ui/checkbox"
 import { getDaysInMonth } from "@/utils/dateUtils"
 import type { BasicTask } from "@/utils/ITask"
 import TaskList from "./TaskList"
-import { getBorderColor, getCheckboxColor } from "@/utils/statusUtils"
 import axios from "@/config/axiosConfig"
 import type { ParamValue } from "next/dist/server/request/params"
 import type { FilterSelection } from "@/utils/IFilterSelection"
@@ -17,6 +14,7 @@ import AddTaskViewModal from "./AddTaskViewModal"
 import { useNotification } from "@/app/.context/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
 import { useParams } from "next/navigation"
+import TaskCalendar from "./TaskCalendar"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -139,21 +137,11 @@ export default function CalendarView({
                                         <div className="space-y-2">
                                             {tasksForDay && (
                                                 <>
-                                                    {(tasksForDay?.length <= 2 ? tasksForDay : tasksForDay.slice(0, 1)).map((task) => (
-                                                        <div key={task.taskId} className="space-y-1">
-                                                            <div
-                                                                className={` flex items-center gap-2 p-1 bg-muted/50 rounded text-xs ${getBorderColor(task.status)}`}
-                                                                onClick={() => setSelectedTask(task.taskId)}
-                                                            >
-                                                                <Checkbox
-                                                                    checked={true}
-                                                                    className={`h-4 w-4 appearance-none ${getCheckboxColor(task.status)}`}
-                                                                />
-                                                                <span className="flex-1 truncate">{task.title}</span>
-                                                                {task.assignee && <ColoredAvatar id={task.assigneeId || ''} name={task.assignee} size="sm" />}
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                    {(tasksForDay?.length <= 2 ? tasksForDay : tasksForDay.slice(0, 1)).map((task) => {
+                                                        return (
+                                                            <TaskCalendar key={task.taskId} task={task} setSelectedTask={setSelectedTask} />
+                                                        )
+                                                    })}
                                                 </>
                                             )}
 
