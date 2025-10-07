@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using server.Models;
 
-public class MemberHandler : AuthorizationHandler<RoleRequirement>
+public class MemberHandler : AuthorizationHandler<OnlyMemberRequirement>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -10,13 +10,14 @@ public class MemberHandler : AuthorizationHandler<RoleRequirement>
         _httpContextAccessor = httpContextAccessor;
     }
 
-    protected override System.Threading.Tasks.Task HandleRequirementAsync(AuthorizationHandlerContext context, RoleRequirement requirement)
+    protected override System.Threading.Tasks.Task HandleRequirementAsync(AuthorizationHandlerContext context, OnlyMemberRequirement requirement)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         var projectMember = httpContext?.Items["ProjectMember"] as ProjectMember;
 
         if (projectMember != null)
         {
+            Console.WriteLine("He is memberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
             context.Succeed(requirement);
             return System.Threading.Tasks.Task.CompletedTask;
         }

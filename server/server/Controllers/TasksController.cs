@@ -33,7 +33,7 @@ namespace server.Controllers
             _hubContext = hubContext;
         }
 
-        [Authorize(Policy = "MemberRequirement")]
+        // [Authorize(Policy = "MemberRequirement")]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)
         {

@@ -26,8 +26,8 @@ namespace server.Services.Project
         public async Task<List<ProjectDTO.ProjectTitile>> GetProjectsTitle(string userId)
         {
             List<server.Models.Project> projects = await _context.Projects
-                .Include(p => p.CreatedByNavigation)
-                .Where(p => p.CreatedBy == userId)
+                .Include(p => p.ProjectMembers)
+                .Where(p => p.ProjectMembers.Any(pm => pm.UserId == userId))
                 .ToListAsync();
 
             return _mapper.Map<List<ProjectDTO.ProjectTitile>>(projects);

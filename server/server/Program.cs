@@ -45,11 +45,6 @@ builder.Services.AddHttpContextAccessor();
 //Add authorization config
 builder.Services.AddAuthorizationBuilder().AddCustomPolicies();
 
-builder.Services.AddSingleton<IAuthorizationHandler, MemberHandler>();
-builder.Services.AddSingleton<IAuthorizationHandler, AssigneeHandler>();
-builder.Services.AddSingleton<IAuthorizationHandler, PMorLeaderHandler>();
-builder.Services.AddSingleton<IAuthorizationHandler, ProjectManagerHandler>();
-
 // Add services to the container.
 builder.Services.AddScoped<IUsers, UsersService>();
 builder.Services.AddScoped<IProjects, ProjectsService>();
@@ -81,7 +76,7 @@ app.UseAuthentication();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<LoadContextMiddleware>();
 app.UseAuthorization();
-app.UseMiddleware<CustomAuthorizationMiddleware>();
+// app.UseMiddleware<CustomAuthorizationMiddleware>();
 // app.MiddlewareCustom();
 
 app.MapControllers();

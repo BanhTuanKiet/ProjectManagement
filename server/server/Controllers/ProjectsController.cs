@@ -32,13 +32,13 @@ namespace server.Controllers
             _context = context;
         }
 
-        [Authorize()]
+        // [Authorize(Policy = "MemberRequirement")]
         [HttpGet()]
         public async Task<ActionResult> GetProjectsTitle()
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             List<ProjectDTO.ProjectTitile> projects =
-              await _projectsServices.GetProjectsTitle("user1") ?? throw new ErrorException(500, "Project not found");
+              await _projectsServices.GetProjectsTitle(userId) ?? throw new ErrorException(500, "Project not found");
 
             return Ok(projects);
         }
@@ -81,13 +81,12 @@ namespace server.Controllers
             }
             catch (Exception ex)
             {
-                throw new ErrorHandlingException(500, $"Không thể gửi email: {ex.Message}");
+                throw new ErrorException(500, $"Không thể gửi email: {ex.Message}");
             }
             return Ok(new { message = "Invited member successfully!" });
         }
 
         [HttpPost("acceptInvitation")]
-        [Authorize] // bắt buộc đã đăng nhập Google
         public async Task<IActionResult> AcceptInvitation([FromQuery] Guid token)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;

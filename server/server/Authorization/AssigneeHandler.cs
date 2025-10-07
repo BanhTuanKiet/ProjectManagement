@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using server.Models;
 
-public class AssigneeHandler : AuthorizationHandler<RoleRequirement>
+public class AssigneeHandler : AuthorizationHandler<OnlyAssigneeRequirement>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -11,7 +11,7 @@ public class AssigneeHandler : AuthorizationHandler<RoleRequirement>
         _httpContextAccessor = httpContextAccessor;
     }
 
-    protected override System.Threading.Tasks.Task HandleRequirementAsync(AuthorizationHandlerContext context, RoleRequirement requirement)
+    protected override System.Threading.Tasks.Task HandleRequirementAsync(AuthorizationHandlerContext context, OnlyAssigneeRequirement requirement)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using server.Models;
 
-public class PMorLeaderHandler : AuthorizationHandler<RoleRequirement>
+public class PMorLeaderHandler : AuthorizationHandler<OnlyPMOrLeaderRequirement>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -11,7 +11,7 @@ public class PMorLeaderHandler : AuthorizationHandler<RoleRequirement>
         _httpContextAccessor = httpContextAccessor;
     }
 
-    protected override System.Threading.Tasks.Task HandleRequirementAsync(AuthorizationHandlerContext context, RoleRequirement requirement)
+    protected override System.Threading.Tasks.Task HandleRequirementAsync(AuthorizationHandlerContext context, OnlyPMOrLeaderRequirement requirement)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         var projectMember = httpContext?.Items["ProjectMember"] as ProjectMember;
