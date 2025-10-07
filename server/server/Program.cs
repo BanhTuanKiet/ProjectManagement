@@ -9,6 +9,7 @@ using server.Services.Task;
 using server.Services.User;
 using server.Services.Comment;
 using server.Services;
+using Microsoft.AspNetCore.Authorization;
 using server.Services.Sprint;
 using server.Services.Backlog;
 
@@ -38,7 +39,16 @@ builder.Services.AddAuthentication(options =>
 })
 .AddGoogleAuth(builder.Configuration)
 .AddJWT(builder.Configuration);
-// .AddAppCookie();
+
+builder.Services.AddHttpContextAccessor();
+
+//Add authorization config
+builder.Services.AddAuthorizationBuilder().AddCustomPolicies();
+
+builder.Services.AddSingleton<IAuthorizationHandler, MemberHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, AssigneeHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, PMorLeaderHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ProjectManagerHandler>();
 
 // Add services to the container.
 builder.Services.AddScoped<IUsers, UsersService>();
@@ -61,19 +71,22 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-  app.MapOpenApi();
+    app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("_allowSpecificOrigins");
-app.UseAuthentication();    
+app.UseAuthentication();
+app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<LoadContextMiddleware>();
 app.UseAuthorization();
-
-//middleware
-app.MiddlewareCustom();
+app.UseMiddleware<CustomAuthorizationMiddleware>();
+// app.MiddlewareCustom();
 
 app.MapControllers();
+
+//signalr
 app.MapHub<PresenceHubConfig>("/hubs/presence");
 app.MapHub<NotificationHub>("/hubs/notification");
 app.MapHub<TaskHubConfig>("/hubs/task");

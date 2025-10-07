@@ -18,12 +18,12 @@ namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjects _projectsServices;
         private readonly UserManager<ApplicationUser> _userManager;
         public readonly ProjectManagementContext _context;
-
 
         public ProjectsController(IProjects projectsServices, UserManager<ApplicationUser> userManager, ProjectManagementContext context)
         {
@@ -43,7 +43,6 @@ namespace server.Controllers
             return Ok(projects);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("member/{projectId}")]
         public async Task<ActionResult> GetProjectMembers(int projectId)
         {
@@ -72,20 +71,19 @@ namespace server.Controllers
         [HttpPost("inviteMember/{projectId}")]
         public async Task<ActionResult> SendProjectInviteEmail([FromBody] InvitePeopleForm invitePeopleDTO)
         {
-            Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Dự án không tồn tại");
+            Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
             Console.WriteLine("Invitation email sent successfully.");
             try
             {
-            //    await _projectsServices.InviteMemberToProject(invitePeopleDTO.ToEmail, "phamtung3328@gmail.com", projectName, invitePeopleDTO.ProjectId);
                 await _projectsServices.InviteMemberToProject(invitePeopleDTO, "trandat2280600642@gmail.com", projectName);
                 Console.WriteLine("Invitation email sent successfully 2.");
             }
             catch (Exception ex)
             {
-                //throw new ErrorHandlingException(500, $"Không thể gửi email: {ex.Message}");
+                throw new ErrorHandlingException(500, $"Không thể gửi email: {ex.Message}");
             }
-             return Ok(new { message = "Mời thành viên thành công!" });
+            return Ok(new { message = "Invited member successfully!" });
         }
 
         [HttpPost("acceptInvitation")]
@@ -144,7 +142,7 @@ namespace server.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "✅ Đã tham gia dự án thành công!" });
+            return Ok(new { message = "Đã tham gia dự án thành công!" });
         }
 
     }

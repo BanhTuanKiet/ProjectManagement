@@ -5,6 +5,7 @@
         public class DecodedToken
         {
             public string userId { get; set; }
+            public string name { get; set; }
             public List<string> roles { get; set; }
         }
     }

@@ -33,6 +33,7 @@ instance.interceptors.response.use(function (response) {
     const statusCode = error.response.status
 
     if (statusCode === 401 && error.response.data?.RetryRequest && !error.config.retry) {
+        console.log("retry request")
       error.config.retry = true
       return instance(error.config)
     }
@@ -49,7 +50,6 @@ instance.interceptors.response.use(function (response) {
         ErrorNotify(errorMessage)
         break
       case 401:
-        console.log("AAAAAAAAAAAAAAAAAAAAAAA")
         const currentPath = window.location.pathname + window.location.search
         localStorage.setItem("prevPage", currentPath)
         WarningNotify(errorMessage)
