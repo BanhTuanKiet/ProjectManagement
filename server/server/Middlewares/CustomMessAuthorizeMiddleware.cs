@@ -17,6 +17,7 @@ public class CustomAuthorizationMiddleware
             if (context.Items.TryGetValue("AuthorizeErrorMessage", out var messageObj))
             {
                 var message = messageObj?.ToString();
+                context.Response.StatusCode = 403;
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsJsonAsync(new { error = message });
             }

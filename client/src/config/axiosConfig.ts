@@ -33,6 +33,7 @@ instance.interceptors.response.use(function (response) {
     const statusCode = error.response.status
 
     if (statusCode === 401 && error.response.data?.RetryRequest && !error.config.retry) {
+        console.log("retry request")
       error.config.retry = true
       return instance(error.config)
     }

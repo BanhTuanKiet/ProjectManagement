@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using server.DTO;
 using server.Models;
 
 namespace server.Util
@@ -27,7 +28,7 @@ namespace server.Util
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(timeExp),
+                Expires = DateTime.UtcNow.AddMinutes(timeExp),
                 Issuer = _configuration["JWT:ISSUSER"],
                 Audience = _configuration["JWT:AUDIENCE"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -66,5 +67,24 @@ namespace server.Util
             }
         }
 
+        public static TokenDTO.DecodedToken DecodeToken(string token)
+        {
+            var jwtHandler = new JwtSecurityTokenHandler();
+            var jsonToken = jwtHandler.ReadJwtToken(token);
+
+            var nameIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid");
+            var nameClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name || c.Type == "unique_name");
+            List<string> roleClaims = jsonToken.Claims
+                .Where(c => c.Type == ClaimTypes.Role || c.Type == "role")
+                .Select(c => c.Value)
+                .ToList();
+
+            return new TokenDTO.DecodedToken
+            {
+                userId = nameIdClaim?.Value,
+                name = nameClaim?.Value,
+                roles = roleClaims
+            };
+        }
     }
 }
