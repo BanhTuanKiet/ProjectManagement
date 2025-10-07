@@ -10,6 +10,8 @@ using server.Services.User;
 using server.Services.Comment;
 using server.Services;
 using Microsoft.AspNetCore.Authorization;
+using server.Services.Sprint;
+using server.Services.Backlog;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -55,6 +57,8 @@ builder.Services.AddScoped<ITasks, TasksService>();
 builder.Services.AddScoped<INotifications, NotificationsService>();
 builder.Services.AddScoped<ISubTasks, SubTaskService>();
 builder.Services.AddScoped<IComment, CommentService>();
+builder.Services.AddScoped<ISprints, SprintsService>();
+builder.Services.AddScoped<IBacklogs, BacklogsService>();
 
 builder.Services.AddSignalR();
 

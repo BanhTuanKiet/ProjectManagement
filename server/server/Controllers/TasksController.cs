@@ -183,7 +183,9 @@ namespace server.Controllers
                 ProjectId = projectId,
                 Title = newTask.Title,
                 CreatedBy = userId,
-                Status = newTask.Status ?? "Todo"
+                Status = newTask.Status ?? "Todo",
+                SprintId = newTask.SprintId,
+                BacklogId = newTask.BacklogId
             };
 
             var addedTask = await _tasksService.AddNewTask(formatedTask);
@@ -249,5 +251,20 @@ namespace server.Controllers
 
             return Ok(new { message = "Add new task successful!" });
         }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("{projectId}/filter")]
+        public async Task<ActionResult> GetTasksBySprintOrBacklog(
+            int projectId,
+            [FromQuery] int? sprintId,
+            [FromQuery] int? backlogId)
+        {
+            if (!sprintId.HasValue && !backlogId.HasValue)
+                return BadRequest("You must provide at least sprintId or backlogId.");
+
+            var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
+            return Ok(tasks);
+        }
+
     }
 }

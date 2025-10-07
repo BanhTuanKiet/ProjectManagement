@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using server.DTO;
 using server.Models;
 using server.Services.Task;
+using server.Services.Sprint;
+using server.Services.Backlog;
 
 namespace server.Services.Project
 {
@@ -155,6 +157,15 @@ namespace server.Services.Project
                         if (decimal.TryParse(kvp.Value?.ToString(), out var hrs))
                             task.EstimateHours = hrs;
                         break;
+                    case "sprintid":
+                        if (int.TryParse(kvp.Value?.ToString(), out var sprintId))
+                            task.SprintId = sprintId;
+                        break;
+
+                    case "backlogid":
+                        if (int.TryParse(kvp.Value?.ToString(), out var backlogId))
+                            task.BacklogId = backlogId;
+                        break;
                 }
             }
 
@@ -198,5 +209,23 @@ namespace server.Services.Project
 
             return task;
         }
+
+        public async Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId)
+        {
+            var query = _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .Where(t => t.ProjectId == projectId);
+
+            if (sprintId.HasValue)
+                query = query.Where(t => t.SprintId == sprintId);
+
+            if (backlogId.HasValue)
+                query = query.Where(t => t.BacklogId == backlogId);
+
+            var tasks = await query.ToListAsync();
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+
     }
 }

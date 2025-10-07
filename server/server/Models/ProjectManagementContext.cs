@@ -48,7 +48,11 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
     public virtual DbSet<Task> Tasks { get; set; }
 
+    public virtual DbSet<Backlog> Backlogs { get; set; }
+
     public virtual DbSet<TaskHistory> TaskHistories { get; set; }
+
+    public DbSet<ProjectInvitations> ProjectInvitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -356,6 +360,21 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasConstraintName("FK_Tags_Project");
         });
 
+        modelBuilder.Entity<Backlog>(entity =>
+        {
+            entity.HasKey(e => e.BacklogId).HasName("PK_Backlogs");
+
+            entity.Property(e => e.Name).HasMaxLength(300);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.HasOne(e => e.Project)
+                .WithMany(p => p.Backlogs)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Backlogs_Project");
+        });
+
         modelBuilder.Entity<Task>(entity =>
         {
             entity.HasKey(e => e.TaskId).HasName("PK__Tasks__7C6949B13B1F1EE9");
@@ -398,6 +417,17 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                         j.HasKey("TaskId", "TagId").HasName("PK__TaskTags__AA3E862BCB448FAB");
                         j.ToTable("TaskTags");
                     });
+            entity.HasOne(d => d.Sprint)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(d => d.SprintId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Tasks_Sprint");
+
+            entity.HasOne(d => d.Backlog)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(d => d.BacklogId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Tasks_Backlog");
         });
 
         modelBuilder.Entity<TaskHistory>(entity =>
@@ -432,6 +462,44 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasForeignKey(d => d.TaskId)
                 .HasConstraintName("FK_TaskHistory_Task");
         });
+
+        modelBuilder.Entity<ProjectInvitations>(entity =>
+        {
+            entity.ToTable("ProjectInvitations");
+
+            entity.HasKey(e => e.Id)
+                  .HasName("PK__ProjectI__3214EC078A400FA2");
+
+            entity.Property(e => e.Id)
+                  .UseIdentityColumn(); // Tự tăng (IDENTITY)
+
+            entity.Property(e => e.ProjectId)
+                  .IsRequired();
+
+            entity.Property(e => e.Email)
+                  .HasMaxLength(255)
+                  .IsRequired();
+
+            entity.Property(e => e.RoleInProject)
+                  .HasMaxLength(50)
+                  .IsRequired();
+
+            entity.Property(e => e.InvitedAt)
+                  .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.Token)
+                  .IsRequired();
+
+            entity.Property(e => e.IsAccepted)
+                  .HasDefaultValue(false);
+
+            // Nếu sau này bạn muốn thêm quan hệ với bảng Project
+            // entity.HasOne<Project>()
+            //       .WithMany()
+            //       .HasForeignKey(e => e.ProjectId)
+            //       .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         OnModelCreatingPartial(modelBuilder);
     }
