@@ -86,53 +86,71 @@ namespace server.Services.Project
 
         public async Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName) {
             var token = Guid.NewGuid();
-            Console.WriteLine("Invitation record created with token: " + token);
-             var invitation = new ProjectInvitations
-                {
-                    ProjectId = invitePeopleDTO.ProjectId,
-                    Email = invitePeopleDTO.ToEmail,
-                    RoleInProject = invitePeopleDTO.RoleInProject,
-                    Token = token,
-                    IsAccepted = false,
-                    InvitedAt = DateTime.UtcNow
-                };
-                await _context.ProjectInvitations.AddAsync(invitation);
-                Console.WriteLine("Invitation record added to context.");
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
+            Console.WriteLine("Looking for user with email: " + invitePeopleDTO.ToEmail);
+            if (user != null)
+            {
+                var existingMember = await _context.ProjectMembers
+                    .FirstOrDefaultAsync(pm => pm.ProjectId == invitePeopleDTO.ProjectId && pm.UserId == user.Id);
+
+                if (existingMember != null)
+                    throw new Exception("Tài khoản đã là thành viên của dự án.");
+            }
+             var existingInvitation = await _context.ProjectInvitations
+                .Where(i => i.Email == invitePeopleDTO.ToEmail && i.ProjectId == invitePeopleDTO.ProjectId && i.IsAccepted == false)
+                .ToListAsync();
+
+            if (existingInvitation.Any())
+            {
+                _context.ProjectInvitations.RemoveRange(existingInvitation);
                 await _context.SaveChangesAsync();
-                
+            }
+            var invitation = new ProjectInvitations
+                    {
+                        ProjectId = invitePeopleDTO.ProjectId,
+                        Email = invitePeopleDTO.ToEmail,
+                        RoleInProject = "Leader",
+                        Token = token,
+                        IsAccepted = false,
+                        InvitedAt = DateTime.UtcNow
+                    };
+                    await _context.ProjectInvitations.AddAsync(invitation);
+                    Console.WriteLine("Invitation record added to context.");
+                    await _context.SaveChangesAsync();
+                    
 
-        string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
+                string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
 
-            string body = $@"
-            <div style='font-family:Arial,sans-serif; text-align:center;'>
-                <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
-                <h2>{inviterName} invited you to <b>{projectName}</b></h2>
-                <a href='http://localhost:3000/login?token={token}'  
-                style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
-                    Join the Project
-                </a>
-                <hr style='margin:30px 0;'/>
-                <h3>Use your app to...</h3>
-                <div style='display:flex; justify-content:center; gap:20px;'>
-                    <div style='max-width:200px;'>
-                        <img src='https://cdn-icons-png.flaticon.com/512/1828/1828961.png' width='50'/>
-                        <p>Collaborate, align, and deliver work, all in <b>one place</b></p>
+                string body = $@"
+                <div style='font-family:Arial,sans-serif; text-align:center;'>
+                    <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
+                    <h2>{inviterName} invited you to <b>{projectName}</b></h2>
+                    <a href='http://localhost:3000/login?token={invitation.Email}'  
+                    style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
+                        Join the Project
+                    </a>
+                    <hr style='margin:30px 0;'/>
+                    <h3>Use your app to...</h3>
+                    <div style='display:flex; justify-content:center; gap:20px;'>
+                        <div style='max-width:200px;'>
+                            <img src='https://cdn-icons-png.flaticon.com/512/1828/1828961.png' width='50'/>
+                            <p>Collaborate, align, and deliver work, all in <b>one place</b></p>
+                        </div>
+                        <div style='max-width:200px;'>
+                            <img src='https://cdn-icons-png.flaticon.com/512/1828/1828859.png' width='50'/>
+                            <p>View work your way using the list, board, calendar and timeline views</p>
+                        </div>
+                        <div style='max-width:200px;'>
+                            <img src='https://cdn-icons-png.flaticon.com/512/1828/1828940.png' width='50'/>
+                            <p>Collect and send work to other teams using <b>forms</b></p>
+                        </div>
                     </div>
-                    <div style='max-width:200px;'>
-                        <img src='https://cdn-icons-png.flaticon.com/512/1828/1828859.png' width='50'/>
-                        <p>View work your way using the list, board, calendar and timeline views</p>
-                    </div>
-                    <div style='max-width:200px;'>
-                        <img src='https://cdn-icons-png.flaticon.com/512/1828/1828940.png' width='50'/>
-                        <p>Collect and send work to other teams using <b>forms</b></p>
-                    </div>
-                </div>
-            </div>";
+                </div>";
 
-            Console.WriteLine("Sending email to: " + invitePeopleDTO.ToEmail);
+                Console.WriteLine("Sending email to: " + invitePeopleDTO.ToEmail);
 
-            await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
-            Console.WriteLine("Email sent successfully!");
+                await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
+                Console.WriteLine("Email sent successfully!");
 
             return true;
         }
