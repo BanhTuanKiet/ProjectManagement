@@ -2,8 +2,7 @@ import React from "react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
-import { getDeadlineStyle } from "@/config/dateConfig"
+import { getDeadlineStyle } from "@/utils/dateUtils";
 
 function DueDateCell({ task, handleCellEdit }: { task: any; handleCellEdit: Function }) {
     const style = getDeadlineStyle(task)

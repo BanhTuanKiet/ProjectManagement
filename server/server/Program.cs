@@ -9,7 +9,6 @@ using server.Services.Task;
 using server.Services.User;
 using server.Services.Comment;
 using server.Services;
-using Microsoft.AspNetCore.Authorization;
 using server.Services.Sprint;
 using server.Services.Backlog;
 

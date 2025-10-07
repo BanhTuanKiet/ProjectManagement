@@ -29,7 +29,9 @@ namespace server.Configs
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration["JWT:ISSUSER"],
                     ValidAudience = configuration["JWT:AUDIENCE"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:KEY"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:KEY"])),
+                    // ClockSkew = TimeSpan.FromMinutes(5)
+                    ClockSkew = TimeSpan.Zero
                 };
 
                 options.Events = new JwtBearerEvents
@@ -80,11 +82,9 @@ namespace server.Configs
 
                         var token = context.Request.Cookies["token"];
                         var errorMessage = string.IsNullOrEmpty(token) ? "Please login to continue!" : "Your session has expired. Please log in again.";
-                        Console.WriteLine("Token is expired: " + token);
+
                         if (!string.IsNullOrEmpty(token))
                         {
-                            Console.WriteLine("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-
                             TokenDTO.DecodedToken decodedToken = JwtUtils.DecodeToken(token);
                             Console.WriteLine("Decode" + decodedToken.roles.Count());
                             if (decodedToken.userId != null && decodedToken.roles != null && decodedToken.name != null)
@@ -106,7 +106,7 @@ namespace server.Configs
                                     await context.Response.WriteAsync(JsonSerializer.Serialize(new { ErrorMessage = "Your session has expired. Please log in again." }));
                                     return;
                                 }
-                                Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
                                 var user = await userManager.FindByIdAsync(decodedToken.userId);
                                 var newToken = JwtUtils.GenerateToken(user, decodedToken.roles, 1, config);
                                 CookieConfig.SetCookie(context.Response, "token", newToken, 1);
