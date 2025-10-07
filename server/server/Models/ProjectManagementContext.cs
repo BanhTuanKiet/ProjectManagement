@@ -52,6 +52,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
     public virtual DbSet<TaskHistory> TaskHistories { get; set; }
 
+    public DbSet<ProjectInvitations> ProjectInvitations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ApplicationUser>(entity =>
@@ -460,6 +462,44 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasForeignKey(d => d.TaskId)
                 .HasConstraintName("FK_TaskHistory_Task");
         });
+
+        modelBuilder.Entity<ProjectInvitations>(entity =>
+        {
+            entity.ToTable("ProjectInvitations");
+
+            entity.HasKey(e => e.Id)
+                  .HasName("PK__ProjectI__3214EC078A400FA2");
+
+            entity.Property(e => e.Id)
+                  .UseIdentityColumn(); // Tự tăng (IDENTITY)
+
+            entity.Property(e => e.ProjectId)
+                  .IsRequired();
+
+            entity.Property(e => e.Email)
+                  .HasMaxLength(255)
+                  .IsRequired();
+
+            entity.Property(e => e.RoleInProject)
+                  .HasMaxLength(50)
+                  .IsRequired();
+
+            entity.Property(e => e.InvitedAt)
+                  .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.Token)
+                  .IsRequired();
+
+            entity.Property(e => e.IsAccepted)
+                  .HasDefaultValue(false);
+
+            // Nếu sau này bạn muốn thêm quan hệ với bảng Project
+            // entity.HasOne<Project>()
+            //       .WithMany()
+            //       .HasForeignKey(e => e.ProjectId)
+            //       .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         OnModelCreatingPartial(modelBuilder);
     }
