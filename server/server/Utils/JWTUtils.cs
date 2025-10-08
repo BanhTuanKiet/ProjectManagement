@@ -28,7 +28,7 @@ namespace server.Util
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddSeconds(timeExp * 30),
+                Expires = DateTime.UtcNow.AddHours(timeExp),
                 Issuer = _configuration["JWT:ISSUSER"],
                 Audience = _configuration["JWT:AUDIENCE"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

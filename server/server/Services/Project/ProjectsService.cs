@@ -9,19 +9,18 @@ using Microsoft.Extensions.Configuration;
 
 namespace server.Services.Project
 {
-  public class ProjectsService : IProjects
-  {
-    public readonly ProjectManagementContext _context;
-    private readonly IMapper _mapper;
-    private readonly IConfiguration _configuration;
-
-    public ProjectsService(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
+    public class ProjectsService : IProjects
     {
-      _context = context;
-      _mapper = mapper;
-      _configuration = configuration;
-    }
+        public readonly ProjectManagementContext _context;
+        private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
 
+        public ProjectsService(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
+        {
+            _context = context;
+            _mapper = mapper;
+            _configuration = configuration;
+        }
 
         public async Task<List<ProjectDTO.ProjectTitile>> GetProjectsTitle(string userId)
         {
@@ -31,6 +30,17 @@ namespace server.Services.Project
                 .ToListAsync();
 
             return _mapper.Map<List<ProjectDTO.ProjectTitile>>(projects);
+        }
+
+        public async Task<List<ProjectDTO.ProjectBasic>> GetProjects(string userId)
+        {
+            List<server.Models.Project> projects = await _context.Projects
+                .Include(p => p.ProjectMembers)
+                .Include(p => p.CreatedByNavigation)
+                .Where(p => p.ProjectMembers.Any(pm => pm.UserId == userId))
+                .ToListAsync();
+
+            return _mapper.Map<List<ProjectDTO.ProjectBasic>>(projects);
         }
 
         public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId)
@@ -84,24 +94,25 @@ namespace server.Services.Project
         }
 
 
-        public async Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName) {
+        public async Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName)
+        {
             var token = Guid.NewGuid();
             Console.WriteLine("Invitation record created with token: " + token);
-             var invitation = new ProjectInvitations
-                {
-                    ProjectId = invitePeopleDTO.ProjectId,
-                    Email = invitePeopleDTO.ToEmail,
-                    RoleInProject = invitePeopleDTO.RoleInProject,
-                    Token = token,
-                    IsAccepted = false,
-                    InvitedAt = DateTime.UtcNow
-                };
-                await _context.ProjectInvitations.AddAsync(invitation);
-                Console.WriteLine("Invitation record added to context.");
-                await _context.SaveChangesAsync();
-                
+            var invitation = new ProjectInvitations
+            {
+                ProjectId = invitePeopleDTO.ProjectId,
+                Email = invitePeopleDTO.ToEmail,
+                RoleInProject = invitePeopleDTO.RoleInProject,
+                Token = token,
+                IsAccepted = false,
+                InvitedAt = DateTime.UtcNow
+            };
+            await _context.ProjectInvitations.AddAsync(invitation);
+            Console.WriteLine("Invitation record added to context.");
+            await _context.SaveChangesAsync();
 
-        string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
+
+            string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
 
             string body = $@"
             <div style='font-family:Arial,sans-serif; text-align:center;'>
