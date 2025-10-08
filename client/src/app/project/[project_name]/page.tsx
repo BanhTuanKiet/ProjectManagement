@@ -46,7 +46,6 @@ const navigationTabs: NavigationTab[] = [
 export default function ProjectInterface() {
     const { project_name } = useParams()
     const [activeTab, setActiveTab] = useState('calendar')
-    const [currentDate, setCurrentDate] = useState(new Date())
     const [tasks, setTasks] = useState<BasicTask[]>([])
 
     useEffect(() => {
@@ -70,7 +69,7 @@ export default function ProjectInterface() {
 
     const views: Record<string, React.ReactNode> = {
         backlog: <BacklogView projectId={project_name} />,
-        calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
+        calendar: <CalendarView />,
         board: <BoardView tasks={tasks} />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
     }

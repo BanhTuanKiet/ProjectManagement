@@ -1,59 +1,38 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import type React from "react"
 import { getDaysInMonth } from "@/utils/dateUtils"
 import type { BasicTask } from "@/utils/ITask"
 import TaskList from "./TaskList"
-import axios from "@/config/axiosConfig"
-import type { ParamValue } from "next/dist/server/request/params"
-import type { Member } from "@/utils/IUser"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
 import { useNotification } from "@/app/.context/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
 import { useParams } from "next/navigation"
 import TaskCalendar from "./TaskCalendar"
-import { useTask } from "@/app/.context/Task"
+import { useTask } from "@/app/.context/TaskContext"
+import { useProject } from "@/app/.context/ProjectContext"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-export default function CalendarView({
-    projectId,
-    currentDate,
-    setCurrentDate,
-}: {
-    projectId: ParamValue
-    currentDate: Date
-    setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
-}) {
+export default function CalendarView() {
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
-    const { tasks } = useTask()
-    const days = getDaysInMonth(currentDate)
+    const { tasks, currentDate } = useTask()
     const [openTaskList, setOpenTaskList] = useState(false)
-    const [members, setMembers] = useState<Member[]>()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
     const { selectedTask, setSelectedTask } = useNotification()
     const { project_name } = useParams<{ project_name: string }>()
+    const { members } = useProject()
+    const [days, setDays] = useState<(number | null)[] | undefined>()
 
     useEffect(() => {
         if (tasks && tasks.length > 0) {
             setMockTasks([...tasks])
+            setDays(getDaysInMonth(currentDate))
         }
-    }, [tasks])
-
-    useEffect(() => {
-        const fetchMembers = async () => {
-            try {
-                const response = await axios.get(`/projects/member/${projectId}`)
-                setMembers(response.data)
-            } catch (error) {
-                console.log(error)
-            }
-        }
-        fetchMembers()
-    }, [projectId])
+    }, [tasks, currentDate])
 
     const getTasksForDay = (day: number) => {
         return mockTasks?.filter(task => {
@@ -73,12 +52,7 @@ export default function CalendarView({
 
     return (
         <div className="p-6 bg-background min-h-screen bg-dynamic">
-            <TaskFilterView
-                setMockTasks={setMockTasks}
-                members={members ?? []}
-                currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
-            />
+            <TaskFilterView setMockTasks={setMockTasks} />
 
             <div className="border border-border rounded-lg overflow-hidden bg-card bg-dynamic">
                 <div className="grid grid-cols-7 border-b border-border">

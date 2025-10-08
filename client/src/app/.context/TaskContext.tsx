@@ -9,12 +9,16 @@ type TaskContextType = {
     connection: signalR.HubConnection | null
     tasks: BasicTask[]
     setTasks: React.Dispatch<React.SetStateAction<BasicTask[]>>
+    currentDate: Date
+    setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
 }
 
 const TaskContext = createContext<TaskContextType>({
     connection: null,
     tasks: [],
     setTasks: () => { },
+    currentDate: new Date(),
+    setCurrentDate: () => { },
 })
 
 export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
@@ -70,7 +74,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     return (
-        <TaskContext.Provider value={{ connection, tasks, setTasks }}>
+        <TaskContext.Provider value={{ connection, tasks, setTasks, currentDate, setCurrentDate }}>
             {children}
         </TaskContext.Provider>
     )

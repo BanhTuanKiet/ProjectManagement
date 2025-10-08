@@ -5,12 +5,12 @@ import { Search, ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-rea
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import React, { useEffect, useState } from "react"
-import { Member } from "@/utils/IUser"
 import { getPriorityBadge, getRoleBadge, getTaskStatusBadge } from "@/utils/statusUtils"
 import ColoredAvatar from "./ColoredAvatar"
 import { capitalizeFirstLetter } from "@/utils/stringUitls"
 import { BasicTask } from "@/utils/ITask"
-import { useTask } from "@/app/.context/Task"
+import { useTask } from "@/app/.context/TaskContext"
+import { useProject } from "@/app/.context/ProjectContext"
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
@@ -22,14 +22,8 @@ const priorityOptions = {
 }
 
 export default function TaskFilterView({
-    members,
-    currentDate,
-    setCurrentDate,
     setMockTasks
 }: {
-    members: Member[]
-    currentDate: Date
-    setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
     setMockTasks: React.Dispatch<React.SetStateAction<BasicTask[]>>
 }) {
     const [filters, setFilters] = useState({
@@ -38,7 +32,8 @@ export default function TaskFilterView({
         status: "",
         priority: ""
     })
-    const { tasks } = useTask()
+    const { tasks, currentDate, setCurrentDate } = useTask()
+    const { members } = useProject()
 
     useEffect(() => {
         console.log("🔍 Filtering mockTasks with:", filters)
