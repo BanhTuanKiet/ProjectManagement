@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using server.Models;
 using server.Services.User;
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -31,20 +32,24 @@ namespace server.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IHubContext<PresenceHubConfig> _hubContext;
+        public readonly ProjectManagementContext _context;
+        
         public UsersController(
             IUsers userServices,
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
-            IHubContext<PresenceHubConfig> hubContext)
+            IHubContext<PresenceHubConfig> hubContext,
+            ProjectManagementContext context)
         {
             _userServices = userServices;
             _userManager = userManager;
             _configuration = configuration;
             _hubContext = hubContext;
+            _context = context;
         }
 
         [HttpGet("signin-google")]
-        public IActionResult SignGoogle(string? returnUrl)  
+        public IActionResult SignGoogle(string? token = null, string returnUrl = "http://localhost:3000/project")
         {
             if (string.IsNullOrEmpty(returnUrl))
             {
@@ -54,7 +59,8 @@ namespace server.Controllers
 
             var properties = new AuthenticationProperties
             {
-                RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl })
+                RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl }),
+                Items = { { "invite_token", token ?? "" } }
             };
 
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
