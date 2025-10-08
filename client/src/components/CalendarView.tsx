@@ -7,7 +7,6 @@ import type { BasicTask } from "@/utils/ITask"
 import TaskList from "./TaskList"
 import axios from "@/config/axiosConfig"
 import type { ParamValue } from "next/dist/server/request/params"
-import type { FilterSelection } from "@/utils/IFilterSelection"
 import type { Member } from "@/utils/IUser"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
@@ -15,6 +14,7 @@ import { useNotification } from "@/app/.context/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
 import { useParams } from "next/navigation"
 import TaskCalendar from "./TaskCalendar"
+import { useTask } from "@/app/.context/Task"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -27,16 +27,21 @@ export default function CalendarView({
     currentDate: Date
     setCurrentDate: React.Dispatch<React.SetStateAction<Date>>
 }) {
-    const [tasks, setTasks] = useState<BasicTask[]>([])
-    const [filterSelection, setFilterSelection] = useState<FilterSelection>({})
+    const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
+    const { tasks } = useTask()
     const days = getDaysInMonth(currentDate)
     const [openTaskList, setOpenTaskList] = useState(false)
-    const filterRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [members, setMembers] = useState<Member[]>()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
     const { selectedTask, setSelectedTask } = useNotification()
     const { project_name } = useParams<{ project_name: string }>()
+
+    useEffect(() => {
+        if (tasks && tasks.length > 0) {
+            setMockTasks([...tasks])
+        }
+    }, [tasks])
 
     useEffect(() => {
         const fetchMembers = async () => {
@@ -47,42 +52,17 @@ export default function CalendarView({
                 console.log(error)
             }
         }
-
         fetchMembers()
     }, [projectId])
 
-    useEffect(() => {
-        if (filterRef.current) {
-            clearTimeout(filterRef.current)
-        }
-
-        filterRef.current = setTimeout(async () => {
-            try {
-                const response = await axios.get(`/tasks/${projectId}`, {
-                    params: {
-                        month: currentDate.getMonth() + 1,
-                        year: currentDate.getFullYear(),
-                        filters: JSON.stringify(filterSelection),
-                    },
-                })
-
-                setTasks(response.data)
-            } catch (error) {
-                console.error(error)
-            }
-        }, 500)
-
-        return () => {
-            if (filterRef.current) {
-                clearTimeout(filterRef.current)
-            }
-        }
-    }, [projectId, currentDate, filterSelection])
-
     const getTasksForDay = (day: number) => {
-        return tasks?.filter((task) => {
-            const createdDate = new Date(task.deadline)
-            return createdDate.getDate() === day
+        return mockTasks?.filter(task => {
+            const date = new Date(task.deadline)
+            return (
+                date.getMonth() === currentDate.getMonth() &&
+                date.getFullYear() === currentDate.getFullYear() &&
+                date.getDate() === day
+            )
         })
     }
 
@@ -94,17 +74,19 @@ export default function CalendarView({
     return (
         <div className="p-6 bg-background min-h-screen bg-dynamic">
             <TaskFilterView
+                setMockTasks={setMockTasks}
                 members={members ?? []}
                 currentDate={currentDate}
                 setCurrentDate={setCurrentDate}
-                filterSelection={filterSelection}
-                setFilterSelection={setFilterSelection}
             />
 
             <div className="border border-border rounded-lg overflow-hidden bg-card bg-dynamic">
                 <div className="grid grid-cols-7 border-b border-border">
-                    {weekDays.map((day) => (
-                        <div key={day} className="p-1 text-center font-medium text-muted-foreground bg-muted/50">
+                    {weekDays.map(day => (
+                        <div
+                            key={day}
+                            className="p-1 text-center font-medium text-muted-foreground bg-muted/50"
+                        >
                             {day}
                         </div>
                     ))}
@@ -123,35 +105,48 @@ export default function CalendarView({
                                 {day && (
                                     <>
                                         <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
-                                            <span className={`w-6 h-6 ${isToday ? "bg-blue-500 text-white rounded flex items-center justify-center" : ""}`}>
+                                            <span
+                                                className={`w-6 h-6 ${
+                                                    isToday
+                                                        ? "bg-blue-500 text-white rounded flex items-center justify-center"
+                                                        : ""
+                                                }`}
+                                            >
                                                 {day}
                                             </span>
                                             <span
                                                 className="px-1 hover:bg-gray-200 hover:rounded transition-colors cursor-pointer"
-                                                onClick={() => day && handleDayClick(day)}
+                                                onClick={() => handleDayClick(day)}
                                             >
                                                 +
                                             </span>
                                         </div>
 
                                         <div className="space-y-2">
-                                            {tasksForDay && (
-                                                <>
-                                                    {(tasksForDay?.length <= 2 ? tasksForDay : tasksForDay.slice(0, 1)).map((task) => {
-                                                        return (
-                                                            <TaskCalendar key={task.taskId} task={task} setSelectedTask={setSelectedTask} />
-                                                        )
-                                                    })}
-                                                </>
-                                            )}
+                                            {(tasksForDay?.length <= 2
+                                                ? tasksForDay
+                                                : tasksForDay.slice(0, 1)
+                                            ).map(task => (
+                                                <TaskCalendar
+                                                    key={task.taskId}
+                                                    task={task}
+                                                    setSelectedTask={setSelectedTask}
+                                                />
+                                            ))}
 
                                             {tasksForDay.length > 2 && (
                                                 <div>
                                                     <div
                                                         className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
-                                                        onClick={() => setOpenTaskList(!openTaskList)}
+                                                        onClick={() =>
+                                                            setOpenTaskList(!openTaskList)
+                                                        }
                                                     >
-                                                        <p className="p-2">{!openTaskList ? `${tasksForDay.length - 1} more` : "Close"}</p>
+                                                        <p className="p-2">
+                                                            {!openTaskList
+                                                                ? `${tasksForDay.length - 1} more`
+                                                                : "Close"}
+                                                        </p>
                                                     </div>
                                                     {openTaskList && (
                                                         <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
@@ -167,26 +162,25 @@ export default function CalendarView({
                         )
                     })}
                 </div>
-
             </div>
 
-            {isModalOpen &&
+            {isModalOpen && (
                 <AddTaskViewModal
                     isModalOpen={isModalOpen}
                     members={members ?? []}
                     currentDate={currentDate}
                     selectedDay={selectedDay ?? currentDate.getDay()}
                     setIsModalOpen={setIsModalOpen}
-                    setTasks={setTasks}
+                    setTasks={setMockTasks}
                 />
-            }
+            )}
 
             {selectedTask && (
-                // <TaskDetailDrawer
-                //     task={selectedTask}
-                //     onClose={() => setSelectedTask(null)}
-                // />
-                <TaskDetailModal projectId={parseInt(project_name)} taskId={selectedTask} onClose={() => setSelectedTask(null)} />
+                <TaskDetailModal
+                    projectId={parseInt(project_name)}
+                    taskId={selectedTask}
+                    onClose={() => setSelectedTask(null)}
+                />
             )}
         </div>
     )

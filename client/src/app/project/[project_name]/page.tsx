@@ -77,7 +77,6 @@ export default function ProjectInterface() {
 
     return (
         <div className="h-screen flex flex-col bg-gray-50">
-            {/* Header cố định */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -117,7 +116,6 @@ export default function ProjectInterface() {
                     </div>
                 </div>
 
-                {/* Nav tab cố định ngay dưới header */}
                 <div className="px-6 bg-white border-t border-gray-200">
                     <nav className="flex space-x-8 border-b border-gray-200 overflow-x-auto">
                         {navigationTabs.map((tab) => (

@@ -17,12 +17,10 @@ const ProjectContext = createContext<ProjectContextType>({
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
     const [projects, setProjects] = useState<ProjectBasic[]>([])
 
-
     useEffect(() => {
         const fetchProjects = async () => {
             try {
                 const response = await axios.get(`/projects`)
-                console.log(response.data)
                 setProjects(response.data)
             } catch (error) {
                 console.log(error)
