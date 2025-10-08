@@ -44,8 +44,14 @@ namespace server.Controllers
         }
 
         [HttpGet("signin-google")]
-        public IActionResult SignGoogle(string returnUrl = "http://localhost:3000/project")
+        public IActionResult SignGoogle(string? returnUrl)  
         {
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                var configReturnUrl = _configuration["Authentication:Google:ReturnUrl"];
+                returnUrl = configReturnUrl ?? "/";
+            }
+
             var properties = new AuthenticationProperties
             {
                 RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl })

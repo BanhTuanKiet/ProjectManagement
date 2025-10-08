@@ -12,6 +12,7 @@ using server.Services;
 using Microsoft.AspNetCore.Authorization;
 using server.Services.Sprint;
 using server.Services.Backlog;
+using server.Services.File;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -54,6 +55,9 @@ builder.Services.AddScoped<ISubTasks, SubTaskService>();
 builder.Services.AddScoped<IComment, CommentService>();
 builder.Services.AddScoped<ISprints, SprintsService>();
 builder.Services.AddScoped<IBacklogs, BacklogsService>();
+builder.Services.AddScoped<IFiles, FileService>();
+builder.Services.AddCloudinary(builder.Configuration);
+
 
 builder.Services.AddSignalR();
 
