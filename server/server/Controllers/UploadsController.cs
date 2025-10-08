@@ -1,0 +1,73 @@
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Mvc;
+using server.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace server.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UploadsController : ControllerBase
+    {
+        private readonly Cloudinary _cloudinary;
+        private readonly ProjectManagementContext _context;
+
+        public UploadsController(Cloudinary cloudinary, ProjectManagementContext context)
+        {
+            _cloudinary = cloudinary;
+            _context = context;
+        }
+
+        [HttpPost("upload/{taskId}")]
+        public async Task<IActionResult> UploadImage(IFormFile file, int taskId)
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            using var stream = file.OpenReadStream();
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(file.FileName, stream)
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            Models.File newFile = new Models.File
+            {
+                TaskId = taskId,
+                FileName = file.FileName,
+                FilePath = uploadResult.SecureUrl.ToString(), // URL Cloudinary
+                FileType = file.ContentType,
+                Version = 1,
+                IsLatest = true,
+                UploadedBy = userId!,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            await _context.Files.AddAsync(newFile);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "File uploaded successfully",
+                file = newFile
+            });
+        }
+        
+                [HttpGet("task/{taskId}")]
+        public async Task<IActionResult> GetFilesByTaskId(int taskId)
+        {
+            var files = await _context.Files
+                .Where(f => f.TaskId == taskId)
+                .OrderByDescending(f => f.UploadedAt)
+                .ToListAsync();
+
+            if (!files.Any())
+                return NotFound("No files found for this task");
+
+            return Ok(files);
+        }
+    }
+}

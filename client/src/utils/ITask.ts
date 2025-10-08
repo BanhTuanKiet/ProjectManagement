@@ -31,8 +31,16 @@ export interface ApplicationUser {
 }
 
 export interface File {
-  id: number
-  fileName: string
+  fileId: number;
+  folderId?: number | null;
+  taskId?: number | null;
+  fileName: string;
+  filePath: string;
+  fileType?: string | null;
+  version: number;
+  isLatest: boolean;
+  uploadedBy: string;
+  uploadedAt: string;
   // ...
 }
 
