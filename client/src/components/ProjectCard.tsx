@@ -2,14 +2,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Users, Calendar } from "lucide-react"
 import type { ProjectBasic } from "@/utils/IProject"
+import { formatDate } from "@/utils/dateUtils"
 
 export function ProjectCard({ project }: { project: ProjectBasic }) {
-  // Format date from YYYY-MM-DD to DD/MM/YYYY
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`
-  }
-
   return (
     <Card className="w-full max-w-[320px] relative overflow-hidden hover:shadow-md transition-shadow">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-cyan-200" />
