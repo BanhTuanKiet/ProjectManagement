@@ -77,7 +77,7 @@ namespace server.Controllers
         public async Task<ActionResult> Signout()
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            CookieConfig.RemoveCookie(Response, "token");
+            CookieUtils.RemoveCookie(Response, "token");
             await PresenceHubConfig.Signout(_hubContext, userId);
             return Ok(new { message = "Logout successful" });
         }

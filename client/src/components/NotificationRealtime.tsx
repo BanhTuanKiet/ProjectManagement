@@ -2,14 +2,14 @@
 
 import type React from "react"
 import { Button } from "./ui/button"
-import { Bell, Check, Trash2, X, ArrowRight } from 'lucide-react'
+import { Bell, X, ArrowRight } from 'lucide-react'
 import type { Notification } from "@/utils/INotifications"
 import ColoredAvatar from "./ColoredAvatar"
 import { formatSentTime } from "@/utils/dateUtils"
-import { useRef, useState } from "react"
 import axios from "@/config/axiosConfig"
-import { useParams, useRouter } from "next/navigation"
 import { useNotification } from "@/app/.context/Notfication"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function NotificationRealtime({
   notifications,

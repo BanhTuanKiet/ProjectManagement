@@ -19,5 +19,10 @@
         {
             return request.Cookies[key];
         }
+
+        public static void RemoveCookie(HttpResponse response, string key)
+        {
+            response.Cookies.Delete(key);
+        }
     }
 }

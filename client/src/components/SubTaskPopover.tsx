@@ -31,7 +31,7 @@ export function SubtaskPopover({ taskId, handleCellEdit, tasks }: {
             handleCellEdit(
                 taskId,
                 "subtasks",
-                [...(tasks.find((t) => t.id === taskId)?.subtasks || []), created]
+                [...(tasks.find((t) => t.id.toString() === taskId)?.subtasks || []), created]
             )
 
             setNewSubSummary("")
