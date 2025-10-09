@@ -13,7 +13,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-
 namespace server.Controllers
 {
     [Route("[controller]")]
@@ -44,7 +43,6 @@ namespace server.Controllers
         [HttpGet("member/{projectId}")]
         public async Task<ActionResult> GetProjectMembers(int projectId)
         {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
 
             List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);

@@ -109,7 +109,7 @@ namespace server.Configs
 
                                 var user = await userManager.FindByIdAsync(decodedToken.userId);
                                 var newToken = JwtUtils.GenerateToken(user, decodedToken.roles, 1, config);
-                                CookieConfig.SetCookie(context.Response, "token", newToken, 1);
+                                CookieUtils.SetCookie(context.Response, "token", newToken, 1);
                                 Console.WriteLine("New token: " + newToken);
                                 await context.Response.WriteAsync(JsonSerializer.Serialize(new
                                 {

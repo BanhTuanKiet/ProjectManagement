@@ -15,7 +15,7 @@ public partial class Task
 
     public string Status { get; set; } = null!;
 
-    public byte Priority { get; set; }
+    public byte? Priority { get; set; }
 
     public string? AssigneeId { get; set; }
 
