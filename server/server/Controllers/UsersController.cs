@@ -108,5 +108,13 @@ namespace server.Controllers
 
             return Ok(new { message = "Đăng nhập thành công!" });
         }
+
+        [HttpGet("not-responded-invitations/{projectId}")]
+        public async Task<ActionResult<List<ProjectInvitations>>> GetUserNotRespondedInvitations()
+        {
+            Console.WriteLine("GetUserNotRespondedInvitations called");
+            var invitations = await _userServices.GetUserNotRespondedInvitations();
+            return Ok(invitations);
+        }
     }
 }

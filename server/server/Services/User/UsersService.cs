@@ -88,5 +88,13 @@ namespace server.Services.User
                 return false;
             }
         }
+
+        public async Task<List<ProjectInvitations>> GetUserNotRespondedInvitations()
+        {
+            Console.WriteLine("GetUserNotRespondedInvitations in service called");
+            return await _context.ProjectInvitations
+                .Where(invitation => invitation.IsAccepted == false)
+                .ToListAsync();
+        }
     }
 }

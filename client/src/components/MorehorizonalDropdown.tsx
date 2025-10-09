@@ -15,6 +15,7 @@ import BackgroundPicker from "./ChangeBackground"
 import axios from "@/config/axiosConfig"
 import { useParams } from "next/navigation"
 import { useProject } from "@/app/.context/ProjectContext"
+import InvitePeopleDialog from "@/components/InvitePeopleDialog"
 
 
 export default function ProjectMenu() {
@@ -118,46 +119,11 @@ export default function ProjectMenu() {
                 </Dialog.Portal>
             </Dialog.Root>
 
-            <Dialog.Root open={invitePeopleOpen} onOpenChange={setInvitePeopleOpen}>
-                <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-                    <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                        <Dialog.Title className="text-lg font-semibold mb-4">
-                            Add people to Project
-                        </Dialog.Title>
-
-                        <input
-                            type="email"
-                            placeholder="Enter email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md p-2 mb-4"
-                        />
-
-                        <label className="block mb-2 font-medium">Role</label>
-                        <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md p-2 mb-4"
-                        >
-                            <option value="Manager">Manager</option>
-                            <option value="Member">Member</option>
-                            <option value="User">User</option>
-                        </select>
-
-                        <div className="flex justify-end gap-3">
-                            <Dialog.Close asChild>
-                                <Button variant="outline">Cancel</Button>
-                            </Dialog.Close>
-                            <Button onClick={handleInvite}>Add</Button>
-                        </div>
-
-                        <Dialog.Close asChild>
-                            <button className="absolute top-3 right-3 text-gray-500 hover:text-gray-700">×</button>
-                        </Dialog.Close>
-                    </Dialog.Content>
-                </Dialog.Portal>
-            </Dialog.Root>
+            <InvitePeopleDialog
+                open={invitePeopleOpen}
+                onOpenChange={setInvitePeopleOpen}
+                projectId={projectId}
+            />
 
         </>
     )
