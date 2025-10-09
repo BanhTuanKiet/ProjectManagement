@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace server.Models;
 
@@ -25,6 +26,7 @@ public partial class File
 
     public DateTime UploadedAt { get; set; }
 
+    [JsonIgnore]
     public virtual Folder? Folder { get; set; }
 
     public virtual Task? Task { get; set; }

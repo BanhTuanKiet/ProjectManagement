@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using server.Models;
 using server.Util;
 
@@ -26,6 +27,7 @@ namespace server.Configs
                 {
                     var email = context.Principal.FindFirstValue(ClaimTypes.Email);
                     var name = context.Principal.FindFirstValue(ClaimTypes.Name);
+                    context.Properties.Items.TryGetValue("invite_token", out var token);
 
                     var userService = context.HttpContext.RequestServices.GetRequiredService<IUsers>();
                     var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
@@ -38,6 +40,41 @@ namespace server.Configs
 
                     CookieUtils.SetCookie(context.Response, "token", accessToken, 24);
                     await userService.SaveRefreshToken(user.Id, refreshToken);
+
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        var db = context.HttpContext.RequestServices.GetRequiredService<ProjectManagementContext>();
+                        if (token != null)
+                        {
+                            var invitation = await db.ProjectInvitations
+                                .FirstOrDefaultAsync(i => i.Email == token && i.IsAccepted == false);
+
+                            if (invitation != null && 
+                                invitation.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+                            {
+                                var existed = await db.ProjectMembers
+                                    .AnyAsync(pm => pm.ProjectId == invitation.ProjectId && pm.UserId == user.Id);
+
+                                if (!existed)
+                                {
+                                    db.ProjectMembers.Add(new ProjectMember
+                                    {
+                                        ProjectId = invitation.ProjectId,
+                                        UserId = user.Id,
+                                        RoleInProject = invitation.RoleInProject,
+                                        JoinedAt = DateTime.UtcNow
+                                    });
+                                }
+
+                                invitation.IsAccepted = true;
+                                await db.SaveChangesAsync();
+
+                                context.Response.Redirect($"http://localhost:3000/project/{invitation.ProjectId}?joined=true");
+                                context.HandleResponse();
+                                return;
+                            }
+                        }
+                    }
 
                     context.Response.Redirect("http://localhost:3000/project?success=true");
                     context.HandleResponse();
