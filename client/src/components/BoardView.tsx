@@ -55,12 +55,14 @@ export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
   }, [tasks]);
 
   const updateTask = async (taskId: number, newStatus: string) => {
-    try {
-      await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  try {
+    await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
 
 const deleteTask = async (taskId: number) => {
   try {
@@ -74,42 +76,52 @@ const deleteTask = async (taskId: number) => {
 };
 
   const handleDragEnd = async (event: any) => {
-    const { active, over } = event;
-    if (!over) return;
+  const { active, over } = event;
+  if (!over) return;
 
-    const activeTaskId = Number(active.id);
-    let newStatus = "";
+  const activeTaskId = Number(active.id);
+  let newStatus = "";
+  let oldStatus = "";
 
-    setFeatures((prev) => {
-      const oldIndex = prev.findIndex((t) => t.taskId.toString() === active.id);
-      const overTask = prev.find((t) => t.taskId.toString() === over.id);
+  setFeatures((prev) => {
+    const oldIndex = prev.findIndex((t) => t.taskId === activeTaskId);
+    const overTask = prev.find((t) => t.taskId.toString() === over.id);
 
-      if (overTask) {
-        const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
-        if (prev[oldIndex].status === overTask.status) {
-          return arrayMove(prev, oldIndex, newIndex);
-        } else {
-          newStatus = overTask.status;
-          return prev.map((task) =>
-            task.taskId.toString() === active.id
-              ? { ...task, status: overTask.status }
-              : task
-          );
-        }
+    if (!overTask) {
+      // Kéo sang cột trống (chỉ đổi status)
+      newStatus = over.id as string;
+      oldStatus = prev[oldIndex].status;
+
+      return prev.map((task) =>
+        task.taskId === activeTaskId ? { ...task, status: newStatus } : task
+      );
+    } else {
+      // Kéo trong cùng cột hoặc sang cột khác
+      const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
+      if (prev[oldIndex].status === overTask.status) {
+        return arrayMove(prev, oldIndex, newIndex);
       } else {
-        newStatus = over.id as string;
+        newStatus = overTask.status;
+        oldStatus = prev[oldIndex].status;
         return prev.map((task) =>
-          task.taskId.toString() === active.id
-            ? { ...task, status: newStatus }
-            : task
+          task.taskId === activeTaskId ? { ...task, status: newStatus } : task
         );
       }
-    });
-
-    if (newStatus) {
-      await updateTask(activeTaskId, newStatus);
     }
-  };
+  });
+
+  // Gọi API cập nhật
+  const success = await updateTask(activeTaskId, newStatus);
+
+  // ❗ Nếu lỗi → khôi phục lại trạng thái cũ
+  if (!success) {
+    setFeatures((prev) =>
+      prev.map((task) =>
+        task.taskId === activeTaskId ? { ...task, status: oldStatus } : task
+      )
+    );
+  }
+};
 
   const filteredTasks = features.filter((t) =>
     t.title?.toLowerCase().includes(searchQuery.toLowerCase())

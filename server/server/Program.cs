@@ -80,7 +80,7 @@ app.UseAuthentication();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<LoadContextMiddleware>();
 app.UseAuthorization();
-// app.UseMiddleware<CustomAuthorizationMiddleware>();
+ //app.UseMiddleware<CustomAuthorizationMiddleware>();
 // app.MiddlewareCustom();
 
 app.MapControllers();
