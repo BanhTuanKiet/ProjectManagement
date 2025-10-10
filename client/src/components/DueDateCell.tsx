@@ -3,6 +3,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { getDeadlineStyle } from "@/utils/dateUtils";
+import { format } from "date-fns"
+
 
 function DueDateCell({ task, handleCellEdit }: { task: any; handleCellEdit: Function }) {
     const style = getDeadlineStyle(task)
