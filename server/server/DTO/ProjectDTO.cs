@@ -18,7 +18,7 @@ namespace server.DTO
             public DateOnly? EndDate { get; set; }
             public string OwnerId { get; set; }
             public string Owner { get; set; }
-            public int CountMembers { get; set; }
+            public List<ProjectMembers> Members { get; set; } = new();
         }
 
         public class ProjectMembers

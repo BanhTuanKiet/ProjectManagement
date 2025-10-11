@@ -101,8 +101,8 @@ export default function TaskFilterView({
                 </div>
 
                 <Select
-                value={filters.assignee ?? "all"}
-                onValueChange={(val) => handleFilter("assignee", val)}
+                    value={filters.assignee ?? "all"}
+                    onValueChange={(val) => handleFilter("assignee", val)}
                 >
                     <SelectTrigger className="w-28">
                         <SelectValue placeholder="Assignee" />

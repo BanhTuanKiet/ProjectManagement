@@ -36,6 +36,7 @@ namespace server.Services.Project
         {
             List<server.Models.Project> projects = await _context.Projects
                 .Include(p => p.ProjectMembers)
+                .ThenInclude(p => p.User)
                 .Include(p => p.CreatedByNavigation)
                 .Where(p => p.ProjectMembers.Any(pm => pm.UserId == userId))
                 .ToListAsync();

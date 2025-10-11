@@ -21,8 +21,8 @@ namespace server.Configs
                             opt => opt.MapFrom(src => src.CreatedBy))
                 .ForMember(dest => dest.Owner,
                             opt => opt.MapFrom(src => src.CreatedByNavigation.UserName))
-                .ForMember(dest => dest.CountMembers,
-                            opt => opt.MapFrom(src => src.ProjectMembers.Count()));
+                .ForMember(dest => dest.Members,
+                            opt => opt.MapFrom(src => src.ProjectMembers));
 
             CreateMap<ProjectMember, ProjectDTO.ProjectMembers>()
                 .ForMember(dest => dest.name,
