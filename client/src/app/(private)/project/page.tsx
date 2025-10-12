@@ -28,10 +28,6 @@ export default function Page() {
                             <h2 className="text-xl font-semibold text-foreground">Recent projects</h2>
                             <p className="text-sm text-muted-foreground">{"Projects you've worked on recently"}</p>
                         </div>
-                        <Button variant="ghost" className="gap-2 text-primary hover:text-primary hover:bg-primary/10">
-                            View all projects
-                            <ArrowRight className="h-4 w-4" />
-                        </Button>
                     </div>
 
                     <div className="relative -mx-6 px-6">

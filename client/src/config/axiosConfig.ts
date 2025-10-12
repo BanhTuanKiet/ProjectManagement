@@ -31,7 +31,7 @@ instance.interceptors.response.use(function (response) {
     if (error && error.response && error.response.data) {
         const errorMessage = error.response.data.ErrorMessage || error.response.data.errorMessage
         const statusCode = error.response.status    
-
+console.log(error.response.data)
         if (statusCode === 401 && error.response.data?.RetryRequest && !error.config.retry) {
             error.config.retry = true
             return instance(error.config)

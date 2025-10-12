@@ -1,14 +1,31 @@
-﻿namespace server.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace server.DTO
 {
     public class TaskDTO
     {
         public class NewTaskView
         {
+            [Required(ErrorMessage = "Title is required")]
+            [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters")]
             public string Title { get; set; } = null!;
+
+            [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
             public string? Description { get; set; }
+
+            // [Required(ErrorMessage = "Assignee is required")]
             public string? AssigneeId { get; set; }
+
+            // [Required(ErrorMessage = "Priority is required")]
+            [Range(1, 3, ErrorMessage = "Priority must be between 1 (Low) and 3 (High)")]
             public byte? Priority { get; set; }
+
+            // [Required(ErrorMessage = "Deadline is required")]
+            [DataType(DataType.Date, ErrorMessage = "Invalid date format for deadline")]
             public string? Deadline { get; set; }
+
+            // [Required(ErrorMessage = "SprintId is required")]
+            [Range(1, int.MaxValue, ErrorMessage = "SprintId must be a valid number")]
             public int? SprintId { get; set; }
         }
 
