@@ -30,92 +30,38 @@ namespace server.Controllers
             _fileService = fileService;
         }
 
-        [HttpPost("upload")]
+         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId)
         {
-            var userid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded");
-
-            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-            ImageUploadResult imageResult = null;
-            VideoUploadResult videoResult = null;
-            RawUploadResult rawResult = null;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             try
             {
-                // Choose param type and call correct overload
-                if (new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" }.Contains(ext))
-                {
-                    var p = new ImageUploadParams
-                    {
-                        File = new FileDescription(file.FileName, file.OpenReadStream()),
-                        PublicId = Path.GetFileNameWithoutExtension(file.FileName),
-                        Folder = "ProjectManagement/Tasks"
-                    };
-                    imageResult = await _cloudinary.UploadAsync(p);
-                }
-                else if (new[] { ".mp4", ".mov", ".avi", ".mkv", ".webm" }.Contains(ext))
-                {
-                    var p = new VideoUploadParams
-                    {
-                        File = new FileDescription(file.FileName, file.OpenReadStream()),
-                        PublicId = Path.GetFileNameWithoutExtension(file.FileName),
-                        Folder = "ProjectManagement/Tasks"
-                    };
-                    videoResult = await _cloudinary.UploadAsync(p);
-                }
-                else
-                {
-                    var p = new RawUploadParams
-                    {
-                        File = new FileDescription(file.FileName, file.OpenReadStream()),
-                        PublicId = Path.GetFileNameWithoutExtension(file.FileName),
-                        Folder = "ProjectManagement/Tasks"
-                        // ResourceType là mặc định cho RawUploadParams => raw
-                    };
-                    rawResult = await _cloudinary.UploadAsync(p);
-                }
-
-                // Lấy URL từ kết quả đúng kiểu
-                string fileUrl = null;
-                if (imageResult != null)
-                    fileUrl = imageResult.SecureUrl?.ToString() ?? imageResult.Url?.ToString();
-                else if (videoResult != null)
-                    fileUrl = videoResult.SecureUrl?.ToString() ?? videoResult.Url?.ToString();
-                else if (rawResult != null)
-                    fileUrl = rawResult.SecureUrl?.ToString() ?? rawResult.Url?.ToString();
-
-                if (string.IsNullOrEmpty(fileUrl))
-                    return StatusCode(500, "Upload failed or URL missing.");
-
-                // (Tùy chọn) nếu muốn bắt download thay vì preview:
-                // if (!fileUrl.Contains("?")) fileUrl += "?fl_attachment";
-
-                var newFile = new server.Models.File
-                {
-                    TaskId = taskId,
-                    FileName = file.FileName,
-                    FilePath = fileUrl,
-                    FileType = file.ContentType,
-                    Version = 1,
-                    IsLatest = true,
-                    UploadedBy = userid ?? "unknown",
-                    UploadedAt = DateTime.UtcNow
-                };
-
-                var created = await _fileService.UploadFileAsync(newFile);
-                return Ok(created);
+                var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId);
+                return Ok(uploadedFile);
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                // log ex
-                Console.WriteLine(ex);
-                return StatusCode(500, "Upload exception: " + ex.Message);
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 
+        [HttpDelete("{fileId}")]
+        public async Task<IActionResult> DeleteFile(int fileId)
+        {
+            try
+            {
+                var result = await _fileService.DeleteFileAsync(fileId);
+                if (!result.isSuccess)
+                    return StatusCode(500, new { message = result.message });
+
+                return Ok(new { message = result.message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
         [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetFilesByTaskId(int taskId)
         {

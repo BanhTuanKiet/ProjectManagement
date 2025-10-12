@@ -17,6 +17,7 @@ import * as signalR from "@microsoft/signalr"
 import { usePresence } from "@/app/.context/OnlineMembers"
 import ColoredAvatar from "./ColoredAvatar"
 import type { ActiveUser } from "@/utils/IUser"
+import { Trash } from "lucide-react";
 
 interface Comment {
     commentId: number
@@ -230,11 +231,20 @@ export default function TaskDetailModal({
         }
     };
 
-    const handleDeleteFile = async (fileIdOrName: any) => {
-        setFiles((prev) => prev.filter((f) => f.fileId !== fileIdOrName && f.fileName !== fileIdOrName));
-        // Nếu bạn có API xóa file, có thể gọi thêm:
-        await axios.delete(`/files/${fileIdOrName}`);
+    const handleDeleteFile = async (fileId: number) => {
+        const confirmDelete = confirm("Bạn có chắc muốn xóa file này không?");
+        if (!confirmDelete) return;
+
+        try {
+            await axios.delete(`/files/${fileId}`);
+            setFiles((prev) => prev.filter((f) => f.fileId !== fileId));
+            alert("Đã xóa file thành công!");
+        } catch (err) {
+            console.error("Delete file error:", err);
+            alert("Lỗi khi xóa file!");
+        }
     };
+
 
     if (!task) return null
 
@@ -348,6 +358,7 @@ export default function TaskDetailModal({
                                 {/* Attachments section */}
                                 <div className="mt-4">
                                     <h3 className="text-sm font-medium text-gray-900 mb-2">Attachments</h3>
+
                                     {files.length === 0 ? (
                                         <p className="text-gray-500 text-sm">No attachments yet.</p>
                                     ) : (
@@ -355,10 +366,9 @@ export default function TaskDetailModal({
                                             {files.map((f) => (
                                                 <div
                                                     key={f.fileId || f.fileName}
-                                                    onClick={() => setPreviewFile(f)} // 👉 click mở preview
-                                                    className="group relative border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all bg-white cursor-pointer"
+                                                    className="group relative border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all bg-white"
                                                 >
-                                                    {/* Nội dung file */}
+                                                    {/* File preview */}
                                                     {f.fileType?.includes("image") ? (
                                                         <img
                                                             src={f.filePath}
@@ -381,14 +391,25 @@ export default function TaskDetailModal({
                                                     <div className="p-2 flex flex-col bg-white">
                                                         <span className="text-xs font-medium truncate">{f.fileName}</span>
                                                         <span className="text-[10px] text-gray-400">
-                                                            {f.uploadedAt
-                                                                ? new Date(f.uploadedAt).toLocaleString()
-                                                                : "Just now"}
+                                                            {f.uploadedAt ? new Date(f.uploadedAt).toLocaleString() : "Just now"}
                                                         </span>
                                                     </div>
 
-                                                    {/* Hiệu ứng đen mờ khi hover */}
-                                                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                    {/* Hover icons */}
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                        <button
+                                                            onClick={() => setPreviewFile(f)}
+                                                            className="bg-white/80 p-2 rounded-full hover:bg-white"
+                                                        >
+                                                            <Eye className="h-4 w-4 text-gray-700" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteFile(f.fileId)}
+                                                            className="bg-white/80 p-2 rounded-full hover:bg-red-100"
+                                                        >
+                                                            <Trash className="h-4 w-4 text-red-600" /> {/* 👈 Icon thùng rác nằm ở đây */}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
