@@ -72,10 +72,10 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
 
       const sprintMap = sprintData.map(s => ({
         ...s,
-        workItems: allTasks.filter(t => t.sprintId === s.sprintId)
+        workItems: allTasks.filter(t => t.sprintId === s.sprintId && t.sprintId !== -1)
       }))
 
-      const backlogTasks = allTasks.filter(t => !t.sprintId)
+      const backlogTasks = allTasks.filter(t => !t.sprintId || t.sprintId === -1)
 
       setSprints(sprintMap)
       setBacklogItems(backlogTasks)
@@ -216,7 +216,8 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
     if (!taskId) return;
 
     try {
-      await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, { sprintId: null });
+      console.log("🔹PATCH sending:", { sprintId: -1 });
+      await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, { sprintId: -1 });
 
       // Cập nhật UI tại client
       setSprints(prev =>

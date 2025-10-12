@@ -49,7 +49,7 @@ export function SidebarCustom({ className }: { className?: string }) {
 
   return (
     <Sidebar className={`w-64 h-full border-r border-gray-200 bg-white shadow-sm ${className || ""}`}>
-      <SidebarContent className="p-3 h-full overflow-y-auto">
+      <SidebarContent className="p-3 h-[calc(100vh-0px)] overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">

@@ -133,3 +133,12 @@ body {
 .bg-dynamic {
   background-color: var(--app-background, #ffffff) !important;
 }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#__next, #root {
+  height: 100%;
+}

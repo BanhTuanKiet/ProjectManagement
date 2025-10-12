@@ -23,7 +23,7 @@ import { BasicTask } from '@/utils/ITask'
 import ListPage from '@/components/ListPage'
 import { useParams } from 'next/navigation'
 import axios from '@/config/axiosConfig'
-import BacklogView from '@/components/BacklogView'
+import BacklogView from '@/components/BacklogView/BacklogView'
 
 interface NavigationTab {
     id: string
@@ -76,14 +76,13 @@ export default function ProjectInterface() {
     }
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50">
+        <div className="h-screen flex flex-col  p-[30px] bg-gray-50">
             {/* Header cố định */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                             <span className="text-sm text-gray-500">Projects</span>
-
                             <div className="flex items-center space-x-2">
                                 <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                                     <span className="text-white font-semibold text-sm">P</span>

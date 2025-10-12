@@ -138,7 +138,7 @@ namespace server.Controllers
         //     return Ok(result);
         // }    
 
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {

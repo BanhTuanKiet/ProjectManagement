@@ -159,7 +159,9 @@ namespace server.Services.Project
                         break;
                     case "sprintid":
                         if (int.TryParse(kvp.Value?.ToString(), out var sprintId))
-                            task.SprintId = sprintId;
+                            task.SprintId = sprintId == -1 ? null : sprintId;
+                        else
+                            task.SprintId = null;
                         break;
 
                     case "backlogid":
