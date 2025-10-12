@@ -77,7 +77,7 @@ namespace server.Controllers
         public async Task<ActionResult> Signout()
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            CookieConfig.RemoveCookie(Response, "token");
+            CookieUtils.RemoveCookie(Response, "token");
             await PresenceHubConfig.Signout(_hubContext, userId);
             return Ok(new { message = "Logout successful" });
         }
@@ -107,6 +107,14 @@ namespace server.Controllers
             //await _auth.SaveRefreshToken(user, refreshToken);
 
             return Ok(new { message = "Đăng nhập thành công!" });
+        }
+
+        [HttpGet("not-responded-invitations/{projectId}")]
+        public async Task<ActionResult<List<ProjectInvitations>>> GetUserNotRespondedInvitations()
+        {
+            Console.WriteLine("GetUserNotRespondedInvitations called");
+            var invitations = await _userServices.GetUserNotRespondedInvitations();
+            return Ok(invitations);
         }
     }
 }

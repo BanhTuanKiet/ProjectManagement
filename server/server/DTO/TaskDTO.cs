@@ -6,9 +6,10 @@
         {
             public string Title { get; set; } = null!;
             public string? Description { get; set; }
-            public string AssigneeId { get; set; }
-            public byte Priority { get; set; }
+            public string? AssigneeId { get; set; }
+            public byte? Priority { get; set; }
             public string? Deadline { get; set; }
+            public int? SprintId { get; set; }
         }
 
         public class CreateNewTask

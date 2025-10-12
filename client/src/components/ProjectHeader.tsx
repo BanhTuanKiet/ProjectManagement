@@ -15,11 +15,7 @@ import { useRouter } from "next/navigation"
 import NotificationRealtime from "@/components/NotificationRealtime"
 import { useNotification } from "@/app/.context/Notfication"
 
-export function ProjectHeader({
-    sidebarTrigger,
-}: {
-    sidebarTrigger: React.ReactNode
-}) {
+export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [theme, setTheme] = useState(false)
@@ -37,8 +33,8 @@ export function ProjectHeader({
         const fetchToken = async () => {
             try {
                 const reponse = await axios.get(`/users/token`)
-                console.log(reponse.data)
                 const token: string = reponse.data ?? ""
+
                 if (reponse.data) {
                     connectSignalR(token)
                     connectNotificationSignalR(token)
@@ -58,8 +54,7 @@ export function ProjectHeader({
 
     const handleLogout = async () => {
         try {
-            const reponse = await axios.get(`/users/signout`)
-            console.log(reponse.data)
+            await axios.get(`/users/signout`)
         } catch (error) {
             console.log(error)
         }

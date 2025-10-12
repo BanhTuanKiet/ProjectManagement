@@ -5,3 +5,8 @@ export const shortenText = (value: string) => {
   }
   return value
 }
+
+export function capitalizeFirstLetter(text: string): string {
+  if (!text) return ""
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

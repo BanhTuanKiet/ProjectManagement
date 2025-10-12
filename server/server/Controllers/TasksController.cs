@@ -33,7 +33,7 @@ namespace server.Controllers
             _hubContext = hubContext;
         }
 
-        // [Authorize(Policy = "MemberRequirement")]
+        [Authorize(Policy = "MemberRequirement")]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)
         {
@@ -62,7 +62,7 @@ namespace server.Controllers
             Models.Task task = await _tasksService.GetTaskById(taskId) ?? throw new ErrorException(404, "Task not found");
             return Ok(task);
         }
-
+//xem xet gop lai
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("view/{projectId}")]
         public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
@@ -76,16 +76,34 @@ namespace server.Controllers
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
+                    DateTime dateTimeCurrent = DateTime.UtcNow;
+                    DateTime deadline = DateTime.Parse(newTask.Deadline);
+                    string status = "";
+
+                    if (dateTimeCurrent.Date == deadline.Date)
+                    {
+                        status = "InProgress";
+                    }
+                    else if (dateTimeCurrent.Date < deadline.Date)
+                    {
+                        throw new ErrorException(400, "Deadline must be after the current date");
+                    }
+                    else
+                    {
+                        status = "Todo";
+                    }
+
                     Models.Task formatedTask = new Models.Task
                     {
                         ProjectId = projectId,
                         Title = newTask.Title,
                         Description = newTask.Description,
                         AssigneeId = newTask.AssigneeId,
+                        SprintId = newTask.SprintId,
                         Priority = newTask.Priority,
                         CreatedBy = userId,
-                        Status = "Todo",
-                        Deadline = DateTime.Parse(newTask.Deadline)
+                        Status = status,
+                        Deadline = dateTimeCurrent
                     };
 
                     Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
@@ -122,21 +140,6 @@ namespace server.Controllers
 
             return Ok(tasks);
         }
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        // [HttpPut("{projectId}/tasks/update")]
-        // public async Task<IActionResult> UpdateBasicTasksById(
-        //     int projectId,
-        //     [FromBody] List<TaskDTO.BasicTask> updatedTasks)
-        // {
-        //     Console.WriteLine("Received tasks for update:", updatedTasks);
-        //     Console.WriteLine("Project ID:", projectId);
-        //     if (updatedTasks == null || !updatedTasks.Any())
-        //         return BadRequest("No tasks provided for update.");
-
-        //     var result = await _tasksService.UpdateBasicTasksById(updatedTasks, projectId);
-
-        //     return Ok(result);
-        // }    
 
         // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
@@ -171,7 +174,7 @@ namespace server.Controllers
 
             return Ok(result);
         }
-
+//xem xet gop lai
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("list/{projectId}")]
         public async Task<ActionResult> AddTaskView([FromRoute] int projectId, [FromBody] TaskDTO.NewTaskListView newTask)
@@ -227,7 +230,7 @@ namespace server.Controllers
 
             return Ok(new { message = "Update task successful!" });
         }
-
+//xem xet gop lai
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("createTask/{projectId}")]
         public async Task<ActionResult> CreateTask([FromBody] TaskDTO.CreateNewTask newTask, int projectId)
@@ -265,6 +268,5 @@ namespace server.Controllers
             var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
             return Ok(tasks);
         }
-
     }
 }

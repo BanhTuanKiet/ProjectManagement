@@ -46,7 +46,6 @@ const navigationTabs: NavigationTab[] = [
 export default function ProjectInterface() {
     const { project_name } = useParams()
     const [activeTab, setActiveTab] = useState('calendar')
-    const [currentDate, setCurrentDate] = useState(new Date())
     const [tasks, setTasks] = useState<BasicTask[]>([])
 
     useEffect(() => {
@@ -70,14 +69,13 @@ export default function ProjectInterface() {
 
     const views: Record<string, React.ReactNode> = {
         backlog: <BacklogView projectId={project_name} />,
-        calendar: <CalendarView projectId={project_name} currentDate={currentDate} setCurrentDate={setCurrentDate} />,
+        calendar: <CalendarView />,
         board: <BoardView tasks={tasks} />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
     }
 
     return (
         <div className="h-screen flex flex-col  p-[30px] bg-gray-50">
-            {/* Header cố định */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -116,7 +114,6 @@ export default function ProjectInterface() {
                     </div>
                 </div>
 
-                {/* Nav tab cố định ngay dưới header */}
                 <div className="px-6 bg-white border-t border-gray-200">
                     <nav className="flex space-x-8 border-b border-gray-200 overflow-x-auto">
                         {navigationTabs.map((tab) => (

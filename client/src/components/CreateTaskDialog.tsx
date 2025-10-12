@@ -29,16 +29,16 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
       const projectId = project_name
       await axios.post(`/tasks/createTask/${projectId}`, {
         ...form,
-        priority: Number(form.priority), // đảm bảo kiểu byte
-        deadline: form.deadline ? new Date(form.deadline) : null,
+        priority: Number(form.priority),
+        deadline: form.deadline ? new Date(form.deadline).toLocaleString('sv-SE').replace(' ', 'T') : null,
       });
-      onClose(); // đóng dialog sau khi tạo
+      onClose(); 
     } catch (error) {
       console.error(error);
     }
   };
 
-  if (!open) return null; // nếu chưa mở thì không render gì
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -88,7 +88,7 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
             <option value={3}>Low</option>
           </select>
           <input
-            type="date"
+            type="datetime-local"
             name="deadline"
             value={form.deadline}
             onChange={handleChange}

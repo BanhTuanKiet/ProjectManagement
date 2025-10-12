@@ -10,19 +10,27 @@ namespace server.Configs
         {
             CreateMap<Models.Task, TaskDTO.BasicTask>()
                 .ForMember(dest => dest.Assignee,
-                          opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
+                            opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
                 .ForMember(dest => dest.CreatedBy,
-                          otp => otp.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
+                            opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
 
             CreateMap<Project, ProjectDTO.ProjectTitile>();
 
+            CreateMap<Project, ProjectDTO.ProjectBasic>()
+                .ForMember(dest => dest.OwnerId,
+                            opt => opt.MapFrom(src => src.CreatedBy))
+                .ForMember(dest => dest.Owner,
+                            opt => opt.MapFrom(src => src.CreatedByNavigation.UserName))
+                .ForMember(dest => dest.CountMembers,
+                            opt => opt.MapFrom(src => src.ProjectMembers.Count()));
+
             CreateMap<ProjectMember, ProjectDTO.ProjectMembers>()
                 .ForMember(dest => dest.name,
-                           opt => opt.MapFrom(src => src.User.UserName))
+                            opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.role,
-                           opt => opt.MapFrom(src => src.RoleInProject))
+                            opt => opt.MapFrom(src => src.RoleInProject))
                 .ForMember(dest => dest.isOwner,
-                           opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"));
+                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"));
 
             CreateMap<SubTask, SubTaskDTO.BasicSubTask>()
                 .ForMember(dest => dest.Assignee,
@@ -33,11 +41,11 @@ namespace server.Configs
 
             CreateMap<SubTaskDTO.UpdateSubTask, SubTask>()
                 .ForMember(dest => dest.Title,
-                        opt => opt.Condition(src => src.Summary != null)) // chỉ map nếu có giá trị
+                            opt => opt.Condition(src => src.Summary != null)) // chỉ map nếu có giá trị
                 .ForMember(dest => dest.Status,
-                        opt => opt.Condition(src => src.Status != null))
+                            opt => opt.Condition(src => src.Status != null))
                 .ForMember(dest => dest.AssigneeId,
-                        opt => opt.Condition(src => src.AssigneeId != null))
+                            opt => opt.Condition(src => src.AssigneeId != null))
                 .ForMember(dest => dest.Assignee, opt => opt.Ignore()) // tránh map navigation
                 .ForMember(dest => dest.Task, opt => opt.Ignore());
 
@@ -60,7 +68,6 @@ namespace server.Configs
             CreateMap<SprintDTO.Update, Sprint>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
                 
-                // ---- ✅ BACKLOG ----
             CreateMap<Backlog, BacklogDTO.BasicBacklog>();
 
             CreateMap<BacklogDTO.Create, Backlog>()

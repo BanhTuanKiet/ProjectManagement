@@ -23,6 +23,7 @@ namespace server.Controllers
 {
     [Route("notifications")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class NotificationsController : ControllerBase
     {
         private readonly INotifications _notificationService;
@@ -37,7 +38,6 @@ namespace server.Controllers
             _mapper = mapper;
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{countDay}")]
         public async Task<ActionResult> GetNotifications(int countDay)
         {
@@ -46,7 +46,6 @@ namespace server.Controllers
             return Ok(notifications);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("read/{notifiId}")]
         public async Task<ActionResult> MarkReadNotfify(int notifiId)
         {
@@ -64,7 +63,6 @@ namespace server.Controllers
             return Ok(notification.Link);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpDelete("{notifiId}")]
         public async Task<ActionResult> DeleteNotify(int notifiId)
         {
@@ -77,9 +75,9 @@ namespace server.Controllers
 
             int isDeleted = await _notificationService.DeleteNotify(notifiId);
 
-            if (isDeleted <=0 ) throw new ErrorException(400, "Delete failed");
+            if (isDeleted <= 0) throw new ErrorException(400, "Delete failed");
 
-            return Ok(new { message = "Delete successful" });
+            return NoContent();
         }
     }
 }

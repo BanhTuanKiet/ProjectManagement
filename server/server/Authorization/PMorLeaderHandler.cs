@@ -18,7 +18,7 @@ public class PMorLeaderHandler : AuthorizationHandler<OnlyPMOrLeaderRequirement>
         var method = httpContext?.Request?.Method;
         var isAllowedRole = requirement.AllowedRoles.Contains(projectMember?.RoleInProject);
         var isAllowedMethod = requirement.AllowedMethods.Contains(method);
-
+        Console.WriteLine("PMOrLeaderHandler: " + projectMember?.RoleInProject + " - " + method);
         if (method == "GET")
         {
             context.Succeed(requirement);

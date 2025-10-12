@@ -1,154 +1,235 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, MoreHorizontal } from "lucide-react";
-import { arrayMove } from "@dnd-kit/sortable";
-import { DndContext, closestCorners } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { Plus, Trash2, Search } from "lucide-react";
+import {
+  DndContext,
+  closestCorners,
+  useDroppable,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import axios from "@/config/axiosConfig";
 import SortableTaskCard from "@/components/SortableTaskCard";
-import { useParams } from "next/navigation"
+import { useParams } from "next/navigation";
 import { BasicTask } from "@/utils/ITask";
-import { taskStatus, getBorderColor } from "@/utils/statusUtils";
+import { taskStatus } from "@/utils/statusUtils";
 import TaskDetailDrawer from "./TaskDetailDrawer";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
+import { Input } from "@/components/ui/input";
+
+function DroppableColumn({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`space-y-2 flex-1 overflow-y-auto min-h-[100px] rounded-md p-1 transition ${
+        isOver ? "bg-blue-100" : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
   const [features, setFeatures] = useState<BasicTask[]>([]);
   const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null);
   const [seeMore, setSeeMore] = useState<Record<string, boolean>>({});
   const [openDialog, setOpenDialog] = useState(false);
-  const { project_name } = useParams()
-  const projectId = Number(project_name)
+  const [searchQuery, setSearchQuery] = useState("");
+  const { project_name } = useParams();
+  const projectId = Number(project_name);
 
   useEffect(() => {
     if (tasks) setFeatures(tasks);
   }, [tasks]);
 
-  // Gọi API update
   const updateTask = async (taskId: number, newStatus: string) => {
-    try {
-      await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  try {
+    await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
 
-  // Drag & Drop handler
+const deleteTask = async (taskId: number) => {
+  try {
+    await axios.delete(`/tasks/bulk-delete/${projectId}`, {
+      data: [taskId],
+    });
+    setFeatures((prev) => prev.filter((t) => t.taskId !== taskId));
+  } catch (error) {
+    console.error("Error deleting task:", error);
+  }
+};
+
   const handleDragEnd = async (event: any) => {
-    const { active, over } = event;
-    if (!over) return;
+  const { active, over } = event;
+  if (!over) return;
 
-    const activeTaskId = Number(active.id);
-    let newStatus = "";
+  const activeTaskId = Number(active.id);
+  let newStatus = "";
+  let oldStatus = "";
 
-    setFeatures((prev) => {
-      const oldIndex = prev.findIndex((t) => t.taskId.toString() === active.id);
-      const overTask = prev.find((t) => t.taskId.toString() === over.id);
+  setFeatures((prev) => {
+    const oldIndex = prev.findIndex((t) => t.taskId === activeTaskId);
+    const overTask = prev.find((t) => t.taskId.toString() === over.id);
 
-      if (overTask) {
-        const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
-        if (prev[oldIndex].status === overTask.status) {
-          return arrayMove(prev, oldIndex, newIndex);
-        } else {
-          newStatus = overTask.status;
-          return prev.map((task) =>
-            task.taskId.toString() === active.id
-              ? { ...task, status: overTask.status }
-              : task
-          );
-        }
+    if (!overTask) {
+      // Kéo sang cột trống (chỉ đổi status)
+      newStatus = over.id as string;
+      oldStatus = prev[oldIndex].status;
+
+      return prev.map((task) =>
+        task.taskId === activeTaskId ? { ...task, status: newStatus } : task
+      );
+    } else {
+      // Kéo trong cùng cột hoặc sang cột khác
+      const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
+      if (prev[oldIndex].status === overTask.status) {
+        return arrayMove(prev, oldIndex, newIndex);
       } else {
-        // thả vào group column
-        newStatus = over.id as string;
+        newStatus = overTask.status;
+        oldStatus = prev[oldIndex].status;
         return prev.map((task) =>
-          task.taskId.toString() === active.id
-            ? { ...task, status: newStatus }
-            : task
+          task.taskId === activeTaskId ? { ...task, status: newStatus } : task
         );
       }
-    });
-
-    if (newStatus) {
-      await updateTask(activeTaskId, newStatus);
     }
-  };
+  });
+
+  // Gọi API cập nhật
+  const success = await updateTask(activeTaskId, newStatus);
+
+  // ❗ Nếu lỗi → khôi phục lại trạng thái cũ
+  if (!success) {
+    setFeatures((prev) =>
+      prev.map((task) =>
+        task.taskId === activeTaskId ? { ...task, status: oldStatus } : task
+      )
+    );
+  }
+};
+
+  const filteredTasks = features.filter((t) =>
+    t.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-5 gap-4 p-4 bg-dynamic">
-        {taskStatus.map((status) => {
-          const columnTasks = features.filter((t) => t.status === status.name);
-          const visibleTasks =
-            seeMore[status.name] || columnTasks.length <= 5
-              ? columnTasks
-              : columnTasks.slice(0, 5);
+    <div className="p-4 bg-dynamic">
+      <div className="flex items-center mb-4 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder="Search task..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 w-64"
+        />
+      </div>
 
-          return (
-            <div
-              key={status.id}
-              className="bg-gray-50 rounded-xl p-3 shadow-md flex flex-col"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="font-semibold" style={{ color: status.color }}>
-                  {status.name}
-                </h2>
-                {columnTasks.length > 0 && (
+      <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-5 gap-4">
+          {taskStatus.map((status) => {
+            const columnTasks = filteredTasks.filter(
+              (t) => t.status === status.name
+            );
+            const isSeeMore = seeMore[status.name];
+            const visibleTasks =
+              isSeeMore || columnTasks.length <= 5
+                ? columnTasks
+                : columnTasks.slice(0, 5);
+
+            return (
+              <div
+                key={status.id}
+                className="bg-gray-50 rounded-xl p-3 shadow-md flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold" style={{ color: status.color }}>
+                    {status.name}
+                  </h2>
                   <span className="bg-gray-200 text-xs px-2 py-1 rounded-full">
                     {columnTasks.length}
                   </span>
-                )}
-              </div>
-
-              {/* Danh sách task */}
-              <SortableContext
-                id={status.name}
-                items={visibleTasks.map((t) => t.taskId.toString())}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-2 flex-1 overflow-y-auto">
-                  {visibleTasks.map((task) => (
-                    <SortableTaskCard
-                      key={task.taskId}
-                      task={task}
-                      onClick={() => setSelectedTask(task)}
-                    />
-                  ))}
-
                 </div>
-              </SortableContext>
 
-              {/* See more */}
-              {columnTasks.length > 5 && !seeMore[status.name] && (
-                <button
-                  className="text-blue-500 text-sm mt-2"
-                  onClick={() =>
-                    setSeeMore((prev) => ({ ...prev, [status.name]: true }))
-                  }
+                <SortableContext
+                  id={status.name}
+                  items={visibleTasks.map((t) => t.taskId.toString())}
+                  strategy={verticalListSortingStrategy}
                 >
-                  See more
-                </button>
-              )}
+                  <DroppableColumn id={status.name}>
+                    {visibleTasks.length > 0 ? (
+                      visibleTasks.map((task) => (
+                        <div key={task.taskId} className="relative group">
+                          <SortableTaskCard
+                            task={task}
+                            onClick={() => setSelectedTask(task)}
+                          />
+                          <button
+                            onClick={() => deleteTask(task.taskId)}
+                            className="absolute top-2 right-2 p-1 opacity-0 group-hover:opacity-100 transition bg-white rounded-full shadow-sm"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-400 text-sm py-6">
+                        Drop here
+                      </p>
+                    )}
+                  </DroppableColumn>
+                </SortableContext>
 
-              {/* Nút tạo task */}
-              <div className="mt-2 flex justify-between">
-                <button
-                  onClick={() => setOpenDialog(true)}
-                  className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
-                >
-                  <Plus className="w-4 h-4" /> Create
-                </button>
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                </button>
+                {columnTasks.length > 5 && (
+                  <div className="mt-2 text-sm text-blue-500">
+                    {!isSeeMore ? (
+                      <button
+                        onClick={() =>
+                          setSeeMore((prev) => ({ ...prev, [status.name]: true }))
+                        }
+                      >
+                        See more
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          setSeeMore((prev) => ({ ...prev, [status.name]: false }))
+                        }
+                      >
+                        Close
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-2 flex justify-between">
+                  <button
+                    onClick={() => setOpenDialog(true)}
+                    className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4" /> Create
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </DndContext>
 
-      {/* Drawer chi tiết */}
       {selectedTask && (
         <TaskDetailDrawer
           task={selectedTask}
@@ -156,85 +237,7 @@ export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
         />
       )}
 
-      {/* Dialog tạo task */}
       <CreateTaskDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-    </DndContext>
+    </div>
   );
 }
-
-
-// "use client";
-
-// import { BasicTask } from "@/utils/ITask";
-// import { taskStatus, getBorderColor } from "@/utils/statusUtils";
-// import { Plus, MoreHorizontal } from "lucide-react";
-// import { useState } from "react";
-// import TaskDetailDrawer from "./TaskDetailDrawer";
-// import { Task } from "@/utils/mapperUtil";
-
-// export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
-//   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-//   return (
-//     <div className="grid grid-cols-5 gap-4 p-4 bg-dynamic">
-//       {taskStatus.map((status) => {
-//         // Lọc task theo status (Todo, In Progress, Done,...)
-//         const columnTasks = tasks.filter((t) => t.status === status.name);
-
-//         return (
-//           <div key={status.id} className="bg-gray-50 rounded-xl p-3 shadow-md hover:">
-//             {/* Header cột */}
-//             <div className="flex items-center justify-between mb-2">
-//               <h2 className="font-semibold" style={{ color: status.color }}>
-//                 {status.name}
-//               </h2>
-//               {columnTasks.length > 0 && (
-//                 <span className="bg-gray-200 text-xs px-2 py-1 rounded-full">
-//                   {columnTasks.length}
-//                 </span>
-//               )}
-//             </div>
-
-//             {/* Danh sách task */}
-//             <div className="space-y-2">
-//               {columnTasks.map((task) => (
-//                 <div
-//                   key={task.taskId}
-//                   className={`bg-white rounded-lg p-3 shadow ${getBorderColor(
-//                     task.status
-//                   )}`}
-//                 >
-//                   <p className="font-medium">{task.title}</p>
-//                   <div className="text-xs text-gray-500 flex flex-col mt-1">
-//                     <span>
-//                       📅{" "}
-//                       {task.deadline
-//                         ? new Date(task.deadline).toDateString()
-//                         : "No deadline"}
-//                     </span>
-//                     <span>🔖 PROJ-{task.projectId}</span>
-//                     <span>👤 {task.assignee || "Unassigned"}</span>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//             <div className="mt-2">
-//               <button className="text-left w-full text-white py-2 rounded-md hover:bg-blue-600 transition-colors pl-2">
-//                 <Plus className="inline-block mr-1 size-4" /> Create
-//               </button>
-//               <button className="p-1 hover:bg-gray-100 rounded">
-//                 <MoreHorizontal className="w-4 h-4 text-gray-500" />
-//               </button>
-//             </div>
-//           </div>
-//         );
-//       })}
-//       {selectedTask && (
-//         <TaskDetailDrawer
-//           task={selectedTask}
-//           onClose={() => setSelectedTask(null)}
-//         />
-//       )}
-//     </div>
-//   );
-// }
