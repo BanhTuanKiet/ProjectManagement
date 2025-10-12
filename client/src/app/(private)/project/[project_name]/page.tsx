@@ -24,6 +24,7 @@ import ListPage from '@/components/ListPage'
 import { useParams } from 'next/navigation'
 import axios from '@/config/axiosConfig'
 import BacklogView from '@/components/BacklogView'
+import { useProject } from '@/app/(context)/ProjectContext'
 
 interface NavigationTab {
     id: string
@@ -44,9 +45,9 @@ const navigationTabs: NavigationTab[] = [
 ]
 
 export default function ProjectInterface() {
-    const { project_name } = useParams()
     const [activeTab, setActiveTab] = useState('calendar')
     const [tasks, setTasks] = useState<BasicTask[]>([])
+    const { project_name } = useProject()
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -68,7 +69,7 @@ export default function ProjectInterface() {
     }, [project_name])
 
     const views: Record<string, React.ReactNode> = {
-        backlog: <BacklogView projectId={project_name} />,
+        backlog: <BacklogView projectId={project_name?.toString()} />,
         calendar: <CalendarView />,
         board: <BoardView tasks={tasks} />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,

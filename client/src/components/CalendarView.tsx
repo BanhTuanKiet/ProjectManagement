@@ -9,7 +9,6 @@ import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
 import { useNotification } from "@/app/(context)/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
-import { useParams } from "next/navigation"
 import TaskCalendar from "./TaskCalendar"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
@@ -23,8 +22,7 @@ export default function CalendarView() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
     const { selectedTask, setSelectedTask } = useNotification()
-    const { project_name } = useParams<{ project_name: string }>()
-    const { members } = useProject()
+    const { project_name, members } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
 
     useEffect(() => {
@@ -151,7 +149,7 @@ export default function CalendarView() {
 
             {selectedTask && (
                 <TaskDetailModal
-                    projectId={parseInt(project_name)}
+                    projectId={project_name ? Number(project_name) : 0}
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />

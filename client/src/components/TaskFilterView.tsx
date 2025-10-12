@@ -36,8 +36,6 @@ export default function TaskFilterView({
     const { members } = useProject()
 
     useEffect(() => {
-        console.log("🔍 Filtering mockTasks with:", filters)
-
         const isEmptyFilter =
             (!filters.search || filters.search.trim() === "") &&
             (!filters.assignee || filters.assignee === "all" || filters.assignee === "") &&
