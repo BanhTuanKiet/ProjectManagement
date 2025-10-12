@@ -182,6 +182,57 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
     }
   };
 
+  // Cho phép thả
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  // Khi thả vào Sprint
+  const handleDropToSprint = async (e: React.DragEvent, sprintId: number) => {
+    const taskId = parseInt(e.dataTransfer.getData("taskId"));
+    if (!taskId) return;
+
+    try {
+      // Gọi API cập nhật sprintId
+      await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, { sprintId });
+
+      // Cập nhật UI tại client
+      setBacklogItems(prev => prev.filter(t => t.id !== taskId));
+      setSprints(prev =>
+        prev.map(s =>
+          s.sprintId === sprintId
+            ? { ...s, workItems: [...s.workItems, backlogItems.find(t => t.id === taskId)!] }
+            : s
+        )
+      );
+    } catch (err) {
+      console.error("❌ Lỗi cập nhật sprintId:", err);
+    }
+  };
+
+  // Khi thả lại vào Backlog
+  const handleDropToBacklog = async (e: React.DragEvent) => {
+    const taskId = parseInt(e.dataTransfer.getData("taskId"));
+    if (!taskId) return;
+
+    try {
+      await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, { sprintId: null });
+
+      // Cập nhật UI tại client
+      setSprints(prev =>
+        prev.map(s => ({
+          ...s,
+          workItems: s.workItems.filter(t => t.id !== taskId),
+        }))
+      );
+      const movedTask = sprints.flatMap(s => s.workItems).find(t => t.id === taskId);
+      if (movedTask) setBacklogItems(prev => [...prev, { ...movedTask, sprintId: null }]);
+    } catch (err) {
+      console.error("❌ Lỗi move về backlog:", err);
+    }
+  };
+
+
 
   return (
     <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm">
@@ -265,10 +316,16 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
 
               {/* Sprint Items */}
               {isExpanded && (
-                <div className="ml-8 space-y-2">
+                <div
+                  className="ml-8 space-y-2"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDropToSprint(e, sprint.sprintId)}
+                >
                   {sprint.workItems.length > 0 ? sprint.workItems.map((item) => (
                     <div
                       key={item.id}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData("taskId", item.id.toString())}
                       className="group flex items-center justify-between py-2 px-4 rounded hover:bg-blue-50 cursor-pointer transition"
                       onClick={(e) => {
                         // Chỉ mở modal khi không click checkbox
@@ -448,10 +505,12 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
           </div>
 
           {expandedSprints.has('backlog') && (
-            <div className="ml-8 space-y-2">
+            <div className="ml-8 space-y-2" onDragOver={handleDragOver} onDrop={handleDropToBacklog}>
               {backlogItems.length > 0 ? backlogItems.map((item) => (
                 <div
                   key={item.id}
+                  draggable
+                  onDragStart={(e) => e.dataTransfer.setData("taskId", item.id.toString())}
                   className="group flex items-center justify-between py-2 px-4 rounded hover:bg-gray-100 cursor-pointer transition"
                   onClick={(e) => {
                     // Chỉ mở modal khi không click checkbox
@@ -509,14 +568,10 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
                         className="w-4 h-4 text-gray-600"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036
-           a2.5 2.5 0 113.536 3.536L7.5 21H3v-4.5
-           L16.732 3.732z" />
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036 a2.5 2.5 0 113.536 3.536L7.5 21H3v-4.5 L16.732 3.732z" />
                       </svg>
                     </button>
                   </div>
-
-
 
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button className="p-1 rounded hover:bg-gray-200" onClick={(e) => e.stopPropagation()}>
