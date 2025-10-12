@@ -274,21 +274,66 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
             >
                 <BacklogContent
                     {...{
-                        sprints, backlogItems, expandedSprints, selectedTasks, editingTaskId, editingTitle, isCreating, newTaskTitles,
+                        projectId: Number(projectId), sprints, backlogItems, expandedSprints, selectedTasks, editingTaskId, editingTitle, isCreating, newTaskTitles,
                         toggleSprint, handleDragOver, handleDropToSprint, handleDropToBacklog, handleUpdateTask, createTask,
-                        setEditingTaskId, setEditingTitle, setSelectedTaskId, setSelectedTasks, setIsCreating, setNewTaskTitles
+                        setEditingTaskId, setEditingTitle, setSelectedTaskId, setSelectedTasks, setIsCreating, setNewTaskTitles, setSprints, setBacklogItems, selectedTaskId
                     }}
                 />
             </div>
             {/* Footer cố định */}
+            {/* Footer cố định */}
             <div className="h-[60px] border-t bg-gray-50 flex items-center justify-between px-4">
-                <span className="text-sm text-gray-500">+ Create new work item</span>
-                <button
-                    onClick={() => setIsCreating('backlog')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-                >
-                    Create Task
-                </button>
+                {isCreating === "backlog" ? (
+                    <div className="flex items-center gap-2 w-full justify-between">
+                        <input
+                            type="text"
+                            placeholder="Enter task summary..."
+                            value={newTaskTitles["backlog"] || ""}
+                            onChange={(e) =>
+                                setNewTaskTitles((prev) => ({
+                                    ...prev,
+                                    backlog: e.target.value,
+                                }))
+                            }
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") createTask();
+                                if (e.key === "Escape") {
+                                    setIsCreating(false);
+                                    setNewTaskTitles((prev) => ({ ...prev, backlog: "" }));
+                                }
+                            }}
+                            className="border rounded px-2 py-1 text-sm w-full max-w-sm"
+                            autoFocus
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => createTask()}
+                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsCreating(false);
+                                    setNewTaskTitles((prev) => ({ ...prev, backlog: "" }));
+                                }}
+                                className="text-sm text-gray-500 hover:text-gray-700"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between w-full">
+                        <span className="text-sm text-gray-500">+ Create new work item</span>
+                        <button
+                            onClick={() => setIsCreating("backlog")}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                        >
+                            Create Task
+                        </button>
+                    </div>
+                )}
             </div>
 
             {selectedTaskId && (
