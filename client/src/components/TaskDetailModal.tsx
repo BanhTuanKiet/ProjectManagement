@@ -397,19 +397,48 @@ export default function TaskDetailModal({
 
                                                     {/* Hover icons */}
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                        {/* 👁 Xem trước */}
                                                         <button
                                                             onClick={() => setPreviewFile(f)}
                                                             className="bg-white/80 p-2 rounded-full hover:bg-white"
                                                         >
                                                             <Eye className="h-4 w-4 text-gray-700" />
                                                         </button>
+
+                                                        {/* ⬇️ Tải về */}
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const response = await fetch(f.filePath);
+                                                                    const blob = await response.blob();
+                                                                    const url = window.URL.createObjectURL(blob);
+                                                                    const a = document.createElement("a");
+                                                                    a.href = url;
+                                                                    a.download = f.fileName || "download";
+                                                                    a.click();
+                                                                    window.URL.revokeObjectURL(url);
+                                                                } catch (err) {
+                                                                    console.error("Download error:", err);
+                                                                    alert("Không thể tải file xuống!");
+                                                                }
+                                                            }}
+                                                            className="bg-white/90 p-2 rounded-full hover:bg-white transition"
+                                                            title="Tải xuống"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                                                            </svg>
+                                                        </button>
+
+                                                        {/* 🗑 Xóa */}
                                                         <button
                                                             onClick={() => handleDeleteFile(f.fileId)}
                                                             className="bg-white/80 p-2 rounded-full hover:bg-red-100"
                                                         >
-                                                            <Trash className="h-4 w-4 text-red-600" /> {/* 👈 Icon thùng rác nằm ở đây */}
+                                                            <Trash className="h-4 w-4 text-red-600" />
                                                         </button>
                                                     </div>
+
                                                 </div>
                                             ))}
                                         </div>
