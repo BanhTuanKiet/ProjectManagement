@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useState } from "react"
-import { usePresence } from "../app/.context/OnlineMembers"
+import { usePresence } from "../app/(context)/OnlineMembers"
 import axios from "@/config/axiosConfig"
 import { useSearchParams } from "next/navigation"
 import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
 import { useRouter } from "next/navigation"
 import NotificationRealtime from "@/components/NotificationRealtime"
-import { useNotification } from "@/app/.context/Notfication"
+import { useNotification } from "@/app/(context)/Notfication"
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -55,6 +55,9 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const handleLogout = async () => {
         try {
             await axios.get(`/users/signout`)
+            setTimeout(() => {
+                window.location.href = "/"
+            }, 500)
         } catch (error) {
             console.log(error)
         }

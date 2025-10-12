@@ -1,6 +1,6 @@
 "use client"
 
-import { usePresence } from "@/app/.context/OnlineMembers"
+import { usePresence } from "@/app/(context)/OnlineMembers"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 // Tạo màu từ string bằng cách hash vào mảng màu

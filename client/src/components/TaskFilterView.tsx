@@ -9,8 +9,8 @@ import { getPriorityBadge, getRoleBadge, getTaskStatusBadge } from "@/utils/stat
 import ColoredAvatar from "./ColoredAvatar"
 import { capitalizeFirstLetter } from "@/utils/stringUitls"
 import { BasicTask } from "@/utils/ITask"
-import { useTask } from "@/app/.context/TaskContext"
-import { useProject } from "@/app/.context/ProjectContext"
+import { useTask } from "@/app/(context)/TaskContext"
+import { useProject } from "@/app/(context)/ProjectContext"
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]

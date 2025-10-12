@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { TaskDetail } from "@/utils/ITask"
 import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils"
 import * as signalR from "@microsoft/signalr"
-import { usePresence } from "@/app/.context/OnlineMembers"
+import { usePresence } from "@/app/(context)/OnlineMembers"
 import ColoredAvatar from "./ColoredAvatar"
 import type { ActiveUser } from "@/utils/IUser"
 

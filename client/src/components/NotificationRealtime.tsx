@@ -7,7 +7,7 @@ import type { Notification } from "@/utils/INotifications"
 import ColoredAvatar from "./ColoredAvatar"
 import { formatSentTime } from "@/utils/dateUtils"
 import axios from "@/config/axiosConfig"
-import { useNotification } from "@/app/.context/Notfication"
+import { useNotification } from "@/app/(context)/Notfication"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 

@@ -7,7 +7,7 @@ import { taskStatus } from "@/utils/statusUtils"
 import { arrayMove } from "@dnd-kit/sortable"
 import axios from "@/config/axiosConfig"
 import { useParams } from "next/navigation"
-import { useNotification } from "@/app/.context/Notfication"
+import { useNotification } from "@/app/(context)/Notfication"
 import TaskCalendar from "./TaskCalendar"
 
 const TaskList = ({ tasks }: { tasks: BasicTask[] }) => {

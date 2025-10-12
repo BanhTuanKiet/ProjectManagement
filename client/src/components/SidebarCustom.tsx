@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import Link from "next/link"
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from "react"
-import { useProject } from '@/app/.context/ProjectContext'
+import { useProject } from '@/app/(context)/ProjectContext'
 
 export function SidebarCustom({ className }: { className?: string }) {
     const { project_name } = useParams()

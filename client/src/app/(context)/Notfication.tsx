@@ -1,17 +1,16 @@
+"use client"
+
 import React, { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
 import axios from "../../config/axiosConfig"
 import { Notification } from "@/utils/INotifications"
-import { BasicTask } from "@/utils/ITask"
 
 type NotificationContextType = {
     connection: signalR.HubConnection | null
     notifications: Notification[]
     connectNotificationSignalR: (token: string) => void
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>
-    // selectedTask: BasicTask | null
     selectedTask: number | null
-    // setSelectedTask: React.Dispatch<React.SetStateAction<BasicTask | null>>
     setSelectedTask: React.Dispatch<React.SetStateAction<number | null>>
 }
 

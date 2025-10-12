@@ -14,7 +14,7 @@ import * as Dialog from "@radix-ui/react-dialog"
 import BackgroundPicker from "./ChangeBackground"
 import axios from "@/config/axiosConfig"
 import { useParams } from "next/navigation"
-import { useProject } from "@/app/.context/ProjectContext"
+import { useProject } from "@/app/(context)/ProjectContext"
 import InvitePeopleDialog from "@/components/InvitePeopleDialog"
 
 

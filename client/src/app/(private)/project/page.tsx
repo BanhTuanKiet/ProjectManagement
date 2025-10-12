@@ -3,7 +3,7 @@
 import { ProjectCard } from "@/components/ProjectCard"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
-import { useProject } from "../.context/ProjectContext"
+import { useProject } from "@/app/(context)/ProjectContext"
 
 export default function Page() {
     const { projects } = useProject()

@@ -1,3 +1,5 @@
+"use client"
+
 import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
 import type { BasicTask } from "../../utils/ITask"

@@ -7,12 +7,12 @@ import type { BasicTask } from "@/utils/ITask"
 import TaskList from "./TaskList"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
-import { useNotification } from "@/app/.context/Notfication"
+import { useNotification } from "@/app/(context)/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
 import { useParams } from "next/navigation"
 import TaskCalendar from "./TaskCalendar"
-import { useTask } from "@/app/.context/TaskContext"
-import { useProject } from "@/app/.context/ProjectContext"
+import { useTask } from "@/app/(context)/TaskContext"
+import { useProject } from "@/app/(context)/ProjectContext"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
