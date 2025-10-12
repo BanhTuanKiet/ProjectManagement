@@ -1,11 +1,9 @@
-"use client"
+import { ThemeProvider } from '../(context)/ThemeContext'
+import { ProjectProvider } from '../(context)/ProjectContext'
+import { PresenceProvider } from '../(context)/OnlineMembers'
+import { NotificationProvider } from '../(context)/Notfication'
 
-import { PresenceProvider } from "./OnlineMembers";
-import { NotificationProvider } from "./Notfication";
-import { ProjectProvider } from "./ProjectContext"
-import { ThemeProvider } from "@/app/.context/ThemeContext"
-
-export function Providers({ children }: { children: React.ReactNode }) {
+export default function layout({ children }: { children: React.ReactNode }) {
     return (
         <ThemeProvider>
             <ProjectProvider>

@@ -6,60 +6,17 @@ import { Search, Plus, Bell, Settings, User, Users, LogOut, Sun, Moon, Check } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useEffect, useState } from "react"
-import { usePresence } from "../app/.context/OnlineMembers"
-import axios from "@/config/axiosConfig"
-import { useSearchParams } from "next/navigation"
-import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
-import { useRouter } from "next/navigation"
 import NotificationRealtime from "@/components/NotificationRealtime"
-import { useNotification } from "@/app/.context/Notfication"
+import { useNotification } from "@/app/(context)/Notfication"
+import { useState } from "react"
+import { useUser } from "@/app/(context)/UserContext"
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [theme, setTheme] = useState(false)
-    const { connectSignalR } = usePresence()
-    const { connectNotificationSignalR, notifications, setNotifications } = useNotification()
-    const searchParams = useSearchParams()
-    const router = useRouter()
-
-    useEffect(() => {
-        const success = searchParams.get("success")
-
-        if (success === "false") return WarningNotify("Signin via Google failed")
-        if (success === "true") SuccessNotify("Signin via Google successful")
-
-        const fetchToken = async () => {
-            try {
-                const reponse = await axios.get(`/users/token`)
-                const token: string = reponse.data ?? ""
-
-                if (reponse.data) {
-                    connectSignalR(token)
-                    connectNotificationSignalR(token)
-                }
-            } catch (error) {
-                console.log(error)
-            }
-        }
-
-        fetchToken()
-        router.replace("/project")
-    }, [])
-
-    const signinGG = async () => {
-        window.location.href = "http://localhost:5144/users/signin-google"
-    }
-
-    const handleLogout = async () => {
-        try {
-            await axios.get(`/users/signout`)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
+    const { notifications, setNotifications } = useNotification()
+    const { handleSignout } = useUser()
     const unreadCount = notifications?.filter(n => !n.isRead).length
 
     return (
@@ -87,9 +44,6 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                     </div>
                 </div>
                 <div className="flex items-center gap-5 relative">
-                    <Button className="bg-red-500 hover:bg-red-700 text-white" onClick={signinGG}>
-                        Google
-                    </Button>
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                         <Plus className="h-4 w-4 mr-2" />
                         Create
@@ -172,7 +126,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                                     </button>
                                     <button
                                         className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
-                                        onClick={() => handleLogout()}
+                                        onClick={() => handleSignout()}
                                     >
                                         <LogOut className="h-4 w-4" />
                                         <span>Log out</span>

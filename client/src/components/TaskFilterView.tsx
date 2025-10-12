@@ -9,8 +9,8 @@ import { getPriorityBadge, getRoleBadge, getTaskStatusBadge } from "@/utils/stat
 import ColoredAvatar from "./ColoredAvatar"
 import { capitalizeFirstLetter } from "@/utils/stringUitls"
 import { BasicTask } from "@/utils/ITask"
-import { useTask } from "@/app/.context/TaskContext"
-import { useProject } from "@/app/.context/ProjectContext"
+import { useTask } from "@/app/(context)/TaskContext"
+import { useProject } from "@/app/(context)/ProjectContext"
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const statusOptions = ["all", "Todo", "In Progress", "Done", "Cancel", "Expired"]
@@ -36,8 +36,6 @@ export default function TaskFilterView({
     const { members } = useProject()
 
     useEffect(() => {
-        console.log("🔍 Filtering mockTasks with:", filters)
-
         const isEmptyFilter =
             (!filters.search || filters.search.trim() === "") &&
             (!filters.assignee || filters.assignee === "all" || filters.assignee === "") &&
@@ -101,8 +99,8 @@ export default function TaskFilterView({
                 </div>
 
                 <Select
-                value={filters.assignee ?? "all"}
-                onValueChange={(val) => handleFilter("assignee", val)}
+                    value={filters.assignee ?? "all"}
+                    onValueChange={(val) => handleFilter("assignee", val)}
                 >
                     <SelectTrigger className="w-28">
                         <SelectValue placeholder="Assignee" />

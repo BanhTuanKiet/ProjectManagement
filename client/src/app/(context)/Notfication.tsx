@@ -1,44 +1,53 @@
+"use client"
+
 import React, { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
 import axios from "../../config/axiosConfig"
 import { Notification } from "@/utils/INotifications"
-import { BasicTask } from "@/utils/ITask"
+import { useUser } from "./UserContext"
 
 type NotificationContextType = {
     connection: signalR.HubConnection | null
     notifications: Notification[]
-    connectNotificationSignalR: (token: string) => void
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>
-    // selectedTask: BasicTask | null
     selectedTask: number | null
-    // setSelectedTask: React.Dispatch<React.SetStateAction<BasicTask | null>>
     setSelectedTask: React.Dispatch<React.SetStateAction<number | null>>
 }
 
 const NotificationContext = createContext<NotificationContextType>({
     connection: null,
     notifications: [],
-    connectNotificationSignalR: (_token: string) => {},
-    setNotifications: () => {},
+    setNotifications: () => { },
     selectedTask: null,
-    setSelectedTask: () => {}
+    setSelectedTask: () => { }
 })
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [selectedTask, setSelectedTask] = useState<number | null>(null)
+    const { user } = useUser()
 
-    const connectNotificationSignalR = (token: string) => {
-        const conn = new signalR.HubConnectionBuilder()
-            .withUrl("http://localhost:5144/hubs/notification", {
-                accessTokenFactory: () => token
-            })
-            .withAutomaticReconnect()
-            .build()
+    useEffect(() => {
+        if (!user?.token) return
 
-        setConnection(conn)
-    }
+        try {
+            const connectNotificationSignalR = () => {
+                const conn = new signalR.HubConnectionBuilder()
+                    .withUrl("http://localhost:5144/hubs/notification", {
+                        accessTokenFactory: () => user?.token
+                    })
+                    .withAutomaticReconnect()
+                    .build()
+
+                setConnection(conn)
+            }
+
+            connectNotificationSignalR()
+        } catch (error) {
+            console.log(error)
+        }
+    })
 
     useEffect(() => {
         if (!connection) return
@@ -60,7 +69,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }, [connection])
 
     return (
-        <NotificationContext.Provider value={{ connection, notifications, setNotifications, selectedTask, setSelectedTask, connectNotificationSignalR }}>
+        <NotificationContext.Provider value={{ connection, notifications, setNotifications, selectedTask, setSelectedTask }}>
             {children}
         </NotificationContext.Provider>
     )

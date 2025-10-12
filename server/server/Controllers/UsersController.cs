@@ -66,11 +66,12 @@ namespace server.Controllers
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        [HttpGet("token")]
+        [HttpGet()]
         public ActionResult GetToken()
         {
             var token = Request.Cookies["token"];
-            return Ok(token ?? null);
+            TokenDTO.DecodedToken decodedToken = JwtUtils.DecodeToken(token);
+            return Ok(decodedToken ?? null);
         }
 
         [HttpGet("signout")]

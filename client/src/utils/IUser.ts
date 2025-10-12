@@ -17,3 +17,9 @@ export interface ActiveUser {
     name: string
     taskId: number
 }
+
+export interface User {
+    id: string
+    name: string
+    token: string
+}

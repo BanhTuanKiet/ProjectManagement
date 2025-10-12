@@ -17,16 +17,23 @@ import {
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
-import { useParams, useRouter } from 'next/navigation'
-import { useState } from "react"
-import { useProject } from '@/app/.context/ProjectContext'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from "react"
+import { useProject } from '@/app/(context)/ProjectContext'
 
 export function SidebarCustom({ className }: { className?: string }) {
-    const { project_name } = useParams()
+    const { project_name } = useProject()
     const [activeTab, setActiveTab] = useState<string>()
     const [isProjectsOpen, setIsProjectsOpen] = useState(true)
     const { projects, setProjects } = useProject()
     const router = useRouter()
+
+    useEffect(() => {
+        const projectIdStored = localStorage.getItem("projectId")
+        const projectId = (projectIdStored ? JSON.parse(projectIdStored) : null)
+        if (project_name) return router.push(`/project/${project_name}`)
+        if (projectId === project_name) router.push(`/project/${projectId.toString()}`)
+    }, [project_name, router])
 
     const handleClick = (id: number) => {
         if (Number(project_name) === id) return
@@ -128,8 +135,8 @@ export function SidebarCustom({ className }: { className?: string }) {
                                                                 <button
                                                                     onClick={() => handleClick(project.projectId)}
                                                                     className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer group ${isActive
-                                                                            ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-l-[3px] border-blue-600 shadow-sm'
-                                                                            : 'hover:bg-muted/60'
+                                                                        ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-l-[3px] border-blue-600 shadow-sm'
+                                                                        : 'hover:bg-muted/60'
                                                                         }`}
                                                                 >
                                                                     <Icon className={`h-4 w-4 transition-colors ${isActive ? 'text-blue-600' : 'text-muted-foreground group-hover:text-foreground'}`} />

@@ -1,3 +1,5 @@
+"use client"
+
 import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
 import type { BasicTask } from "../../utils/ITask"
@@ -66,7 +68,6 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
                 },
             })
 
-            console.log(response.data)
             setTasks(response.data)
         } catch (error) {
             console.log(error)

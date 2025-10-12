@@ -122,8 +122,14 @@ export const getNotificationIcon = (type: string) => {
     }
 }
 
-export const getPriorityIcon = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+export const getPriorityIcon = (priority: string | number) => {
+    const level = {
+        1: "high",
+        2: "medium",
+        3: "low"
+    }[Number(priority)]
+
+    switch (level) {
         case "high":
             return <Flag className="h-4 w-4 text-red-500" />
         case "medium":
@@ -131,6 +137,6 @@ export const getPriorityIcon = (priority: string) => {
         case "low":
             return <Flag className="h-4 w-4 text-green-500" />
         default:
-            return <Flag className="h-4 w-4 text-orange-500" />
+            return <Flag className="h-4 w-4 text-gray-400" />
     }
 }
