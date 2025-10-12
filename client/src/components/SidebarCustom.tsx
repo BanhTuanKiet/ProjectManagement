@@ -41,7 +41,7 @@ export function SidebarCustom({ className }: { className?: string }) {
 
     return (
         <Sidebar className={`w-64 h-full border-r bg-background/95 backdrop-blur-sm ${className || ""}`}>
-            <SidebarContent className="p-4 h-full overflow-y-auto">
+            <SidebarContent className="p-4 h-[calc(100vh-0px)] overflow-y-auto">
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu className="space-y-1.5">
@@ -77,7 +77,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-
+                          
                             <div className="h-px bg-border/60 my-3" />
 
                             <SidebarMenuItem>
