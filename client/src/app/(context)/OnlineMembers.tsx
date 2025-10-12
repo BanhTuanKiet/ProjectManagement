@@ -2,42 +2,48 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
+import { useUser } from "./UserContext"
 
 type OnlineUser = {
     userId: string
-    projects: string[]   // danh sách project mà user này đang tham gia
+    projects: string[] 
 }
 
 type PresenceContextType = {
     connection: signalR.HubConnection | null
     onlineUsers: Record<string, OnlineUser>
-    tokenStored: string
-    connectSignalR: (token: string) => void
 }
 
 const PresenceContext = createContext<PresenceContextType>({
     connection: null,
     onlineUsers: {},
-    tokenStored: "",
-    connectSignalR: (_token: string) => { }
 })
 
 export const PresenceProvider = ({ children }: { children: React.ReactNode }) => {
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
     const [onlineUsers, setOnlineUsers] = useState<Record<string, OnlineUser>>({})
-    const [tokenStored, setTokenStored] = useState<string>("")
+    const { user } = useUser()
 
-    const connectSignalR = (token: string) => {
-        const conn = new signalR.HubConnectionBuilder()
-            .withUrl("http://localhost:5144/hubs/presence", {
-                accessTokenFactory: () => token
-            })
-            .withAutomaticReconnect()
-            .build()
+    useEffect(() => {
+        if (!user?.token) return
 
-        setConnection(conn)
-        setTokenStored(token)
-    }
+        try {
+            const connectSignalR = () => {
+                const conn = new signalR.HubConnectionBuilder()
+                    .withUrl("http://localhost:5144/hubs/presence", {
+                        accessTokenFactory: () => user.token
+                    })
+                    .withAutomaticReconnect()
+                    .build()
+
+                setConnection(conn)
+            }
+
+            connectSignalR()
+        } catch (error) {
+            console.log(error)
+        }
+    })
 
     useEffect(() => {
         if (!connection) return
@@ -73,7 +79,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
     }, [connection])
 
     return (
-        <PresenceContext.Provider value={{ connection, onlineUsers, tokenStored, connectSignalR }}>
+        <PresenceContext.Provider value={{ connection, onlineUsers }}>
             {children}
         </PresenceContext.Provider>
     )
