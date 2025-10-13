@@ -27,7 +27,7 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
   const handleSubmit = async () => {
     try {
       const projectId = project_name
-      await axios.post(`/tasks/createTask/${projectId}`, {
+      await axios.post(`/tasks/view/${projectId}`, {
         ...form,
         priority: Number(form.priority),
         deadline: form.deadline ? new Date(form.deadline).toLocaleString('sv-SE').replace(' ', 'T') : null,
@@ -83,9 +83,9 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
             onChange={handleChange}
             className="w-full border rounded px-2 py-1"
           >
-            <option value={1}>High</option>
+            <option value={1}>Low</option>
             <option value={2}>Medium</option>
-            <option value={3}>Low</option>
+            <option value={3}>High</option>
           </select>
           <input
             type="datetime-local"

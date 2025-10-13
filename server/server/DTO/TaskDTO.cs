@@ -10,6 +10,7 @@
             public byte? Priority { get; set; }
             public string? Deadline { get; set; }
             public int? SprintId { get; set; }
+            public int? BacklogId { get; set; }
         }
 
         public class CreateNewTask

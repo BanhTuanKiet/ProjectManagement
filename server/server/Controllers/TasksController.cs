@@ -21,16 +21,20 @@ namespace server.Controllers
         private readonly ITasks _tasksService;
         private readonly INotifications _notificationsService;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<TaskHubConfig> _taskHubContext;
+
         public TasksController(
             ProjectManagementContext context,
             ITasks tasksService,
             INotifications notificationsService,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            IHubContext<TaskHubConfig> taskHubContext)
         {
             _context = context;
             _tasksService = tasksService;
             _notificationsService = notificationsService;
             _hubContext = hubContext;
+            _taskHubContext = taskHubContext;
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -41,8 +45,18 @@ namespace server.Controllers
                 ? JsonConvert.DeserializeObject<FilterDTO.FilterCalendarView>(filters)
                 : new FilterDTO.FilterCalendarView();
 
-            List<TaskDTO.BasicTask> tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
+            List<TaskDTO.BasicTask> tasks = new List<TaskDTO.BasicTask>();
 
+            if (month != null && year != null)
+            {
+                Console.WriteLine("Use GetBasicTasksByMonth");
+                tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
+            }
+            else
+            {
+                Console.WriteLine("Use GetBasicTasksById");
+                tasks = await _tasksService.GetBasicTasksById(projectId);
+            }
             return Ok(tasks);
         }
 
@@ -62,7 +76,7 @@ namespace server.Controllers
             Models.Task task = await _tasksService.GetTaskById(taskId) ?? throw new ErrorException(404, "Task not found");
             return Ok(task);
         }
-//xem xet gop lai
+
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("view/{projectId}")]
         public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
@@ -77,21 +91,10 @@ namespace server.Controllers
                 try
                 {
                     DateTime dateTimeCurrent = DateTime.UtcNow;
+                    if (newTask.Deadline == null) 
+                        newTask.Deadline = dateTimeCurrent.ToString();
                     DateTime deadline = DateTime.Parse(newTask.Deadline);
-                    string status = "";
-
-                    if (dateTimeCurrent.Date == deadline.Date)
-                    {
-                        status = "InProgress";
-                    }
-                    else if (dateTimeCurrent.Date < deadline.Date)
-                    {
-                        throw new ErrorException(400, "Deadline must be after the current date");
-                    }
-                    else
-                    {
-                        status = "Todo";
-                    }
+                    string status = "Todo";
 
                     Models.Task formatedTask = new Models.Task
                     {
@@ -103,23 +106,31 @@ namespace server.Controllers
                         Priority = newTask.Priority,
                         CreatedBy = userId,
                         Status = status,
-                        Deadline = dateTimeCurrent
+                        Deadline = deadline,
+                        BacklogId = newTask.BacklogId,
+                        CreatedAt = dateTimeCurrent,
                     };
 
                     Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
-                    Notification notification = new Notification
+                    if (newTask.AssigneeId != null)
                     {
-                        UserId = formatedTask.AssigneeId,
-                        ProjectId = formatedTask.ProjectId,
-                        Message = $"A new task {formatedTask.Title} has been assigned to you by {name}",
-                        IsRead = false,
-                        CreatedAt = DateTime.UtcNow,
-                        Link = $"/tasks/{formatedTask.TaskId}",
-                        CreatedId = userId
-                    };
 
-                    await _notificationsService.SaveNotification(notification);
-                    await NotificationHub.SendTask(_hubContext, notification.UserId, notification);
+                        Notification notification = new Notification
+                        {
+                            UserId = formatedTask.AssigneeId,
+                            ProjectId = formatedTask.ProjectId,
+                            Message = $"A new task {formatedTask.Title} has been assigned to you by {name}",
+                            IsRead = false,
+                            CreatedAt = DateTime.UtcNow,
+                            Link = $"/tasks/{formatedTask.TaskId}",
+                            CreatedId = userId
+                        };
+                        Console.WriteLine("UserID in function: " + newTask.AssigneeId);
+                        Console.WriteLine("UserID in notification: " + notification.UserId);
+
+                        await _notificationsService.SaveNotification(notification);
+                        await NotificationHub.SendTask(_hubContext, notification.UserId, notification);
+                    }
                     await transaction.CommitAsync();
 
                     return Ok(new { message = "Add new task successful!" });
@@ -174,27 +185,6 @@ namespace server.Controllers
 
             return Ok(result);
         }
-//xem xet gop lai
-        [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPost("list/{projectId}")]
-        public async Task<ActionResult> AddTaskView([FromRoute] int projectId, [FromBody] TaskDTO.NewTaskListView newTask)
-        {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
-
-            var formatedTask = new Models.Task
-            {
-                ProjectId = projectId,
-                Title = newTask.Title,
-                CreatedBy = userId,
-                Status = newTask.Status ?? "Todo",
-                SprintId = newTask.SprintId,
-                BacklogId = newTask.BacklogId
-            };
-
-            var addedTask = await _tasksService.AddNewTask(formatedTask);
-
-            return Ok(addedTask);
-        }
 
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("bulk-delete")]
@@ -216,7 +206,7 @@ namespace server.Controllers
 
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
-        public async Task<ActionResult> UpdateStatusTask(int taskId, [FromBody] Dictionary<string, object> updates)
+        public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
@@ -228,31 +218,10 @@ namespace server.Controllers
             if (updatedTask.Status != newStatus || updatedTask == null)
                 throw new ErrorException(400, "Update task failed!");
 
+            await _taskHubContext.Clients.Group($"project-{projectId}")
+                .SendAsync("TaskUpdated", updatedTask);
+
             return Ok(new { message = "Update task successful!" });
-        }
-//xem xet gop lai
-        [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPost("createTask/{projectId}")]
-        public async Task<ActionResult> CreateTask([FromBody] TaskDTO.CreateNewTask newTask, int projectId)
-        {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
-
-            var formatedTask = new Models.Task
-            {
-                ProjectId = projectId,
-                Title = newTask.Title,
-                Description = newTask.Description,
-                Status = "In process",
-                AssigneeId = newTask.AssigneeId,
-                Priority = newTask.Priority,
-                CreatedBy = userId,
-                CreatedAt = DateTime.UtcNow,
-                Deadline = newTask.Deadline
-            };
-
-            Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
-
-            return Ok(new { message = "Add new task successful!" });
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

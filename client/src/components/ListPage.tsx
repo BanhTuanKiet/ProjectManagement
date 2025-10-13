@@ -26,6 +26,7 @@ import { initialColumns, Column } from "@/config/columsConfig";
 import { useTaskTable } from "@/hooks/useResizableColumns";
 import { Task } from "@/utils/mapperUtil";
 import TaskDetailDrawer from "./TaskDetailDrawer";
+import { useParams } from "next/dist/client/components/navigation";
 // interface Task {
 //   id: string;
 //   key: string;
@@ -154,6 +155,8 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const { project_name } = useParams();
+  const projectId1 = Number(project_name);
 
   return (
     <div className="flex flex-col h-full overflow-hidden max-w-7xl mx-auto w-full">
@@ -260,8 +263,8 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                   e.preventDefault(); // chặn xuống dòng
                   if (!newTaskTitle.trim()) return;
                   try {
-                    const projectId = 1; // 👈 tuỳ props/state
-                    const res = await axios.post(`/tasks/list/${projectId}`, {
+                    const projectId = projectId1; // 👈 tuỳ props/state
+                    const res = await axios.post(`/tasks/view/${projectId}`, {
                       title: newTaskTitle,
                       status: "To Do",
                     });
@@ -280,9 +283,9 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
               onClick={async () => {
                 if (!newTaskTitle.trim()) return;
                 try {
-                  const projectId = 1; // 👈 tuỳ props/state
+                  const projectId = projectId1; // 👈 tuỳ props/state
                   console.log("title", newTaskTitle);
-                  const res = await axios.post(`/tasks/list/${projectId}`, {
+                  const res = await axios.post(`/tasks/view/${projectId}`, {
                     title: newTaskTitle,
                     status: "To Do",
                   });

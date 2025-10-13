@@ -60,5 +60,11 @@ namespace server.Configs
 
             await Clients.Caller.SendAsync("ActiveUsersInTask", usersInTask);
         }
+
+        public async Task JoinProjectGroup(int projectId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"project-{projectId}");
+            await Clients.Caller.SendAsync("JoinedProjectGroup", projectId);
+        }
     }
 }
