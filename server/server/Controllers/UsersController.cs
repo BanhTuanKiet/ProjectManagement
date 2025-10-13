@@ -66,7 +66,7 @@ namespace server.Controllers
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        [HttpGet()]
+        [HttpGet("infor")]
         public ActionResult GetToken()
         {
             var token = Request.Cookies["token"];
