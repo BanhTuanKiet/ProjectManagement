@@ -135,7 +135,7 @@ body {
     background-color: var(--app-background, #ffffff) !important;
 }
 
-html, body {
+/* html, body {
   height: 100%;
   overflow: hidden;
 }
@@ -153,4 +153,4 @@ html, body {
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
-}
+} */
