@@ -61,12 +61,12 @@ export const isTaskOverdue = (deadline: string | Date) => {
     return taskDeadline < now
 }
 
-export const getDeadlineStyle = (task: { dueDate?: string; status?: string }) => {
-    if (!task.dueDate) {
+export const getDeadlineStyle = (task: { deadline?: string; status?: string }) => {
+    if (!task.deadline) {
         return { className: "text-gray-400", icon: null, container: "border border-gray-200" }
     }
 
-    const due = new Date(task.dueDate)
+    const due = new Date(task.deadline)
     const now = new Date()
 
     if (task.status === "Done") {

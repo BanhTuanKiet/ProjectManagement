@@ -25,7 +25,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
     const { user } = useUser()
 
     useEffect(() => {
-        if (!user?.token) return
+        if (!user) return
 
         try {
             const connectSignalR = () => {
@@ -43,7 +43,7 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
         } catch (error) {
             console.log(error)
         }
-    })
+    }, [user])
 
     useEffect(() => {
         if (!connection) return

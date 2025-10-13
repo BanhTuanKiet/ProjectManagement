@@ -30,7 +30,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentDate, setCurrentDate] = useState(new Date())
     const { user } = useUser()
     const { project_name } = useProject()
-    console.log(project_name)
+
     useEffect(() => {
         if (!user) return
 
@@ -79,7 +79,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
                         filters: null,
                     },
                 })
-                console.log(response.data)
+
                 setTasks(response.data)
             } catch (error) {
                 console.log(error)

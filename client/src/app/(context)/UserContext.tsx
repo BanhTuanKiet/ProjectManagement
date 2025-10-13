@@ -24,17 +24,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
     const searchParams = useSearchParams()
     const router = useRouter()
-    
+
     useEffect(() => {
         const success = searchParams.get("success")
 
-        if (success === "false") return WarningNotify("Signin via Google failed")
-        if (success === "true") SuccessNotify("Signin via Google successful")
+        if (success === "false") {
+            WarningNotify("Signin via Google failed")
+            return
+        }
+
+        if (success === "true") {
+            SuccessNotify("Signin via Google successful")
+            router.replace("/project")
+            return
+        }
 
         const fetchUser = async () => {
             try {
                 const response = await axios.get(`/users/infor`)
-                console.log(response.data)
                 if (response.data) {
                     setUser(response.data)
                 }
@@ -44,11 +51,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         fetchUser()
-        router.replace("/project")
-    }, [router, searchParams])
+    }, [searchParams])
+
 
     const signinGG = () => {
-        console.log("signin")
         window.location.href = "http://localhost:5144/users/signin-google"
     }
 

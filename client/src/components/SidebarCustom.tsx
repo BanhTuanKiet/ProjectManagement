@@ -36,6 +36,7 @@ export function SidebarCustom({ className }: { className?: string }) {
     }, [project_name, router])
 
     const handleClick = (id: number) => {
+        console.log(id)
         if (Number(project_name) === id) return
         router.push(`/project/${id.toString()}`)
     }

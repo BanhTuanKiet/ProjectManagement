@@ -1,110 +1,54 @@
-"use client"
-import type { DragEndEvent } from "@/components/ui/shadcn-io/list"
-import { ListGroup, ListHeader, ListItem, ListItems, ListProvider } from "@/components/ui/shadcn-io/list"
-import { useEffect, useState } from "react"
-import type { BasicTask } from "@/utils/ITask"
-import { taskStatus } from "@/utils/statusUtils"
-import { arrayMove } from "@dnd-kit/sortable"
-import axios from "@/config/axiosConfig"
-import { useParams } from "next/navigation"
-import { useNotification } from "@/app/(context)/Notfication"
-import TaskCard from "./TaskCalendar"
+import { BasicTask } from "@/utils/ITask"
+import { Badge } from "@/components/ui/badge"
+import { Clock } from 'lucide-react'
+import ColoredAvatar from "./ColoredAvatar"
+import { getStatusColor } from "@/utils/statusUtils"
 
-const TaskList = ({ tasks }: { tasks: BasicTask[] }) => {
-  const { project_name } = useParams()
-  const [features, setFeatures] = useState<BasicTask[]>([])
-  const { selectedTask, setSelectedTask } = useNotification()
-
-  useEffect(() => {
-    if (!tasks) return
-    setFeatures(tasks)
-  }, [tasks])
-
-  const updateTask = async (taskId: number, newStatus: string) => {
-    try {
-      const projectId = project_name
-      await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus })
-    } catch (error) {
-      console.log(error)
+export function TaskList({ tasks }: { tasks: BasicTask[] }) {
+    const isOverdue = (deadline: string) => {
+        return new Date(deadline) < new Date()
     }
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over) return
-
-    let newStatus = ""
-    const activeTaskId = Number(active.id)
-
-    setFeatures((prev) => {
-      const oldIndex = prev.findIndex((t) => t.taskId.toString() === active.id)
-      const overTask = prev.find((t) => t.taskId.toString() === over.id)
-      const currentTask = prev.find((f) => f.taskId === overTask?.taskId)
-
-      if (overTask?.taskId === currentTask?.taskId) return prev
-
-      if (overTask) {
-        const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id)
-        if (prev[oldIndex].status === overTask.status) {
-          return arrayMove(prev, oldIndex, newIndex)
-        } else {
-          newStatus = overTask.status
-          return prev.map((task) =>
-            task.taskId.toString() === active.id ? { ...task, status: overTask.status } : task,
-          )
-        }
-      } else {
-        newStatus = over.id as string
-        return prev.map((task) => (task.taskId.toString() === active.id ? { ...task, status: newStatus } : task))
-      }
-    })
-
-    if (newStatus === "") return
-    if (newStatus) {
-      await updateTask(activeTaskId, newStatus)
+console.log(tasks)
+    if (!tasks || tasks.length === 0) {
+        return <div className="p-3 text-center text-xs text-muted-foreground">No tasks available</div>
     }
-  }
 
-  return (
-    <div className="w-full h-full bg-background p-6">
-      <ListProvider onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 h-full overflow-x-auto">
-          {taskStatus.map((status) => {
-            const tasksInColumn = features.filter((f) => f.status === status.name)
-            return (
-              <div key={status.name} className="flex-shrink-0 w-80">
-                <ListGroup id={status.name}>
-                  <div className="mb-3">
-                    <ListHeader color={status.color} name={status.name} />
-                    <div className="mt-2 px-3">
-                      <span className="text-xs text-muted-foreground">
-                        {tasksInColumn.length} {tasksInColumn.length === 1 ? "task" : "tasks"}
-                      </span>
+    return (
+        <div className="max-h-64 overflow-y-auto p-1">
+            <div className="space-y-1">
+                {tasks.map((task) => (
+                    <div
+                        key={task.taskId}
+                        className={`
+                            flex items-center gap-2 rounded border 
+                            bg-card p-2 hover:bg-accent/50 transition-colors cursor-pointer
+                         `}
+                    >
+                        <div className="flex items-center gap-1.5 min-w-fit">
+                            <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+                                TASK-{task.taskId}
+                            </span>
+                            <Badge variant="secondary" className={`${getStatusColor(task.status)} text-[10px] px-1.5 py-0 h-4`}>
+                                {task.status}
+                            </Badge>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{task.title}</p>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 min-w-fit">
+                            {isOverdue(task.deadline) && (
+                                <div className="flex items-center gap-0.5 text-red-500">
+                                    <Clock className="h-3 w-3" />
+                                    <span className="text-[10px] font-medium">Overdue</span>
+                                </div>
+                            )}
+                            <ColoredAvatar id={task.assigneeId ?? task.createdBy} name={task.assignee} />
+                        </div>
                     </div>
-                  </div>
-
-                  <ListItems className="space-y-2 p-0 min-h-[200px] bg-muted/30 rounded-lg p-2">
-                    {tasksInColumn.map((feature, index) => (
-                      <ListItem
-                        id={feature.taskId.toString()}
-                        index={index}
-                        key={feature.taskId}
-                        name={feature.title}
-                        parent={feature.status}
-                        className="p-0 w-full"
-                      >
-                        <TaskCard key={feature.taskId} task={feature} setSelectedTask={setSelectedTask} />
-                      </ListItem>
-                    ))}
-                  </ListItems>
-                </ListGroup>
-              </div>
-            )
-          })}
+                ))}
+            </div>
         </div>
-      </ListProvider>
-    </div>
-  )
+    )
 }
-
-export default TaskList

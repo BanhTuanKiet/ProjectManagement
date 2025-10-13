@@ -55,7 +55,7 @@ export default function ColoredAvatar({
 
     const bgColor = stringToColor(name || "?")
     const sizeClasses = size === "sm" ? "h-6 w-6 text-xs" : size === "md" ? "h-8 w-8 text-sm" : "h-12 w-12 text-base"
-    const indicatorSize = "h-2.5 w-2.5"
+    const indicatorSize = size === "sm" ? "h-2.5 w-2.5" : size === "md" ? "h-3.75 w-3.75" : "h-5 w-5"
     const indicatorPosition = size === "sm" ? "-top-0.5 -right-0.5" : size === "md" ? "-top-0.5 -right-0.5" : "-top-1 -right-1"
 
     return (
