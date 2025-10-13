@@ -9,6 +9,7 @@ using server.Services.Comment;
 using server.Services.Sprint;
 using server.Services.Backlog;
 using server.Services;
+using server.Services.File;
 
 namespace server.Configs
 {
@@ -38,6 +39,7 @@ namespace server.Configs
             services.AddScoped<IComment, CommentService>();
             services.AddScoped<ISprints, SprintsService>();
             services.AddScoped<IBacklogs, BacklogsService>();
+            services.AddScoped<IFiles, FileService>();
         }
     }
 }

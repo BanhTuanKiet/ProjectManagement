@@ -10,7 +10,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.CorsPolicy();
 builder.Services.AddAutoMapper(typeof(AutoMapperConfig).Assembly);
 builder.Services.AddDatabaseAndServices(connectionString);
-
+builder.Services.AddCloudinary(builder.Configuration);
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
