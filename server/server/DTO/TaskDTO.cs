@@ -27,6 +27,7 @@ namespace server.DTO
             // [Required(ErrorMessage = "SprintId is required")]
             [Range(1, int.MaxValue, ErrorMessage = "SprintId must be a valid number")]
             public int? SprintId { get; set; }
+            public int? BacklogId { get; set; }
         }
 
         public class CreateNewTask

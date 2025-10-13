@@ -50,10 +50,21 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         connection.start().then(async () => {
             console.log("Connected to TaskHub")
 
+            await connection.invoke("JoinProjectGroup", Number(project_name))
+
             await fetchTasks()
         }).catch(error => console.log(error))
 
+        connection.on("TaskUpdated", (updatedTask: BasicTask) => {
+            console.log("TaskUpdated received:", updatedTask)
+            setTasks(prevTasks => {
+                const filtered = prevTasks.filter(t => t.taskId !== updatedTask.taskId);
+                return [...filtered, updatedTask];
+            });
+        })
+
         return () => {
+            connection.off("TaskUpdated")
             connection?.stop()
         }
     }, [connection])

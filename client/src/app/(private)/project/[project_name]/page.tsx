@@ -71,7 +71,7 @@ export default function ProjectInterface() {
     const views: Record<string, React.ReactNode> = {
         backlog: <BacklogView projectId={project_name?.toString()} />,
         calendar: <CalendarView />,
-        board: <BoardView tasks={tasks} />,
+        board: <BoardView />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
     }
 

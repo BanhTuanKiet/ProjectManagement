@@ -20,6 +20,7 @@ import { taskStatus } from "@/utils/statusUtils";
 import TaskDetailDrawer from "./TaskDetailDrawer";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Input } from "@/components/ui/input";
+import { useTask } from "@/app/.context/TaskContext"
 
 function DroppableColumn({
   id,
@@ -41,7 +42,7 @@ function DroppableColumn({
   );
 }
 
-export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
+export default function BoardView() {
   const [features, setFeatures] = useState<BasicTask[]>([]);
   const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null);
   const [seeMore, setSeeMore] = useState<Record<string, boolean>>({});
@@ -49,10 +50,13 @@ export default function BoardView({ tasks }: { tasks: BasicTask[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const { project_name } = useParams();
   const projectId = Number(project_name);
+  const { tasks } = useTask();
 
   useEffect(() => {
-    if (tasks) setFeatures(tasks);
-  }, [tasks]);
+          if (tasks && tasks.length > 0) {
+              setFeatures([...tasks])
+          }
+      }, [tasks])
 
   const updateTask = async (taskId: number, newStatus: string) => {
   try {
