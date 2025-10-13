@@ -35,7 +35,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
         const fetchUser = async () => {
             try {
-                const response = await axios.get(`/users`)
+                const response = await axios.get(`/users/infor`)
                 if (response.data) {
                     setUser(response.data)
                 }
