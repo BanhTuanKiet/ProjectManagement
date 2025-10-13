@@ -4,8 +4,8 @@ import { createContext, useContext, useEffect, useState } from "react"
 import * as signalR from "@microsoft/signalr"
 import type { BasicTask } from "../../utils/ITask"
 import axios from "../../config/axiosConfig"
-import { useParams } from "next/navigation"
-import { usePresence } from "./OnlineMembers"
+import { useUser } from "./UserContext"
+import { useProject } from "./ProjectContext"
 
 type TaskContextType = {
     connection: signalR.HubConnection | null
@@ -27,32 +27,30 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
     const [tasks, setTasks] = useState<BasicTask[]>([])
     const [selectedTask, setSelectedTask] = useState<number | null>(null)
-    const { project_name } = useParams<{ project_name: string }>()
     const [currentDate, setCurrentDate] = useState(new Date())
-    const { tokenStored } = usePresence()
-
+    const { user } = useUser()
+    const { project_name } = useProject()
+    console.log(project_name)
     useEffect(() => {
-        if (!tokenStored) return
+        if (!user) return
 
         const conn = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5144/hubs/task", {
-                accessTokenFactory: () => tokenStored
+                accessTokenFactory: () => user.token
             })
             .withAutomaticReconnect()
             .build()
 
         setConnection(conn)
-    }, [tokenStored])
+    }, [user])
 
     useEffect(() => {
-        if (!connection) return
+        if (!connection || !project_name) return
 
         connection.start().then(async () => {
             console.log("Connected to TaskHub")
 
             await connection.invoke("JoinProjectGroup", Number(project_name))
-
-            await fetchTasks()
         }).catch(error => console.log(error))
 
         connection.on("TaskUpdated", (updatedTask: BasicTask) => {
@@ -67,23 +65,29 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
             connection.off("TaskUpdated")
             connection?.stop()
         }
-    }, [connection])
+    }, [connection, project_name])
 
-    const fetchTasks = async () => {
-        try {
-            const response = await axios.get(`/tasks/${project_name}`, {
-                params: {
-                    month: null,
-                    year: null,
-                    filters: null,
-                },
-            })
+    useEffect(() => {
+        if (!project_name) return
 
-            setTasks(response.data)
-        } catch (error) {
-            console.log(error)
+        const fetchTasks = async () => {
+            try {
+                const response = await axios.get(`/tasks/${project_name}`, {
+                    params: {
+                        month: null,
+                        year: null,
+                        filters: null,
+                    },
+                })
+                console.log(response.data)
+                setTasks(response.data)
+            } catch (error) {
+                console.log(error)
+            }
         }
-    }
+
+        fetchTasks()
+    }, [project_name])
 
     return (
         <TaskContext.Provider value={{ connection, tasks, setTasks, currentDate, setCurrentDate }}>

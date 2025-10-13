@@ -20,7 +20,7 @@ import { taskStatus } from "@/utils/statusUtils";
 import TaskDetailDrawer from "./TaskDetailDrawer";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Input } from "@/components/ui/input";
-import { useTask } from "@/app/.context/TaskContext"
+import { useTask } from "@/app/(context)/TaskContext"
 
 function DroppableColumn({
   id,
