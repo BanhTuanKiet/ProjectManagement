@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { Search, Plus, Bell, Settings, User, Users, LogOut, Sun, Moon, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,14 +8,17 @@ import NotificationRealtime from "@/components/NotificationRealtime"
 import { useNotification } from "@/app/(context)/Notfication"
 import { useState } from "react"
 import { useUser } from "@/app/(context)/UserContext"
+import { useRouter } from "next/navigation"
+import ColoredAvatar from "./ColoredAvatar"
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [theme, setTheme] = useState(false)
     const { notifications, setNotifications } = useNotification()
-    const { handleSignout } = useUser()
+    const { handleSignout, user } = useUser()
     const unreadCount = notifications?.filter(n => !n.isRead).length
+    const router = useRouter()
 
     return (
         <>
@@ -80,18 +81,19 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                             <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                 <div className="p-4 border-b border-gray-100">
                                     <div className="flex items-center gap-3">
-                                        <Avatar className="h-12 w-12">
-                                            <AvatarFallback className="bg-purple-600 text-white text-lg font-semibold">BK</AvatarFallback>
-                                        </Avatar>
+                                        <ColoredAvatar id={user?.id ?? ""} name={user?.name} size="lg" />
                                         <div>
-                                            <h3 className="font-semibold text-gray-900">Bành Tuấn Kiệt</h3>
-                                            <p className="text-sm text-gray-600">kiett5153@gmail.com</p>
+                                            <h3 className="font-semibold text-gray-900">{user?.name}</h3>
+                                            <p className="text-sm text-gray-600">{user?.email}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="py-2">
-                                    <button className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700">
+                                    <button
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
+                                        onClick={() => router.push("/profile")}
+                                    >
                                         <User className="h-4 w-4" />
                                         <span>Profile</span>
                                     </button>

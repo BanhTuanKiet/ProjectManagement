@@ -5,8 +5,6 @@ import axios from "../../config/axiosConfig"
 import { useSearchParams, useRouter } from "next/navigation"
 import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
 import type { User } from "@/utils/IUser"
-import { useNotification } from "./Notfication"
-import { usePresence } from "./OnlineMembers"
 
 type UserContextType = {
     user: User | null
@@ -36,6 +34,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         const fetchUser = async () => {
             try {
                 const response = await axios.get(`/users/infor`)
+                console.log(response.data)
                 if (response.data) {
                     setUser(response.data)
                 }
@@ -49,6 +48,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, [router, searchParams])
 
     const signinGG = () => {
+        console.log("signin")
         window.location.href = "http://localhost:5144/users/signin-google"
     }
 

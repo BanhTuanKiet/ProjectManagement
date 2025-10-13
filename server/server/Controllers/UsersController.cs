@@ -55,7 +55,7 @@ namespace server.Controllers
             {
                 var configReturnUrl = _configuration["Authentication:Google:ReturnUrl"];
                 returnUrl = configReturnUrl ?? "/";
-            }
+            }   
 
             var properties = new AuthenticationProperties
             {

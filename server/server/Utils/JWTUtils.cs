@@ -17,7 +17,8 @@ namespace server.Util
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName ?? user.Id.ToString())
+                new Claim(ClaimTypes.Name, user.UserName ?? user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? user.Id.ToString())
             };
 
             foreach (var role in roles)
@@ -74,6 +75,8 @@ namespace server.Util
 
             var nameIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid");
             var nameClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name || c.Type == "unique_name");
+            var emailClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email || c.Type == "email");
+
             List<string> roleClaims = jsonToken.Claims
                 .Where(c => c.Type == ClaimTypes.Role || c.Type == "role")
                 .Select(c => c.Value)
@@ -83,7 +86,8 @@ namespace server.Util
             {
                 userId = nameIdClaim?.Value,
                 name = nameClaim?.Value,
-                roles = roleClaims
+                roles = roleClaims,
+                Email = emailClaim?.Value
             };
         }
     }
