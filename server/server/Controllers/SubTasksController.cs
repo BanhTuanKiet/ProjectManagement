@@ -23,83 +23,57 @@ namespace server.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSubTask([FromBody] SubTaskDTO.CreateSubTask subTask)
         {
-            try
-            {
-                if (subTask == null)
-                    throw new ErrorException(400, "Invalid subtask data.");
+            if (subTask == null)
+                throw new ErrorException(400, "Invalid subtask data.");
 
-                Console.WriteLine("Data Đầu vào: ", subTask.Title);
-                var subtask = _mapper.Map<Models.SubTask>(subTask);
-                Console.WriteLine("Creating subtask: ", subtask);
-                var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
-                return Ok(createdSubTask);
-            }
-            catch (ErrorException ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            Console.WriteLine("Data Đầu vào: ", subTask.Title);
+
+            var subtask = _mapper.Map<Models.SubTask>(subTask);
+            Console.WriteLine("Creating subtask: ", subtask);
+            var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
+            return Ok(createdSubTask);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllSubTasks()
         {
-            try
-            {
-                var subTasks = await _subTasksService.GetAllSubTasks();
-                if (subTasks == null || !subTasks.Any())
-                    throw new ErrorException(404, "No subtasks found.");
-                return Ok(subTasks);
-            }
-            catch (ErrorException ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var subTasks = await _subTasksService.GetAllSubTasks();
+
+            if (subTasks == null || !subTasks.Any())
+                throw new ErrorException(404, "No subtasks found.");
+            return Ok(subTasks);
         }
 
         [HttpGet("byTask/{taskId}")]
         public async Task<IActionResult> GetSubTasksByTask(int taskId)
         {
-            try
-            {
-                if (taskId <= 0)
-                    throw new ErrorException(400, "Invalid taskId.");
+            if (taskId <= 0)
+                throw new ErrorException(400, "Invalid taskId.");
 
-                var subtasks = await _subTasksService.GetSubTasksByTaskIdAsync(taskId);
+            var subtasks = await _subTasksService.GetSubTasksByTaskIdAsync(taskId);
 
-                if (subtasks == null || !subtasks.Any())
-                    throw new ErrorException(404, "No subtasks found for this task.");
+            if (subtasks == null || !subtasks.Any())
+                throw new ErrorException(404, "No subtasks found for this task.");
 
-                return Ok(subtasks);
-            }
-            catch (ErrorException ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            return Ok(subtasks);
         }
 
         [HttpPut("{subTaskId}/update")]
         public async Task<IActionResult> UpdateSubTask(int subTaskId, [FromBody] SubTaskDTO.UpdateSubTask dto)
         {
-            try
-            {
-                if (dto == null)
-                    throw new ErrorException(400, "Invalid update data.");
+            if (dto == null)
+                throw new ErrorException(400, "Invalid update data.");
 
-                if (subTaskId != dto.SubTaskId)
-                    throw new ErrorException(400, "SubTaskId mismatch.");
+            if (subTaskId != dto.SubTaskId)
+                throw new ErrorException(400, "SubTaskId mismatch.");
 
-                var updated = await _subTasksService.UpdateSubTaskAsync(dto);
+            var updated = await _subTasksService.UpdateSubTaskAsync(dto);
 
-                if (updated == null)
-                    throw new ErrorException(404, "Subtask not found.");
+            if (updated == null)
+                throw new ErrorException(404, "Subtask not found.");
 
-                var result = _mapper.Map<SubTaskDTO.BasicSubTask>(updated);
-                return Ok(result);
-            }
-            catch (ErrorException ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var result = _mapper.Map<SubTaskDTO.BasicSubTask>(updated);
+            return Ok(result);
         }
     }
 }

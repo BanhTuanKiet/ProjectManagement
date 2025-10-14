@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using server.Services.File;
 using server.Configs;
 
-
 namespace server.Controllers
 {
     [ApiController]
@@ -31,74 +30,54 @@ namespace server.Controllers
             _fileService = fileService;
         }
 
-         [HttpPost("upload")]
+        [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId)
         {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                    throw new ErrorException(401, "Unauthorized: missing user ID.");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (file == null || file.Length == 0)
-                    throw new ErrorException(400, "File is missing or empty.");
+            if (string.IsNullOrEmpty(userId))
+                throw new ErrorException(401, "Unauthorized: missing user ID.");
 
-                if (taskId <= 0)
-                    throw new ErrorException(400, "Invalid task ID.");
+            if (file == null || file.Length == 0)
+                throw new ErrorException(400, "File is missing or empty.");
 
-                var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId);
+            if (taskId <= 0)
+                throw new ErrorException(400, "Invalid task ID.");
 
-                if (uploadedFile == null)
-                    throw new ErrorException(500, "File upload failed.");
+            var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId);
 
-                return Ok(uploadedFile);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            if (uploadedFile == null)
+                throw new ErrorException(500, "File upload failed.");
+
+            return Ok(uploadedFile);
         }
 
         [HttpDelete("{fileId}")]
         public async Task<IActionResult> DeleteFile(int fileId)
         {
-            try
-            {
-                if (fileId <= 0)
-                    throw new ErrorException(400, "Invalid file ID.");
+            if (fileId <= 0)
+                throw new ErrorException(400, "Invalid file ID.");
 
-                var result = await _fileService.DeleteFileAsync(fileId);
+            var result = await _fileService.DeleteFileAsync(fileId);
 
-                if (!result.isSuccess)
-                    throw new ErrorException(500, result.message ?? "Failed to delete file.");
+            if (!result.isSuccess)
+                throw new ErrorException(500, result.message ?? "Failed to delete file.");
 
-                return Ok(new { message = result.message });
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            return Ok(new { message = result.message });
         }
+
         [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetFilesByTaskId(int taskId)
         {
-            try
-            {
-                if (taskId <= 0)
-                    throw new ErrorException(400, "Invalid task ID.");
+            if (taskId <= 0)
+                throw new ErrorException(400, "Invalid task ID.");
 
-                var files = await _fileService.GetFilesByTaskIdAsync(taskId);
+            var files = await _fileService.GetFilesByTaskIdAsync(taskId);
 
-                if (files == null || !files.Any())
-                    throw new ErrorException(404, "No files found for this task.");
+            if (files == null || !files.Any())
+                throw new ErrorException(404, "No files found for this task.");
 
-                return Ok(files);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            return Ok(files);
         }
-
     }
 }

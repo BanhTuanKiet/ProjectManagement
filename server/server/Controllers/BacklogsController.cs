@@ -20,79 +20,50 @@ namespace server.Controllers
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetAll(int projectId)
         {
-            try
-            {
-                var data = await _service.GetAll(projectId);
-                return Ok(data);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var data = await _service.GetAll(projectId);
+            return Ok(data);
         }
 
         [HttpGet("detail/{backlogId}")]
         public async Task<IActionResult> GetById(int backlogId)
         {
-            try
-            {
-                var backlog = await _service.GetById(backlogId);
-                if (backlog == null)
-                    throw new ErrorException(404, "Backlog not found");
-                return Ok(backlog);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var backlog = await _service.GetById(backlogId);
+
+            if (backlog == null)
+                throw new ErrorException(404, "Backlog not found");
+            return Ok(backlog);
         }
 
         [HttpPost("{projectId}")]
         public async Task<IActionResult> Create(int projectId, [FromBody] BacklogDTO.Create dto)
         {
-            try
-            {
-                var backlog = await _service.Create(projectId, dto);
-                if (backlog == null)
-                    throw new ErrorException(400, "Failed to create backlog");
-                return Ok(backlog);
-            }catch(ErrorException ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var backlog = await _service.Create(projectId, dto);
+
+            if (backlog == null)
+                throw new ErrorException(400, "Failed to create backlog");
+            return Ok(backlog);
         }
 
         [HttpPut("{backlogId}")]
         public async Task<IActionResult> Update(int backlogId, [FromBody] BacklogDTO.Update dto)
         {
-            try
-            {
-                var backlog = await _service.Update(backlogId, dto);
-                if (backlog == null)
-                    throw new ErrorException(404, "Backlog not found or update failed");
-                return Ok(backlog);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var backlog = await _service.Update(backlogId, dto);
+
+            if (backlog == null)
+                throw new ErrorException(404, "Backlog not found or update failed");
+            return Ok(backlog);
         }
 
         [HttpDelete("{backlogId}")]
         public async Task<IActionResult> Delete(int backlogId)
         {
-            try
-            {
-                var result = await _service.Delete(backlogId);
-                if (!result)
-                    throw new ErrorException(404, "Backlog not found or delete failed");
+            var result = await _service.Delete(backlogId);
 
-                return Ok(new { message = "Deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            if (!result)
+                throw new ErrorException(404, "Backlog not found or delete failed");
+
+            return Ok(new { message = "Deleted successfully" });
+
         }
     }
 }

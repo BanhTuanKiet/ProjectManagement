@@ -20,82 +20,52 @@ namespace server.Controllers
         [HttpGet("{projectId}")]
         public async Task<IActionResult> GetAll(int projectId)
         {
-            try{
-                var data = await _service.GetAll(projectId);
-                return Ok(data);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            var data = await _service.GetAll(projectId);
+            return Ok(data);
         }
 
         [HttpGet("detail/{sprintId}")]
         public async Task<IActionResult> GetById(int sprintId)
         {
-            try
-            {
-                var sprint = await _service.GetById(sprintId);
-                if (sprint == null)
-                    throw new ErrorException(404, "Sprint not found");
+            var sprint = await _service.GetById(sprintId);
 
-                return Ok(sprint);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            if (sprint == null)
+                throw new ErrorException(404, "Sprint not found");
+
+            return Ok(sprint);
         }
 
         [HttpPost("{projectId}")]
         public async Task<IActionResult> Create(int projectId, [FromBody] SprintDTO.Create dto)
         {
-            try
-            {
-                var sprint = await _service.Create(projectId, dto);
-                if (sprint == null)
-                    throw new ErrorException(400, "Failed to create sprint");
+            var sprint = await _service.Create(projectId, dto);
 
-                return Ok(sprint);
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            if (sprint == null)
+                throw new ErrorException(400, "Failed to create sprint");
+
+            return Ok(sprint);
         }
 
         [HttpPut("{sprintId}")]
         public async Task<IActionResult> Update(int sprintId, [FromBody] SprintDTO.Update dto)
         {
-            try
-            {
-                var sprint = await _service.Update(sprintId, dto);
-                if (sprint == null)
-                    throw new ErrorException(404, "Sprint not found or update failed");
+            var sprint = await _service.Update(sprintId, dto);
 
-                return Ok(sprint);
-            }
-            catch (ErrorException ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            if (sprint == null)
+                throw new ErrorException(404, "Sprint not found or update failed");
+
+            return Ok(sprint);
         }
 
         [HttpDelete("{sprintId}")]
         public async Task<IActionResult> Delete(int sprintId)
         {
-            try
-            {
-                var result = await _service.Delete(sprintId);
-                if (!result)
-                    throw new ErrorException(404, "Sprint not found or delete failed");
+            var result = await _service.Delete(sprintId);
 
-                return Ok(new { message = "Deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                throw new ErrorException(500, ex.Message);
-            }
+            if (!result)
+                throw new ErrorException(404, "Sprint not found or delete failed");
+
+            return Ok(new { message = "Deleted successfully" });
         }
     }
 }
