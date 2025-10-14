@@ -6,6 +6,8 @@ import { UserMini } from "@/utils/IUser";
 import { mapApiTaskToTask, mapApiUserToUserMini, Task, mapTaskToApiUpdatePayload } from "@/utils/mapperUtil";
 import { BasicTask } from "@/utils/ITask";
 import { Column, initialColumns } from "@/config/columsConfig";
+import { useProject } from "@/app/(context)/ProjectContext"
+
 
 export const useTaskTable = (tasksnomal: BasicTask[]) => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -16,25 +18,17 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
   const [editingCell, setEditingCell] = useState<{ taskId: number; field: string } | null>(null);
   const [draggedTask, setDraggedTask] = useState<number | null>(null);
   const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
+  const { members } = useProject(); // 👈 lấy từ context
 
-  // Fetch users + tasks
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("/users");
-        //console.log("Fetched users:", response.data);
-        const mappedUsers = response.data.map(mapApiUserToUserMini);
-        //console.log("Mapped users:", mappedUsers);
-        const mappedTasks = tasksnomal.map(mapApiTaskToTask);
-          //console.log("Mapped tasks:", mappedTasks);
-        setTasks(mappedTasks);
-        setAvailableUsers(mappedUsers);
-      } catch (error) {
-        console.log("Error fetching users:", error);
-      }
-    };
-    fetchUsers();
-  }, [tasksnomal]);
+    const mappedTasks = tasksnomal.map(mapApiTaskToTask);
+    setTasks(mappedTasks);
+
+    if (members && members.length > 0) {
+      const mappedUsers = members.map(mapApiUserToUserMini);
+      setAvailableUsers(mappedUsers);
+    }
+  }, [tasksnomal, members]);
 
   // Resize columns
   const resizingColumn = useRef<{ index: number; startX: number; startWidth: number } | null>(null);
