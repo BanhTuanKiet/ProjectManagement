@@ -41,32 +41,45 @@ namespace server.Controllers
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)
         {
-            FilterDTO.FilterCalendarView filterObj = !string.IsNullOrEmpty(filters)
-                ? JsonConvert.DeserializeObject<FilterDTO.FilterCalendarView>(filters)
-                : new FilterDTO.FilterCalendarView();
-
-            List<TaskDTO.BasicTask> tasks = new List<TaskDTO.BasicTask>();
-
-            if (month != null && year != null)
+            try
             {
-                Console.WriteLine("Use GetBasicTasksByMonth");
-                tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
+                FilterDTO.FilterCalendarView filterObj = !string.IsNullOrEmpty(filters)
+                    ? JsonConvert.DeserializeObject<FilterDTO.FilterCalendarView>(filters)
+                    : new FilterDTO.FilterCalendarView();
+
+                List<TaskDTO.BasicTask> tasks = new List<TaskDTO.BasicTask>();
+
+                if (month != null && year != null)
+                {
+                    Console.WriteLine("Use GetBasicTasksByMonth");
+                    tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
+                }
+                else
+                {
+                    Console.WriteLine("Use GetBasicTasksById");
+                    tasks = await _tasksService.GetBasicTasksById(projectId);
+                }
+                return Ok(tasks);
             }
-            else
+            catch(Exception ex)
             {
-                Console.WriteLine("Use GetBasicTasksById");
-                tasks = await _tasksService.GetBasicTasksById(projectId);
+                throw new ErrorException(500, ex.Message);
             }
-            return Ok(tasks);
         }
 
         [Authorize(Policy = "MemberRequirement")]
         [HttpGet("{projectId}/list")]
         public async Task<ActionResult> GetBasicTasksById(int projectId)
         {
-            List<TaskDTO.BasicTask> tasks = await _tasksService.GetBasicTasksById(projectId);
-
-            return Ok(tasks);
+            try
+            {
+                var tasks = await _tasksService.GetBasicTasksById(projectId);
+                return Ok(tasks);
+            }
+            catch (Exception ex)
+            {
+                throw new ErrorException(500, ex.Message);
+            }
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -147,95 +160,103 @@ namespace server.Controllers
         [HttpGet("allbasictasks")]
         public async Task<ActionResult> GetAllBasicTasks()
         {
-            List<TaskDTO.BasicTask> tasks = await _tasksService.GetAllBasicTasks();
+            try{
+                List<TaskDTO.BasicTask> tasks = await _tasksService.GetAllBasicTasks();
 
-            return Ok(tasks);
+                return Ok(tasks);
+            } catch (Exception ex){
+                throw new ErrorException(500, ex.Message);
+            }
+
         }
 
         // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPatch("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
-            Console.WriteLine("==== PATCH REQUEST START ====");
-            Console.WriteLine($"ProjectId: {projectId}, TaskId: {taskId}");
-
-            if (updates != null)
+            try
             {
-                Console.WriteLine("Updates payload:");
-                foreach (var kvp in updates)
-                {
-                    Console.WriteLine($" - {kvp.Key}: {kvp.Value}");
-                }
+                if (updates == null || !updates.Any())
+                    throw new ErrorException(400, "No updates provided.");
+                var result = await _tasksService.PatchTaskField(projectId, taskId, updates);
+                if (result == null)
+                    throw new ErrorException(404, "Task not found in this project.");                
+                return Ok(result);
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("No updates received");
+                throw new ErrorException(500, ex.Message);
             }
-            Console.WriteLine("==== PATCH REQUEST END ====");
-
-            if (updates == null || !updates.Any())
-                return BadRequest("No updates provided.");
-
-            var result = await _tasksService.PatchTaskField(projectId, taskId, updates);
-            if (result == null) return NotFound("Task not found in this project.");
-
-            Console.WriteLine("==== PATCH RESPONSE ====");
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(result));
-            Console.WriteLine("========================");
-
-            return Ok(result);
         }
 
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
-            if (dto.Ids == null || !dto.Ids.Any())
+            try
             {
-                return BadRequest(new { message = "No IDs provided." });
+                if (dto.Ids == null || !dto.Ids.Any())
+                {
+                    return BadRequest(new { message = "No IDs provided." });
+                }
+
+                var deletedCount = await _tasksService.BulkDeleteTasksAsync(dto.ProjectId, dto.Ids);
+
+                return Ok(new
+                {
+                    message = $"Deleted {deletedCount} tasks.",
+                    count = deletedCount
+                });
             }
-
-            var deletedCount = await _tasksService.BulkDeleteTasksAsync(dto.ProjectId, dto.Ids);
-
-            return Ok(new
+            catch (Exception ex)
             {
-                message = $"Deleted {deletedCount} tasks.",
-                count = deletedCount
-            });
+                throw new ErrorException(500, ex.Message);
+            }
         }
 
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
-            Models.Task task = await _tasksService.GetTaskById(taskId)
-                ?? throw new ErrorException(404, "Task not found");
+            try
+            {
+                Models.Task task = await _tasksService.GetTaskById(taskId)
+                    ?? throw new ErrorException(404, "Task not found");
 
-            string newStatus = updates["status"]?.ToString() ?? task.Status;
+                string newStatus = updates["status"]?.ToString() ?? task.Status;
 
-            Models.Task updatedTask = await _tasksService.UpdateTaskStatus(taskId, newStatus);
+                Models.Task updatedTask = await _tasksService.UpdateTaskStatus(taskId, newStatus);
 
-            if (updatedTask.Status != newStatus || updatedTask == null)
-                throw new ErrorException(400, "Update task failed!");
+                if (updatedTask.Status != newStatus || updatedTask == null)
+                    throw new ErrorException(400, "Update task failed!");
 
-            await _taskHubContext.Clients.Group($"project-{projectId}")
-                .SendAsync("TaskUpdated", updatedTask);
+                await _taskHubContext.Clients.Group($"project-{projectId}")
+                    .SendAsync("TaskUpdated", updatedTask);
 
-            return Ok(new { message = "Update task successful!" });
+                return Ok(new { message = "Update task successful!" });
+            }
+            catch (Exception ex)
+            {
+                throw new ErrorException(500, ex.Message);
+            }
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{projectId}/filter")]
-        public async Task<ActionResult> GetTasksBySprintOrBacklog(
-            int projectId,
-            [FromQuery] int? sprintId,
-            [FromQuery] int? backlogId)
+        public async Task<ActionResult> GetTasksBySprintOrBacklog(int projectId, [FromQuery] int? sprintId, [FromQuery] int? backlogId)
         {
-            if (!sprintId.HasValue && !backlogId.HasValue)
-                return BadRequest("You must provide at least sprintId or backlogId.");
+            try
+            {
+                if (!sprintId.HasValue && !backlogId.HasValue)
+                    throw new ErrorException(400, "You must provide at least sprintId or backlogId.");
 
-            var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
-            return Ok(tasks);
+                var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
+                return Ok(tasks);
+            }
+            catch (Exception ex)
+            {
+                throw new ErrorException(500, ex.Message);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using server.DTO;
 using server.Models;
 using server.Services.SubTask;
 using AutoMapper;
+using server.Configs;
 
 namespace server.Controllers
 {
@@ -24,49 +25,80 @@ namespace server.Controllers
         {
             try
             {
+                if (subTask == null)
+                    throw new ErrorException(400, "Invalid subtask data.");
+
                 Console.WriteLine("Data Đầu vào: ", subTask.Title);
                 var subtask = _mapper.Map<Models.SubTask>(subTask);
                 Console.WriteLine("Creating subtask: ", subtask);
                 var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
                 return Ok(createdSubTask);
-                // return Ok("Subtask created successfully");
             }
-            catch (KeyNotFoundException ex)
+            catch (ErrorException ex)
             {
-                return NotFound(ex.Message);
+                throw new ErrorException(500, ex.Message);
             }
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAllSubTasks()
         {
-            var subTasks = await _subTasksService.GetAllSubTasks();
-            return Ok(subTasks);
+            try
+            {
+                var subTasks = await _subTasksService.GetAllSubTasks();
+                if (subTasks == null || !subTasks.Any())
+                    throw new ErrorException(404, "No subtasks found.");
+                return Ok(subTasks);
+            }
+            catch (ErrorException ex)
+            {
+                throw new ErrorException(500, ex.Message);
+            }
         }
 
         [HttpGet("byTask/{taskId}")]
         public async Task<IActionResult> GetSubTasksByTask(int taskId)
         {
-            var subtasks = await _subTasksService.GetSubTasksByTaskIdAsync(taskId);
-            Console.WriteLine("Subtasks for TaskId " + taskId + ": " + subtasks);
-            return Ok(subtasks);
+            try
+            {
+                if (taskId <= 0)
+                    throw new ErrorException(400, "Invalid taskId.");
+
+                var subtasks = await _subTasksService.GetSubTasksByTaskIdAsync(taskId);
+
+                if (subtasks == null || !subtasks.Any())
+                    throw new ErrorException(404, "No subtasks found for this task.");
+
+                return Ok(subtasks);
+            }
+            catch (ErrorException ex)
+            {
+                throw new ErrorException(500, ex.Message);
+            }
         }
 
         [HttpPut("{subTaskId}/update")]
         public async Task<IActionResult> UpdateSubTask(int subTaskId, [FromBody] SubTaskDTO.UpdateSubTask dto)
         {
-            Console.WriteLine("Updating subtask AAAAAAAAAAAAAAAAAAAAAAAAAAAAA:", dto);
-            if (subTaskId != dto.SubTaskId)
-                return BadRequest("SubtaskId mismatch");
-
             try
             {
+                if (dto == null)
+                    throw new ErrorException(400, "Invalid update data.");
+
+                if (subTaskId != dto.SubTaskId)
+                    throw new ErrorException(400, "SubTaskId mismatch.");
+
                 var updated = await _subTasksService.UpdateSubTaskAsync(dto);
+
+                if (updated == null)
+                    throw new ErrorException(404, "Subtask not found.");
+
                 var result = _mapper.Map<SubTaskDTO.BasicSubTask>(updated);
                 return Ok(result);
             }
-            catch (KeyNotFoundException ex)
+            catch (ErrorException ex)
             {
-                return NotFound(ex.Message);
+                throw new ErrorException(500, ex.Message);
             }
         }
     }
