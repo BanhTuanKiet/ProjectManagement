@@ -56,9 +56,9 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         connection.on("TaskUpdated", (updatedTask: BasicTask) => {
             console.log("TaskUpdated received:", updatedTask)
             setTasks(prevTasks => {
-                const filtered = prevTasks.filter(t => t.taskId !== updatedTask.taskId);
-                return [...filtered, updatedTask];
-            });
+                const filtered = prevTasks.filter(t => t.taskId !== updatedTask.taskId)
+                return [...filtered, updatedTask]
+            })
         })
 
         return () => {
@@ -79,7 +79,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
                         filters: null,
                     },
                 })
-
+                console.log(response.data)
                 setTasks(response.data)
             } catch (error) {
                 console.log(error)

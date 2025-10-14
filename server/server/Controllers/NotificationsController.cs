@@ -38,11 +38,11 @@ namespace server.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("{countDay}")]
-        public async Task<ActionResult> GetNotifications(int countDay)
+        [HttpGet("{type}")]
+        public async Task<ActionResult> GetNotifications(string type)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            List<NotificationDTO.NotificationBasic> notifications = await _notificationService.GetUserNotificationsLast7Days(userId, countDay);
+            List<NotificationDTO.NotificationBasic> notifications = await _notificationService.GetNotificationByType(userId, type);
             return Ok(notifications);
         }
 

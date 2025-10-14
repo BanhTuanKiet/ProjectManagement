@@ -7,7 +7,6 @@ import type { BasicTask } from "@/utils/ITask"
 import { TaskList } from "./TaskList"
 import TaskFilterView from "./TaskFilterView"
 import AddTaskViewModal from "./AddTaskViewModal"
-import { useNotification } from "@/app/(context)/Notfication"
 import TaskDetailModal from "./TaskDetailModal"
 import TaskCalendar from "./TaskCalendar"
 import { useTask } from "@/app/(context)/TaskContext"
@@ -20,15 +19,18 @@ export default function CalendarView() {
     const { tasks, currentDate } = useTask()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
-    const { selectedTask, setSelectedTask } = useNotification()
+    const [selectedTask, setSelectedTask] = useState<number | null>(null)
     const { project_name, members } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
-    const [openDay, setOpenDay] = useState<number | null>(null) 
-
+    const [openDay, setOpenDay] = useState<number | null>(null)
+console.log(tasks)
     useEffect(() => {
-        if (tasks && tasks.length > 0) {
+        setDays(getDaysInMonth(currentDate))
+
+        if (Array.isArray(tasks)) {
             setMockTasks([...tasks])
-            setDays(getDaysInMonth(currentDate))
+        } else {
+            setMockTasks([])
         }
     }, [tasks, currentDate])
 
@@ -78,11 +80,7 @@ export default function CalendarView() {
                                     <>
                                         <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
                                             <span
-                                                className={`w-6 h-6 flex items-center justify-center ${
-                                                    isToday
-                                                        ? "bg-blue-500 text-white rounded"
-                                                        : ""
-                                                }`}
+                                                className={`w-6 h-6 flex items-center justify-center ${isToday ? "bg-blue-500 text-white rounded" : ""}`}
                                             >
                                                 {day}
                                             </span>
@@ -150,13 +148,13 @@ export default function CalendarView() {
                 />
             )}
 
-            {selectedTask && (
+            {/* {selectedTask && (
                 <TaskDetailModal
                     projectId={project_name ? Number(project_name) : 0}
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />
-            )}
+            )} */}
         </div>
     )
 }

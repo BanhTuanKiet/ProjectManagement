@@ -17,6 +17,7 @@ public partial class Notification
     public string? Link { get; set; }
 
     public bool IsRead { get; set; }
+    public string? Type { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

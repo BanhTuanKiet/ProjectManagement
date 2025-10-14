@@ -4,7 +4,6 @@ import { Search, Plus, Bell, Settings, User, Users, LogOut, Sun, Moon, Check } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import NotificationRealtime from "@/components/NotificationRealtime"
 import { useNotification } from "@/app/(context)/Notfication"
 import { useState } from "react"
 import { useUser } from "@/app/(context)/UserContext"
@@ -15,9 +14,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const [isOpen, setIsOpen] = useState(false)
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [theme, setTheme] = useState(false)
-    const { notifications, setNotifications } = useNotification()
     const { handleSignout, user } = useUser()
-    const unreadCount = notifications?.filter(n => !n.isRead).length
     const router = useRouter()
 
     return (
@@ -60,16 +57,8 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                         >
                             <Bell className="h-4 w-4" />
-                            {unreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                    {unreadCount}
-                                </span>
-                            )}
                         </Button>
 
-                        {isNotificationOpen && (
-                            <NotificationRealtime notifications={notifications} unreadCount={unreadCount} setNotifications={setNotifications} />
-                        )}
                     </div>
                     <div className="relative">
                         <Avatar className="h-8 w-8 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>

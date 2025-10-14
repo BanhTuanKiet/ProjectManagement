@@ -123,10 +123,9 @@ namespace server.Controllers
                             IsRead = false,
                             CreatedAt = DateTime.UtcNow,
                             Link = $"/tasks/{formatedTask.TaskId}",
-                            CreatedId = userId
+                            CreatedId = userId,
+                            Type = "task"
                         };
-                        Console.WriteLine("UserID in function: " + newTask.AssigneeId);
-                        Console.WriteLine("UserID in notification: " + notification.UserId);
 
                         await _notificationsService.SaveNotification(notification);
                         await NotificationHub.SendTask(_hubContext, notification.UserId, notification);
@@ -151,39 +150,18 @@ namespace server.Controllers
 
             return Ok(tasks);
         }
-
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPatch("{projectId}/tasks/{taskId}/update")]
+        //sao co toi 2 ham update status
+        [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
-            Console.WriteLine("==== PATCH REQUEST START ====");
-            Console.WriteLine($"ProjectId: {projectId}, TaskId: {taskId}");
-
-            if (updates != null)
-            {
-                Console.WriteLine("Updates payload:");
-                foreach (var kvp in updates)
-                {
-                    Console.WriteLine($" - {kvp.Key}: {kvp.Value}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("No updates received");
-            }
-            Console.WriteLine("==== PATCH REQUEST END ====");
-
             if (updates == null || !updates.Any())
-                return BadRequest("No updates provided.");
+                throw new ErrorException(400, "Update failed");
 
-            var result = await _tasksService.PatchTaskField(projectId, taskId, updates);
-            if (result == null) return NotFound("Task not found in this project.");
+            var result = await _tasksService.PatchTaskField(projectId, taskId, updates) 
+                ?? throw new ErrorException(404, "Task not found");
 
-            Console.WriteLine("==== PATCH RESPONSE ====");
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(result));
-            Console.WriteLine("========================");
-
-            return Ok(result);
+            return Ok(new { message = "Update successful" });
         }
 
         [Authorize(Policy = "PMOrLeaderRequirement")]
@@ -203,7 +181,7 @@ namespace server.Controllers
                 count = deletedCount
             });
         }
-
+//sao co toi 2 ham update status
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)

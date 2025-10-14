@@ -11,3 +11,11 @@ export interface Notification {
     createdAt: string   
     type?: string
 }
+
+export interface NotificationGroups {
+    task: Notification[]
+    mention: Notification[]
+    project: Notification[]
+    system: Notification[]
+    workedOn: Notification[]
+}
