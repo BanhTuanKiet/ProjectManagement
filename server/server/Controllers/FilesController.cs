@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using server.Models;
 using Microsoft.EntityFrameworkCore;
 using server.Services.File;
-
+using server.Configs;
 
 namespace server.Controllers
 {
@@ -30,47 +30,54 @@ namespace server.Controllers
             _fileService = fileService;
         }
 
-         [HttpPost("upload")]
+        [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            try
-            {
-                var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId);
-                return Ok(uploadedFile);
-            }
-            catch (System.Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            if (string.IsNullOrEmpty(userId))
+                throw new ErrorException(401, "Unauthorized: missing user ID.");
+
+            if (file == null || file.Length == 0)
+                throw new ErrorException(400, "File is missing or empty.");
+
+            if (taskId <= 0)
+                throw new ErrorException(400, "Invalid task ID.");
+
+            var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId);
+
+            if (uploadedFile == null)
+                throw new ErrorException(500, "File upload failed.");
+
+            return Ok(uploadedFile);
         }
 
         [HttpDelete("{fileId}")]
         public async Task<IActionResult> DeleteFile(int fileId)
         {
-            try
-            {
-                var result = await _fileService.DeleteFileAsync(fileId);
-                if (!result.isSuccess)
-                    return StatusCode(500, new { message = result.message });
+            if (fileId <= 0)
+                throw new ErrorException(400, "Invalid file ID.");
 
-                return Ok(new { message = result.message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var result = await _fileService.DeleteFileAsync(fileId);
+
+            if (!result.isSuccess)
+                throw new ErrorException(500, result.message ?? "Failed to delete file.");
+
+            return Ok(new { message = result.message });
         }
+
         [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetFilesByTaskId(int taskId)
         {
+            if (taskId <= 0)
+                throw new ErrorException(400, "Invalid task ID.");
+
             var files = await _fileService.GetFilesByTaskIdAsync(taskId);
-            if (!files.Any())
-                return NotFound("No files found for this task.");
+
+            if (files == null || !files.Any())
+                throw new ErrorException(404, "No files found for this task.");
 
             return Ok(files);
         }
-
     }
 }

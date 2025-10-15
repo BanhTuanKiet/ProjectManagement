@@ -45,22 +45,14 @@ namespace server.Controllers
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)
         {
-            FilterDTO.FilterCalendarView filterObj = !string.IsNullOrEmpty(filters)
+            var filterObj = !string.IsNullOrEmpty(filters)
                 ? JsonConvert.DeserializeObject<FilterDTO.FilterCalendarView>(filters)
                 : new FilterDTO.FilterCalendarView();
 
-            List<TaskDTO.BasicTask> tasks = new List<TaskDTO.BasicTask>();
+            List<TaskDTO.BasicTask> tasks = (month != null && year != null)
+                ? await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj)
+                : await _tasksService.GetBasicTasksById(projectId);
 
-            if (month != null && year != null)
-            {
-                Console.WriteLine("Use GetBasicTasksByMonth");
-                tasks = await _tasksService.GetBasicTasksByMonth(projectId, month, year, filterObj);
-            }
-            else
-            {
-                Console.WriteLine("Use GetBasicTasksById");
-                tasks = await _tasksService.GetBasicTasksById(projectId);
-            }
             return Ok(tasks);
         }
 
@@ -165,7 +157,6 @@ namespace server.Controllers
         public async Task<ActionResult> GetAllBasicTasks()
         {
             List<TaskDTO.BasicTask> tasks = await _tasksService.GetAllBasicTasks();
-
             return Ok(tasks);
         }
         //sao co toi 2 ham update status
@@ -186,6 +177,7 @@ namespace server.Controllers
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
+
             if (dto.Ids == null || !dto.Ids.Any())
             {
                 return BadRequest(new { message = "No IDs provided." });
@@ -241,13 +233,10 @@ namespace server.Controllers
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{projectId}/filter")]
-        public async Task<ActionResult> GetTasksBySprintOrBacklog(
-            int projectId,
-            [FromQuery] int? sprintId,
-            [FromQuery] int? backlogId)
+        public async Task<ActionResult> GetTasksBySprintOrBacklog(int projectId, [FromQuery] int? sprintId, [FromQuery] int? backlogId)
         {
             if (!sprintId.HasValue && !backlogId.HasValue)
-                return BadRequest("You must provide at least sprintId or backlogId.");
+                throw new ErrorException(400, "You must provide at least sprintId or backlogId.");
 
             var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
             return Ok(tasks);

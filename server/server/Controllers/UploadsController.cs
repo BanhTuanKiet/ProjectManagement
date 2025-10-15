@@ -3,6 +3,7 @@ using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 using server.Models;
 using Microsoft.EntityFrameworkCore;
+using server.Configs;
 
 namespace server.Controllers
 {
@@ -23,8 +24,12 @@ namespace server.Controllers
         public async Task<IActionResult> UploadImage(IFormFile file, int taskId)
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                throw new ErrorException(401, "User not authenticated");
+
             if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+                throw new ErrorException(400, "No file uploaded");
 
             using var stream = file.OpenReadStream();
             var uploadParams = new ImageUploadParams
@@ -33,6 +38,9 @@ namespace server.Controllers
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult == null || uploadResult.StatusCode != System.Net.HttpStatusCode.OK)
+                throw new ErrorException(500, "Upload to Cloudinary failed");
 
             Models.File newFile = new Models.File
             {
@@ -55,8 +63,8 @@ namespace server.Controllers
                 file = newFile
             });
         }
-        
-                [HttpGet("task/{taskId}")]
+
+        [HttpGet("task/{taskId}")]
         public async Task<IActionResult> GetFilesByTaskId(int taskId)
         {
             var files = await _context.Files
@@ -65,7 +73,7 @@ namespace server.Controllers
                 .ToListAsync();
 
             if (!files.Any())
-                return NotFound("No files found for this task");
+                throw new ErrorException(404, "No files found for this task");
 
             return Ok(files);
         }
