@@ -5,8 +5,6 @@ import axios from "../../config/axiosConfig"
 import { useSearchParams, useRouter } from "next/navigation"
 import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
 import type { User } from "@/utils/IUser"
-import { useNotification } from "./Notfication"
-import { usePresence } from "./OnlineMembers"
 
 type UserContextType = {
     user: User | null
@@ -26,12 +24,20 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
     const searchParams = useSearchParams()
     const router = useRouter()
-    
+
     useEffect(() => {
         const success = searchParams.get("success")
 
-        if (success === "false") return WarningNotify("Signin via Google failed")
-        if (success === "true") SuccessNotify("Signin via Google successful")
+        if (success === "false") {
+            WarningNotify("Signin via Google failed")
+            return
+        }
+
+        if (success === "true") {
+            SuccessNotify("Signin via Google successful")
+            router.replace("/project")
+            return
+        }
 
         const fetchUser = async () => {
             try {
@@ -45,8 +51,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         fetchUser()
-        router.replace("/project")
-    }, [router, searchParams])
+    }, [searchParams])
+
 
     const signinGG = () => {
         window.location.href = "http://localhost:5144/users/signin-google"

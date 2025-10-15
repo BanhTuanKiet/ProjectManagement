@@ -4,12 +4,11 @@ import { useEffect, useState } from "react"
 import type React from "react"
 import { getDaysInMonth } from "@/utils/dateUtils"
 import type { BasicTask } from "@/utils/ITask"
-import TaskList from "./TaskList"
+import { TaskList } from "./TaskList"
 import TaskFilterView from "./TaskFilterView"
-import AddTaskViewModal from "./AddTaskViewModal"
-import { useNotification } from "@/app/(context)/Notfication"
+import AddTaskModal from "./AddTaskModal"
 import TaskDetailModal from "./TaskDetailModal"
-import TaskCalendar from "./TaskCalendar"
+import TaskCard from "./TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
 
@@ -18,17 +17,20 @@ const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 export default function CalendarView() {
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
     const { tasks, currentDate } = useTask()
-    const [openTaskList, setOpenTaskList] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
-    const { selectedTask, setSelectedTask } = useNotification()
+    const [selectedTask, setSelectedTask] = useState<number | null>(null)
     const { project_name, members } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
+    const [openDay, setOpenDay] = useState<number | null>(null)
 
     useEffect(() => {
-        if (tasks && tasks.length > 0) {
+        setDays(getDaysInMonth(currentDate))
+
+        if (Array.isArray(tasks)) {
             setMockTasks([...tasks])
-            setDays(getDaysInMonth(currentDate))
+        } else {
+            setMockTasks([])
         }
     }, [tasks, currentDate])
 
@@ -72,56 +74,55 @@ export default function CalendarView() {
                         return (
                             <div
                                 key={index}
-                                className="min-h-32 border-r border-b border-border p-3 bg-card"
+                                className="relative min-h-32 border-r border-b border-border p-3 bg-card"
                             >
                                 {day && (
                                     <>
                                         <div className="text-sm font-medium mb-2 text-start flex items-center justify-between">
                                             <span
-                                                className={`w-6 h-6 ${
-                                                    isToday
-                                                        ? "bg-blue-500 text-white rounded flex items-center justify-center"
-                                                        : ""
-                                                }`}
+                                                className={`w-6 h-6 flex items-center justify-center ${isToday ? "bg-blue-500 text-white rounded" : ""}`}
                                             >
                                                 {day}
                                             </span>
                                             <span
                                                 className="px-1 hover:bg-gray-200 hover:rounded transition-colors cursor-pointer"
-                                                onClick={() => handleDayClick(day)}
+                                                onClick={() => {
+                                                    handleDayClick(day)
+                                                }}
                                             >
                                                 +
                                             </span>
                                         </div>
 
                                         <div className="space-y-2">
-                                            {(tasksForDay?.length <= 2
+                                            {(tasksForDay?.length < 2
                                                 ? tasksForDay
                                                 : tasksForDay.slice(0, 1)
                                             ).map(task => (
-                                                <TaskCalendar
+                                                <TaskCard
                                                     key={task.taskId}
                                                     task={task}
                                                     setSelectedTask={setSelectedTask}
                                                 />
                                             ))}
 
-                                            {tasksForDay.length > 2 && (
+                                            {tasksForDay.length > 1 && (
                                                 <div>
                                                     <div
                                                         className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
                                                         onClick={() =>
-                                                            setOpenTaskList(!openTaskList)
+                                                            setOpenDay(openDay === day ? null : day)
                                                         }
                                                     >
                                                         <p className="p-2">
-                                                            {!openTaskList
-                                                                ? `${tasksForDay.length - 1} more`
-                                                                : "Close"}
+                                                            {openDay === day
+                                                                ? "Close"
+                                                                : `${tasksForDay.length - 1} more`}
                                                         </p>
                                                     </div>
-                                                    {openTaskList && (
-                                                        <div className="absolute z-50 mt-2 w-38 bg-card border rounded-lg shadow-lg">
+
+                                                    {openDay === day && (
+                                                        <div className="absolute z-50 mt-2 w-40 bg-card border rounded-lg shadow-lg">
                                                             <TaskList tasks={tasksForDay} />
                                                         </div>
                                                     )}
@@ -137,7 +138,7 @@ export default function CalendarView() {
             </div>
 
             {isModalOpen && (
-                <AddTaskViewModal
+                <AddTaskModal
                     isModalOpen={isModalOpen}
                     members={members ?? []}
                     currentDate={currentDate}
@@ -147,13 +148,13 @@ export default function CalendarView() {
                 />
             )}
 
-            {selectedTask && (
+            {/* {selectedTask && (
                 <TaskDetailModal
                     projectId={project_name ? Number(project_name) : 0}
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />
-            )}
+            )} */}
         </div>
     )
 }

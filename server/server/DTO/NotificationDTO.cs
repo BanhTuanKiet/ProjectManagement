@@ -11,6 +11,7 @@ namespace server.DTO
             public string CreatedBy { get; set; }
             public int? ProjectId { get; set; }
             public string Message { get; set; } = null!;
+            public string? Type { get; set; }
             public string? Link { get; set; }
             public bool IsRead { get; set; }
             public DateTime CreatedAt { get; set; }

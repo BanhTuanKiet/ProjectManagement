@@ -28,8 +28,8 @@ builder.Services.AddSignalR();
 
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<ValidateInputFilter>();
-    options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider());
+    // options.Filters.Add<ValidateInputFilter>();
+    // options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider());
 });
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -47,18 +47,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ✅ ĐẶT MIDDLEWARE XỬ LÝ LỖI TRƯỚC UseRouting()
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 app.UseRouting();
+
 app.UseCors("_allowSpecificOrigins");
 app.UseAuthentication();
-app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<LoadContextMiddleware>();
 app.UseAuthorization();
- //app.UseMiddleware<CustomAuthorizationMiddleware>();
-// app.MiddlewareCustom();
 
 app.MapControllers();
 
-//signalr
+// SignalR
 app.MapHub<PresenceHubConfig>("/hubs/presence");
 app.MapHub<NotificationHub>("/hubs/notification");
 app.MapHub<TaskHubConfig>("/hubs/task");

@@ -7,7 +7,7 @@ public partial class Notification
 {
     public long NotificationId { get; set; }
 
-    public string UserId { get; set; } = null!;
+    public string? UserId { get; set; } = null!;
     public string CreatedId { get; set; }
 
     public int? ProjectId { get; set; }
@@ -17,6 +17,7 @@ public partial class Notification
     public string? Link { get; set; }
 
     public bool IsRead { get; set; }
+    public string? Type { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

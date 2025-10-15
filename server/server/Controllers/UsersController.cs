@@ -55,7 +55,7 @@ namespace server.Controllers
             {
                 var configReturnUrl = _configuration["Authentication:Google:ReturnUrl"];
                 returnUrl = configReturnUrl ?? "/";
-            }
+            }   
 
             var properties = new AuthenticationProperties
             {
@@ -70,8 +70,9 @@ namespace server.Controllers
         public ActionResult GetToken()
         {
             var token = Request.Cookies["token"];
+            if (token == null) return Ok();
             TokenDTO.DecodedToken decodedToken = JwtUtils.DecodeToken(token);
-            return Ok(decodedToken ?? null);
+            return Ok(decodedToken);
         }
 
         [HttpGet("signout")]

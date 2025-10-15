@@ -221,6 +221,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.Message).HasMaxLength(1000);
             entity.Property(e => e.UserId).HasMaxLength(128);
             entity.Property(e => e.CreatedId).HasMaxLength(128);
+            entity.Property(e => e.Type).HasMaxLength(20);
 
             entity.HasOne(d => d.Project).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.ProjectId)

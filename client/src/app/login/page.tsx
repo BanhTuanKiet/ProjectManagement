@@ -7,25 +7,27 @@ import Jira from "@/app/Images/Jira.png"
 import { useState } from "react"
 import axios from "@/config/axiosConfig"
 import { useRouter } from "next/navigation"
+import { useUser } from "../(context)/UserContext";
 
 
 export default function Login() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const { signinGG } = useUser()
 
     const router = useRouter()
 
-    const signinGG = async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
+    // const signinGG = async () => {
+    //     const urlParams = new URLSearchParams(window.location.search);
+    //     const token = urlParams.get("token");
 
-        let apiUrl = "http://localhost:5144/users/signin-google";
-        if (token) {
-            apiUrl += `?token=${token}`;
-        }
+    //     let apiUrl = "http://localhost:5144/users/signin-google";
+    //     if (token) {
+    //         apiUrl += `?token=${token}`;
+    //     }
 
-        window.location.href = apiUrl;
-    }
+    //     window.location.href = apiUrl;
+    // }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -124,7 +126,7 @@ export default function Login() {
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     className="bg-white border border-gray-300 px-4 py-3 rounded-lg font-medium hover:bg-gray-50 transition duration-200 flex items-center justify-center gap-2 cursor-pointer"
-                                    onClick={signinGG}
+                                    onClick={() => signinGG()}
                                 >
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                                         <path

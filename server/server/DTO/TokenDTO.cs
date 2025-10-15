@@ -7,6 +7,7 @@
             public string userId { get; set; }
             public string name { get; set; }
             public List<string> roles { get; set; }
+            public string Email { get; set; }
         }
     }
 }

@@ -30,7 +30,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentDate, setCurrentDate] = useState(new Date())
     const { user } = useUser()
     const { project_name } = useProject()
-    console.log(project_name)
+
     useEffect(() => {
         if (!user) return
 
@@ -50,15 +50,20 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         connection.start().then(async () => {
             console.log("Connected to TaskHub")
 
-            await connection.invoke("JoinProjectGroup", Number(project_name))
+            // await connection.invoke("JoinProjectGroup", Number(project_name))
         }).catch(error => console.log(error))
+
+        connection.on("AddedTask", (addedTask: BasicTask) => {
+            console.log("addedTask: ", addedTask)
+            setTasks(prevTasks => [addedTask, ...prevTasks])
+        })
 
         connection.on("TaskUpdated", (updatedTask: BasicTask) => {
             console.log("TaskUpdated received:", updatedTask)
             setTasks(prevTasks => {
-                const filtered = prevTasks.filter(t => t.taskId !== updatedTask.taskId);
-                return [...filtered, updatedTask];
-            });
+                const filtered = prevTasks.filter(t => t.taskId !== updatedTask.taskId)
+                return [...filtered, updatedTask]
+            })
         })
 
         return () => {
@@ -79,7 +84,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
                         filters: null,
                     },
                 })
-                console.log(response.data)
+
                 setTasks(response.data)
             } catch (error) {
                 console.log(error)

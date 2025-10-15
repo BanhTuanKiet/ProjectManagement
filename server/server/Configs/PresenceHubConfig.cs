@@ -22,6 +22,13 @@ namespace server.Configs
         }
         private static ConcurrentDictionary<string, OnlineUser> OnlineUsers = new();
 
+        public static IEnumerable<string> GetUserOnline(int projectId, string createdId)
+        {
+            return OnlineUsers.Values
+                .Where(u => u.Projects.Contains(projectId) && u.UserId != createdId)
+                .Select(u => u.UserId);
+        }
+
         public override async System.Threading.Tasks.Task OnConnectedAsync()
         {
             var userId = Context.UserIdentifier ?? Context.ConnectionId;
@@ -46,17 +53,17 @@ namespace server.Configs
             await base.OnConnectedAsync();
         }
 
-        // public override async Task OnDisconnectedAsync(Exception? exception)
-        // {
-        //     var userId = Context.UserIdentifier ?? Context.ConnectionId;
+        public override async System.Threading.Tasks.Task OnDisconnectedAsync(Exception? exception)
+        {
+            var userId = Context.UserIdentifier ?? Context.ConnectionId;
 
-        //     if (OnlineUsers.TryRemove(userId, out var removedUser))
-        //     {
-        //         await Clients.All.SendAsync("UserOffline", removedUser.UserId);
-        //     }
+            if (OnlineUsers.TryRemove(userId, out var removedUser))
+            {
+                await Clients.All.SendAsync("UserOffline", removedUser.UserId);
+            }
 
-        //     await base.OnDisconnectedAsync(exception);
-        // }
+            await base.OnDisconnectedAsync(exception);
+        }
 
         public static async System.Threading.Tasks.Task Signout(IHubContext<PresenceHubConfig> hubContext, string userId)
         {

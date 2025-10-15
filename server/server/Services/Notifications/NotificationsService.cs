@@ -43,6 +43,18 @@ namespace server.Services.Project
             return _mapper.Map<List<NotificationDTO.NotificationBasic>>(notifications);
         }
 
+        public async Task<List<NotificationDTO.NotificationBasic>> GetNotificationByType(string userId, string type)
+        {
+            var notifications = await _context.Notifications
+                .Include(n => n.User)
+                .Include(n => n.CreatedBy)
+                .Where(n => n.UserId == userId && n.Type == type)
+                .OrderBy(n => n.CreatedAt)
+                .ToListAsync();
+
+            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(notifications);
+        }
+
         public async Task<Notification> GetNotificationById(long notificationId)
         {
             return await _context.Notifications.FirstOrDefaultAsync(n => n.NotificationId == notificationId);
