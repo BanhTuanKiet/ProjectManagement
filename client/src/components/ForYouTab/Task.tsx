@@ -77,7 +77,7 @@ export default function Assign({ activeTab }: { activeTab: string }) {
                                 </span>
                                 <span className="flex items-center gap-1">
                                     <strong className="font-semibold">To:</strong>
-                                    <span>{n.assignee}</span>
+                                    <span>{n.assignee ?? "All"}</span>
                                 </span>
                                 {n.projectId && (
                                     <span className="flex items-center gap-1">

@@ -41,7 +41,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
         const conn = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5144/hubs/notification", {
-                accessTokenFactory: () => user.token!,
+                accessTokenFactory: () => user.token,
             })
             .withAutomaticReconnect()
             .build()
@@ -63,6 +63,13 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             setNotifications(prev => ({
                 ...prev,
                 task: [notification, ...prev.task],
+            }))
+        })
+
+        connection.on("NotifyTaskChanged", (notification: Notification) => {
+            setNotifications(prev => ({
+                ...prev,
+                task: [notification, ...prev.task]
             }))
         })
 

@@ -91,7 +91,7 @@ namespace server.Controllers
                 try
                 {
                     DateTime dateTimeCurrent = DateTime.UtcNow;
-                    if (newTask.Deadline == null) 
+                    if (newTask.Deadline == null)
                         newTask.Deadline = dateTimeCurrent.ToString();
                     DateTime deadline = DateTime.Parse(newTask.Deadline);
                     string status = "Todo";
@@ -128,7 +128,7 @@ namespace server.Controllers
                         };
 
                         await _notificationsService.SaveNotification(notification);
-                        await NotificationHub.SendTask(_hubContext, notification.UserId, notification);
+                        await NotificationHub.SendTaskAssignedNotification(_hubContext, notification.UserId, notification);
                     }
                     await transaction.CommitAsync();
 
@@ -158,7 +158,7 @@ namespace server.Controllers
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
-            var result = await _tasksService.PatchTaskField(projectId, taskId, updates) 
+            var result = await _tasksService.PatchTaskField(projectId, taskId, updates)
                 ?? throw new ErrorException(404, "Task not found");
 
             return Ok(new { message = "Update successful" });
@@ -181,14 +181,18 @@ namespace server.Controllers
                 count = deletedCount
             });
         }
-//sao co toi 2 ham update status
+        //sao co toi 2 ham update status
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
 
+            string oldStatus = task.Status;
             string newStatus = updates["status"]?.ToString() ?? task.Status;
 
             Models.Task updatedTask = await _tasksService.UpdateTaskStatus(taskId, newStatus);
@@ -198,6 +202,21 @@ namespace server.Controllers
 
             await _taskHubContext.Clients.Group($"project-{projectId}")
                 .SendAsync("TaskUpdated", updatedTask);
+
+            Notification notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"Task #{taskId} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"/tasks/{taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            await _notificationsService.SaveNotification(notification);
+            await NotificationHub.SendNotificationToAllExcept(_hubContext, projectId, userId, notification);
 
             return Ok(new { message = "Update task successful!" });
         }
