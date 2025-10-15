@@ -54,8 +54,20 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, [searchParams])
 
 
-    const signinGG = () => {
-        window.location.href = "http://localhost:5144/users/signin-google"
+    // const signinGG = () => {
+    //     window.location.href = "http://localhost:5144/users/signin-google"
+    // }
+
+    const signinGG = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get("email");
+
+        let apiUrl = "http://localhost:5144/users/signin-google";
+        if (email) {
+            apiUrl += `?email=${email}`;
+        }
+
+        window.location.href = apiUrl;
     }
 
     const handleSignout = async () => {

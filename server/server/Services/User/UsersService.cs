@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
+using System.Text.RegularExpressions;
 
 namespace server.Services.User
 {
@@ -25,14 +26,15 @@ namespace server.Services.User
         public async Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            string formatedName = name.Replace(" ", "").ToLower();
+            // string formatedName = name.Replace(" ", "").ToLower();
+            string formattedName = Regex.Replace(name ?? email.Split('@')[0], @"[^a-zA-Z0-9]", "").ToLower();
 
             if (user == null)
             {
                 user = new ApplicationUser
                 {
                     Email = email,
-                    UserName = formatedName
+                    UserName = formattedName
                 };
 
                 var result = await _userManager.CreateAsync(user);
@@ -47,7 +49,6 @@ namespace server.Services.User
 
                 await _userManager.AddToRoleAsync(user, "User");
             }
-
             return user;
         }
 

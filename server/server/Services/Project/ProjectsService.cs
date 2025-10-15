@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using server.DTO;
 using server.Models;
 using server.Util;
+using server.Configs;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 
@@ -99,16 +100,7 @@ namespace server.Services.Project
         {
             var token = Guid.NewGuid();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
-            Console.WriteLine("Looking for user with email: " + invitePeopleDTO.ToEmail);
-            if (user != null)
-            {
-                var existingMember = await _context.ProjectMembers
-                    .FirstOrDefaultAsync(pm => pm.ProjectId == invitePeopleDTO.ProjectId && pm.UserId == user.Id);
-
-                if (existingMember != null)
-                    throw new Exception("Tài khoản đã là thành viên của dự án.");
-            }
-             var existingInvitation = await _context.ProjectInvitations
+            var existingInvitation = await _context.ProjectInvitations
                 .Where(i => i.Email == invitePeopleDTO.ToEmail && i.ProjectId == invitePeopleDTO.ProjectId && i.IsAccepted == false)
                 .ToListAsync();
 
@@ -127,7 +119,6 @@ namespace server.Services.Project
                         InvitedAt = DateTime.UtcNow
                     };
                     await _context.ProjectInvitations.AddAsync(invitation);
-                    Console.WriteLine("Invitation record added to context.");
                     await _context.SaveChangesAsync();
                     
 
@@ -137,7 +128,7 @@ namespace server.Services.Project
                 <div style='font-family:Arial,sans-serif; text-align:center;'>
                     <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
                     <h2>{inviterName} invited you to <b>{projectName}</b></h2>
-                    <a href='http://localhost:3000/login?token={invitation.Email}'  
+                    <a href='http://localhost:3000/login?email={invitation.Email}'  
                     style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
                         Join the Project
                     </a>
@@ -159,11 +150,7 @@ namespace server.Services.Project
                     </div>
                 </div>";
 
-                Console.WriteLine("Sending email to: " + invitePeopleDTO.ToEmail);
-
                 await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
-                Console.WriteLine("Email sent successfully!");
-
             return true;
         }
     }

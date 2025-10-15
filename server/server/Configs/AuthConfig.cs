@@ -27,7 +27,7 @@ namespace server.Configs
                 {
                     var email = context.Principal.FindFirstValue(ClaimTypes.Email);
                     var name = context.Principal.FindFirstValue(ClaimTypes.Name);
-                    context.Properties.Items.TryGetValue("invite_token", out var token);
+                    context.Properties.Items.TryGetValue("email", out var token);
 
                     var userService = context.HttpContext.RequestServices.GetRequiredService<IUsers>();
                     var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
@@ -54,7 +54,6 @@ namespace server.Configs
                             {
                                 var existed = await db.ProjectMembers
                                     .AnyAsync(pm => pm.ProjectId == invitation.ProjectId && pm.UserId == user.Id);
-
                                 if (!existed)
                                 {
                                     db.ProjectMembers.Add(new ProjectMember

@@ -65,20 +65,30 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        public async Task<ActionResult> SendProjectInviteEmail([FromBody] InvitePeopleForm invitePeopleDTO)
+        public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO)
         {
             Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
             Console.WriteLine("Invitation email sent successfully.");
-            try
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
+            if (user != null)
             {
-                await _projectsServices.InviteMemberToProject(invitePeopleDTO, "trandat2280600642@gmail.com", projectName);
-                Console.WriteLine("Invitation email sent successfully 2.");
+                var existingMember = await _context.ProjectMembers
+                    .FirstOrDefaultAsync(pm => pm.ProjectId == invitePeopleDTO.ProjectId && pm.UserId == user.Id);
+
+                if (existingMember != null)
+                    throw new ErrorException(400, "Tài khoản đã là thành viên của dự án.");
             }
-            catch (Exception ex)
+
+            bool isSuccess = await _projectsServices.InviteMemberToProject(invitePeopleDTO, "trandat2280600642@gmail.com", projectName);
+            Console.WriteLine("Invitation email sent successfully 2.");
+
+            if (!isSuccess)
             {
-                throw new ErrorException(500, $"Không thể gửi email: {ex.Message}");
+                throw new ErrorException(500, $"Không thể gửi email");
             }
+
             return Ok(new { message = "Invited member successfully!" });
         }
     }

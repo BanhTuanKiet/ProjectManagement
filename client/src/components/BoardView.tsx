@@ -87,6 +87,8 @@ const deleteTask = async (taskId: number) => {
   let newStatus = "";
   let oldStatus = "";
 
+  if (!over.id || typeof over.id !== "string") return;
+
   setFeatures((prev) => {
     const oldIndex = prev.findIndex((t) => t.taskId === activeTaskId);
     const overTask = prev.find((t) => t.taskId.toString() === over.id);
@@ -95,6 +97,9 @@ const deleteTask = async (taskId: number) => {
       // Kéo sang cột trống (chỉ đổi status)
       newStatus = over.id as string;
       oldStatus = prev[oldIndex].status;
+
+      const validStatuses = ["Todo", "Doing", "Done", "Cancel"];
+      if (!validStatuses.includes(newStatus)) return prev;
 
       return prev.map((task) =>
         task.taskId === activeTaskId ? { ...task, status: newStatus } : task
@@ -114,7 +119,8 @@ const deleteTask = async (taskId: number) => {
     }
   });
 
-  // Gọi API cập nhật
+  if (!newStatus) return;
+  
   const success = await updateTask(activeTaskId, newStatus);
 
   // ❗ Nếu lỗi → khôi phục lại trạng thái cũ

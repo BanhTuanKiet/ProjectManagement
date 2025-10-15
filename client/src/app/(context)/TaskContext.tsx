@@ -50,7 +50,6 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         connection.start().then(async () => {
             console.log("Connected to TaskHub")
 
-            // await connection.invoke("JoinProjectGroup", Number(project_name))
         }).catch(error => console.log(error))
 
         connection.on("AddedTask", (addedTask: BasicTask) => {

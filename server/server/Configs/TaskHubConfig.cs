@@ -61,11 +61,10 @@ namespace server.Configs
             await Clients.Caller.SendAsync("ActiveUsersInTask", usersInTask);
         }
 
-        // public async Task JoinProjectGroup(int projectId)
-        // {
-        //     await Groups.AddToGroupAsync(Context.ConnectionId, $"project-{projectId}");
-        //     await Clients.Caller.SendAsync("JoinedProjectGroup", projectId);
-        // }
+        public async static Task TaskUpdated(IHubContext<TaskHubConfig> hubContext, DTO.TaskDTO.BasicTask basicTask)
+        {
+            await hubContext.Clients.All.SendAsync("TaskUpdated", basicTask);
+        }
 
         public async static Task AddedTask(IHubContext<TaskHubConfig> hubContext, int projectId, string userId, DTO.TaskDTO.BasicTask basicTask)
         {
