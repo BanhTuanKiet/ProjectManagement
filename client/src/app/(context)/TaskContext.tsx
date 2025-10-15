@@ -50,8 +50,13 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         connection.start().then(async () => {
             console.log("Connected to TaskHub")
 
-            await connection.invoke("JoinProjectGroup", Number(project_name))
+            // await connection.invoke("JoinProjectGroup", Number(project_name))
         }).catch(error => console.log(error))
+
+        connection.on("AddedTask", (addedTask: BasicTask) => {
+            console.log("addedTask: ", addedTask)
+            setTasks(prevTasks => [addedTask, ...prevTasks])
+        })
 
         connection.on("TaskUpdated", (updatedTask: BasicTask) => {
             console.log("TaskUpdated received:", updatedTask)
@@ -79,7 +84,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
                         filters: null,
                     },
                 })
-                console.log(response.data)
+
                 setTasks(response.data)
             } catch (error) {
                 console.log(error)

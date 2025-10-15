@@ -8,7 +8,7 @@ export function TaskList({ tasks }: { tasks: BasicTask[] }) {
     const isOverdue = (deadline: string) => {
         return new Date(deadline) < new Date()
     }
-console.log(tasks)
+
     if (!tasks || tasks.length === 0) {
         return <div className="p-3 text-center text-xs text-muted-foreground">No tasks available</div>
     }
@@ -33,7 +33,7 @@ console.log(tasks)
                             </Badge>
                         </div>
 
-                        <div className="flex-1 min-w-0">
+                        {/* <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium truncate">{task.title}</p>
                         </div>
 
@@ -45,7 +45,7 @@ console.log(tasks)
                                 </div>
                             )}
                             <ColoredAvatar id={task.assigneeId ?? task.createdBy} name={task.assignee} />
-                        </div>
+                        </div> */}
                     </div>
                 ))}
             </div>

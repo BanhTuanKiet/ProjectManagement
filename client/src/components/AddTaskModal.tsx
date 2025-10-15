@@ -15,7 +15,7 @@ import axios from '@/config/axiosConfig'
 import { Member } from '@/utils/IUser'
 import { useParams } from 'next/navigation'
 import { BasicTask, NewTaskView } from '@/utils/ITask'
-import { formattedDate, getDeadlineFromSelectedDay, setDefaultDeadline } from '@/utils/dateUtils'
+import { formattedDate, getDeadlineFromSelectedDay } from '@/utils/dateUtils'
 
 export default function AddTaskViewModal({
     isModalOpen,

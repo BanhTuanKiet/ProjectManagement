@@ -6,9 +6,9 @@ import { getDaysInMonth } from "@/utils/dateUtils"
 import type { BasicTask } from "@/utils/ITask"
 import { TaskList } from "./TaskList"
 import TaskFilterView from "./TaskFilterView"
-import AddTaskViewModal from "./AddTaskViewModal"
+import AddTaskModal from "./AddTaskModal"
 import TaskDetailModal from "./TaskDetailModal"
-import TaskCalendar from "./TaskCalendar"
+import TaskCard from "./TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
 
@@ -23,7 +23,7 @@ export default function CalendarView() {
     const { project_name, members } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
     const [openDay, setOpenDay] = useState<number | null>(null)
-console.log(tasks)
+
     useEffect(() => {
         setDays(getDaysInMonth(currentDate))
 
@@ -95,18 +95,18 @@ console.log(tasks)
                                         </div>
 
                                         <div className="space-y-2">
-                                            {(tasksForDay?.length <= 2
+                                            {(tasksForDay?.length < 2
                                                 ? tasksForDay
                                                 : tasksForDay.slice(0, 1)
                                             ).map(task => (
-                                                <TaskCalendar
+                                                <TaskCard
                                                     key={task.taskId}
                                                     task={task}
                                                     setSelectedTask={setSelectedTask}
                                                 />
                                             ))}
 
-                                            {tasksForDay.length > 2 && (
+                                            {tasksForDay.length > 1 && (
                                                 <div>
                                                     <div
                                                         className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
@@ -138,7 +138,7 @@ console.log(tasks)
             </div>
 
             {isModalOpen && (
-                <AddTaskViewModal
+                <AddTaskModal
                     isModalOpen={isModalOpen}
                     members={members ?? []}
                     currentDate={currentDate}

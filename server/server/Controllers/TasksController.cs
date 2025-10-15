@@ -9,6 +9,7 @@ using server.Models;
 using server.Services.Task;
 using server.Configs;
 using Microsoft.AspNetCore.SignalR;
+using AutoMapper;
 
 namespace server.Controllers
 {
@@ -20,21 +21,24 @@ namespace server.Controllers
         private readonly ProjectManagementContext _context;
         private readonly ITasks _tasksService;
         private readonly INotifications _notificationsService;
-        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<NotificationHub> _notificationHubContext;
         private readonly IHubContext<TaskHubConfig> _taskHubContext;
+        private readonly IMapper _mapper;
 
         public TasksController(
             ProjectManagementContext context,
             ITasks tasksService,
             INotifications notificationsService,
-            IHubContext<NotificationHub> hubContext,
-            IHubContext<TaskHubConfig> taskHubContext)
+            IHubContext<NotificationHub> notificationHubContext,
+            IHubContext<TaskHubConfig> taskHubContext,
+            IMapper mapper)
         {
             _context = context;
             _tasksService = tasksService;
             _notificationsService = notificationsService;
-            _hubContext = hubContext;
+            _notificationHubContext = notificationHubContext;
             _taskHubContext = taskHubContext;
+            _mapper = mapper;
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -65,7 +69,6 @@ namespace server.Controllers
         public async Task<ActionResult> GetBasicTasksById(int projectId)
         {
             List<TaskDTO.BasicTask> tasks = await _tasksService.GetBasicTasksById(projectId);
-
             return Ok(tasks);
         }
 
@@ -79,67 +82,82 @@ namespace server.Controllers
 
         [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("view/{projectId}")]
-        public async Task<ActionResult> AddTaskCalendarView([FromBody] TaskDTO.NewTaskView newTask, int projectId)
+        public async Task<ActionResult> AddTask([FromBody] TaskDTO.NewTaskView newTask, int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             string name = User.FindFirst(ClaimTypes.Name)?.Value;
-            var strategy = _context.Database.CreateExecutionStrategy();
+            // var strategy = _context.Database.CreateExecutionStrategy();
 
-            return await strategy.ExecuteAsync(async () =>
+            // return await strategy.ExecuteAsync(async () =>
+            // {
+            //     await using var transaction = await _context.Database.BeginTransactionAsync();
+            // try
+            // {
+            DateTime dateTimeCurrent = DateTime.UtcNow;
+            DateTime deadline = DateTime.Parse(newTask.Deadline);
+            string status;
+
+            // Nếu không có deadline → để trạng thái mặc định
+            if (string.IsNullOrEmpty(newTask.Deadline))
             {
-                await using var transaction = await _context.Database.BeginTransactionAsync();
-                try
+                status = "Todo";
+            }
+            else
+            {
+                if (deadline.Date < dateTimeCurrent.Date)
+                    throw new ErrorException(400, "Deadline must be after the current date");
+
+                if (deadline.Date == dateTimeCurrent.Date)
+                    status = "InProgress";
+                else
+                    status = "Todo";
+            }
+            Models.Task formatedTask = new Models.Task
+            {
+                ProjectId = projectId,
+                Title = newTask.Title,
+                Description = newTask.Description,
+                AssigneeId = newTask.AssigneeId,
+                SprintId = newTask.SprintId,
+                Priority = newTask.Priority,
+                CreatedBy = userId,
+                Status = status,
+                Deadline = deadline,
+                BacklogId = newTask.BacklogId,
+                CreatedAt = dateTimeCurrent,
+            };
+
+            Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
+            if (newTask.AssigneeId != null)
+            {
+
+                Notification notification = new Notification
                 {
-                    DateTime dateTimeCurrent = DateTime.UtcNow;
-                    if (newTask.Deadline == null)
-                        newTask.Deadline = dateTimeCurrent.ToString();
-                    DateTime deadline = DateTime.Parse(newTask.Deadline);
-                    string status = "Todo";
+                    UserId = formatedTask.AssigneeId,
+                    ProjectId = formatedTask.ProjectId,
+                    Message = $"A new task {formatedTask.Title} has been assigned to you by {name}",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
+                    Link = $"/tasks/{formatedTask.TaskId}",
+                    CreatedId = userId,
+                    Type = "task"
+                };
+                TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(addedTask);
 
-                    Models.Task formatedTask = new Models.Task
-                    {
-                        ProjectId = projectId,
-                        Title = newTask.Title,
-                        Description = newTask.Description,
-                        AssigneeId = newTask.AssigneeId,
-                        SprintId = newTask.SprintId,
-                        Priority = newTask.Priority,
-                        CreatedBy = userId,
-                        Status = status,
-                        Deadline = deadline,
-                        BacklogId = newTask.BacklogId,
-                        CreatedAt = dateTimeCurrent,
-                    };
+                await _notificationsService.SaveNotification(notification);
+                await TaskHubConfig.AddedTask(_taskHubContext, projectId, userId, basicTask);
+                await NotificationHub.SendTaskAssignedNotification(_notificationHubContext, notification.UserId, notification);
+            }
+            // await transaction.CommitAsync();
 
-                    Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
-                    if (newTask.AssigneeId != null)
-                    {
-
-                        Notification notification = new Notification
-                        {
-                            UserId = formatedTask.AssigneeId,
-                            ProjectId = formatedTask.ProjectId,
-                            Message = $"A new task {formatedTask.Title} has been assigned to you by {name}",
-                            IsRead = false,
-                            CreatedAt = DateTime.UtcNow,
-                            Link = $"/tasks/{formatedTask.TaskId}",
-                            CreatedId = userId,
-                            Type = "task"
-                        };
-
-                        await _notificationsService.SaveNotification(notification);
-                        await NotificationHub.SendTaskAssignedNotification(_hubContext, notification.UserId, notification);
-                    }
-                    await transaction.CommitAsync();
-
-                    return Ok(new { message = "Add new task successful!" });
-                }
-                catch (ErrorException ex)
-                {
-                    await transaction.RollbackAsync();
-                    throw new ErrorException(500, ex.Message);
-                }
-            });
+            return Ok(new { message = "Add new task successful!" });
+            // }
+            // catch (ErrorException ex)
+            // {
+            //     await transaction.RollbackAsync();
+            //     throw new ErrorException(500, ex.Message);
+            // }
+            // });
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -216,7 +234,7 @@ namespace server.Controllers
             };
 
             await _notificationsService.SaveNotification(notification);
-            await NotificationHub.SendNotificationToAllExcept(_hubContext, projectId, userId, notification);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
 
             return Ok(new { message = "Update task successful!" });
         }
