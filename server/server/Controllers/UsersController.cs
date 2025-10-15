@@ -49,7 +49,7 @@ namespace server.Controllers
         }
 
         [HttpGet("signin-google")]
-        public IActionResult SignGoogle(string? token = null, string returnUrl = "http://localhost:3000/project")
+        public IActionResult SignGoogle(string? email  = null, string returnUrl = "http://localhost:3000/project")
         {
             if (string.IsNullOrEmpty(returnUrl))
             {
@@ -60,7 +60,7 @@ namespace server.Controllers
             var properties = new AuthenticationProperties
             {
                 RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl }),
-                Items = { { "invite_token", token ?? "" } }
+                Items = { { "email", email  ?? "" } }
             };
 
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);

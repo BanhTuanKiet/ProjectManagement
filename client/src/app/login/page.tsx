@@ -17,18 +17,6 @@ export default function Login() {
 
     const router = useRouter()
 
-    // const signinGG = async () => {
-    //     const urlParams = new URLSearchParams(window.location.search);
-    //     const token = urlParams.get("token");
-
-    //     let apiUrl = "http://localhost:5144/users/signin-google";
-    //     if (token) {
-    //         apiUrl += `?token=${token}`;
-    //     }
-
-    //     window.location.href = apiUrl;
-    // }
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {

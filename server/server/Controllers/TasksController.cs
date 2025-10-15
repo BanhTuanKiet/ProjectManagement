@@ -204,7 +204,7 @@ namespace server.Controllers
 
             string oldStatus = task.Status;
             string newStatus = updates["status"]?.ToString() ?? task.Status;
-
+            
             Models.Task updatedTask = await _tasksService.UpdateTaskStatus(taskId, newStatus);
 
             if (updatedTask.Status != newStatus || updatedTask == null)
@@ -224,8 +224,11 @@ namespace server.Controllers
                 CreatedId = userId,
                 Type = "task"
             };
+            
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
             await _notificationsService.SaveNotification(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
             await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
 
             return Ok(new { message = "Update task successful!" });
