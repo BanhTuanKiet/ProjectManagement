@@ -6,11 +6,13 @@ import { useParams } from 'next/navigation'
 import type { ParamValue } from 'next/dist/server/request/params'
 import TaskDetailModal from '../TaskDetailModal'
 import BacklogContent from './BacklogSections'
+import { useProject } from '@/app/(context)/ProjectContext'
+import SprintCard from '../SprintCard'
 
 interface WorkItem { id: number; key: string; title: string; status: 'TO DO' | 'IN PROGRESS' | 'DONE'; assignee?: string; assigneeColor?: string; sprintId?: number | null }
 interface Sprint { sprintId: number; name: string; projectId: number; status?: 'active' | 'planned' | 'completed'; workItems: WorkItem[] }
 
-export default function BacklogView({ projectId }: { projectId: ParamValue }) {
+export default function BacklogView() {
     const [sprints, setSprints] = useState<Sprint[]>([])
     const [backlogItems, setBacklogItems] = useState<WorkItem[]>([])
     const [expandedSprints, setExpandedSprints] = useState<Set<string>>(new Set(['backlog']))
@@ -20,20 +22,20 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
     const [isCreating, setIsCreating] = useState<false | number | 'backlog'>(false)
     const [newTaskTitles, setNewTaskTitles] = useState<{ [key: string]: string }>({})
-    const { project_name } = useParams<{ project_name: string }>()
+    const { project_name } = useProject()
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const scrollSpeed = useRef(0)
     const scrollFrame = useRef<number | null>(null)
     const footerRef = useRef<HTMLDivElement>(null);
 
 
-    useEffect(() => { if (projectId) fetchData() }, [projectId])
+    useEffect(() => { if (project_name) fetchData() }, [project_name])
 
     const fetchData = async () => {
         const [sprintRes, backlogRes, taskRes] = await Promise.all([
-            axios.get(`/sprints/${projectId}`),
-            axios.get(`/backlogs/${projectId}`),
-            axios.get(`/tasks/${projectId}/list`)
+            axios.get(`/sprints/${project_name}`),
+            axios.get(`/backlogs/${project_name}`),
+            axios.get(`/tasks/${project_name}/list`)
         ])
         const allTasks: WorkItem[] = taskRes.data.map((t: any) => ({
             id: t.taskId, key: t.key || `TASK-${t.taskId}`, title: t.title, status: (t.status || 'TO DO').toUpperCase(), sprintId: t.sprintId
@@ -100,7 +102,7 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
 
     const handleUpdateTask = async (taskId: number) => {
         try {
-            await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, {
+            await axios.patch(`/tasks/${project_name}/tasks/${taskId}/update`, {
                 title: editingTitle,
             });
 
@@ -142,7 +144,7 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
         if (movedTask.sprintId === sprintId) return;
 
         try {
-            await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, { sprintId });
+            await axios.patch(`/tasks/${project_name}/tasks/${taskId}/update`, { sprintId });
 
             // Xác định task đang nằm ở đâu (Backlog hay Sprint khác)
             setSprints(prev =>
@@ -173,7 +175,7 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
 
         try {
             console.log("🔹PATCH sending:", { sprintId: -1 });
-            await axios.patch(`/tasks/${projectId}/tasks/${taskId}/update`, { sprintId: -1 });
+            await axios.patch(`/tasks/${project_name}/tasks/${taskId}/update`, { sprintId: -1 });
 
             // Cập nhật UI tại client
             setSprints(prev =>
@@ -267,6 +269,7 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
 
     return (
         <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm overflow-hidden">
+            <SprintCard />
             <div
                 ref={scrollContainerRef}
                 className="flex flex-col overflow-y-auto bg-white border rounded-lg shadow-sm"
@@ -291,14 +294,12 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
                 </button>
             </div>
 
-            {selectedTaskId && (
+            {/* {selectedTaskId && (
                 <TaskDetailModal
-                    projectId={Number(projectId)}
                     taskId={selectedTaskId}
                     onClose={() => setSelectedTaskId(null)}
                 />
-            )}
-
+            )} */}
         </div>
     )
 }

@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <ProjectHeader sidebarTrigger={<SidebarTrigger />} />
                 <div className="flex flex-1 overflow-hidden">
                     <SidebarCustom className="mt-13" />
-                    <main className="flex-1 overflow-auto bg-gray-50">
+                    <main className="flex-1 overflow-auto bg-gray-50 ">
                         {children}
                     </main>
                 </div>

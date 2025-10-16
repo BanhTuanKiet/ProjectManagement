@@ -28,7 +28,7 @@ namespace server.Controllers
             var comments = await _commentService.GetCommentsByTaskIdAsync(taskId);
 
             if (comments == null || !comments.Any())
-                throw new ErrorException(404, "No comments found for this task.");
+                return Ok();
 
             return Ok(comments);
         }
