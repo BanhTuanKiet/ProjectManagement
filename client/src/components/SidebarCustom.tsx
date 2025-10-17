@@ -203,25 +203,6 @@ export function SidebarCustom({ className }: { className?: string }) {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-
-            {/* Footer with User Profile */}
-            <SidebarFooter className="border-t border-border/40 p-3 bg-background/50 backdrop-blur-sm">
-                <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/60 transition-all duration-200 cursor-pointer group">
-                    <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30">
-                            NA
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-background rounded-full" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">Nguyễn Văn A</p>
-                        <p className="text-xs text-muted-foreground truncate">nguyenvana@example.com</p>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-accent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Settings className="h-4 w-4" />
-                    </Button>
-                </div>
-            </SidebarFooter>
         </Sidebar>
     )
 }
