@@ -32,7 +32,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                         <span className="text-gray-900 font-medium">Jira</span>
                     </div>
                 </div>
-                <div className="flex-1 w-lg mx-8">
+                {/* <div className="flex-1 w-lg mx-8">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-6" />
                         <Input
@@ -40,7 +40,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                             className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:bg-white"
                         />
                     </div>
-                </div>
+                </div> */}
                 <div className="flex items-center gap-5 relative">
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                         <Plus className="h-4 w-4 mr-2" />

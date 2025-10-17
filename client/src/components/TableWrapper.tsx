@@ -108,7 +108,7 @@ export default function TableWrapper({
                 projectId,
                 taskId: parentId,
                 title: newSubSummary,
-                status: "To Do",
+                status: "Todo",
             })
             const created = mapApiTaskToTask(res.data)
             handleCellEdit(parentId, "subtasks", [...(tasks.find((t) => t.id === parentId)?.subtasks || []), created])

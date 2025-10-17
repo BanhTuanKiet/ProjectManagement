@@ -24,6 +24,7 @@ import ListPage from '@/components/ListPage'
 import axios from '@/config/axiosConfig'
 import BacklogView from '@/components/BacklogView/BacklogView'
 import { useProject } from '@/app/(context)/ProjectContext'
+import Summary from '@/components/Summary'
 
 interface NavigationTab {
     id: string
@@ -44,7 +45,7 @@ const navigationTabs: NavigationTab[] = [
 ]
 
 export default function ProjectInterface() {
-    const [activeTab, setActiveTab] = useState('calendar')
+    const [activeTab, setActiveTab] = useState('summary')
     const [tasks, setTasks] = useState<BasicTask[]>([])
     const { project_name } = useProject()
 
@@ -68,14 +69,15 @@ export default function ProjectInterface() {
     }, [project_name])
 
     const views: Record<string, React.ReactNode> = {
-        backlog: <BacklogView projectId={project_name?.toString()} />,
+        summary: <Summary />,
+        backlog: <BacklogView />,
         calendar: <CalendarView />,
         board: <BoardView />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
     }
 
     return (
-        <div className="h-screen flex flex-col  p-[30px] bg-gray-50">
+        <div className="h-screen flex flex-col p-[30px] py-0 bg-gray-50">
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -137,7 +139,7 @@ export default function ProjectInterface() {
             </div>
 
             {/* Nội dung cuộn được */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-0 bg-gray-50">
                 {views[activeTab]}
             </div>
         </div>

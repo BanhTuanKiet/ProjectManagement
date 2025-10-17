@@ -75,7 +75,7 @@ namespace server.Controllers
             var files = await _fileService.GetFilesByTaskIdAsync(taskId);
 
             if (files == null || !files.Any())
-                throw new ErrorException(404, "No files found for this task.");
+                return Ok();
 
             return Ok(files);
         }

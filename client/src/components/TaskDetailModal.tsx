@@ -14,10 +14,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { TaskDetail } from "@/utils/ITask"
 import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils"
 import * as signalR from "@microsoft/signalr"
-import { usePresence } from "@/app/(context)/OnlineMembers"
 import ColoredAvatar from "./ColoredAvatar"
 import type { ActiveUser } from "@/utils/IUser"
 import { Trash } from "lucide-react";
+import { useProject } from "@/app/(context)/ProjectContext";
+import { useUser } from "@/app/(context)/UserContext";
 
 interface Comment {
     commentId: number
@@ -30,11 +31,9 @@ interface Comment {
 }
 
 export default function TaskDetailModal({
-    projectId,
     taskId,
     onClose,
 }: {
-    projectId: number,
     taskId: number,
     onClose: () => void
 }) {
@@ -45,7 +44,8 @@ export default function TaskDetailModal({
     const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([])
     const [comments, setComments] = useState<Comment[]>([])
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
-    const { tokenStored } = usePresence()
+    const { user } = useUser()
+    const { project_name } = useProject()
     const [files, setFiles] = useState<any[]>([]);
     const [previewFile, setPreviewFile] = useState<any | null>(null);
 
@@ -53,7 +53,7 @@ export default function TaskDetailModal({
     useEffect(() => {
         const fetchTaskDetail = async () => {
             try {
-                const response = await axios.get(`/tasks/detail/${projectId}/${taskId}`)
+                const response = await axios.get(`/tasks/detail/${project_name}/${taskId}`)
                 setTask(response.data)
             } catch (error) {
                 console.error("Fetch task detail error:", error)
@@ -71,15 +71,15 @@ export default function TaskDetailModal({
 
         fetchTaskDetail()
         fetchComments()
-    }, [projectId, taskId])
+    }, [project_name, taskId])
 
     // setup SignalR connection
     useEffect(() => {
-        if (!tokenStored) return
+        if (!user) return
 
         const conn = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5144/hubs/task", {
-                accessTokenFactory: () => tokenStored,
+                accessTokenFactory: () => user.token,
             })
             .withAutomaticReconnect()
             .build()
@@ -92,7 +92,7 @@ export default function TaskDetailModal({
                 conn.stop().catch(() => { /* ignore */ })
             }
         }
-    }, [tokenStored])
+    }, [user])
 
     useEffect(() => {
         if (!connection) return
@@ -263,11 +263,11 @@ export default function TaskDetailModal({
                             <span className="text-gray-400">/</span>
                             <div className="flex items-center gap-2">
                                 {/* if you have task.key you can show it here */}
-                                {("key" in task && (task as any).key) ? (
+                                {/* {("key" in task && (task as any).key) ? (
                                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                         {(task as any).key}
                                     </Badge>
-                                ) : null}
+                                ) : null} */}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -637,7 +637,7 @@ export default function TaskDetailModal({
                                                     <label className="text-xs font-medium text-gray-700 block mb-2">Due date</label>
                                                     <button className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2">
                                                         <Calendar className="h-4 w-4" />
-                                                        {("deadline" in task ? (task as any).deadline : null) || "Add due date"}
+                                                        {task.deadline ?? "Add due date"}
                                                     </button>
                                                 </div>
 
