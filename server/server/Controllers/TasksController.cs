@@ -173,7 +173,7 @@ namespace server.Controllers
             return Ok(new { message = "Update successful" });
         }
 
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
@@ -244,5 +244,22 @@ namespace server.Controllers
             var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
             return Ok(tasks);
         }
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPost("restore/{taskId}")]
+        public async Task<IActionResult> RestoreTask(int taskId)
+        {
+            try
+            {
+                var restoredTask = await _tasksService.RestoreTaskFromHistory(taskId);
+
+                // Optional: gửi notification hoặc signalR
+                return Ok(new { message = "Restore successful", task = restoredTask });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }

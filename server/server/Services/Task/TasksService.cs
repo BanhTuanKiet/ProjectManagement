@@ -30,7 +30,7 @@ namespace server.Services.Project
                 .Include(t => t.Assignee)
                 .Include(t => t.CreatedByNavigation)
                 .Where(t => t.ProjectId == projectId);
- 
+
             if (month.HasValue)
                 query = query.Where(t => t.CreatedAt.Month == month);
 
@@ -38,7 +38,7 @@ namespace server.Services.Project
                 query = query.Where(t => t.CreatedAt.Year == year);
 
             if (!string.IsNullOrEmpty(filters.status) && filters.status != "all")
-                    query = query.Where(t => t.Status == filters.status);
+                query = query.Where(t => t.Status == filters.status);
 
             if (!string.IsNullOrEmpty(filters.assignee) && filters.assignee != "all")
                 query = query.Where(t => t.Assignee.UserName == filters.assignee);
@@ -228,6 +228,63 @@ namespace server.Services.Project
             var tasks = await query.ToListAsync();
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
+       public async Task<Models.Task> RestoreTaskFromHistory(int taskId)
+{
+    using var conn = _context.Database.GetDbConnection();
+    await conn.OpenAsync();
+    using var tran = await conn.BeginTransactionAsync();
+    using var cmd = conn.CreateCommand();
+    cmd.Transaction = tran;
+
+    try
+    {
+        // Tắt trigger
+        cmd.CommandText = "DISABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
+        await cmd.ExecuteNonQueryAsync();
+
+        // Bật IDENTITY_INSERT
+        cmd.CommandText = "SET IDENTITY_INSERT Tasks ON;";
+        await cmd.ExecuteNonQueryAsync();
+
+        // Insert dữ liệu từ TaskHistory (có SprintId, BacklogId)
+        cmd.CommandText = @"
+            INSERT INTO Tasks 
+            (TaskId, ProjectId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt)
+            SELECT 
+                TaskId, ProjectHistoryId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt
+            FROM TaskHistory
+            WHERE TaskId = @taskId;
+        ";
+        var param = cmd.CreateParameter();
+        param.ParameterName = "@taskId";
+        param.Value = taskId;
+        cmd.Parameters.Add(param);
+
+        await cmd.ExecuteNonQueryAsync();
+
+        // Tắt IDENTITY_INSERT
+        cmd.CommandText = "SET IDENTITY_INSERT Tasks OFF;";
+        cmd.Parameters.Clear();
+        await cmd.ExecuteNonQueryAsync();
+
+        // Bật lại trigger
+        cmd.CommandText = "ENABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
+        await cmd.ExecuteNonQueryAsync();
+
+        await tran.CommitAsync();
+
+        var restoredTask = await _context.Tasks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+        return restoredTask ?? throw new Exception("Restore failed: Task not found.");
+    }
+    catch (Exception ex)
+    {
+        await tran.RollbackAsync();
+        throw new Exception($"Restore failed for TaskId {taskId}.", ex);
+    }
+}
 
     }
 }

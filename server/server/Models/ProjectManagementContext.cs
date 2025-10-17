@@ -288,15 +288,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.CreatedBy).HasMaxLength(128);
             entity.Property(e => e.Name).HasMaxLength(300);
 
-            entity.HasOne(d => d.ChangedByNavigation).WithMany(p => p.ProjectHistories)
-                .HasForeignKey(d => d.ChangedBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ProjectHistory_ChangedBy");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.ProjectHistories)
-                .HasForeignKey(d => d.ProjectId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_ProjectHistory_Project");
+            entity.Ignore(e => e.ChangedByNavigation);
+            entity.Ignore(e => e.Project);
         });
 
         modelBuilder.Entity<ProjectMember>(entity =>
@@ -445,23 +438,11 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.Title).HasMaxLength(300);
 
-            entity.HasOne(d => d.Assignee).WithMany(p => p.TaskHistoryAssignees)
-                .HasForeignKey(d => d.AssigneeId)
-                .HasConstraintName("FK_TaskHistory_Assignee");
-
-            entity.HasOne(d => d.ChangedByNavigation).WithMany(p => p.TaskHistoryChangedByNavigations)
-                .HasForeignKey(d => d.ChangedBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_TaskHistory_ChangedBy");
-
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TaskHistoryCreatedByNavigations)
-                .HasForeignKey(d => d.CreatedBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_TaskHistory_CreatedBy");
-
-            entity.HasOne(d => d.Task).WithMany(p => p.TaskHistories)
-                .HasForeignKey(d => d.TaskId)
-                .HasConstraintName("FK_TaskHistory_Task");
+            // Giữ các ID nhưng không tạo ràng buộc FK
+            entity.Ignore(e => e.Assignee);
+            entity.Ignore(e => e.ChangedByNavigation);
+            entity.Ignore(e => e.CreatedByNavigation);
+            entity.Ignore(e => e.Task);
         });
 
         modelBuilder.Entity<ProjectInvitations>(entity =>
@@ -501,8 +482,13 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             //       .OnDelete(DeleteBehavior.Cascade);
         });
 
-
         OnModelCreatingPartial(modelBuilder);
+        modelBuilder.Entity<Task>()
+            .ToTable(tb => tb.HasTrigger("trg_TaskHistory_Snapshot"));
+
+        modelBuilder.Entity<Project>()
+            .ToTable(tb => tb.HasTrigger("trg_ProjectHistory_Snapshot"));
+
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

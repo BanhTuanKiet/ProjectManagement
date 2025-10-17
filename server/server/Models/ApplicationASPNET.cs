@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace server.Models
 {
@@ -26,6 +28,7 @@ namespace server.Models
         //ProjectFileSnapshot
         public virtual ICollection<ProjectFileSnapshot> ProjectFileSnapshots { get; set; } = new List<ProjectFileSnapshot>();
         //ProjectHistory
+        [NotMapped]
         public virtual ICollection<ProjectHistory> ProjectHistories { get; set; } = new List<ProjectHistory>();
         //ProjectMember
         public virtual ICollection<ProjectMember> ProjectMembers { get; set; } = new List<ProjectMember>();
@@ -35,8 +38,11 @@ namespace server.Models
         //SubTask
         public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
         //TaskHistory
+        [NotMapped]
         public virtual ICollection<TaskHistory> TaskHistoryAssignees { get; set; } = new List<TaskHistory>();
+        [NotMapped]
         public virtual ICollection<TaskHistory> TaskHistoryCreatedByNavigations { get; set; } = new List<TaskHistory>();
+        [NotMapped]
         public virtual ICollection<TaskHistory> TaskHistoryChangedByNavigations { get; set; } = new List<TaskHistory>();
     }
 
