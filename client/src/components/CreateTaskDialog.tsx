@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import axios from "@/config/axiosConfig";
-import { useParams } from 'next/navigation'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import ColoredAvatar from "./ColoredAvatar";
+import { useProject } from "@/app/(context)/ProjectContext"
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -17,22 +19,24 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
     priority: 1,
     deadline: "",
   });
+  const { project_name, members } = useProject()
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-  const { project_name } = useParams()
+
   const handleSubmit = async () => {
     try {
       const projectId = project_name
-      await axios.post(`/tasks/view/${projectId}`, {
+      const response = await axios.post(`/tasks/view/${projectId}`, {
         ...form,
         priority: Number(form.priority),
         deadline: form.deadline ? new Date(form.deadline).toLocaleString('sv-SE').replace(' ', 'T') : null,
       });
-      onClose(); 
+      console.log("Task created:", response.data);
+      onClose();
     } catch (error) {
       console.error(error);
     }
@@ -70,13 +74,6 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
             onChange={handleChange}
             className="w-full border rounded px-2 py-1"
           />
-          <input
-            name="assigneeId"
-            placeholder="Assignee ID"
-            value={form.assigneeId}
-            onChange={handleChange}
-            className="w-full border rounded px-2 py-1"
-          />
           <select
             name="priority"
             value={form.priority}
@@ -94,6 +91,28 @@ export default function CreateTaskDialog({ open, onClose }: CreateTaskDialogProp
             onChange={handleChange}
             className="w-full border rounded px-2 py-1"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Assignee</label>
+          <Select
+            value={form.assigneeId}
+            onValueChange={(value) => setForm({ ...form, assigneeId: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select assignee" />
+            </SelectTrigger>
+            <SelectContent>
+              {members?.map((member) => (
+                <SelectItem key={member.userId} value={member.userId}>
+                  <div className="flex items-center gap-2">
+                    <ColoredAvatar id={member.userId} name={member.name} size="sm" />
+                    <span>{member.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Actions */}
