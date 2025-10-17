@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import WordOn from "@/components/ForYouTab/WordOn"
+import WorkOn from "@/components/ForYouTab/WorkOn"
 import Assign from "@/components/ForYouTab/Task"
 
 interface MainTab {
@@ -11,9 +11,9 @@ interface MainTab {
 }
 
 export default function Page() {
-    const [activeTab, setActiveTab] = useState<string>("word")
+    const [activeTab, setActiveTab] = useState<string>("")
     const tabs: MainTab[] = [
-        { name: "Worked on", tab: "word" },
+        { name: "Worked on", tab: "" },
         { name: "Task", tab: "task", count: 2 },
         { name: "Projects", tab: "project", count: 3 },
         { name: "Mentions", tab: "mention", count: 4 },
@@ -41,7 +41,7 @@ export default function Page() {
             if (hash && tabs.some(t => t.name === hash)) {
                 setActiveTab(hash)
             } else if (!hash) {
-                setActiveTab("word")
+                setActiveTab("")
             }
         }
 
@@ -51,9 +51,9 @@ export default function Page() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case "word":
+            case "":
                 return (
-                    <WordOn />
+                    <WorkOn />
                 )
 
             case "task": 
@@ -74,7 +74,7 @@ export default function Page() {
 
     return (
         <div className="min-h-screen bg-background">
-            <div className="max-w-[1400px] mx-auto px-6 py-4 space-y-10">
+            <div className="max-w-[1400px] mx-auto px-10 py-4 space-y-10">
                 <section className="space-y-6">
                     <div className="border-b border-border">
                         <nav className="flex flex-wrap gap-6">

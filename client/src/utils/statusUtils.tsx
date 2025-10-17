@@ -53,18 +53,24 @@ export const getRoleBadge = (role: string) => {
     }
 }
 
-export const getPriorityBadge = (priority: string) => {
-    switch (priority) {
+export const getPriorityBadge = (priority: string | number) => {
+    const level = {
+        1: "high",
+        2: "medium",
+        3: "low"
+    }[Number(priority)]
+
+    switch (level) {
         case "high":
-            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-400 text-red-800 dark:bg-red-900 dark:text-red-200"
         case "medium":
-            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-400 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
         case "low":
-            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-        case "all": // dùng khi filter, có thể style neutral
-            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
+            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-400 text-green-800 dark:bg-green-900 dark:text-green-200"
+        case "all":
+            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-400 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
         default:
-            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+            return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-400 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
     }
 }
 
@@ -154,4 +160,9 @@ export const getStatusColor = (status: string) => {
         default:
             return "bg-gray-100 text-gray-700 hover:bg-gray-100"
     }
+}
+
+export const getPriorityLabel = (priority: number) => {
+    const labels = { 1: "High", 2: "Medium", 3: "Low" }
+    return labels[priority as keyof typeof labels] || `Priority ${priority}`
 }

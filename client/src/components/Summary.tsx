@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
     Calendar,
     Users,
@@ -14,9 +14,6 @@ import {
     Plus,
     Settings,
     UserPlus,
-    Briefcase,
-    Star,
-    UserIcon,
     ChevronDown,
 } from "lucide-react"
 import {
@@ -27,6 +24,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "./ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useProject } from "@/app/(context)/ProjectContext"
+import { ProjectBasic } from "@/utils/IProject"
+import { formatDate } from "@/utils/dateUtils"
+import { useTask } from "@/app/(context)/TaskContext"
+import { BasicTask } from "@/utils/ITask"
+import { getPriorityBadge, getPriorityLabel, getTaskStatusBadge } from "@/utils/statusUtils"
+import ColoredAvatar from "./ColoredAvatar"
+import MemberList from "./MemberList"
+
 interface Member {
     id: string
     userName: string
@@ -47,132 +53,58 @@ interface TaskStats {
     expired: number
 }
 
-interface ProjectData {
-    id: string
-    name: string
-    description: string
-    createdById: string
-    createdAt: string
-    members: Member[]
-    taskStats: TaskStats[]
-    totalTasks: number
-    completedTasks: number
-}
-
-const mockProject: ProjectData = {
-    id: "1",
-    name: "E-Commerce Platform Redesign",
-    description:
-        "Complete redesign of the e-commerce platform with focus on user experience, performance optimization, and mobile responsiveness.",
-    createdById: "user-001",
-    createdAt: "2025-01-15T08:00:00Z",
-    totalTasks: 52,
-    completedTasks: 28,
-    members: [
-        {
-            id: "1",
-            userName: "Nguyễn Văn A",
-            email: "nguyenvana@example.com",
-            phoneNumber: "+84 912 345 678",
-            role: "Project Manager",
-            addedBy: "System",
-            joinedAt: "2025-01-15T08:00:00Z",
-        },
-        {
-            id: "2",
-            userName: "Trần Thị B",
-            email: "tranthib@example.com",
-            phoneNumber: "+84 923 456 789",
-            role: "Leader",
-            addedBy: "Nguyễn Văn A",
-            joinedAt: "2025-01-16T10:30:00Z",
-        },
-        {
-            id: "3",
-            userName: "Lê Văn C",
-            email: "levanc@example.com",
-            phoneNumber: "+84 934 567 890",
-            role: "Leader",
-            addedBy: "Nguyễn Văn A",
-            joinedAt: "2025-01-18T14:20:00Z",
-        },
-        {
-            id: "4",
-            userName: "Phạm Thị D",
-            email: "phamthid@example.com",
-            phoneNumber: "+84 945 678 901",
-            role: "Member",
-            addedBy: "Trần Thị B",
-            joinedAt: "2025-01-20T09:15:00Z",
-        },
-        {
-            id: "5",
-            userName: "Hoàng Văn E",
-            email: "hoangvane@example.com",
-            phoneNumber: "+84 956 789 012",
-            role: "Member",
-            addedBy: "Trần Thị B",
-            joinedAt: "2025-01-22T11:45:00Z",
-        },
-        {
-            id: "6",
-            userName: "Đặng Thị F",
-            email: "dangthif@example.com",
-            phoneNumber: "+84 967 890 123",
-            role: "Member",
-            addedBy: "Lê Văn C",
-            joinedAt: "2025-01-25T16:00:00Z",
-        },
-    ],
-    taskStats: [
-        { priority: 1, total: 15, todo: 2, inProgress: 4, done: 7, cancel: 1, expired: 1 },
-        { priority: 2, total: 20, todo: 3, inProgress: 5, done: 10, cancel: 1, expired: 1 },
-        { priority: 3, total: 17, todo: 5, inProgress: 3, done: 11, cancel: 2, expired: 1 },
-    ],
-}
-
-const statusConfig = {
-    todo: { label: "To Do", icon: AlertCircle, color: "text-gray-500", bgColor: "bg-gray-400" },
-    inProgress: { label: "In Progress", icon: Clock, color: "text-blue-500", bgColor: "bg-blue-500" },
-    done: { label: "Done", icon: CheckCircle2, color: "text-green-500", bgColor: "bg-green-500" },
-    cancel: { label: "Cancelled", icon: XCircle, color: "text-red-500", bgColor: "bg-red-400" },
-    expired: { label: "Expired", icon: CalendarX, color: "text-orange-500", bgColor: "bg-orange-400" },
-}
-
 export default function Summary() {
-    const [project] = useState<ProjectData>(mockProject)
+    const { projects, project_name, members } = useProject()
+    const [project, setProject] = useState<ProjectBasic | undefined>()
     const [activeTab, setActiveTab] = useState<"overview" | "members">("overview")
+    const { tasks } = useTask()
+    const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
 
-    const overallProgress = Math.round((project.completedTasks / project.totalTasks) * 100)
-    const createdDate = new Date(project.createdAt).toLocaleDateString("vi-VN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    })
-
-    const getPriorityLabel = (priority: number) => {
-        const labels = { 1: "High", 2: "Medium", 3: "Low" }
-        return labels[priority as keyof typeof labels] || `Priority ${priority}`
-    }
-
-    const getPriorityColor = (priority: number) => {
-        const colors = {
-            1: "bg-red-500",
-            2: "bg-orange-500",
-            3: "bg-yellow-500",
+    useEffect(() => {
+        if (project_name) {
+            const projectTemp = projects.find(p => p.projectId === Number(project_name))
+            if (projectTemp) setProject(projectTemp)
         }
-        return colors[priority as keyof typeof colors] || "bg-gray-500"
-    }
+    }, [project_name, projects])
 
-    const formatDateTime = (dateString: string) => {
-        return new Date(dateString).toLocaleString("vi-VN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        })
-    }
+    useEffect(() => {
+        if (project && tasks) setMockTasks(tasks)
+    }, [project, tasks])
+
+    const projectManager = members?.find(m => m.isOwner)
+    const projectMembers = members?.filter(m => !m.isOwner)
+
+    const totalTasks = mockTasks.length ?? 0
+    const doneTasks = mockTasks.filter(t => t.status.toLocaleLowerCase() === "done").length
+    const overallProgress = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0
+    const taskStatistics = Object.values(
+        mockTasks.reduce<Record<number, TaskStats>>((acc, task) => {
+            const p = task.priority
+            if (!acc[p]) {
+                acc[p] = {
+                    priority: p,
+                    total: 0,
+                    todo: 0,
+                    inProgress: 0,
+                    done: 0,
+                    cancel: 0,
+                    expired: 0
+                }
+            }
+
+            acc[p].total += 1
+
+            const status = task.status.toLowerCase()
+            console.log(status)
+            if (status === "todo") acc[p].todo += 1
+            else if (status === "in progress") acc[p].inProgress += 1
+            else if (status === "done") acc[p].done += 1
+            else if (status === "cancel") acc[p].cancel += 1
+            else if (status === "expired") acc[p].expired += 1
+
+            return acc
+        }, {} as Record<number, TaskStats>)
+    )
 
     const roles = [
         { label: "Project Manager", value: "Project Manager", color: "bg-gray-100 text-gray-800" },
@@ -180,30 +112,26 @@ export default function Summary() {
         { label: "Member", value: "Member", color: "bg-green-100 text-green-800" },
     ]
 
-
     return (
         <div className="min-h-screen bg-gray-50 p-0">
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Project Header */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                                <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                                <h1 className="text-2xl font-bold text-gray-900">{project?.name}</h1>
                                 <button className="text-gray-400 hover:text-gray-600">
                                     <Settings size={20} />
                                 </button>
                             </div>
-                            <p className="text-gray-600 leading-relaxed mb-4">{project.description}</p>
+                            <p className="text-gray-600 leading-relaxed mb-4">{project?.description}</p>
                             <div className="flex items-center gap-6 text-sm text-gray-500">
                                 <div className="flex items-center gap-2">
                                     <Calendar size={16} />
-                                    <span>Created {createdDate}</span>
+                                    <span>Created {formatDate(project?.startDate ?? "")}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Users size={16} />
-                                    <span>{project.members.length} members</span>
-                                </div>
+
+                                {projectManager && projectMembers && <MemberList object={{ projectManager, projectMembers }} />}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -217,7 +145,6 @@ export default function Summary() {
                         </div>
                     </div>
 
-                    {/* Overall Progress Bar */}
                     <div className="mt-6 pt-6 border-t border-gray-200">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-700">Overall Progress</span>
@@ -230,13 +157,12 @@ export default function Summary() {
                             />
                         </div>
                         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                            <span>{project.completedTasks} completed</span>
-                            <span>{project.totalTasks - project.completedTasks} remaining</span>
+                            <span>{doneTasks} done</span>
+                            <span>{totalTasks - doneTasks} remaining</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
                 <div className="border-b border-gray-200 bg-white rounded-t-lg">
                     <div className="flex gap-8 px-6">
                         <button
@@ -260,152 +186,146 @@ export default function Summary() {
                             Members
                         </button>
                     </div>
-                </div>
 
-                {/* Content */}
-                {activeTab === "overview" ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Task Statistics by Priority */}
-                        <div className="lg:col-span-2 space-y-4">
-                            <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
+                    {activeTab === "overview" ? (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
+                            <div className="lg:col-span-2 space-y-4">
+                                <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
 
-                            {project.taskStats.map((stat) => {
-                                const completionRate = Math.round((stat.done / stat.total) * 100)
+                                {taskStatistics.map((stat) => {
+                                    const completionRate = Math.round((stat.done / stat.total) * 100)
 
-                                return (
-                                    <div key={stat.priority} className="bg-white rounded-lg border border-gray-200 p-5">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-3 h-3 rounded-full ${getPriorityColor(stat.priority)}`} />
-                                                <h3 className="font-semibold text-gray-900">{getPriorityLabel(stat.priority)}</h3>
-                                                <span className="text-sm text-gray-500">({stat.total} tasks)</span>
+                                    return (
+                                        <div key={stat.priority} className="bg-white rounded-lg border border-gray-200 p-5">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-3 h-3 rounded-full ${getPriorityBadge(stat.priority)}`} />
+                                                    <h3 className="font-semibold text-gray-900">{getPriorityLabel(stat.priority)}</h3>
+                                                    <span className="text-sm text-gray-500">({stat.total} tasks)</span>
+                                                </div>
+                                                <span className="text-sm font-medium text-gray-700">{completionRate}%</span>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">{completionRate}%</span>
-                                        </div>
 
-                                        {/* Progress Bar with 5 statuses */}
-                                        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
-                                            <div className="h-full flex">
-                                                <div
-                                                    className={statusConfig.done.bgColor}
-                                                    style={{ width: `${(stat.done / stat.total) * 100}%` }}
-                                                />
-                                                <div
-                                                    className={statusConfig.inProgress.bgColor}
-                                                    style={{ width: `${(stat.inProgress / stat.total) * 100}%` }}
-                                                />
-                                                <div
-                                                    className={statusConfig.todo.bgColor}
-                                                    style={{ width: `${(stat.todo / stat.total) * 100}%` }}
-                                                />
-                                                <div
-                                                    className={statusConfig.cancel.bgColor}
-                                                    style={{ width: `${(stat.cancel / stat.total) * 100}%` }}
-                                                />
-                                                <div
-                                                    className={statusConfig.expired.bgColor}
-                                                    style={{ width: `${(stat.expired / stat.total) * 100}%` }}
-                                                />
+                                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
+                                                <div className="h-full flex">
+                                                    <div
+                                                        className="bg-blue-400"
+                                                        style={{ width: `${(stat.todo / stat.total) * 100}%` }}
+                                                    />
+                                                    <div
+                                                        className="bg-yellow-400"
+                                                        style={{ width: `${(stat.inProgress / stat.total) * 100}%` }}
+                                                    />
+                                                    <div
+                                                        className="bg-green-400"
+                                                        style={{ width: `${(stat.done / stat.total) * 100}%` }}
+                                                    />
+                                                    <div
+                                                        className="bg-orange-300"
+                                                        style={{ width: `${(stat.cancel / stat.total) * 100}%` }}
+                                                    />
+                                                    <div
+                                                        className="bg-red-400"
+                                                        style={{ width: `${(stat.expired / stat.total) * 100}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-5 gap-3">
+                                                {["Todo", "In Progress", "Done", "Cancel", "Expired"].map((status, index) => {
+                                                    const count = stat[status as keyof typeof stat] as number
+
+                                                    return (
+                                                        <div key={index} className="flex flex-col items-center">
+                                                            <span className={getTaskStatusBadge(status)}>
+                                                                {status}
+                                                            </span>
+                                                            <div className="text-sm font-semibold text-gray-900">{count}</div>
+                                                        </div>
+                                                    )
+                                                })}
                                             </div>
                                         </div>
+                                    )
+                                })}
+                            </div>
 
-                                        {/* Status Breakdown - 5 statuses */}
-                                        <div className="grid grid-cols-5 gap-3">
-                                            {Object.entries(statusConfig).map(([key, config]) => {
-                                                const StatusIcon = config.icon
-                                                const count = stat[key as keyof typeof stat] as number
+                            <div className="space-y-4">
+                                <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
 
-                                                return (
-                                                    <div key={key} className="flex flex-col items-center">
-                                                        <StatusIcon size={16} className={config.color} />
-                                                        <div className="text-xs text-gray-500 mt-1 text-center">{config.label}</div>
-                                                        <div className="text-sm font-semibold text-gray-900">{count}</div>
-                                                    </div>
-                                                )
-                                            })}
+                                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-blue-100">Total Tasks</span>
+                                        <BarChart3 size={20} className="text-blue-200" />
+                                    </div>
+                                    <div className="text-3xl font-bold">{totalTasks}</div>
+                                </div>
+
+                                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-green-100">Done</span>
+                                        <CheckCircle2 size={20} className="text-green-200" />
+                                    </div>
+                                    <div className="text-3xl font-bold">{doneTasks}</div>
+                                    <div className="text-sm text-green-100 mt-1">{doneTasks}% of total</div>
+                                </div>
+
+                                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg p-6 text-white">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-blue-100">In Progress</span>
+                                        <Clock size={20} className="text-blue-200" />
+                                    </div>
+                                    <div className="text-3xl font-bold">
+                                        {taskStatistics.reduce((sum, stat) => sum + stat.inProgress, 0)}
+                                    </div>
+                                </div>
+
+                                <div className="bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg p-6 text-white">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-gray-100">To Do</span>
+                                        <AlertCircle size={20} className="text-gray-200" />
+                                    </div>
+                                    <div className="text-3xl font-bold">
+                                        {taskStatistics.reduce((sum, stat) => sum + stat.todo, 0)}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-lg p-4 text-white">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <XCircle size={16} />
+                                            <span className="text-xs text-red-100">Cancelled</span>
+                                        </div>
+                                        <div className="text-2xl font-bold">
+                                            {taskStatistics.reduce((sum, stat) => sum + stat.cancel, 0)}
                                         </div>
                                     </div>
-                                )
-                            })}
-                        </div>
 
-                        {/* Summary Cards */}
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
-
-                            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-blue-100">Total Tasks</span>
-                                    <BarChart3 size={20} className="text-blue-200" />
-                                </div>
-                                <div className="text-3xl font-bold">{project.totalTasks}</div>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-green-100">Done</span>
-                                    <CheckCircle2 size={20} className="text-green-200" />
-                                </div>
-                                <div className="text-3xl font-bold">{project.completedTasks}</div>
-                                <div className="text-sm text-green-100 mt-1">{overallProgress}% of total</div>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg p-6 text-white">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-blue-100">In Progress</span>
-                                    <Clock size={20} className="text-blue-200" />
-                                </div>
-                                <div className="text-3xl font-bold">
-                                    {project.taskStats.reduce((sum, stat) => sum + stat.inProgress, 0)}
-                                </div>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg p-6 text-white">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-100">To Do</span>
-                                    <AlertCircle size={20} className="text-gray-200" />
-                                </div>
-                                <div className="text-3xl font-bold">{project.taskStats.reduce((sum, stat) => sum + stat.todo, 0)}</div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-lg p-4 text-white">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <XCircle size={16} />
-                                        <span className="text-xs text-red-100">Cancelled</span>
-                                    </div>
-                                    <div className="text-2xl font-bold">
-                                        {project.taskStats.reduce((sum, stat) => sum + stat.cancel, 0)}
-                                    </div>
-                                </div>
-
-                                <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg p-4 text-white">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <CalendarX size={16} />
-                                        <span className="text-xs text-orange-100">Expired</span>
-                                    </div>
-                                    <div className="text-2xl font-bold">
-                                        {project.taskStats.reduce((sum, stat) => sum + stat.expired, 0)}
+                                    <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg p-4 text-white">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <CalendarX size={16} />
+                                            <span className="text-xs text-orange-100">Expired</span>
+                                        </div>
+                                        <div className="text-2xl font-bold">
+                                            {taskStatistics.reduce((sum, stat) => sum + stat.expired, 0)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ) : (
-                    /* Members Tab - Table Layout */
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
-                                <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                                    <UserPlus size={16} className="inline mr-1" />
-                                    Invite Member
-                                </button>
+                    ) : (
+                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <div className="p-6 border-b border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
+                                    <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                                        <UserPlus size={16} className="inline mr-1" />
+                                        Invite Member
+                                    </button>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Table */}
-                        <div className="overflow-x-auto">
+                            {/* <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
@@ -491,9 +411,10 @@ export default function Summary() {
                                     })}
                                 </tbody>
                             </table>
+                        </div> */}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     )
