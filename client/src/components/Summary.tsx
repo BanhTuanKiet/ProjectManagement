@@ -5,38 +5,23 @@ import {
     Calendar,
     Users,
     BarChart3,
-    CheckCircle2,
-    Clock,
-    AlertCircle,
-    XCircle,
-    CalendarX,
-    MoreVertical,
     Plus,
     Settings,
-    UserPlus,
-    ChevronDown,
 } from "lucide-react"
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "./ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useProject } from "@/app/(context)/ProjectContext"
 import { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import { useTask } from "@/app/(context)/TaskContext"
-import { BasicTask, TaskStats } from "@/utils/ITask"
-import ColoredAvatar from "./ColoredAvatar"
-import MemberList from "./MemberList"
+import { BasicTask } from "@/utils/ITask"
 import Overview from "./Summary/Overview"
+import { useHash } from "@/hooks/useHash"
+import Members from "./Summary/MemberList"
+import MemberList from "./MemberList"
 
 export default function Summary() {
+    const { hash: activeTab, setHash: setActiveTab } = useHash("")
     const { projects, project_name, members } = useProject()
     const [project, setProject] = useState<ProjectBasic | undefined>()
-    const [activeTab, setActiveTab] = useState<"overview" | "members">("overview")
     const { tasks } = useTask()
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
 
@@ -58,11 +43,24 @@ export default function Summary() {
     const doneTasks = mockTasks.filter(t => t.status.toLocaleLowerCase() === "done").length
     const overallProgress = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0
 
-    const roles = [
-        { label: "Project Manager", value: "Project Manager", color: "bg-gray-100 text-gray-800" },
-        { label: "Leader", value: "Leader", color: "bg-blue-100 text-blue-800" },
-        { label: "Member", value: "Member", color: "bg-green-100 text-green-800" },
-    ]
+    const renderContent = (activeTab: string) => {
+        switch (activeTab) {
+            case "":
+                return <Overview mockTasks={mockTasks} />
+            case "members":
+                if (project) {
+                    return <Members project={project} />
+                }
+            default:
+                return (
+                    <div className="py-12 text-center">
+                        <p className="text-muted-foreground">
+                            No notifications in <strong>{activeTab}</strong>
+                        </p>
+                    </div>
+                )
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-0">
@@ -118,8 +116,8 @@ export default function Summary() {
                 <div className="border-b border-gray-200 bg-white rounded-t-lg">
                     <div className="flex gap-8 px-6">
                         <button
-                            onClick={() => setActiveTab("overview")}
-                            className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "overview"
+                            onClick={() => setActiveTab("")}
+                            className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === ""
                                 ? "border-blue-600 text-blue-600"
                                 : "border-transparent text-gray-500 hover:text-gray-700"
                                 }`}
@@ -139,109 +137,7 @@ export default function Summary() {
                         </button>
                     </div>
 
-                    {activeTab === "overview" ? (
-                        <Overview mockTasks={mockTasks} />
-                    ) : (
-                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                            <div className="p-6 border-b border-gray-200">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
-                                    <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                                        <UserPlus size={16} className="inline mr-1" />
-                                        Invite Member
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            User Name
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Email
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Phone Number
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Role
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Added By
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Joined At
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {project.members.map((member) => {
-                                        return (
-                                            <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
-                                                            {member.userName.charAt(0)}
-                                                        </div>
-                                                        <div className="font-medium text-gray-900">{member.userName}</div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-600">{member.email}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-600">{member.phoneNumber}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div
-                                                        className={`inline-flex items-center gap-2 rounded-lg border text-sm font-medium`}
-                                                    >
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full justify-between bg-transparent"
-                                                                >
-                                                                    {member.role}
-                                                                    <ChevronDown className="h-4 w-4 ml-2" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent className="z-50">
-                                                                {roles.map((s) => (
-                                                                    <DropdownMenuItem key={s.value}>
-                                                                        <Badge className={s.color}>{s.label}</Badge>
-                                                                    </DropdownMenuItem>
-                                                                ))}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-600">{member.addedBy}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-600">{formatDateTime(member.joinedAt)}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                    <button className="text-gray-400 hover:text-gray-600">
-                                                        <MoreVertical size={20} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div> */}
-                        </div>
-                    )}
+                    {renderContent(activeTab)}
                 </div>
             </div>
         </div>
