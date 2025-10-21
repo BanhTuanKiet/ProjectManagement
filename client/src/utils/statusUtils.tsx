@@ -75,12 +75,12 @@ export const getPriorityBadge = (priority: string | number) => {
 }
 
 export const getTaskStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status.toLowerCase().replace(/\s+/g, "")) {
         case "all":
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
         case "todo":
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-        case "in progress":
+        case "inprogress":
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
         case "done":
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
@@ -165,4 +165,11 @@ export const getStatusColor = (status: string) => {
 export const getPriorityLabel = (priority: number) => {
     const labels = { 1: "High", 2: "Medium", 3: "Low" }
     return labels[priority as keyof typeof labels] || `Priority ${priority}`
+}
+
+export const formatTaskStatus = (statusKey: string) => {
+    const words = statusKey.replace(/([A-Z])/g, ' $1').split(/\s+/).filter(Boolean);
+    return words.map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ')
 }

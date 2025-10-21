@@ -28,30 +28,10 @@ import { useProject } from "@/app/(context)/ProjectContext"
 import { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import { useTask } from "@/app/(context)/TaskContext"
-import { BasicTask } from "@/utils/ITask"
-import { getPriorityBadge, getPriorityLabel, getTaskStatusBadge } from "@/utils/statusUtils"
+import { BasicTask, TaskStats } from "@/utils/ITask"
 import ColoredAvatar from "./ColoredAvatar"
 import MemberList from "./MemberList"
-
-interface Member {
-    id: string
-    userName: string
-    email: string
-    phoneNumber: string
-    role: "Project Manager" | "Leader" | "Member"
-    addedBy: string
-    joinedAt: string
-}
-
-interface TaskStats {
-    priority: number
-    total: number
-    todo: number
-    inProgress: number
-    done: number
-    cancel: number
-    expired: number
-}
+import Overview from "./Summary/Overview"
 
 export default function Summary() {
     const { projects, project_name, members } = useProject()
@@ -77,34 +57,6 @@ export default function Summary() {
     const totalTasks = mockTasks.length ?? 0
     const doneTasks = mockTasks.filter(t => t.status.toLocaleLowerCase() === "done").length
     const overallProgress = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0
-    const taskStatistics = Object.values(
-        mockTasks.reduce<Record<number, TaskStats>>((acc, task) => {
-            const p = task.priority
-            if (!acc[p]) {
-                acc[p] = {
-                    priority: p,
-                    total: 0,
-                    todo: 0,
-                    inProgress: 0,
-                    done: 0,
-                    cancel: 0,
-                    expired: 0
-                }
-            }
-
-            acc[p].total += 1
-
-            const status = task.status.toLowerCase()
-            console.log(status)
-            if (status === "todo") acc[p].todo += 1
-            else if (status === "in progress") acc[p].inProgress += 1
-            else if (status === "done") acc[p].done += 1
-            else if (status === "cancel") acc[p].cancel += 1
-            else if (status === "expired") acc[p].expired += 1
-
-            return acc
-        }, {} as Record<number, TaskStats>)
-    )
 
     const roles = [
         { label: "Project Manager", value: "Project Manager", color: "bg-gray-100 text-gray-800" },
@@ -188,131 +140,7 @@ export default function Summary() {
                     </div>
 
                     {activeTab === "overview" ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
-                            <div className="lg:col-span-2 space-y-4">
-                                <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
-
-                                {taskStatistics.map((stat) => {
-                                    const completionRate = Math.round((stat.done / stat.total) * 100)
-
-                                    return (
-                                        <div key={stat.priority} className="bg-white rounded-lg border border-gray-200 p-5">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-3 h-3 rounded-full ${getPriorityBadge(stat.priority)}`} />
-                                                    <h3 className="font-semibold text-gray-900">{getPriorityLabel(stat.priority)}</h3>
-                                                    <span className="text-sm text-gray-500">({stat.total} tasks)</span>
-                                                </div>
-                                                <span className="text-sm font-medium text-gray-700">{completionRate}%</span>
-                                            </div>
-
-                                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
-                                                <div className="h-full flex">
-                                                    <div
-                                                        className="bg-blue-400"
-                                                        style={{ width: `${(stat.todo / stat.total) * 100}%` }}
-                                                    />
-                                                    <div
-                                                        className="bg-yellow-400"
-                                                        style={{ width: `${(stat.inProgress / stat.total) * 100}%` }}
-                                                    />
-                                                    <div
-                                                        className="bg-green-400"
-                                                        style={{ width: `${(stat.done / stat.total) * 100}%` }}
-                                                    />
-                                                    <div
-                                                        className="bg-orange-300"
-                                                        style={{ width: `${(stat.cancel / stat.total) * 100}%` }}
-                                                    />
-                                                    <div
-                                                        className="bg-red-400"
-                                                        style={{ width: `${(stat.expired / stat.total) * 100}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-5 gap-3">
-                                                {["Todo", "In Progress", "Done", "Cancel", "Expired"].map((status, index) => {
-                                                    const count = stat[status as keyof typeof stat] as number
-
-                                                    return (
-                                                        <div key={index} className="flex flex-col items-center">
-                                                            <span className={getTaskStatusBadge(status)}>
-                                                                {status}
-                                                            </span>
-                                                            <div className="text-sm font-semibold text-gray-900">{count}</div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-
-                            <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
-
-                                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-blue-100">Total Tasks</span>
-                                        <BarChart3 size={20} className="text-blue-200" />
-                                    </div>
-                                    <div className="text-3xl font-bold">{totalTasks}</div>
-                                </div>
-
-                                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-green-100">Done</span>
-                                        <CheckCircle2 size={20} className="text-green-200" />
-                                    </div>
-                                    <div className="text-3xl font-bold">{doneTasks}</div>
-                                    <div className="text-sm text-green-100 mt-1">{doneTasks}% of total</div>
-                                </div>
-
-                                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg p-6 text-white">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-blue-100">In Progress</span>
-                                        <Clock size={20} className="text-blue-200" />
-                                    </div>
-                                    <div className="text-3xl font-bold">
-                                        {taskStatistics.reduce((sum, stat) => sum + stat.inProgress, 0)}
-                                    </div>
-                                </div>
-
-                                <div className="bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg p-6 text-white">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-gray-100">To Do</span>
-                                        <AlertCircle size={20} className="text-gray-200" />
-                                    </div>
-                                    <div className="text-3xl font-bold">
-                                        {taskStatistics.reduce((sum, stat) => sum + stat.todo, 0)}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-lg p-4 text-white">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <XCircle size={16} />
-                                            <span className="text-xs text-red-100">Cancelled</span>
-                                        </div>
-                                        <div className="text-2xl font-bold">
-                                            {taskStatistics.reduce((sum, stat) => sum + stat.cancel, 0)}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg p-4 text-white">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <CalendarX size={16} />
-                                            <span className="text-xs text-orange-100">Expired</span>
-                                        </div>
-                                        <div className="text-2xl font-bold">
-                                            {taskStatistics.reduce((sum, stat) => sum + stat.expired, 0)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <Overview mockTasks={mockTasks} />
                     ) : (
                         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                             <div className="p-6 border-b border-gray-200">
