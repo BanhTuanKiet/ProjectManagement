@@ -35,7 +35,7 @@ interface NavigationTab {
 }
 
 const navigationTabs: NavigationTab[] = [
-    { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
+    { id: '', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
     { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'backlog', label: 'Backlog', icon: <Square className="w-4 h-4" /> },
     { id: 'board', label: 'Board', icon: <Square className="w-4 h-4" /> },
@@ -137,7 +137,7 @@ export default function ProjectInterface() {
                         {navigationTabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id === "summary" ? "" : tab.id)}
+                                onClick={() => setActiveTab(tab.id === "" ? "" : tab.id)}
                                 className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                                     ? 'border-blue-500 text-blue-600'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

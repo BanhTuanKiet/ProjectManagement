@@ -1,22 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-    Calendar,
-    Users,
-    BarChart3,
-    Plus,
-    Settings,
-} from "lucide-react"
+import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react"
 import { useProject } from "@/app/(context)/ProjectContext"
-import { ProjectBasic } from "@/utils/IProject"
+import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import { useTask } from "@/app/(context)/TaskContext"
-import { BasicTask } from "@/utils/ITask"
+import type { BasicTask } from "@/utils/ITask"
 import Overview from "./Summary/Overview"
 import { useHash } from "@/hooks/useHash"
 import Members from "./Summary/MemberList"
 import MemberList from "./MemberList"
+import SettingsPopup from "./SettingsPopup"
 
 export default function Summary() {
     const { hash: activeTab, setHash: setActiveTab } = useHash("")
@@ -24,10 +19,11 @@ export default function Summary() {
     const [project, setProject] = useState<ProjectBasic | undefined>()
     const { tasks } = useTask()
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
     useEffect(() => {
         if (project_name) {
-            const projectTemp = projects.find(p => p.projectId === Number(project_name))
+            const projectTemp = projects.find((p) => p.projectId === Number(project_name))
             if (projectTemp) setProject(projectTemp)
         }
     }, [project_name, projects])
@@ -36,12 +32,12 @@ export default function Summary() {
         if (project && tasks) setMockTasks(tasks)
     }, [project, tasks])
 
-    const projectManager = members?.find(m => m.isOwner)
-    const projectMembers = members?.filter(m => !m.isOwner)
+    const projectManager = members?.find((m) => m.isOwner)
+    const projectMembers = members?.filter((m) => !m.isOwner)
 
     const totalTasks = mockTasks.length ?? 0
-    const doneTasks = mockTasks.filter(t => t.status.toLocaleLowerCase() === "done").length
-    const overallProgress = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0
+    const doneTasks = mockTasks.filter((t) => t.status.toLocaleLowerCase() === "done").length
+    const overallProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0
 
     const renderContent = (activeTab: string) => {
         switch (activeTab) {
@@ -70,9 +66,7 @@ export default function Summary() {
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="text-2xl font-bold text-gray-900">{project?.name}</h1>
-                                <button className="text-gray-400 hover:text-gray-600">
-                                    <Settings size={20} />
-                                </button>
+                                <SettingsPopup />
                             </div>
                             <p className="text-gray-600 leading-relaxed mb-4">{project?.description}</p>
                             <div className="flex items-center gap-6 text-sm text-gray-500">

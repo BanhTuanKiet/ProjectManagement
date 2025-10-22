@@ -106,7 +106,7 @@ export default function CalendarView() {
                                                 />
                                             ))}
 
-                                            {tasksForDay.length > 1 && (
+                                                                                        {tasksForDay.length > 1 && (
                                                 <div>
                                                     <div
                                                         className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"
