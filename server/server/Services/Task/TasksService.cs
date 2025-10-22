@@ -6,6 +6,7 @@ using server.Models;
 using server.Services.Task;
 using server.Services.Sprint;
 using server.Services.Backlog;
+using System.Text.Json;
 
 namespace server.Services.Project
 {
@@ -54,6 +55,7 @@ namespace server.Services.Project
             var tasks = await query.ToListAsync();
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
+
         public async Task<List<TaskDTO.BasicTask>> GetBasicTasksById(int projectId)
         {
             List<server.Models.Task> tasks = await _context.Tasks
@@ -174,12 +176,14 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return _mapper.Map<TaskDTO.BasicTask>(task);
         }
+
         public async Task<Models.Task> AddNewTask(Models.Task newTask)
         {
             await _context.Tasks.AddAsync(newTask);
             await _context.SaveChangesAsync();
             return newTask;
         }
+
         public async Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids)
         {
             var tasks = await _context.Tasks
@@ -202,6 +206,7 @@ namespace server.Services.Project
         public async Task<Models.Task?> UpdateTaskStatus(int taskId, string newStatus)
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+
             if (task == null)
                 return null;
 
@@ -228,26 +233,27 @@ namespace server.Services.Project
             var tasks = await query.ToListAsync();
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
-       public async Task<Models.Task> RestoreTaskFromHistory(int taskId)
-{
-    using var conn = _context.Database.GetDbConnection();
-    await conn.OpenAsync();
-    using var tran = await conn.BeginTransactionAsync();
-    using var cmd = conn.CreateCommand();
-    cmd.Transaction = tran;
 
-    try
-    {
-        // Tắt trigger
-        cmd.CommandText = "DISABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
-        await cmd.ExecuteNonQueryAsync();
+        public async Task<Models.Task> RestoreTaskFromHistory(int taskId)
+        {
+            using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            using var tran = await conn.BeginTransactionAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.Transaction = tran;
 
-        // Bật IDENTITY_INSERT
-        cmd.CommandText = "SET IDENTITY_INSERT Tasks ON;";
-        await cmd.ExecuteNonQueryAsync();
+            try
+            {
+                // Tắt trigger
+                cmd.CommandText = "DISABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
+                await cmd.ExecuteNonQueryAsync();
 
-        // Insert dữ liệu từ TaskHistory (có SprintId, BacklogId)
-        cmd.CommandText = @"
+                // Bật IDENTITY_INSERT
+                cmd.CommandText = "SET IDENTITY_INSERT Tasks ON;";
+                await cmd.ExecuteNonQueryAsync();
+
+                // Insert dữ liệu từ TaskHistory (có SprintId, BacklogId)
+                cmd.CommandText = @"
             INSERT INTO Tasks 
             (TaskId, ProjectId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt)
             SELECT 
@@ -255,36 +261,133 @@ namespace server.Services.Project
             FROM TaskHistory
             WHERE TaskId = @taskId;
         ";
-        var param = cmd.CreateParameter();
-        param.ParameterName = "@taskId";
-        param.Value = taskId;
-        cmd.Parameters.Add(param);
+                var param = cmd.CreateParameter();
+                param.ParameterName = "@taskId";
+                param.Value = taskId;
+                cmd.Parameters.Add(param);
 
-        await cmd.ExecuteNonQueryAsync();
+                await cmd.ExecuteNonQueryAsync();
 
-        // Tắt IDENTITY_INSERT
-        cmd.CommandText = "SET IDENTITY_INSERT Tasks OFF;";
-        cmd.Parameters.Clear();
-        await cmd.ExecuteNonQueryAsync();
+                // Tắt IDENTITY_INSERT
+                cmd.CommandText = "SET IDENTITY_INSERT Tasks OFF;";
+                cmd.Parameters.Clear();
+                await cmd.ExecuteNonQueryAsync();
 
-        // Bật lại trigger
-        cmd.CommandText = "ENABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
-        await cmd.ExecuteNonQueryAsync();
+                // Bật lại trigger
+                cmd.CommandText = "ENABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
+                await cmd.ExecuteNonQueryAsync();
 
-        await tran.CommitAsync();
+                await tran.CommitAsync();
 
-        var restoredTask = await _context.Tasks
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TaskId == taskId);
+                var restoredTask = await _context.Tasks
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
-        return restoredTask ?? throw new Exception("Restore failed: Task not found.");
-    }
-    catch (Exception ex)
-    {
-        await tran.RollbackAsync();
-        throw new Exception($"Restore failed for TaskId {taskId}.", ex);
-    }
-}
+                return restoredTask ?? throw new Exception("Restore failed: Task not found.");
+            }
+            catch (Exception ex)
+            {
+                await tran.RollbackAsync();
+                throw new Exception($"Restore failed for TaskId {taskId}.", ex);
+            }
+        }
 
+        public async Task<List<TaskDTO.BasicTask>> FilterTasks(int projectId, Dictionary<string, string> filters, string? keyword)
+        {
+            // 1️⃣ Bắt đầu truy vấn gốc
+            var query = _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .Include(t => t.Sprint)
+                .Where(t => t.ProjectId == projectId)
+                .AsQueryable();
+
+            // 2️⃣ Nếu có keyword, thêm điều kiện tìm kiếm
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                string lowerKeyword = keyword.Trim().ToLower();
+
+                query = query.Where(t =>
+                    (t.Title != null && t.Title.ToLower().Contains(lowerKeyword)) ||
+                    (t.Description != null && t.Description.ToLower().Contains(lowerKeyword)) ||
+                    (t.Assignee != null && t.Assignee.UserName.ToLower().Contains(lowerKeyword)) ||
+                    (t.CreatedByNavigation != null && t.CreatedByNavigation.UserName.ToLower().Contains(lowerKeyword)) ||
+                    (t.Sprint != null && t.Sprint.Name.ToLower().Contains(lowerKeyword))
+                );
+            }
+
+            // 2️⃣ Áp dụng từng điều kiện lọc dựa trên key trong filters
+            foreach (var filter in filters)
+            {
+                var key = filter.Key;
+                var value = filter.Value?.Trim();
+
+                if (string.IsNullOrEmpty(value))
+                    continue;
+
+                switch (key)
+                {
+                    case "Status":
+                        query = query.Where(t => t.Status == value);
+                        break;
+
+                    case "Priority":
+                        // Cho phép lọc bằng số hoặc chuỗi “Low”, “Medium”, “High”
+                        if (byte.TryParse(value, out var priority))
+                            query = query.Where(t => t.Priority == priority);
+                        else
+                        {
+                            query = value.ToLower() switch
+                            {
+                                "low" => query.Where(t => t.Priority == 1),
+                                "medium" => query.Where(t => t.Priority == 2),
+                                "high" => query.Where(t => t.Priority == 3),
+                                _ => query
+                            };
+                        }
+                        break;
+
+                    case "AssigneeId":
+                        query = query.Where(t => t.AssigneeId == value);
+                        break;
+
+                    case "CreatedBy":
+                        query = query.Where(t => t.CreatedBy == value);
+                        break;
+
+                    case "SprintId":
+                        if (int.TryParse(value, out var sprintId))
+                            query = query.Where(t => t.SprintId == sprintId);
+                        break;
+
+                    case "AssigneeName":
+                        query = query.Where(t => t.Assignee != null && t.Assignee.UserName.Contains(value));
+                        break;
+
+                    case "CreatorName":
+                        query = query.Where(t => t.CreatedByNavigation != null && t.CreatedByNavigation.UserName.Contains(value));
+                        break;
+
+                    case "SprintName":
+                        query = query.Where(t => t.Sprint != null && t.Sprint.Name.Contains(value));
+                        break;
+                }
+            }
+
+            var tasks = await query.ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+
+        public async Task<List<TaskDTO.BasicTask>> SearchTasks(int projectId, string keyword)
+        {
+            var tasks = await _context.Tasks
+                .FromSqlRaw("EXEC sp_SearchTasks @ProjectId = {0}, @Keyword = {1}", projectId, keyword)
+                .ToListAsync();
+            Console.WriteLine("Tasks found BBBBBBBBBBBBBBBBB: " + tasks);
+            List<TaskDTO.BasicTask> Taskavailable = _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+            Console.WriteLine("Tasks found AAAAAAAAAAAAAAA: " + Taskavailable);
+            return Taskavailable;
+        }
     }
 }

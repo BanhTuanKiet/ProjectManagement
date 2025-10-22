@@ -2,34 +2,40 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "@/config/axiosConfig";
-import { UserMini } from "@/utils/IUser";
+import { Member, UserMini } from "@/utils/IUser";
 import { mapApiTaskToTask, mapApiUserToUserMini, Task, mapTaskToApiUpdatePayload } from "@/utils/mapperUtil";
 import { BasicTask } from "@/utils/ITask";
 import { Column, initialColumns } from "@/config/columsConfig";
 import { useProject } from "@/app/(context)/ProjectContext";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [availableUsers, setAvailableUsers] = useState<UserMini[]>([]);
+    const [availableUsers, setAvailableUsers] = useState<Member[]>([]);
     const [columns, setColumns] = useState<Column[]>(initialColumns);
     const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
     const [searchQuery, setSearchQuery] = useState("");
     const [editingCell, setEditingCell] = useState<{ taskId: number; field: string } | null>(null);
     const [draggedTask, setDraggedTask] = useState<number | null>(null);
     const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
-    const { project_name } = useProject()
+    const { project_name, members } = useProject()
+    const [filters, setFilters] = useState<Record<string, string>>({});
+    const debouncedSearch = useDebounce(searchQuery, 400);
     // Fetch users + tasks
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get("/users");
-                //console.log("Fetched users:", response.data);
-                const mappedUsers = response.data.map(mapApiUserToUserMini);
-                //console.log("Mapped users:", mappedUsers);
+                console.log("Project members from context:", members);
+                if (members) {
+                    // const mappedUsers = members.map(mapApiUserToUserMini);
+                    // console.log("Mapped users:", mappedUsers);
+                    setAvailableUsers(members);
+                }
+                console.log("Raw tasks from props:", tasksnomal);
                 const mappedTasks = tasksnomal.map(mapApiTaskToTask);
+                console.log("Mapped tasks:", mappedTasks);
                 //console.log("Mapped tasks:", mappedTasks);
                 setTasks(mappedTasks);
-                setAvailableUsers(mappedUsers);
             } catch (error) {
                 console.log("Error fetching users:", error);
             }
@@ -167,17 +173,46 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
         [draggedColumnIndex, columns]
     );
 
-    // Filter
-    const filteredTasks = useMemo(() => {
-        return tasks.filter((t) => {
-            const summary = t.summary?.toLowerCase() || "";
-            const key = t.key?.toLowerCase() || "";
-            return (
-                summary.includes(searchQuery.toLowerCase()) ||
-                key.includes(searchQuery.toLowerCase())
+useEffect(() => {
+    const fetchFilteredAndSearchedTasks = async () => {
+        try {
+            // Nếu không có lọc và không có search → trả lại danh sách gốc
+            if (
+                Object.keys(filters).length === 0 &&
+                debouncedSearch.trim() === ""
+            ) {
+                const mapped = tasksnomal.map(mapApiTaskToTask);
+                setTasks(mapped);
+                return;
+            }
+
+            // 🔸 Tạo params gửi lên API
+            const params = {
+                ...filters,
+                keyword: debouncedSearch.trim() || undefined,
+            };
+
+            console.log("🧭 Gửi request filter/search với params:", params);
+
+            // 🔸 Gọi API duy nhất
+            const res = await axios.get(
+                `/tasks/${Number(project_name)}/filter-by`,
+                { params }
             );
-        });
-    }, [tasks, searchQuery]);
+
+            console.log("✅ API response:", res.data);
+
+            // 🔸 Map dữ liệu sang format hiển thị FE
+            const mapped = res.data.map(mapApiTaskToTask);
+            setTasks(mapped);
+        } catch (err) {
+            console.error("❌ Lỗi khi filter/search tasks:", err);
+        }
+    };
+
+    fetchFilteredAndSearchedTasks();
+}, [debouncedSearch, filters, project_name]);
+
 
     const addTask = useCallback((newTask: Task) => {
         setTasks((prev) => [...prev, newTask]);
@@ -225,10 +260,11 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
         columns,
         selectedTasks,
         searchQuery,
-        editingCell,
-        filteredTasks,
-        totalWidth,
+        filters,
+        setFilters,
         setSearchQuery,
+        editingCell,
+        totalWidth,
         setEditingCell,
         handleMouseDown,
         toggleTaskSelection,

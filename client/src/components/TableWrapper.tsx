@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import ColoredAvatar from "@/components/ColoredAvatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
-import type { UserMini } from "@/utils/IUser"
+import type { Member, UserMini } from "@/utils/IUser"
 import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import React, { useState, useEffect, useRef } from "react"
@@ -36,7 +36,7 @@ interface TableWrapperProps {
     handleColumnDragOver: (e: React.DragEvent) => void
     handleColumnDrop: (e: React.DragEvent, targetColumnIndex: number) => void
     setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: number; field: string } | null>>
-    availableUsers?: UserMini[]
+    availableUsers?: Member[]
     copySelectedTasks: () => void
     deleteSelectedTasks: () => void
     onTaskClick: (task: Task) => void
@@ -95,8 +95,9 @@ export default function TableWrapper({
         } else {
             // fetch subtasks từ API
             const subtasks = await fetchSubtasks(taskId)
-            handleCellEdit(taskId, "subtasks", subtasks)
-
+            const updatedTasks = tasks.map((t) =>
+                t.id === taskId ? { ...t, subtasks } : t
+            )
             setExpandedTasks((prev) => new Set(prev).add(taskId))
         }
     }
@@ -222,7 +223,7 @@ export default function TableWrapper({
 
                         {/* Dấu + bên phải cell */}
                         {hoveredTaskId === task.id && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAddingSubtaskFor(task.id)}>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setAddingSubtaskFor(task.id); setExpandedTasks(prev => new Set(prev).add(task.id)); }}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         )}
@@ -354,8 +355,6 @@ export default function TableWrapper({
                                         <ColoredAvatar
                                             id={task.raw.assigneeId ?? ""}
                                             name={u.name}
-                                            src={u.avatar}
-                                            initials={u.initials}
                                             size="sm"
                                         />
                                         <span>{u.name}</span>

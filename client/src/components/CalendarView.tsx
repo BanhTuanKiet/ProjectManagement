@@ -148,13 +148,13 @@ export default function CalendarView() {
                 />
             )}
 
-            {/* {selectedTask && (
+            {selectedTask && (
                 <TaskDetailModal
-                    projectId={project_name ? Number(project_name) : 0}
+                    // projectId={project_name ? Number(project_name) : 0}
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />
-            )} */}
+            )}
         </div>
     )
 }
