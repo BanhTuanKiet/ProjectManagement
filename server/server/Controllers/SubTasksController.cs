@@ -52,8 +52,8 @@ namespace server.Controllers
 
             var subtasks = await _subTasksService.GetSubTasksByTaskIdAsync(taskId);
 
-            if (subtasks == null || !subtasks.Any())
-                throw new ErrorException(404, "No subtasks found for this task.");
+            // if (subtasks == null || !subtasks.Any())
+            //     throw new ErrorException(404, "No subtasks found for this task.");
 
             return Ok(subtasks);
         }

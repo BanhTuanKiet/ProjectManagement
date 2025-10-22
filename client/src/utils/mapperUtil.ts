@@ -80,10 +80,10 @@ export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
 }
 
 export const mapApiUserToUserMini = (apiUser: any): UserMini => ({
-  id: apiUser.id,
-  name: apiUser.userName,
+  id: apiUser.userId,
+  name: apiUser.name,
   avatar: apiUser.avatarUrl || "",
-  initials: (apiUser.userName || "?")
+  initials: (apiUser.name || "?")
     .split(" ")
     .map((n: string) => n[0])
     .join("")

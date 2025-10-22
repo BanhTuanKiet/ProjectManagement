@@ -104,6 +104,7 @@ namespace server.Controllers
                 else
                     status = "Todo";
             }
+
             Models.Task formatedTask = new Models.Task
             {
                 ProjectId = projectId,
@@ -120,9 +121,9 @@ namespace server.Controllers
             };
 
             Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
+
             if (newTask.AssigneeId != null)
             {
-
                 Notification notification = new Notification
                 {
                     UserId = formatedTask.AssigneeId,
@@ -177,7 +178,6 @@ namespace server.Controllers
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
-
             if (dto.Ids == null || !dto.Ids.Any())
             {
                 return BadRequest(new { message = "No IDs provided." });
@@ -204,7 +204,7 @@ namespace server.Controllers
 
             string oldStatus = task.Status;
             string newStatus = updates["status"]?.ToString() ?? task.Status;
-            
+
             Models.Task updatedTask = await _tasksService.UpdateTaskStatus(taskId, newStatus);
 
             if (updatedTask.Status != newStatus || updatedTask == null)
@@ -224,7 +224,7 @@ namespace server.Controllers
                 CreatedId = userId,
                 Type = "task"
             };
-            
+
             TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
             await _notificationsService.SaveNotification(notification);
@@ -261,5 +261,44 @@ namespace server.Controllers
             }
         }
 
+        [Authorize(Policy = "MemberRequirement")]
+        [HttpGet("{projectId}/filter-by")]
+        public async Task<ActionResult> FilterTasks(int projectId, [FromQuery] string? keyword)
+        {
+            var query = HttpContext.Request.Query;
+
+            if (!query.Any())
+                throw new ErrorException(400, "No filters provided");
+
+            // Lưu key/value từ query vào Dictionary
+            var filters = query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
+
+            // Nếu có "me" → thay bằng userId
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (filters.ContainsValue("me"))
+            {
+                foreach (var key in filters.Keys.ToList())
+                {
+                    Console.WriteLine($"Key AAAAAAAAAAAAAAAAAAAAAAAAAAAA: {key}, Value: {filters[key]}");
+                    if (filters[key] == "me")
+                        filters[key] = userId;
+                }
+            }
+
+            var result = await _tasksService.FilterTasks(projectId, filters, keyword);
+            return Ok(result);
+        }
+
+        [Authorize(Policy = "MemberRequirement")]
+        [HttpGet("{projectId}/search")]
+        public async Task<ActionResult> SearchTasks(int projectId, [FromQuery] string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+                throw new ErrorException(400, "Keyword is required");
+
+            var result = await _tasksService.SearchTasks(projectId, keyword);
+            return Ok(result);
+        }
     }
 }
