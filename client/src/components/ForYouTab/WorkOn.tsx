@@ -2,7 +2,7 @@ import { useProject } from '@/app/(context)/ProjectContext'
 import React from 'react'
 import { ProjectCard } from '../ProjectCard'
 
-export default function WordOn() {
+export default function WorkOn() {
     const { projects } = useProject()
 
     return (

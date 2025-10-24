@@ -27,6 +27,7 @@ import BacklogView from '@/components/BacklogView/BacklogView'
 import TrashView from '@/components/TrashView'
 import { useProject } from '@/app/(context)/ProjectContext'
 import Summary from '@/components/Summary'
+import { useHash } from '@/hooks/useHash'
 
 interface NavigationTab {
     id: string
@@ -36,7 +37,7 @@ interface NavigationTab {
 }
 
 const navigationTabs: NavigationTab[] = [
-    { id: 'summary', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
+    { id: '', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
     { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'backlog', label: 'Backlog', icon: <Square className="w-4 h-4" /> },
     { id: 'board', label: 'Board', icon: <Square className="w-4 h-4" /> },
@@ -48,9 +49,9 @@ const navigationTabs: NavigationTab[] = [
 ]
 
 export default function ProjectInterface() {
-    const [activeTab, setActiveTab] = useState('summary')
     const [tasks, setTasks] = useState<BasicTask[]>([])
     const { project_name } = useProject()
+    const { hash: activeTab, setHash: setActiveTab } = useHash("")
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -71,13 +72,28 @@ export default function ProjectInterface() {
         fetchProjects()
     }, [project_name])
 
-    const views: Record<string, React.ReactNode> = {
-        summary: <Summary />,
-        backlog: <BacklogView />,
-        calendar: <CalendarView />,
-        board: <BoardView />,
-        list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
-        trash: <TrashView projectId={project_name} />,
+
+    const renderContent = (activeTab: string) => {
+        switch (activeTab) {
+            case "":
+                return <Summary />
+            case "backlog":
+                return <BacklogView />
+            case "calendar":
+                return <CalendarView />
+            case "board":
+                return <BoardView />
+            case "list":
+                return <ListPage tasksNormal={tasks} projectId={Number(project_name)} />
+            default:
+                return (
+                    <div className="py-12 text-center">
+                        <p className="text-muted-foreground">
+                            No content in <strong>{activeTab}</strong>
+                        </p>
+                    </div>
+                )
+        }
     }
 
     return (
@@ -125,7 +141,7 @@ export default function ProjectInterface() {
                         {navigationTabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => setActiveTab(tab.id === "" ? "" : tab.id)}
                                 className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                                     ? 'border-blue-500 text-blue-600'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -142,9 +158,8 @@ export default function ProjectInterface() {
                 </div>
             </div>
 
-            {/* Nội dung cuộn được */}
             <div className="flex-1 overflow-y-auto p-0 bg-gray-50">
-                {views[activeTab]}
+                {renderContent(activeTab)}
             </div>
         </div>
     )

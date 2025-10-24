@@ -67,6 +67,15 @@ export interface Project {
   name: string
 }
 
+export interface TaskStats {
+    priority: number
+    total: number
+    todo: number
+    inProgress: number
+    done: number
+    cancel: number
+    expired: number
+}
 
 export interface BasicTask {
   taskId: number

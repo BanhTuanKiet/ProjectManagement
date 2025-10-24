@@ -1,168 +1,236 @@
 "use client"
-import { Computer, Settings,UsersRound, Contact, Megaphone, Wand, BadgeCent, Mountain, ChevronDown } from "lucide-react"
-import Image from 'next/image';
-import JiraHome from "@/app/Images/JiraHome.png"
-import { useState } from "react";
+import { BarChart3, CheckCircle2, FileText, MessageSquare, Shield, Users, Wallet, Zap } from "lucide-react"
+import PricingTable from "@/components/pricing-table"
 
 export default function Page() {
-  const features = [
-    { title: "Pages", desc: "Create and share knowledge", color: "text-yellow-500" },
-    { title: "Whiteboards", desc: "Collaborative diagrams", color: "text-indigo-500" },
-    { title: "Databases", desc: "Organize structured info", color: "text-green-500" },
-    { title: "Spaces", desc: "Organize people & work", color: "text-orange-500" },
-  ]
+    const features = [
+        {
+            icon: Zap,
+            title: "Quản lý dự án",
+            desc: "Tổ chức công việc hiệu quả với bảng Kanban, timeline và phân quyền chi tiết",
+        },
+        {
+            icon: Users,
+            title: "Cộng tác nhóm",
+            desc: "Làm việc cùng nhau trong thời gian thực với chat, mention và bình luận trong task",
+        },
+        {
+            icon: CheckCircle2,
+            title: "Theo dõi tiến độ",
+            desc: "Giám sát tiến độ dự án, sprint và milestone trên Gantt chart hoặc dashboard",
+        },
+        {
+            icon: Shield,
+            title: "Người dùng & Phân quyền",
+            desc: "Đăng ký, đăng nhập JWT + OAuth, vai trò linh hoạt: Admin, Manager, Member, Client",
+        },
+        {
+            icon: Wallet,
+            title: "Thanh toán & Gói dịch vụ",
+            desc: "Theo dõi giao dịch, quản lý gói Free / Premium và quyền lợi sử dụng khác nhau",
+        },
+        {
+            icon: FileText,
+            title: "Tài liệu & File",
+            desc: "Upload, quản lý tài liệu, hình ảnh, PDF và đính kèm trực tiếp vào task",
+        },
+        {
+            icon: MessageSquare,
+            title: "Thông báo & Giao tiếp",
+            desc: "Nhận thông báo realtime, email digest và theo dõi trạng thái online/offline của thành viên",
+        },
+        {
+            icon: BarChart3,
+            title: "Báo cáo & Dashboard",
+            desc: "Phân tích workload, hiệu suất thành viên và thống kê chi tiết theo dự án",
+        },
+    ]
 
-  return (
-    <main className="min-h-screen bg-white text-gray-900">
-      {/* Header */}
-      <header className="w-full border-b border-gray-100">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-6 ml-20">
-              {/* Logo */}
-              <div className="flex items-center gap-3 cursor-pointer">
-                {/* <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 3h6v6H3z" fill="#0B66FF"/>
-                  <path d="M15 3h6v6h-6z" fill="#0B66FF" opacity="0.2"/>
-                  <path d="M3 15h6v6H3z" fill="#0B66FF" opacity="0.6"/>
-                  <path d="M15 15h6v6h-6z" fill="#0B66FF" />
-                </svg> */}
-                <Mountain className="h-8 w-8 text-blue-600" />
-                <span className="font-semibold text-3xl">  ATLASSIAN </span>
-              </div>
+    return (
+        <main className="min-h-screen bg-gradient-to-b from-white to-slate-50">
+            <header className="w-full border-b border-slate-200 bg-white">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+                                <span className="text-lg font-bold text-white">P</span>
+                            </div>
+                            <span className="text-xl font-bold text-slate-900">ProjectHub</span>
+                        </div>
 
-              {/* Nav */}
-              <nav className="hidden md:flex items-center gap-6 text-normal text-black pt-3 ml-3">
-                <a href="#">Products <ChevronDown className="inline h-4 w-4" /></a>
-                <a href="#">Solutions <ChevronDown className="inline h-4 w-4" /></a>
-                <a href="#">Why atlassian? <ChevronDown className="inline h-4 w-4" /></a>
-                <a href="#" className="hidden lg:inline">Resources <ChevronDown className="inline h-4 w-4" /></a>
-                <a href="#" className="hidden lg:inline">Enterprise</a>
-              </nav>
-            </div>
-
-            {/* User section */}
-            <div className="flex items-center gap-4">
-              {/* <button className="hidden md:inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium border border-gray-200">
-                Search
-              </button> */}
-
-              <a href="http://localhost:3000/login" className="mt-3 hidden md:inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium border border-gray-200 hover:bg-gray-100 transition">
-                Sign in</a>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 lg:px-8 pt-12 pb-20">
-        <div className="text-center">
-          <h1 className="mx-auto max-w-4xl text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight">
-            Unleash knowledge <br className="hidden md:inline" /> with Jira +{" "}
-            <span className="text-black">Confluence</span>
-          </h1>
-
-          <p className="mt-6 text-gray-600 max-w-l mx-auto text-base sm:text-lg">
-            Collaborate, document, and organize work — all in one place.
-          </p>
-
-          <div className="mt-8 flex items-center justify-center">
-            <a className="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-white font-semibold shadow hover:bg-blue-700 transition">
-              Get started
-            </a>
-          </div>
-        </div>
-
-          <div className="grid grid-cols-7 gap-4 p-6 pt-12 mx-auto justify-center items-center text-center mr-40 ml-40">
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <Computer className="h-6 w-6 text-gray-600 hover:text-sky-600 transition duration-200" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">Software</span>
-                </button>
-                
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <Settings className="h-6 w-6 text-gray-600 hover:text-sky-600 transition duration-200" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">Operations</span>
-                </button>
-                
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <Contact className="h-6 w-6 text-gray-600 hover:text-sky-600 transition duration-200" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">HR</span>
-                </button>
-                
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <UsersRound className="h-6 w-6 text-gray-600 hover:text-sky-600 transition" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">All Teams</span>
-                </button>
-                
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <Megaphone className="h-6 w-6 text-gray-600 hover:text-sky-600 transition duration-200" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">Marketing</span>
-                </button>
-                
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <Wand className="h-6 w-6 text-gray-600 hover:text-sky-600 transition duration-200" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">Design</span>
-                </button>
-                
-                <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
-                    <BadgeCent className="h-6 w-6 text-gray-600 hover:text-sky-600 transition duration-200" />
-                    <span className="text-sm font-medium text-gray-700 hover:text-sky-600 transition duration-200">Sales</span>
-                </button>
-            </div>
-
-        {/* Features */}
-        <div className="mt-12">
-          <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-6">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-gray-200 p-6 text-center hover:shadow-lg transition"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gray-50">
-                  <svg className={`h-7 w-7 ${f.color}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="1.5" />
-                  </svg>
+                        <div className="flex items-center gap-4">
+                            <a
+                                href="http://localhost:3000/login"
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+                            >
+                                Đăng nhập
+                            </a>
+                            <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
+                                Bắt đầu miễn phí
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold">{f.title}</h3>
-                  <p className="mt-1 text-xs text-gray-500">{f.desc}</p>
+            </header>
+
+            <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
+                <div className="space-y-6">
+                    <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 leading-tight">
+                        Quản lý dự án <br className="hidden sm:inline" />
+                        <span className="text-blue-600">đơn giản và hiệu quả</span>
+                    </h1>
+
+                    <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                        Công cụ quản lý dự án toàn diện giúp nhóm của bạn cộng tác, tổ chức công việc và hoàn thành mục tiêu nhanh
+                        hơn.
+                    </p>
+
+                    <div className="flex items-center justify-center gap-4 pt-4">
+                        <button className="rounded-full bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl">
+                            Bắt đầu ngay
+                        </button>
+                        <button className="rounded-full border border-slate-300 px-8 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">
+                            Xem demo
+                        </button>
+                    </div>
+
+                    <p className="text-sm text-slate-500 pt-4">Không cần thẻ tín dụng • Bắt đầu miễn phí trong 2 phút</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <figure>
-        <Image src={JiraHome} alt="JiraHome" className="mx-auto max-w-5xl px-6 lg:px-8 pt-12 pb-20" />
-      </figure>
-      <footer className="bg-gray-100 mt-10 ml-30 mr-30">
-            <div className="grid grid-cols-4 gap-4 p-6">
-                <div><Mountain className="h-6 w-6" /></div>
-                <div><strong>Products</strong></div>
-                <div><strong>Resources</strong></div>
-                <div><strong>Learn</strong></div>
-                <div><strong>Company</strong></div>
-                <div>Rovo</div>
-                <div>Technical support</div>
-                <div>Partners</div>
-                <div><strong>Careers</strong></div>
-                <div>Jira</div>
-                <div>Purchasing & licensing</div>
-                <div>Training & certification</div>
-                <div><strong>Events</strong></div>
-                <div>Jira Align</div>
-                <div>Atlassian Community</div>
-                <div>Documentation</div>
-                <div><strong>Blogs</strong></div>
-                <div>Jira Service Management</div>
-                <div>Knowledge base</div>
-                <div>Developer resources</div>
-                <div><strong>Investor Relations</strong></div>
-                <div>Confluence</div>
-                <div>Marketplace</div>
-                <div>Enterprise services</div>
+            </section>
+
+            <section className="mx-auto max-w-6xl px-6 lg:px-8 py-20">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {features.map((feature, idx) => {
+                        const Icon = feature.icon
+                        return (
+                            <div key={idx} className="rounded-xl border border-slate-200 bg-white p-8 hover:shadow-lg transition">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 mb-4">
+                                    <Icon className="h-6 w-6 text-blue-600" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h3>
+                                <p className="text-slate-600">{feature.desc}</p>
+                            </div>
+                        )
+                    })}
+                </div>
+            </section>
+
+            <div className="px-6 lg:px-8 py-20">
+                <PricingTable />
             </div>
-        </footer>
-    </main>
-  )
+
+            <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
+                <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-16">
+                    <h2 className="text-3xl font-bold text-white mb-4">Sẵn sàng để bắt đầu?</h2>
+                    <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+                        Tham gia hàng nghìn nhóm đang sử dụng ProjectHub để quản lý dự án hiệu quả.
+                    </p>
+                    <button className="rounded-full bg-white px-8 py-3 text-blue-600 font-semibold hover:bg-blue-50 transition">
+                        Bắt đầu miễn phí ngay
+                    </button>
+                </div>
+            </section>
+
+            <footer className="border-t border-slate-200 bg-white">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                        <div>
+                            <h4 className="font-semibold text-slate-900 mb-4">Sản phẩm</h4>
+                            <ul className="space-y-2 text-sm text-slate-600">
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Tính năng
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Giá cả
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Bảo mật
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-slate-900 mb-4">Công ty</h4>
+                            <ul className="space-y-2 text-sm text-slate-600">
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Về chúng tôi
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Blog
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Liên hệ
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-slate-900 mb-4">Hỗ trợ</h4>
+                            <ul className="space-y-2 text-sm text-slate-600">
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Tài liệu
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Hỗ trợ
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Cộng đồng
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-slate-900 mb-4">Pháp lý</h4>
+                            <ul className="space-y-2 text-sm text-slate-600">
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Điều khoản
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Quyền riêng tư
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" className="hover:text-slate-900">
+                                        Cookie
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="border-t border-slate-200 pt-8 flex items-center justify-between">
+                        <p className="text-sm text-slate-600">© 2025 ProjectHub. Tất cả quyền được bảo lưu.</p>
+                        <div className="flex gap-4">
+                            <a href="#" className="text-slate-600 hover:text-slate-900">
+                                Twitter
+                            </a>
+                            <a href="#" className="text-slate-600 hover:text-slate-900">
+                                LinkedIn
+                            </a>
+                            <a href="#" className="text-slate-600 hover:text-slate-900">
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    )
 }

@@ -3,6 +3,7 @@ export interface Member {
   name: string
   role: string
   isOwner: boolean
+  joinedAt: string
 }
 
 export interface UserMini {

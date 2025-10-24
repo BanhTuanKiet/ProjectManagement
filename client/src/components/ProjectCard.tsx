@@ -7,12 +7,9 @@ import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import ColoredAvatar from "./ColoredAvatar"
 import Link from "next/link"
+import MemberList from "./MemberList"
 
 export function ProjectCard({ project }: { project: ProjectBasic }) {
-    const maxDisplayedMembers = 6
-    const displayedMembers = project.members?.slice(0, maxDisplayedMembers) || []
-    const remainingCount = (project.members?.length || 0) - maxDisplayedMembers
-
     return (
         <Card className="w-full max-w-[320px] relative overflow-hidden hover:shadow-md transition-shadow py-0">
             <div className="absolute left-0 top-0 bottom-0 w-3 bg-cyan-200" />
@@ -34,32 +31,7 @@ export function ProjectCard({ project }: { project: ProjectBasic }) {
             </CardHeader>
 
             <CardContent className="pl-5 pr-4 pb-3 space-y-2">
-                <div className="space-y-1">
-                    <Button variant="ghost" className="w-full justify-between h-8 px-2 text-xs font-normal hover:bg-gray-50">
-                        <span className="text-gray-700 flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            Owner: <ColoredAvatar key={project.projectId} id={project.ownerId} name={project.owner} size="sm" />
-                        </span>
-                    </Button>
-
-                    <Button variant="ghost" className="w-full justify-between h-8 px-2 text-xs font-normal hover:bg-gray-50">
-                        <span className="text-gray-700">Team members: </span>
-                        {project.members && project.members.length > 0 && (
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center -space-x-1">
-                                    {displayedMembers.map((member) => (
-                                        <ColoredAvatar key={member.userId} id={member.userId} name={member.name} size="sm" />
-                                    ))}
-                                    {remainingCount > 0 && (
-                                        <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
-                                            <span className="text-[10px] font-medium text-muted-foreground">+{remainingCount}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </Button>
-                </div>
+                <MemberList project={project} />
 
                 <Button
                     variant="ghost"
