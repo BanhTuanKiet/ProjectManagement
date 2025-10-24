@@ -40,6 +40,7 @@ namespace server.Configs
             services.AddScoped<ISprints, SprintsService>();
             services.AddScoped<IBacklogs, BacklogsService>();
             services.AddScoped<IFiles, FileService>();
+            services.AddScoped<IPlans, PlansService>();
         }
     }
 }

@@ -6,7 +6,7 @@ import { useUser } from "./UserContext"
 
 type OnlineUser = {
     userId: string
-    projects: string[] 
+    projects: string[]
 }
 
 type PresenceContextType = {
@@ -74,7 +74,9 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
         })
 
         return () => {
-            connection?.stop()
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.stop().catch(() => { /* ignore */ })
+            }
         }
     }, [connection])
 

@@ -46,8 +46,8 @@ export default function TaskDetailModal({
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
     const { user } = useUser()
     const { project_name } = useProject()
-    const [files, setFiles] = useState<any[]>([]);
-    const [previewFile, setPreviewFile] = useState<any | null>(null);
+    const [files, setFiles] = useState<any[]>([])
+    const [previewFile, setPreviewFile] = useState<any | null>(null)
 
     // fetch task detail + comments
     useEffect(() => {
@@ -284,9 +284,9 @@ export default function TaskDetailModal({
                                 <TooltipContent side="bottom" className="p-3">
                                     <div className="space-y-2">
                                         <p className="text-sm font-medium">Active Users ({activeUsers.length})</p>
-                                        {activeUsers.length > 0 ? (
+                                        {activeUsers?.length > 0 ? (
                                             <div className="flex flex-wrap gap-2">
-                                                {activeUsers.map((user) => (
+                                                {activeUsers?.map((user) => (
                                                     <div key={user.id} className="flex items-center gap-2">
                                                         <ColoredAvatar id={user.id} name={user.name} size="sm" />
                                                     </div>
@@ -498,7 +498,7 @@ export default function TaskDetailModal({
                                                 </div>
                                             </div>
 
-                                            {comments.map((c) => (
+                                            {comments && comments?.map((c) => (
                                                 <div key={c.commentId} className="flex gap-3 pb-3">
                                                     <ColoredAvatar id={c.userId} name={c.userName ?? "User"} size="md" showOnlineStatus={true} />
                                                     <div className="flex-1">
@@ -568,7 +568,7 @@ export default function TaskDetailModal({
 
                                             {/* comment list with edit/delete */}
                                             <div className="mt-4 space-y-3">
-                                                {comments.map((c) => (
+                                                {comments && comments?.map((c) => (
                                                     <div key={c.commentId} className="flex gap-3 border-b pb-3">
                                                         <Avatar className="h-8 w-8">
                                                             <AvatarFallback className="bg-gray-500 text-white text-xs">{c.userName?.[0] ?? "U"}</AvatarFallback>

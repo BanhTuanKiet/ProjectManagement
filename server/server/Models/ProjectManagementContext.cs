@@ -34,7 +34,10 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<Task> Tasks { get; set; }
     public virtual DbSet<Backlog> Backlogs { get; set; }
     public virtual DbSet<TaskHistory> TaskHistories { get; set; }
-    public DbSet<ProjectInvitations> ProjectInvitations { get; set; }
+    public virtual DbSet<ProjectInvitations> ProjectInvitations { get; set; }
+    public virtual DbSet<Plans> Plans { get; set; }
+    public virtual DbSet<Features> Features { get; set; }
+    public virtual DbSet<PlanFeatures> PlanFeatures { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -467,6 +470,64 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             //       .WithMany()
             //       .HasForeignKey(e => e.ProjectId)
             //       .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ===== Plans =====
+        modelBuilder.Entity<Plans>(entity =>
+        {
+            entity.ToTable("Plans");
+
+            entity.HasKey(e => e.PlanId);
+
+            entity.Property(e => e.Name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+
+            entity.Property(e => e.Price)
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.Description)
+                  .HasMaxLength(255);
+
+            entity.Property(e => e.Badge)
+                  .HasDefaultValue(false);
+        });
+
+        // ===== Features =====
+        modelBuilder.Entity<Features>(entity =>
+        {
+            entity.ToTable("Features");
+
+            entity.HasKey(e => e.FeatureId);
+
+            entity.Property(e => e.Name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+        });
+
+        // ===== PlanFeatures =====
+        modelBuilder.Entity<PlanFeatures>(entity =>
+        {
+            entity.ToTable("PlanFeatures");
+
+            entity.HasKey(e => e.PlanFeatureId);
+
+            entity.Property(e => e.ValueType)
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.Value)
+                  .HasMaxLength(255);
+
+            // Thiết lập quan hệ
+            entity.HasOne(e => e.Plans)
+                  .WithMany(p => p.PlanFeatures)
+                  .HasForeignKey(e => e.PlanId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Features)
+                  .WithMany(f => f.PlanFeatures)
+                  .HasForeignKey(e => e.FeatureId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);
