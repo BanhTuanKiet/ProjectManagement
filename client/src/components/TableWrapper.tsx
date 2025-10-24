@@ -70,6 +70,7 @@ export default function TableWrapper({
     const [addingSubtaskFor, setAddingSubtaskFor] = useState<number | null>(null)
     const [newSubSummary, setNewSubSummary] = useState("")
     const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set())
+    const [subTask, setSubTask] = useState<Task[] | null>(null)
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -126,6 +127,7 @@ export default function TableWrapper({
             const res = await axios.get(`/subtasks/byTask/${taskId}`)
             console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
             const mapped = res.data.map((sub: any) => mapApiTaskToTask(sub))
+            setSubTask(mapped)
             return mapped
         } catch (err) {
             console.error("Error fetching subtasks", err)
@@ -493,7 +495,7 @@ export default function TableWrapper({
                         <SubtaskList
                             parentTaskId={task.id}
                             projectId={projectId}
-                            subtasks={task.subtasks || []}
+                            subtasks={subTask || []}
                             columns={columns}
                             totalWidth={totalWidth}
                             selectedTasks={selectedTasks}

@@ -300,5 +300,39 @@ namespace server.Controllers
             var result = await _tasksService.SearchTasks(projectId, keyword);
             return Ok(result);
         }
+
+        [HttpGet("{projectId}/deleted")]
+        public async Task<IActionResult> GetAllDeletedTasks(int projectId)
+        {
+            Console.WriteLine("Fetching all deleted tasks for projectId AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", projectId);
+            var result = await _tasksService.GetAllDeletedTasksAsync(projectId);
+            if (result == null)
+                throw new ErrorException(404, "No deleted tasks found.");
+            return Ok(result);
+        }
+
+        // API 2️⃣: TÌM KIẾM và LỌC các task đã xóa
+        [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpGet("{projectId}/deleted/search")]
+        public async Task<IActionResult> SearchDeletedTasks(int projectId, [FromQuery] string? keyword)
+        {
+            var query = HttpContext.Request.Query;
+            var filters = query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
+
+            // Xử lý logic cho "me" (giữ nguyên như cũ)
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (filters.ContainsValue("me"))
+            {
+                foreach (var key in filters.Keys.ToList())
+                {
+                    if (filters[key] == "me")
+                        filters[key] = userId;
+                }
+            }
+
+            var result = await _tasksService.FilterDeletedTasks(projectId, filters, keyword);
+            return Ok(result);
+        }
     }
 }

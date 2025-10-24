@@ -8,7 +8,7 @@ namespace server.Models;
 public partial class ProjectManagementContext : IdentityDbContext<ApplicationUser, ApplicationRole, string,
                                                                   ApplicationUserClaim, ApplicationUserRole,
                                                                 ApplicationUserLogin, ApplicationRoleClaim, ApplicationUserToken>
-    {
+{
     public ProjectManagementContext()
     {
     }
@@ -17,41 +17,23 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         : base(options)
     {
     }
-
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-
     public virtual DbSet<ActivityLog> ActivityLogs { get; set; }
-
     public virtual DbSet<Comment> Comments { get; set; }
-
     public virtual DbSet<File> Files { get; set; }
-
     public virtual DbSet<Folder> Folders { get; set; }
-
     public virtual DbSet<FolderSnapshot> FolderSnapshots { get; set; }
-
     public virtual DbSet<Notification> Notifications { get; set; }
-
     public virtual DbSet<Project> Projects { get; set; }
-
     public virtual DbSet<ProjectFileSnapshot> ProjectFileSnapshots { get; set; }
-
     public virtual DbSet<ProjectHistory> ProjectHistories { get; set; }
-
     public virtual DbSet<ProjectMember> ProjectMembers { get; set; }
-
     public virtual DbSet<Sprint> Sprints { get; set; }
-
     public virtual DbSet<SubTask> SubTasks { get; set; }
-
     public virtual DbSet<Tag> Tags { get; set; }
-
     public virtual DbSet<Task> Tasks { get; set; }
-
     public virtual DbSet<Backlog> Backlogs { get; set; }
-
     public virtual DbSet<TaskHistory> TaskHistories { get; set; }
-
     public DbSet<ProjectInvitations> ProjectInvitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -236,7 +218,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasOne(d => d.CreatedBy).WithMany(p => p.CreatedNotifications)
                 .HasForeignKey(d => d.CreatedId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
-                // .HasConstraintName("FK_Notification_AspNetUsers_CreatedId");
+            // .HasConstraintName("FK_Notification_AspNetUsers_CreatedId");
         });
 
         modelBuilder.Entity<Project>(entity =>
@@ -438,6 +420,11 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.Title).HasMaxLength(300);
 
+            // ✅ thêm cấu hình cho IsDeleted
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false)
+                .IsRequired();
+
             // Giữ các ID nhưng không tạo ràng buộc FK
             entity.Ignore(e => e.Assignee);
             entity.Ignore(e => e.ChangedByNavigation);
@@ -488,7 +475,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
         modelBuilder.Entity<Project>()
             .ToTable(tb => tb.HasTrigger("trg_ProjectHistory_Snapshot"));
-
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

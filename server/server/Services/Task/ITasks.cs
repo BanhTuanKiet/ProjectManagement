@@ -24,6 +24,9 @@ namespace server.Services.Task
 
         Task<Models.Task> RestoreTaskFromHistory(int taskId);
 
+        Task<IEnumerable<object>> GetAllDeletedTasksAsync(int projectId);
+        Task<IEnumerable<object>> FilterDeletedTasks(int projectId, Dictionary<string, string> filters, string? keyword);
+
         Task<List<TaskDTO.BasicTask>> FilterTasks(int projectId, Dictionary<string, string> filters, string? keyword);
 
         Task<List<TaskDTO.BasicTask>> SearchTasks(int projectId, string keyword);

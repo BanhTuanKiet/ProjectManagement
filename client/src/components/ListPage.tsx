@@ -18,10 +18,12 @@ import { BasicTask } from "@/utils/ITask";
 import { Task } from "@/utils/mapperUtil";
 import { useTaskTable } from "@/hooks/useResizableColumns";
 import TaskDetailDrawer from "./TaskDetailDrawer";
+import TaskDetailModal from "./TaskDetailModal";
 import { useParams } from "next/dist/client/components/navigation";
 import axios from "@/config/axiosConfig";
 import { mapApiTaskToTask } from "@/utils/mapperUtil";
 import ColoredAvatar from "./ColoredAvatar";
+import { useProject } from "@/app/(context)/ProjectContext"
 import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon, taskStatus } from "@/utils/statusUtils";
 
 interface ListPageProps {
@@ -60,12 +62,11 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { project_name } = useParams();
+  const { project_name } = useProject();
   const stableFilters = useMemo(() => filters, [filters.Status, filters.Priority, filters.AssigneeId]);
-  // const projectId = Number(project_name);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden max-w-7xl mx-auto w-full">
+    <div className="flex flex-col h-full overflow-hidden  mx-auto w-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
         <div className="flex items-center gap-4">
@@ -264,10 +265,12 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
             onTaskClick={setSelectedTask}
           />
 
-          <TaskDetailDrawer
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-          />
+          {selectedTask && (
+            <TaskDetailModal
+              taskId={selectedTask.id}
+              onClose={() => setSelectedTask(null)}
+            />
+          )}
         </div>
       </div>
 
