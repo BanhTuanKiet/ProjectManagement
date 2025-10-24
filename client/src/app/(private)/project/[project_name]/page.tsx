@@ -14,7 +14,8 @@ import {
     FileText,
     Archive,
     Plus,
-    Square
+    Square,
+    Trash
 } from 'lucide-react'
 import CalendarView from '@/components/CalendarView'
 import BoardView from '@/components/BoardView'
@@ -23,6 +24,7 @@ import { BasicTask } from '@/utils/ITask'
 import ListPage from '@/components/ListPage'
 import axios from '@/config/axiosConfig'
 import BacklogView from '@/components/BacklogView/BacklogView'
+import TrashView from '@/components/TrashView'
 import { useProject } from '@/app/(context)/ProjectContext'
 import Summary from '@/components/Summary'
 
@@ -42,6 +44,7 @@ const navigationTabs: NavigationTab[] = [
     { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
     { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },
     { id: 'archived', label: 'Archived work items', icon: <Archive className="w-4 h-4" /> },
+    { id: 'trash', label: 'Trash', icon: <Trash className="w-4 h-4" /> },
 ]
 
 export default function ProjectInterface() {
@@ -74,6 +77,7 @@ export default function ProjectInterface() {
         calendar: <CalendarView />,
         board: <BoardView />,
         list: <ListPage tasksNormal={tasks} projectId={Number(project_name)} />,
+        trash: <TrashView projectId={project_name} />,
     }
 
     return (
