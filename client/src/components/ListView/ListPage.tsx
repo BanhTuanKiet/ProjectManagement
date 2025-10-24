@@ -17,12 +17,12 @@ import {
 import { BasicTask } from "@/utils/ITask";
 import { Task } from "@/utils/mapperUtil";
 import { useTaskTable } from "@/hooks/useResizableColumns";
-import TaskDetailDrawer from "./TaskDetailDrawer";
-import TaskDetailModal from "./TaskDetailModal";
+import TaskDetailDrawer from "../TaskDetailDrawer";
+import TaskDetailModal from "../TaskDetailModal";
 import { useParams } from "next/dist/client/components/navigation";
 import axios from "@/config/axiosConfig";
 import { mapApiTaskToTask } from "@/utils/mapperUtil";
-import ColoredAvatar from "./ColoredAvatar";
+import ColoredAvatar from "../ColoredAvatar";
 import { useProject } from "@/app/(context)/ProjectContext"
 import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon, taskStatus } from "@/utils/statusUtils";
 
@@ -153,7 +153,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                   onClick={() => setFilters((prev) => ({ ...prev, Priority: priority }))}
                 >
                   <div className="flex items-center gap-2">
-                    {getPriorityIcon(priority)}
+                    {/* {getPriorityIcon(priority)} */}
                     <span className={getPriorityBadge(priority.toLowerCase())}>
                       {priority}
                     </span>

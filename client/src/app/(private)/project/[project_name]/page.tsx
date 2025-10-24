@@ -17,14 +17,14 @@ import {
     Square,
     Trash
 } from 'lucide-react'
-import CalendarView from '@/components/CalendarView'
-import BoardView from '@/components/BoardView'
+import CalendarView from '@/components/CalendarView/CalendarView'
+import BoardView from '@/components/BoardView/BoardView'
 import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown'
 import { BasicTask } from '@/utils/ITask'
-import ListPage from '@/components/ListPage'
+import ListPage from '@/components/ListView/ListPage'
 import axios from '@/config/axiosConfig'
 import BacklogView from '@/components/BacklogView/BacklogView'
-import TrashView from '@/components/TrashView'
+import TrashView from '@/components/TrashView/TrashView'
 import { useProject } from '@/app/(context)/ProjectContext'
 import Summary from '@/components/Summary'
 import { useHash } from '@/hooks/useHash'
