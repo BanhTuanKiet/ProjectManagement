@@ -158,7 +158,6 @@ export default function TaskFilterView({
                                 </span>
                             </SelectItem>
                         ))}
-
                     </SelectContent>
                 </Select>
             </div>

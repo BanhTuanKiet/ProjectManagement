@@ -27,6 +27,7 @@ namespace server.DTO
             public string name { get; set; }
             public string role { get; set; }
             public bool isOwner { get; set; }
+            public DateTime joinedAt { get; set; }
         }
     }
 }
