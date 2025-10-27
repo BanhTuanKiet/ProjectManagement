@@ -38,6 +38,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<Plans> Plans { get; set; }
     public virtual DbSet<Features> Features { get; set; }
     public virtual DbSet<PlanFeatures> PlanFeatures { get; set; }
+    public virtual DbSet<Payments> Payments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -222,6 +223,47 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasForeignKey(d => d.CreatedId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
             // .HasConstraintName("FK_Notification_AspNetUsers_CreatedId");
+        });
+
+        modelBuilder.Entity<Payments>(entity =>
+        {
+            entity.ToTable("Payments");
+
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.Id)
+                  .HasDefaultValueSql("NEWID()");
+
+            entity.Property(p => p.UserId)
+                  .HasMaxLength(128)
+                  .IsRequired();
+
+            entity.Property(p => p.Amount)
+                  .HasColumnType("decimal(18,2)")
+                  .IsRequired();
+
+            entity.Property(p => p.Currency)
+                  .HasMaxLength(3)
+                  .HasDefaultValue("VND")
+                  .IsRequired();
+
+            entity.Property(p => p.Gateway)
+                  .HasMaxLength(20)
+                  .HasDefaultValue("VNPay")
+                  .IsRequired();
+
+            entity.Property(p => p.Status)
+                  .HasMaxLength(20)
+                  .HasDefaultValue("Pending")
+                  .IsRequired();
+
+            entity.Property(p => p.CreatedAt)
+                  .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne<ApplicationUser>()
+                  .WithMany()
+                  .HasForeignKey(p => p.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Project>(entity =>
@@ -484,7 +526,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                   .HasMaxLength(100);
 
             entity.Property(e => e.Price)
-                  .HasMaxLength(50);
+                  .HasColumnType("decimal(10,2)");
 
             entity.Property(e => e.Description)
                   .HasMaxLength(255);
@@ -531,6 +573,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         });
 
         OnModelCreatingPartial(modelBuilder);
+
         modelBuilder.Entity<Task>()
             .ToTable(tb => tb.HasTrigger("trg_TaskHistory_Snapshot"));
 

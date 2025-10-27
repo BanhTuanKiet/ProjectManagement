@@ -6,7 +6,7 @@ namespace server.DTO
         {
             public int Id { get; set; }
             public string Name { get; set; }
-            public string Price { get; set; }
+            public decimal Price { get; set; }
             public string Description { get; set; }
             public bool Badge { get; set; }
             public List<FeatureDetail> Features { get; set; } = new();

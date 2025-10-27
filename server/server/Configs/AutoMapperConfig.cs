@@ -78,6 +78,7 @@ namespace server.Configs
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Plans, PlanDTO.PlanDetail>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PlanId))
                 .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.PlanFeatures));
 
             CreateMap<PlanFeatures, PlanDTO.FeatureDetail>()

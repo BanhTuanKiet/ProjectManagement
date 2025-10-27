@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using server.Configs;
 
@@ -25,7 +24,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorizationBuilder().AddCustomPolicies();
 
 builder.Services.AddSignalR();
-
+builder.Services.AddHttpClient();
 builder.Services.AddControllers(options =>
 {
     // options.Filters.Add<ValidateInputFilter>();

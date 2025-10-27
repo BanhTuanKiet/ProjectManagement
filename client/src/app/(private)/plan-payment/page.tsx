@@ -1,72 +1,105 @@
 "use client"
 
-import { useState } from "react"
-import { Check, Lock, ArrowRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Check, Lock, ArrowRight } from 'lucide-react'
 import PricingTable from "@/components/pricing-table"
 import { PlanDetail } from "@/utils/IPlan"
+import axios from "@/config/axiosConfig"
+import { useSearchParams } from "next/navigation"
+
+const paymentMethods = [
+    {
+        id: "vnpay",
+        name: "VNPay",
+        description: "Bank card, e-wallet",
+        logo: (
+            <img
+                src="/vn-pay.png"
+                alt="VNPay"
+                className="h-10 w-auto object-contain"
+            />
+        ),
+    },
+    {
+        id: "paypal",
+        name: "PayPal",
+        description: "Your PayPal account",
+        logo: (
+            <img
+                src="/pay-pal.png"
+                alt="PayPal"
+                className="h-10 w-auto object-contain"
+            />
+        ),
+    },
+]
 
 export default function PlanPaymentPage() {
     const [selectedMethod, setSelectedMethod] = useState<"vnpay" | "paypal">("vnpay")
     const [selectedPlan, setSelectedPlan] = useState<PlanDetail | undefined>()
     const [isLoading, setIsLoading] = useState(false)
+    const searchParams = useSearchParams()
 
-    const paymentMethods = [
-        {
-            id: "vnpay",
-            name: "VNPay",
-            description: "Bank card, e-wallet",
-            logo: (
-                <img
-                    src="/vn-pay.png"
-                    alt="VNPay"
-                    className="h-10 w-auto object-contain"
-                />
-            ),
-        },
-        {
-            id: "paypal",
-            name: "PayPal",
-            description: "Your PayPal account",
-            logo: (
-                <img
-                    src="/pay-pal.png"
-                    alt="PayPal"
-                    className="h-10 w-auto object-contain"
-                />
-            ),
-        },
-    ]
+    useEffect(() => {
+        const verifyPayment = async () => {
+            try {
+                const status = searchParams.get("status")
+                const token = searchParams.get("token")
+                console.log(token)
+                console.log(status)
+                if (status) {
+                    const response = await axios.post("/payments/capture-order", { orderId: token })
+                    console.log(response)
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        verifyPayment()
+    }, [searchParams])
 
     const handlePayment = async () => {
         setIsLoading(true)
-        const paymentUrl = `/checkout?method=${selectedMethod}`
-        setTimeout(() => {
-            window.location.href = paymentUrl
-        }, 500)
+        const order = {
+            amount: selectedPlan?.price,
+            currency: "USD",
+            returnUrl: "http://localhost:3000/plan-payment?status=true",
+            cancelUrl: "http://localhost:3000/plan-payment?status=false"
+        }
+        try {
+            const response = await axios.post(`/payments/checkout/paypal`, order)
+            const links = response.data.links ?? []
+            console.log(links)
+            window.open(links[1].href)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
-            {/* Header */}
             <header className="sticky top-0 z-40 border-b border-slate-200/50 bg-white/80 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-cyan-600 shadow-lg">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-600 shadow-lg">
                                 <span className="text-lg font-bold text-white">P</span>
                             </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">
                                 ProjectHub
                             </span>
                         </div>
                         <nav className="hidden md:flex items-center gap-8">
-                            <a href="#" className="text-sm font-medium text-slate-600 hover:text-teal-600 transition">
+                            <a href="#" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">
                                 Features
                             </a>
-                            <a href="#" className="text-sm font-medium text-slate-600 hover:text-teal-600 transition">
+                            <a href="#" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">
                                 Pricing
                             </a>
-                            <a href="#" className="text-sm font-medium text-slate-600 hover:text-teal-600 transition">
+                            <a href="#" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">
                                 Support
                             </a>
                         </nav>
@@ -74,7 +107,6 @@ export default function PlanPaymentPage() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <section className="mx-auto max-w-7xl px-6 lg:px-8 py-16">
                 {/* Section Title */}
                 <div className="mb-16 text-center">
@@ -88,9 +120,7 @@ export default function PlanPaymentPage() {
                     <PricingTable selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} />
                 </div>
 
-                {/* Payment Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Payment Methods Sidebar */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 space-y-6">
                             <div>
@@ -107,13 +137,13 @@ export default function PlanPaymentPage() {
                                             key={method.id}
                                             onClick={() => setSelectedMethod(method.id as "vnpay" | "paypal")}
                                             className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left group ${isSelected
-                                                ? "border-teal-500 bg-gradient-to-br from-teal-50 to-cyan-50 shadow-md"
-                                                : "border-slate-200 bg-white hover:border-teal-300 hover:bg-teal-50/30"
+                                                ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-50 shadow-md"
+                                                : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className={`flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center transition-all ${isSelected ? "bg-white shadow-sm" : "bg-slate-100 group-hover:bg-teal-100"
+                                                    className={`flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center transition-all ${isSelected ? "bg-white shadow-sm" : "bg-slate-100 group-hover:bg-blue-100"
                                                         }`}
                                                 >
                                                     {method.logo}
@@ -123,7 +153,7 @@ export default function PlanPaymentPage() {
                                                     <p className="text-xs text-slate-600">{method.description}</p>
                                                 </div>
                                                 {isSelected && (
-                                                    <div className="w-5 h-5 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                                                         <Check className="h-3 w-3 text-white" />
                                                     </div>
                                                 )}
@@ -133,8 +163,7 @@ export default function PlanPaymentPage() {
                                 })}
                             </div>
 
-                            {/* Security Info */}
-                            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4">
+                            <div className="bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-4">
                                 <div className="flex items-start gap-3">
                                     <Lock className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                                     <div>
@@ -146,11 +175,10 @@ export default function PlanPaymentPage() {
                                 </div>
                             </div>
 
-                            {/* Payment Button */}
                             <button
                                 onClick={handlePayment}
                                 disabled={isLoading}
-                                className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                                className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
                             >
                                 {isLoading ? (
                                     <>
@@ -167,24 +195,20 @@ export default function PlanPaymentPage() {
                         </div>
                     </div>
 
-                    {/* Order Summary */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">
                             <h3 className="text-2xl font-bold text-slate-900 mb-4">Order Summary</h3>
 
                             <div className="space-y-6">
-                                {/* Order Items */}
                                 <div className="space-y-4 pb-4 mb-4 border-b border-slate-200">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-3">
-                                            {/* <p className="font-semibold text-slate-900">Professional Plan</p> */}
                                             <p className="text-sm text-slate-600">Monthly Billing</p>
                                         </div>
                                         <p className="font-semibold text-slate-900 mt-auto">{selectedPlan?.price}</p>
                                     </div>
                                 </div>
 
-                                {/* Pricing Breakdown */}
                                 <div className="space-y-4 mb-4">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-slate-600">Base Price</span>
@@ -196,18 +220,16 @@ export default function PlanPaymentPage() {
                                     </div>
                                 </div>
 
-                                {/* Total */}
-                                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl mb-4 p-4 border border-teal-200">
+                                <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl mb-4 p-4 border border-blue-200">
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-slate-900">Total</span>
-                                        <span className="text-3xl font-bold text-teal-600">{selectedPlan?.price}</span>
+                                        <span className="text-3xl font-bold text-blue-600">{selectedPlan?.price}</span>
                                     </div>
                                     <p className="text-xs text-slate-600 mt-2">You will be charged on December 15</p>
                                 </div>
 
-                                {/* Features List */}
                                 <div className="pt-4 border-t border-slate-200 mb-4">
-                                    <p className="text-sm font-semibold text-slate-900 mb-4">You’ll get:</p>
+                                    <p className="text-sm font-semibold text-slate-900 mb-4">{`You'll get:`}</p>
                                     <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
                                         {selectedPlan?.features?.map((feature, idx) => (
                                             <li key={idx} className="flex items-center gap-3 text-sm text-slate-700">
@@ -218,11 +240,10 @@ export default function PlanPaymentPage() {
                                     </ul>
                                 </div>
 
-                                {/* Guarantee */}
                                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                                     <p className="text-sm text-amber-900">
-                                        <span className="font-semibold">30-day money-back guarantee.</span> 
-                                        If you’re not satisfied, we’ll refund your payment.
+                                        <span className="font-semibold">30-day money-back guarantee.</span>
+                                        {`If you're not satisfied, we'll refund your payment.`}
                                     </p>
                                 </div>
                             </div>

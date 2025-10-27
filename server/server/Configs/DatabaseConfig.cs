@@ -41,6 +41,7 @@ namespace server.Configs
             services.AddScoped<IBacklogs, BacklogsService>();
             services.AddScoped<IFiles, FileService>();
             services.AddScoped<IPlans, PlansService>();
+            services.AddScoped<IPayments, PaymentsService>();
         }
     }
 }
