@@ -29,7 +29,7 @@ export default function PricingTable({
     const allFeatures = Array.from(
         new Set(plans.flatMap(p => p.features.map(f => f.featureName)))
     )
-console.log(plans)
+
     return (
         <section className="mx-auto max-w-7xl">
             <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm bg-white">

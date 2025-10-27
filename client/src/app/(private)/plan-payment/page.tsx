@@ -45,33 +45,39 @@ export default function PlanPaymentPage() {
             try {
                 const status = searchParams.get("status")
                 const token = searchParams.get("token")
-                console.log(token)
-                console.log(status)
-                if (status) {
-                    const response = await axios.post("/payments/capture-order", { orderId: token })
-                    console.log(response)
+                const order = {
+                    orderId: token,
+                    amount: selectedPlan?.price,
+                    name: selectedPlan?.name,
+                    description: `Payment for ${selectedPlan?.name} Plan`,
                 }
+                if (status) await axios.post("/payments/capture-order", order)
             } catch (error) {
                 console.log(error)
+            } finally {
+                window.history.replaceState({}, document.title, window.location.pathname)
             }
         }
 
         verifyPayment()
-    }, [searchParams])
+    }, [searchParams, selectedPlan])
 
     const handlePayment = async () => {
         setIsLoading(true)
         const order = {
             amount: selectedPlan?.price,
             currency: "USD",
+            // planId: selectedPlan?.id,
+            description: `Payment for ${selectedPlan?.name} Plan`,
             returnUrl: "http://localhost:3000/plan-payment?status=true",
             cancelUrl: "http://localhost:3000/plan-payment?status=false"
         }
+
         try {
             const response = await axios.post(`/payments/checkout/paypal`, order)
             const links = response.data.links ?? []
-            console.log(links)
             window.open(links[1].href)
+            console.log(response)
         } catch (error) {
             console.log(error)
         } finally {

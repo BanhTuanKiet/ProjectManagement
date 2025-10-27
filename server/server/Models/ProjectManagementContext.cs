@@ -260,10 +260,15 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(p => p.CreatedAt)
                   .HasDefaultValueSql("GETUTCDATE()");
 
-            entity.HasOne<ApplicationUser>()
-                  .WithMany()
-                  .HasForeignKey(p => p.UserId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            // entity.HasOne<ApplicationUser>()
+            //       .WithMany()
+            //       .HasForeignKey(p => p.UserId)
+            //       .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Project>(entity =>

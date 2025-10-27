@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Security.Claims;
 
 namespace server.Controllers
 {
@@ -53,10 +54,29 @@ namespace server.Controllers
                 purchase_units = new[]
                 {
                     new {
+                        // description = order.Description ?? "Payment description",
                         amount = new {
                             currency_code = order.Currency ?? "USD",
-                            value = order.Amount.ToString("F2")
-                        }
+                            value = order.Amount.ToString("F2"),
+                            // breakdown = new {
+                            //     item_total = new {
+                            //         currency_code = order.Currency ?? "USD",
+                            //         value = order.Amount.ToString("F2")
+                            //     }
+                            // }
+                        },
+                        // items = new[]
+                        // {
+                        //     new {
+                        //         name = order.Description ?? "Subscription",
+                        //         description = "Payment for selected plan",
+                        //         quantity = "1",
+                        //         unit_amount = new {
+                        //             currency_code = order.Currency ?? "USD",
+                        //             value = order.Amount.ToString("F2")
+                        //         }
+                        //     }
+                        // }
                     }
                 },
                 application_context = new
@@ -71,23 +91,13 @@ namespace server.Controllers
 
             var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/v2/checkout/orders", orderPayload);
             var result = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(result);
-            var links = doc.RootElement.GetProperty("links").EnumerateArray();
-            var approve = links.FirstOrDefault(l =>
-                l.TryGetProperty("rel", out var relProp) && relProp.GetString() == "approve");
-
-            if (approve.ValueKind == JsonValueKind.Undefined)
-            {
-                throw new ErrorException(400, "Payment failed");
-            }
-
-            var approveLink = approve.GetProperty("href").GetString();
             return Ok(result);
         }
 
         [HttpPost("capture-order")]
         public async Task<IActionResult> CaptureOrder([FromBody] OrderDTO.PaypalCaptureRequest request)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var clientId = _config["PaypalSettings:ClientId"];
             var secret = _config["PaypalSettings:Secret"];
             var baseUrl = _config["PaypalSettings:BaseUrl"];
@@ -110,7 +120,26 @@ namespace server.Controllers
             var captureResponse = await _httpClient.PostAsJsonAsync(captureUrl, new { });
             var captureResult = await captureResponse.Content.ReadAsStringAsync();
 
-            return Content(captureResult, "application/json");
+            Payments paypal = new Payments
+            {
+                UserId = userId,
+                Amount = request.Amount,
+                Currency = "USD",
+                Gateway = "Paypal",
+                GatewayRef = request.OrderId,
+                Status = "Paid",
+                Description = request.Description
+            };
+
+            await _paymentsService.SavePaypalPayment(paypal);
+
+            string message = request.Name ==
+                "Free"
+                    ? "You’re currently using the Free Plan."
+                    : $"Thank you for upgrading to the {request.Name} Plan! Your payment has been successfully processed.";
+                    
+            return Ok(new { captureResponse = captureResponse, message = message });
+
         }
     }
 }

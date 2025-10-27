@@ -29,7 +29,7 @@ namespace server.Models
 
         [Required]
         [StringLength(20)]
-        public string Status { get; set; } = "Pending"; // Pending | Succeeded | Failed
+        public string Status { get; set; } = "Pending"; // Pending | Paid | Failed
 
         [StringLength(255)]
         public string? Description { get; set; }

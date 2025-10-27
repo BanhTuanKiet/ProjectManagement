@@ -17,5 +17,11 @@ namespace server.Services.Project
             _mapper = mapper;
         }
 
+        public async Task<Payments> SavePaypalPayment(Payments paypalPayment)
+        {
+            await _context.Payments.AddAsync(paypalPayment);
+            await _context.SaveChangesAsync();
+            return paypalPayment;
+        }
     }
 }
