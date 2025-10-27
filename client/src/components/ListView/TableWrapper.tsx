@@ -13,9 +13,9 @@ import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import React, { useState, useEffect, useRef } from "react"
 import axios from "@/config/axiosConfig"
-import DueDateCell from "./DueDateCell"
+import DueDateCell from "../DueDateCell"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
-import SubtaskList from "./SubtaskList"
+import SubtaskList from "../SubtaskList"
 import { getPriorityIcon } from "@/utils/statusUtils"
 
 interface TableWrapperProps {

@@ -60,11 +60,11 @@ export default function BacklogView() {
             };
             if (sprintId) body.sprintId = sprintId;
 
-            const res = await axios.post(`/tasks/list/${projectId}`, body);
+            const res = await axios.post(`/tasks/list/${Number(project_name)}`, body);
             const taskId = res.data.taskId;
 
             // 2️⃣ Gọi API lấy chi tiết task vừa tạo
-            const detailRes = await axios.get(`/tasks/detail/${projectId}/${taskId}`);
+            const detailRes = await axios.get(`/tasks/detail/${Number(project_name)}/${taskId}`);
             const data = detailRes.data;
 
             // 3️⃣ Chuẩn hóa dữ liệu để thêm vào UI
