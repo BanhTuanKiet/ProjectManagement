@@ -10,7 +10,7 @@ namespace server.Configs
         public string Name { get; set; } = null!;
         public int TaskId { get; set; }
     }
-    
+
     public class TaskHubConfig : Hub
     {
         private static ConcurrentDictionary<string, ActiveUser> ActiveUsers = new();
@@ -70,6 +70,11 @@ namespace server.Configs
         {
             var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
             await hubContext.Clients.All.SendAsync("AddedTask", basicTask);
+        }
+
+        public async static Task DeletedTask(IHubContext<TaskHubConfig> hubContext, DTO.TaskDTO.BasicTask basicTask)
+        {
+            await hubContext.Clients.All.SendAsync("TaskUpdated", basicTask);
         }
     }
 }

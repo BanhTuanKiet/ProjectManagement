@@ -179,12 +179,30 @@ namespace server.Controllers
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
             if (dto.Ids == null || !dto.Ids.Any())
             {
                 return BadRequest(new { message = "No IDs provided." });
             }
 
             var deletedCount = await _tasksService.BulkDeleteTasksAsync(dto.ProjectId, dto.Ids);
+
+            foreach (var taskId in dto.Ids)
+            {
+                Notification notification = new Notification
+                {
+                    ProjectId = dto.ProjectId,
+                    Message = $"Delete task #{taskId} was deleted by {name}",
+                    Link = $"/tasks/{taskId}",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedId = userId,
+                    Type = "task"
+                };
+                await _notificationsService.SaveNotification(notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notification);
+            }
 
             return Ok(new
             {
@@ -193,7 +211,7 @@ namespace server.Controllers
             });
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -211,14 +229,14 @@ namespace server.Controllers
             if (updatedTask.Status != newStatus || updatedTask == null)
                 throw new ErrorException(400, "Update task failed!");
 
-            await _taskHubContext.Clients.Group($"project-{projectId}")
-                .SendAsync("TaskUpdated", updatedTask);
+            // await _taskHubContext.Clients.Group($"project-{projectId}")
+            // .SendAsync("TaskUpdated", updatedTask);
 
             Notification notification = new Notification
             {
                 UserId = null,
                 ProjectId = projectId,
-                Message = $"Task #{taskId} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
+                Message = $"Task #{taskId} {task.Title} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow,
                 Link = $"/tasks/{taskId}",
@@ -233,6 +251,82 @@ namespace server.Controllers
             await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
 
             return Ok(new { message = "Update task successful!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateDescription/{taskId}")]
+        public async Task<ActionResult> UpdateDescriptionTask(int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            string oldDescription = task.Description;
+            string newDescription = updates["description"]?.ToString() ?? oldDescription;
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskDescription(taskId, newDescription);
+
+            if (updatedTask.Description != newDescription || updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            return Ok(new { message = "Update description successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateStartDate/{taskId}")]
+        public async Task<ActionResult> UpdateStartDateTask(int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            DateTime? deadline = task.Deadline;
+            DateTime? startDate = null;
+            if (updates.ContainsKey("createdAt") && updates["createdAt"] != null)
+            {
+                startDate = DateTime.Parse(updates["createdAt"].ToString());
+            }
+            if (deadline.HasValue && startDate.HasValue)
+            {
+                if (deadline.Value.Year < startDate.Value.Year || deadline.Value.Month < startDate.Value.Month ||
+                 (deadline.Value.Month == startDate.Value.Month && deadline.Value.Day < startDate.Value.Day) ||
+                 (deadline.Value.Day == startDate.Value.Day && deadline.Value.TimeOfDay < startDate.Value.TimeOfDay))
+                {
+                    throw new ErrorException(400, "Ngày kết thúc không được sớm hơn ngày bắt đầu");
+                }
+            }
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskStartDate(taskId, startDate);
+
+            if (updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            return Ok(new { message = "Update start date successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateDueDate/{taskId}")]
+        public async Task<ActionResult> UpdateDueDateTask(int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            DateTime? startDate = task.CreatedAt;
+            DateTime? deadline = null;
+            if (updates.ContainsKey("deadline") && updates["deadline"] != null)
+            {
+                deadline = DateTime.Parse(updates["deadline"].ToString());
+            }
+
+            if (deadline.HasValue && startDate.HasValue && deadline < startDate)
+            {
+                throw new ErrorException(400, "Ngày kết thúc không được sớm hơn ngày bắt đầu");
+            }
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskDueDate(taskId, deadline);
+
+            if (updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            return Ok(new { message = "Update due date successfull!" });
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

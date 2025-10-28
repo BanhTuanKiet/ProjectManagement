@@ -67,7 +67,7 @@ namespace server.Configs
 
             CreateMap<SprintDTO.Update, Sprint>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
-                
+
             CreateMap<Backlog, BacklogDTO.BasicBacklog>();
 
             CreateMap<BacklogDTO.Create, Backlog>()

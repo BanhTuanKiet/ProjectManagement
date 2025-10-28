@@ -217,6 +217,60 @@ namespace server.Services.Project
             return task;
         }
 
+        public async Task<Models.Task> UpdateTaskDescription(int taskId, string description)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+            task.Description = description;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskStartDate(int taskId, DateTime? startDate)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            DateTime? deadline = task.Deadline;
+            if (deadline.HasValue && startDate.HasValue)
+            {
+                if (deadline.Value.Year < startDate.Value.Year || deadline.Value.Month < startDate.Value.Month ||
+                 (deadline.Value.Month == startDate.Value.Month && deadline.Value.Day < startDate.Value.Day) ||
+                 (deadline.Value.Day == startDate.Value.Day && deadline.Value.TimeOfDay < startDate.Value.TimeOfDay))
+                {
+                    throw new Exception("Ngày kết thúc không được sớm hơn ngày bắt đầu");
+                }
+                else
+                {
+                    task.CreatedAt = startDate ?? DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    return task;
+                }
+            }
+            return null;
+        }
+
+        public async Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            DateTime? startDate = task.CreatedAt;
+            if (startDate.HasValue && dueDate.HasValue)
+            {
+                if (dueDate.Value.Year < startDate.Value.Year || dueDate.Value.Month < startDate.Value.Month ||
+                (dueDate.Value.Month == startDate.Value.Month && dueDate.Value.Day < startDate.Value.Day) ||
+                 (dueDate.Value.Day == startDate.Value.Day && dueDate.Value.TimeOfDay < startDate.Value.TimeOfDay))
+                {
+                    throw new Exception("Ngày kết thúc không được sớm hơn ngày bắt đầu");
+                }
+                else
+                {
+                    task.Deadline = dueDate;
+                    await _context.SaveChangesAsync();
+                    return task;
+                }
+            }
+            return null;
+        }
+
         public async Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId)
         {
             var query = _context.Tasks
