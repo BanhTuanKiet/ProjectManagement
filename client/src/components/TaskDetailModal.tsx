@@ -1,153 +1,193 @@
-"use client"
+"use client";
 
-import axios from "@/config/axiosConfig"
-import { useEffect, useState } from "react"
+import axios from "@/config/axiosConfig";
+import { useEffect, useState } from "react";
 import { Paperclip } from "lucide-react";
-import { X, ChevronDown, User, Calendar, Plus, Activity, Filter, MoreHorizontal, Eye, Share, Lock } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
-import { Textarea } from "@/components/ui/textarea"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { TaskDetail } from "@/utils/ITask"
-import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils"
-import * as signalR from "@microsoft/signalr"
-import ColoredAvatar from "./ColoredAvatar"
-import type { ActiveUser } from "@/utils/IUser"
+import {
+    X,
+    ChevronDown,
+    User,
+    Calendar,
+    Plus,
+    Activity,
+    Filter,
+    MoreHorizontal,
+    Eye,
+    Share,
+    Lock,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+} from "@/components/ui/accordion";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { TaskDetail } from "@/utils/ITask";
+import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils";
+import * as signalR from "@microsoft/signalr";
+import ColoredAvatar from "./ColoredAvatar";
+import type { ActiveUser } from "@/utils/IUser";
 import { Trash } from "lucide-react";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { useUser } from "@/app/(context)/UserContext";
 
 interface Comment {
-    commentId: number
-    taskId: number
-    userId: string
-    content: string
-    createdAt: string
-    isEdited: boolean
-    userName?: string
+    commentId: number;
+    taskId: number;
+    userId: string;
+    content: string;
+    createdAt: string;
+    isEdited: boolean;
+    userName?: string;
 }
 
 export default function TaskDetailModal({
     taskId,
     onClose,
 }: {
-    taskId: number,
-    onClose: () => void
+    taskId: number;
+    onClose: () => void;
 }) {
-    const [activeTab, setActiveTab] = useState("all")
-    const [comment, setComment] = useState("")
-    const [task, setTask] = useState<TaskDetail | null>(null)
-    const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
-    const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([])
-    const [comments, setComments] = useState<Comment[]>([])
-    const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
-    const { user } = useUser()
-    const { project_name } = useProject()
+    const [activeTab, setActiveTab] = useState("all");
+    const [comment, setComment] = useState("");
+    const [task, setTask] = useState<TaskDetail | null>(null);
+    const [connection, setConnection] = useState<signalR.HubConnection | null>(
+        null
+    );
+    const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+    const { user } = useUser();
+    const { project_name } = useProject();
     const [files, setFiles] = useState<any[]>([]);
     const [previewFile, setPreviewFile] = useState<any | null>(null);
+    const [description, setDescription] = useState(task?.description || "");
+    const [editDescription, setEditDescription] = useState(false);
+    const [startDate, setStartDate] = useState(task?.createdAt || "");
+    const [editStartDate, setEditStartDate] = useState(false);
+    const [dueDate, setDueDate] = useState(task?.deadline || "");
+    const [editDueDate, setEditDueDate] = useState(false);
 
     // fetch task detail + comments
     useEffect(() => {
         const fetchTaskDetail = async () => {
             try {
-                const response = await axios.get(`/tasks/detail/${project_name}/${taskId}`)
-                setTask(response.data)
+                const response = await axios.get(
+                    `/tasks/detail/${project_name}/${taskId}`
+                );
+                setTask(response.data);
             } catch (error) {
-                console.error("Fetch task detail error:", error)
+                console.error("Fetch task detail error:", error);
             }
-        }
+        };
+
 
         const fetchComments = async () => {
             try {
-                const res = await axios.get(`/comment/task/${taskId}`)
-                setComments(res.data ?? [])
+                const res = await axios.get(`/comment/task/${taskId}`);
+                setComments(res.data ?? []);
             } catch (error) {
-                console.error("Fetch comments error:", error)
+                console.error("Fetch comments error:", error);
             }
-        }
+        };
 
-        fetchTaskDetail()
-        fetchComments()
-    }, [project_name, taskId])
+        fetchTaskDetail();
+        fetchComments();
+    }, [project_name, taskId]);
 
     // setup SignalR connection
     useEffect(() => {
-        if (!user) return
+        if (!user) return;
 
         const conn = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5144/hubs/task", {
                 accessTokenFactory: () => user.token,
             })
             .withAutomaticReconnect()
-            .build()
+            .build();
 
-        setConnection(conn)
+        setConnection(conn);
 
         return () => {
             // ensure cleanup if token changes before connection established
             if (conn && conn.state === signalR.HubConnectionState.Connected) {
-                conn.stop().catch(() => { /* ignore */ })
+                conn.stop().catch(() => {
+                    /* ignore */
+                });
             }
-        }
-    }, [user])
+        };
+    }, [user]);
 
     useEffect(() => {
-        if (!connection) return
+        if (!connection) return;
 
-        let mounted = true
+        let mounted = true;
 
-        connection.start().then(async () => {
-            if (!mounted) return
-            console.log("Connected to TaskHub")
+        connection
+            .start()
+            .then(async () => {
+                if (!mounted) return;
+                console.log("Connected to TaskHub");
 
-            try {
-                await connection.invoke("JoinTaskGroup", taskId)
-            } catch (err) {
-                console.error("JoinTaskGroup error:", err)
-            }
+                try {
+                    await connection.invoke("JoinTaskGroup", taskId);
+                } catch (err) {
+                    console.error("JoinTaskGroup error:", err);
+                }
 
-            connection.on("UserJoinedTask", (user: ActiveUser) => {
-                setActiveUsers((prev) => {
-                    // avoid duplicates
-                    if (prev.find((p) => p.id === user.id)) return prev
-                    return [...prev, user]
-                })
+                connection.on("UserJoinedTask", (user: ActiveUser) => {
+                    setActiveUsers((prev) => {
+                        // avoid duplicates
+                        if (prev.find((p) => p.id === user.id)) return prev;
+                        return [...prev, user];
+                    });
+                });
+
+                connection.on("UserLeftTask", (user: ActiveUser) => {
+                    setActiveUsers((prev) => prev.filter((u) => u.id !== user.id));
+                });
+
+                connection.on("ActiveUsersInTask", (users: ActiveUser[]) => {
+                    setActiveUsers(users);
+                });
+
+                // optional: listen to new comments broadcasted by hub (if implemented server-side)
+                connection.on("NewComment", (newComment: Comment) => {
+                    setComments((prev) => [newComment, ...prev]);
+                });
+
+                try {
+                    await connection.invoke("GetActiveUsers", taskId);
+                } catch (err) {
+                    console.error("GetActiveUsers error:", err);
+                }
             })
-
-            connection.on("UserLeftTask", (user: ActiveUser) => {
-                setActiveUsers((prev) => prev.filter((u) => u.id !== user.id))
-            })
-
-            connection.on("ActiveUsersInTask", (users: ActiveUser[]) => {
-                setActiveUsers(users)
-            })
-
-            // optional: listen to new comments broadcasted by hub (if implemented server-side)
-            connection.on("NewComment", (newComment: Comment) => {
-                setComments((prev) => [newComment, ...prev])
-            })
-
-            try {
-                await connection.invoke("GetActiveUsers", taskId)
-            } catch (err) {
-                console.error("GetActiveUsers error:", err)
-            }
-        }).catch(err => {
-            console.error("SignalR connection start error:", err)
-        })
+            .catch((err) => {
+                console.error("SignalR connection start error:", err);
+            });
 
         return () => {
-            connection.off("UserJoinedTask")
-            connection.off("UserLeftTask")
-            connection.off("ActiveUsersInTask")
-            connection.off("NewComment")
-            connection.stop().catch(() => { /* ignore */ })
-            mounted = false
-        }
-    }, [connection, taskId])
+            connection.off("UserJoinedTask");
+            connection.off("UserLeftTask");
+            connection.off("ActiveUsersInTask");
+            connection.off("NewComment");
+            connection.stop().catch(() => {
+                /* ignore */
+            });
+            mounted = false;
+        };
+    }, [connection, taskId]);
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -166,52 +206,59 @@ export default function TaskDetailModal({
     // Handlers for comments ----------------------------------
 
     const handleAddComment = async () => {
-        if (!comment.trim()) return
+        if (!comment.trim()) return;
         try {
             if (editingCommentId) {
                 // update existing comment
-                const res = await axios.put(`/comment/${editingCommentId}`, { content: comment.trim() })
-                setComments((prev) => prev.map(c => c.commentId === editingCommentId ? res.data : c))
-                setEditingCommentId(null)
+                const res = await axios.put(`/comment/${editingCommentId}`, {
+                    content: comment.trim(),
+                });
+                setComments((prev) =>
+                    prev.map((c) => (c.commentId === editingCommentId ? res.data : c))
+                );
+                setEditingCommentId(null);
             } else {
                 // create new
                 const newCommentPayload = {
                     TaskId: taskId,
                     Content: comment.trim(),
-                }
-                const res = await axios.post(`/comment`, newCommentPayload)
+                };
+                const res = await axios.post(`/comment`, newCommentPayload);
                 // prepend new comment
-                setComments((prev) => [res.data, ...prev])
+                setComments((prev) => [res.data, ...prev]);
                 // optionally notify server via SignalR if needed
-                if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                if (
+                    connection &&
+                    connection.state === signalR.HubConnectionState.Connected
+                ) {
                     try {
-                        await connection.invoke("BroadcastNewComment", taskId, res.data)
+                        await connection.invoke("BroadcastNewComment", taskId, res.data);
                     } catch (err) {
                         // ignore if server not implement BroadcastNewComment
                     }
                 }
             }
-            setComment("")
+            setComment("");
         } catch (error) {
-            console.error("Comment add/edit error:", error)
+            console.error("Comment add/edit error:", error);
         }
-    }
+    };
 
     const handleEditClick = (c: Comment) => {
-        setComment(c.content)
-        setEditingCommentId(c.commentId)
+        setComment(c.content);
+        setEditingCommentId(c.commentId);
         // switch to comments tab if not there
-        setActiveTab("comments")
-    }
+        setActiveTab("comments");
+    };
 
     const handleDeleteComment = async (id: number) => {
         try {
-            await axios.delete(`/comment/${id}`)
-            setComments((prev) => prev.filter((c) => c.commentId !== id))
+            await axios.delete(`/comment/${id}`);
+            setComments((prev) => prev.filter((c) => c.commentId !== id));
         } catch (error) {
-            console.error("Delete comment error:", error)
+            console.error("Delete comment error:", error);
         }
-    }
+    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -224,7 +271,7 @@ export default function TaskDetailModal({
         try {
             const res = await axios.post(`/files/upload`, formData);
             alert("Upload thành công!");
-            setFiles(prev => [res.data, ...prev]); // ✅ Cập nhật danh sách ngay
+            setFiles((prev) => [res.data, ...prev]); // ✅ Cập nhật danh sách ngay
         } catch (err) {
             console.error("Upload error:", err);
             alert("Lỗi upload file");
@@ -245,8 +292,43 @@ export default function TaskDetailModal({
         }
     };
 
+    const handleUpdateDescription = async (updateDescription: string) => {
+        try {
+            const response = await axios.put(`/tasks/updateDescription/${taskId}`, {
+                description: updateDescription,
+            });
+            setEditDescription(false);
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-    if (!task) return null
+    const handleStartDate = async (newStartDate: string) => {
+        try {
+            const response = await axios.put(`/tasks/updateStartDate/${taskId}`, {
+                createdAt: newStartDate,
+            });
+            setEditStartDate(false);
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleDueDate = async (newDueDate: string) => {
+        try {
+            const response = await axios.put(`/tasks/updateDueDate/${taskId}`, {
+                deadline: newDueDate,
+            });
+            setEditDueDate(false);
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    if (!task) return null;
 
     return (
         <TooltipProvider>
@@ -256,7 +338,11 @@ export default function TaskDetailModal({
                 <div className="relative bg-white w-[1000px] h-[90vh] rounded-lg shadow-xl flex flex-col">
                     <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
                         <div className="flex items-center gap-3">
-                            <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-blue-600 hover:bg-blue-50"
+                            >
                                 <Plus className="h-4 w-4 mr-1" />
                                 Add epic
                             </Button>
@@ -276,19 +362,32 @@ export default function TaskDetailModal({
                             </Button>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="bg-blue-100 text-blue-700">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="bg-blue-100 text-blue-700"
+                                    >
                                         <Eye className="h-4 w-4 mr-1" />
                                         {activeUsers.length}
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="p-3">
                                     <div className="space-y-2">
-                                        <p className="text-sm font-medium">Active Users ({activeUsers.length})</p>
+                                        <p className="text-sm font-medium">
+                                            Active Users ({activeUsers.length})
+                                        </p>
                                         {activeUsers.length > 0 ? (
                                             <div className="flex flex-wrap gap-2">
                                                 {activeUsers.map((user) => (
-                                                    <div key={user.id} className="flex items-center gap-2">
-                                                        <ColoredAvatar id={user.id} name={user.name} size="sm" />
+                                                    <div
+                                                        key={user.id}
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        <ColoredAvatar
+                                                            id={user.id}
+                                                            name={user.name}
+                                                            size="sm"
+                                                        />
                                                     </div>
                                                 ))}
                                             </div>
@@ -315,7 +414,9 @@ export default function TaskDetailModal({
                             <div className="p-6 space-y-6">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Badge className={`${getTaskStatusBadge(task.status)} border`}>
+                                        <Badge
+                                            className={`${getTaskStatusBadge(task.status)} border`}
+                                        >
                                             {task.status}
                                             <ChevronDown className="h-3 w-3 ml-1" />
                                         </Badge>
@@ -325,7 +426,13 @@ export default function TaskDetailModal({
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <Button variant="ghost" size="sm" onClick={() => document.getElementById("fileUploadInput")?.click()}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                            document.getElementById("fileUploadInput")?.click()
+                                        }
+                                    >
                                         <Paperclip className="h-4 w-4 mr-1" />
                                         Add attachment
                                     </Button>
@@ -338,7 +445,9 @@ export default function TaskDetailModal({
                                 </div>
                                 {task.files && task.files.length > 0 && (
                                     <div className="mt-4">
-                                        <h3 className="text-sm font-medium text-gray-900 mb-2">Attachments</h3>
+                                        <h3 className="text-sm font-medium text-gray-900 mb-2">
+                                            Attachments
+                                        </h3>
                                         <ul className="space-y-1">
                                             {task.files.map((f) => (
                                                 <li key={f.fileId}>
@@ -357,7 +466,9 @@ export default function TaskDetailModal({
                                 )}
                                 {/* Attachments section */}
                                 <div className="mt-4">
-                                    <h3 className="text-sm font-medium text-gray-900 mb-2">Attachments</h3>
+                                    <h3 className="text-sm font-medium text-gray-900 mb-2">
+                                        Attachments
+                                    </h3>
 
                                     {files.length === 0 ? (
                                         <p className="text-gray-500 text-sm">No attachments yet.</p>
@@ -389,9 +500,13 @@ export default function TaskDetailModal({
 
                                                     {/* Footer info */}
                                                     <div className="p-2 flex flex-col bg-white">
-                                                        <span className="text-xs font-medium truncate">{f.fileName}</span>
+                                                        <span className="text-xs font-medium truncate">
+                                                            {f.fileName}
+                                                        </span>
                                                         <span className="text-[10px] text-gray-400">
-                                                            {f.uploadedAt ? new Date(f.uploadedAt).toLocaleString() : "Just now"}
+                                                            {f.uploadedAt
+                                                                ? new Date(f.uploadedAt).toLocaleString()
+                                                                : "Just now"}
                                                         </span>
                                                     </div>
 
@@ -425,8 +540,19 @@ export default function TaskDetailModal({
                                                             className="bg-white/90 p-2 rounded-full hover:bg-white transition"
                                                             title="Tải xuống"
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                className="h-4 w-4 text-gray-700"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
+                                                                />
                                                             </svg>
                                                         </button>
 
@@ -438,7 +564,6 @@ export default function TaskDetailModal({
                                                             <Trash className="h-4 w-4 text-red-600" />
                                                         </button>
                                                     </div>
-
                                                 </div>
                                             ))}
                                         </div>
@@ -446,45 +571,89 @@ export default function TaskDetailModal({
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
-                                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded border min-h-[60px]">
-                                        {task.description || "Add a description..."}
-                                    </div>
+                                    <h3 className="text-sm font-medium text-gray-900 mb-2">
+                                        Description
+                                    </h3>
+
+                                    {!editDescription ? (
+                                        <div
+                                            className="text-sm text-gray-600 bg-gray-50 p-3 rounded border min-h-[60px] cursor-pointer hover:bg-gray-100"
+                                            onClick={() => setEditDescription(true)}
+                                        >
+                                            {description || task.description}
+                                        </div>
+                                    ) : (
+                                        <textarea
+                                            autoFocus
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            onBlur={() => {
+                                                handleUpdateDescription(description);
+                                                setEditDescription(false);
+                                            }}
+                                            className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
+                                            placeholder="Add a description..."
+                                        />
+                                    )}
                                 </div>
 
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-sm font-medium text-gray-900">Subtasks</h3>
+                                        <h3 className="text-sm font-medium text-gray-900">
+                                            Subtasks
+                                        </h3>
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
                                     </div>
-                                    <button className="text-sm text-gray-500 hover:text-gray-700">Add subtask</button>
+                                    <button className="text-sm text-gray-500 hover:text-gray-700">
+                                        Add subtask
+                                    </button>
                                 </div>
 
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-900 mb-3">Linked work items</h3>
-                                    <button className="text-sm text-gray-500 hover:text-gray-700">Add linked work item</button>
+                                    <h3 className="text-sm font-medium text-gray-900 mb-3">
+                                        Linked work items
+                                    </h3>
+                                    <button className="text-sm text-gray-500 hover:text-gray-700">
+                                        Add linked work item
+                                    </button>
                                 </div>
 
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-sm font-medium text-gray-900">Activity</h3>
+                                        <h3 className="text-sm font-medium text-gray-900">
+                                            Activity
+                                        </h3>
                                         <Button variant="ghost" size="sm">
                                             <Filter className="h-4 w-4" />
                                         </Button>
                                     </div>
 
-                                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                    <Tabs
+                                        value={activeTab}
+                                        onValueChange={setActiveTab}
+                                        className="w-full"
+                                    >
                                         <TabsList className="grid w-full grid-cols-4 bg-gray-100">
-                                            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-                                            <TabsTrigger value="comments" className="text-xs">Comments</TabsTrigger>
-                                            <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
-                                            <TabsTrigger value="worklog" className="text-xs">Work log</TabsTrigger>
+                                            <TabsTrigger value="all" className="text-xs">
+                                                All
+                                            </TabsTrigger>
+                                            <TabsTrigger value="comments" className="text-xs">
+                                                Comments
+                                            </TabsTrigger>
+                                            <TabsTrigger value="history" className="text-xs">
+                                                History
+                                            </TabsTrigger>
+                                            <TabsTrigger value="worklog" className="text-xs">
+                                                Work log
+                                            </TabsTrigger>
                                         </TabsList>
 
                                         <TabsContent value="all" className="mt-4 space-y-4">
                                             <div className="flex gap-3">
                                                 <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="bg-red-500 text-white text-xs">TB</AvatarFallback>
+                                                    <AvatarFallback className="bg-red-500 text-white text-xs">
+                                                        TB
+                                                    </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 text-sm">
@@ -492,23 +661,44 @@ export default function TaskDetailModal({
                                                         <span className="text-gray-500">updated the</span>
                                                         <span className="font-medium">Reporter</span>
                                                     </div>
-                                                    <div className="text-xs text-gray-500 mt-1">September 13, 2025 at 3:36 PM</div>
-                                                    <Badge variant="outline" className="mt-2 text-xs">HISTORY</Badge>
-                                                    <div className="text-sm text-gray-600 mt-2">Thái Bảo → None</div>
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        September 13, 2025 at 3:36 PM
+                                                    </div>
+                                                    <Badge variant="outline" className="mt-2 text-xs">
+                                                        HISTORY
+                                                    </Badge>
+                                                    <div className="text-sm text-gray-600 mt-2">
+                                                        Thái Bảo → None
+                                                    </div>
                                                 </div>
                                             </div>
 
                                             {comments.map((c) => (
                                                 <div key={c.commentId} className="flex gap-3 pb-3">
-                                                    <ColoredAvatar id={c.userId} name={c.userName ?? "User"} size="md" showOnlineStatus={true} />
+                                                    <ColoredAvatar
+                                                        id={c.userId}
+                                                        name={c.userName ?? "User"}
+                                                        size="md"
+                                                        showOnlineStatus={true}
+                                                    />
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2 text-sm">
-                                                            <span className="font-medium">{c.userName ?? "User"}</span>
+                                                            <span className="font-medium">
+                                                                {c.userName ?? "User"}
+                                                            </span>
                                                             <span className="text-gray-500">commented</span>
                                                         </div>
-                                                        <div className="text-xs text-gray-500 mt-0.5">{new Date(c.createdAt).toLocaleString()}</div>
-                                                        <div className="text-sm text-gray-700 mt-1">{c.content}</div>
-                                                        {c.isEdited && <span className="text-xs text-gray-400">(edited)</span>}
+                                                        <div className="text-xs text-gray-500 mt-0.5">
+                                                            {new Date(c.createdAt).toLocaleString()}
+                                                        </div>
+                                                        <div className="text-sm text-gray-700 mt-1">
+                                                            {c.content}
+                                                        </div>
+                                                        {c.isEdited && (
+                                                            <span className="text-xs text-gray-400">
+                                                                (edited)
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -517,7 +707,9 @@ export default function TaskDetailModal({
                                         <TabsContent value="comments" className="mt-4">
                                             <div className="flex gap-3">
                                                 <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="bg-red-500 text-white text-xs">ME</AvatarFallback>
+                                                    <AvatarFallback className="bg-red-500 text-white text-xs">
+                                                        ME
+                                                    </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex-1">
                                                     <Textarea
@@ -527,30 +719,65 @@ export default function TaskDetailModal({
                                                         className="min-h-[80px] resize-none"
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Enter" && !e.shiftKey) {
-                                                                e.preventDefault()
-                                                                handleAddComment()
+                                                                e.preventDefault();
+                                                                handleAddComment();
                                                             }
                                                         }}
                                                     />
                                                     <div className="flex items-center gap-2 mt-2">
                                                         <div className="flex gap-1">
-                                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => { setComment("🎉 Looks good!"); }}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-xs px-2 py-1 h-auto"
+                                                                onClick={() => {
+                                                                    setComment("🎉 Looks good!");
+                                                                }}
+                                                            >
                                                                 🎉 Looks good!
                                                             </Button>
-                                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => { setComment("👋 Need help?"); }}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-xs px-2 py-1 h-auto"
+                                                                onClick={() => {
+                                                                    setComment("👋 Need help?");
+                                                                }}
+                                                            >
                                                                 👋 Need help?
                                                             </Button>
-                                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => { setComment("🚫 This is blocked..."); }}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-xs px-2 py-1 h-auto"
+                                                                onClick={() => {
+                                                                    setComment("🚫 This is blocked...");
+                                                                }}
+                                                            >
                                                                 🚫 This is blocked...
                                                             </Button>
-                                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => { setComment("🔍 Can you clarify...?"); }}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-xs px-2 py-1 h-auto"
+                                                                onClick={() => {
+                                                                    setComment("🔍 Can you clarify...?");
+                                                                }}
+                                                            >
                                                                 🔍 Can you clarify...?
                                                             </Button>
                                                         </div>
 
                                                         <div className="ml-auto flex items-center gap-2">
                                                             {editingCommentId && (
-                                                                <Button size="sm" variant="ghost" onClick={() => { setEditingCommentId(null); setComment(""); }}>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() => {
+                                                                        setEditingCommentId(null);
+                                                                        setComment("");
+                                                                    }}
+                                                                >
                                                                     Cancel
                                                                 </Button>
                                                             )}
@@ -561,7 +788,11 @@ export default function TaskDetailModal({
                                                     </div>
 
                                                     <div className="text-xs text-gray-500 mt-2">
-                                                        Pro tip: press <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">M</kbd> to comment
+                                                        Pro tip: press{" "}
+                                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">
+                                                            M
+                                                        </kbd>{" "}
+                                                        to comment
                                                     </div>
                                                 </div>
                                             </div>
@@ -569,20 +800,43 @@ export default function TaskDetailModal({
                                             {/* comment list with edit/delete */}
                                             <div className="mt-4 space-y-3">
                                                 {comments.map((c) => (
-                                                    <div key={c.commentId} className="flex gap-3 border-b pb-3">
+                                                    <div
+                                                        key={c.commentId}
+                                                        className="flex gap-3 border-b pb-3"
+                                                    >
                                                         <Avatar className="h-8 w-8">
-                                                            <AvatarFallback className="bg-gray-500 text-white text-xs">{c.userName?.[0] ?? "U"}</AvatarFallback>
+                                                            <AvatarFallback className="bg-gray-500 text-white text-xs">
+                                                                {c.userName?.[0] ?? "U"}
+                                                            </AvatarFallback>
                                                         </Avatar>
                                                         <div className="flex-1">
                                                             <div className="flex items-center justify-between">
-                                                                <span className="text-sm font-medium">{c.userName ?? "User"}</span>
-                                                                <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleString()}</span>
+                                                                <span className="text-sm font-medium">
+                                                                    {c.userName ?? "User"}
+                                                                </span>
+                                                                <span className="text-xs text-gray-400">
+                                                                    {new Date(c.createdAt).toLocaleString()}
+                                                                </span>
                                                             </div>
-                                                            <div className="text-sm text-gray-700 mt-1">{c.content}</div>
-                                                            {c.isEdited && <span className="text-xs text-gray-400 ml-1">(edited)</span>}
+                                                            <div className="text-sm text-gray-700 mt-1">
+                                                                {c.content}
+                                                            </div>
+                                                            {c.isEdited && (
+                                                                <span className="text-xs text-gray-400 ml-1">
+                                                                    (edited)
+                                                                </span>
+                                                            )}
                                                             <div className="flex gap-2 text-xs text-blue-600 mt-1">
-                                                                <button onClick={() => handleEditClick(c)}>Edit</button>
-                                                                <button onClick={() => handleDeleteComment(c.commentId)}>Delete</button>
+                                                                <button onClick={() => handleEditClick(c)}>
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleDeleteComment(c.commentId)
+                                                                    }
+                                                                >
+                                                                    Delete
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -591,11 +845,15 @@ export default function TaskDetailModal({
                                         </TabsContent>
 
                                         <TabsContent value="history" className="mt-4">
-                                            <div className="text-sm text-gray-500">History items will appear here</div>
+                                            <div className="text-sm text-gray-500">
+                                                History items will appear here
+                                            </div>
                                         </TabsContent>
 
                                         <TabsContent value="worklog" className="mt-4">
-                                            <div className="text-sm text-gray-500">Work log entries will appear here</div>
+                                            <div className="text-sm text-gray-500">
+                                                Work log entries will appear here
+                                            </div>
                                         </TabsContent>
                                     </Tabs>
                                 </div>
@@ -606,60 +864,130 @@ export default function TaskDetailModal({
                             <div className="p-4">
                                 <Accordion type="single" collapsible className="w-full">
                                     <AccordionItem value="details">
-                                        <AccordionTrigger className="text-sm font-medium">Details</AccordionTrigger>
+                                        <AccordionTrigger className="text-sm font-medium">
+                                            Details
+                                        </AccordionTrigger>
                                         <AccordionContent>
                                             <div className="space-y-4 mt-2">
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-700 block mb-2">Assignee</label>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Assignee
+                                                    </label>
                                                     <div className="flex items-center gap-2">
                                                         <User className="h-4 w-4 text-gray-400" />
                                                         <span className="text-sm text-gray-600">
-                                                            {typeof task.assignee === "string" ? task.assignee : task.assignee?.name || "Unassigned"}
+                                                            {typeof task.assignee === "string"
+                                                                ? task.assignee
+                                                                : task.assignee?.name || "Unassigned"}
                                                         </span>
                                                     </div>
-                                                    <button className="text-xs text-blue-600 hover:text-blue-800 mt-1">Assign to me</button>
-                                                </div>
-
-                                                <div>
-                                                    <label className="text-xs font-medium text-gray-700 block mb-2">Priority</label>
-                                                    <div className="flex items-center gap-2">
-                                                        {getPriorityIcon("Medium")}
-                                                        <span className="text-sm text-gray-600">Medium</span>
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <label className="text-xs font-medium text-gray-700 block mb-2">Parent</label>
-                                                    <button className="text-sm text-gray-500 hover:text-gray-700">Add parent</button>
-                                                </div>
-
-                                                <div>
-                                                    <label className="text-xs font-medium text-gray-700 block mb-2">Due date</label>
-                                                    <button className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2">
-                                                        <Calendar className="h-4 w-4" />
-                                                        {task.deadline ?? "Add due date"}
+                                                    <button className="text-xs text-blue-600 hover:text-blue-800 mt-1">
+                                                        Assign to me
                                                     </button>
                                                 </div>
 
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-700 block mb-2">Labels</label>
-                                                    <button className="text-sm text-gray-500 hover:text-gray-700">Add labels</button>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Priority
+                                                    </label>
+                                                    <div className="flex items-center gap-2">
+                                                        {getPriorityIcon("Medium")}
+                                                        <span className="text-sm text-gray-600">
+                                                            Medium
+                                                        </span>
+                                                    </div>
                                                 </div>
 
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-700 block mb-2">Sprint</label>
-                                                    <button className="text-sm text-gray-500 hover:text-gray-700">Add to sprint</button>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Parent
+                                                    </label>
+                                                    <button className="text-sm text-gray-500 hover:text-gray-700">
+                                                        Add parent
+                                                    </button>
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Due date
+                                                    </label>
+
+                                                    {!editDueDate ? (
+                                                        <button
+                                                            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
+                                                            onClick={() => setEditDueDate(true)}
+                                                        >
+                                                            <Calendar className="h-4 w-4" />
+                                                            {dueDate || task.deadline || "Add due date"}
+                                                        </button>
+                                                    ) : (
+                                                        <input
+                                                            type="datetime-local"
+                                                            autoFocus
+                                                            value={dueDate ? new Date(dueDate).toISOString().slice(0, 16) : ""}
+                                                            onChange={(e) => setDueDate(e.target.value)}
+                                                            onBlur={() => handleDueDate(dueDate)}
+                                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Start date
+                                                    </label>
+
+                                                    {!editStartDate ? (
+                                                        <button
+                                                            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
+                                                            onClick={() => setEditStartDate(true)}
+                                                        >
+                                                            <Calendar className="h-4 w-4" />
+                                                            {startDate || task.createdAt}
+                                                        </button>
+                                                    ) : (
+                                                        <input
+                                                            type="datetime-local"
+                                                            autoFocus
+                                                            value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ""}
+                                                            onChange={(e) => setStartDate(e.target.value)}
+                                                            onBlur={() => handleStartDate(startDate)}
+                                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Labels
+                                                    </label>
+                                                    <button className="text-sm text-gray-500 hover:text-gray-700">
+                                                        Add labels
+                                                    </button>
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Sprint
+                                                    </label>
+                                                    <button className="text-sm text-gray-500 hover:text-gray-700">
+                                                        Add to sprint
+                                                    </button>
                                                 </div>
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
 
                                     <AccordionItem value="more-fields">
-                                        <AccordionTrigger className="text-sm font-medium">More fields</AccordionTrigger>
+                                        <AccordionTrigger className="text-sm font-medium">
+                                            More fields
+                                        </AccordionTrigger>
                                         <AccordionContent>
                                             <div className="mt-2 text-sm text-gray-600">
                                                 <div className="mb-2">
-                                                    <span className="block text-xs font-medium text-gray-700 mb-1">Reporter</span>
+                                                    <span className="block text-xs font-medium text-gray-700 mb-1">
+                                                        Reporter
+                                                    </span>
                                                     Anonymous
                                                 </div>
                                             </div>
@@ -667,11 +995,15 @@ export default function TaskDetailModal({
                                     </AccordionItem>
 
                                     <AccordionItem value="automation">
-                                        <AccordionTrigger className="text-sm font-medium">Automation</AccordionTrigger>
+                                        <AccordionTrigger className="text-sm font-medium">
+                                            Automation
+                                        </AccordionTrigger>
                                         <AccordionContent>
                                             <div className="mt-2 text-sm text-gray-600">
                                                 <p className="mb-2">Recent rule runs</p>
-                                                <button className="text-xs text-blue-600 hover:text-blue-800">Refresh to see recent runs</button>
+                                                <button className="text-xs text-blue-600 hover:text-blue-800">
+                                                    Refresh to see recent runs
+                                                </button>
                                                 <div className="text-xs text-gray-500 mt-2">
                                                     Created September 7, 2025 at 1:34 PM <br />
                                                     Updated September 13, 2025 at 3:36 PM
@@ -722,5 +1054,5 @@ export default function TaskDetailModal({
                 </div>
             )}
         </TooltipProvider>
-    )
+    );
 }

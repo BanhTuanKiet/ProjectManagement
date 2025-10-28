@@ -12,40 +12,15 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import BackgroundPicker from "./ChangeBackground"
-import axios from "@/config/axiosConfig"
 import { useParams } from "next/navigation"
-import { useProject } from "@/app/(context)/ProjectContext"
 import InvitePeopleDialog from "@/components/InvitePeopleDialog"
 
 
 export default function ProjectMenu() {
     const { project_name } = useParams()
     const projectId = Number(project_name)
-    const { projects, setProjects } = useProject()
-    const currentProject = projects?.find(p => p.projectId === projectId)
     const [bgOpen, setBgOpen] = useState(false)
     const [invitePeopleOpen, setInvitePeopleOpen] = useState(false)
-    const [email, setEmail] = useState("")
-    const [role, setRole] = useState("Member")
-
-    const handleInvite = async () => {
-        try {
-            const formData = {
-                toEmail: email,
-                projectId: projectId,
-                roleInProject: role
-            }
-
-            const res = await axios.post(`/projects/inviteMember/${projectId}`, formData);
-            console.log("Invite result:", res.data)
-
-            setInvitePeopleOpen(false)
-            setEmail("")
-            setRole("Member")
-        } catch (err) {
-            console.error("Error inviting member:", err)
-        }
-    }
 
     return (
         <>

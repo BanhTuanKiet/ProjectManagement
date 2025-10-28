@@ -22,7 +22,7 @@ const NotificationContext = createContext<NotificationContextType>({
         workedOn: [],
     },
     setNotifications: () => { },
-    setData: () => {}
+    setData: () => { }
 })
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {

@@ -6,6 +6,8 @@ import { formatDate } from "@/utils/dateUtils"
 import type { Member } from "@/utils/IUser"
 import { getRoleBadge } from "@/utils/statusUtils"
 import ColoredAvatar from "../ColoredAvatar"
+import InvitePeopleDialog from "@/components/InvitePeopleDialog"
+import { useParams } from "next/navigation"
 
 export default function MemberList({
   project,
@@ -15,6 +17,9 @@ export default function MemberList({
   const [sortedMemers, setSortedMembers] = useState<Member[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+  const { project_name } = useParams()
+  const projectId = Number(project_name)
+  const [invitePeopleOpen, setInvitePeopleOpen] = useState(false)
 
   useEffect(() => {
     if (!project) return
@@ -39,7 +44,12 @@ export default function MemberList({
           <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
           <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
             <UserPlus size={16} className="inline mr-1" />
-            Invite Member
+            <span onClick={() => setInvitePeopleOpen(true)} className="text-sm font-medium">Invite people</span>
+            <InvitePeopleDialog
+              open={invitePeopleOpen}
+              onOpenChange={setInvitePeopleOpen}
+              projectId={projectId}
+            />
           </button>
         </div>
       </div>
@@ -111,9 +121,8 @@ export default function MemberList({
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  currentPage === page ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-200"
-                }`}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${currentPage === page ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-200"
+                  }`}
               >
                 {page}
               </button>
