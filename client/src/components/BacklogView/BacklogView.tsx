@@ -8,9 +8,13 @@ import TaskDetailModal from '../TaskDetailModal'
 import BacklogContent from './BacklogSections'
 import { useProject } from '@/app/(context)/ProjectContext'
 import SprintCard from '../SprintCard'
+import { Plus } from 'lucide-react'
+import { useTask } from '@/app/(context)/TaskContext'
+import { Console } from 'console'
 
-interface WorkItem { id: number; key: string; title: string; status: 'TO DO' | 'IN PROGRESS' | 'DONE'; assignee?: string; assigneeColor?: string; sprintId?: number | null }
-interface Sprint { sprintId: number; name: string; projectId: number; status?: 'active' | 'planned' | 'completed'; workItems: WorkItem[] }
+
+interface WorkItem { id: number; key: string; title: string; status: 'TO DO' | 'IN PROGRESS' | 'DONE'; assignee?: string; assigneeColor?: string; sprintId?: number | null, deadline?: string; }
+interface Sprint { sprintId: number; name: string; projectId: number; status?: 'active' | 'planned' | 'completed'; workItems: WorkItem[], startDate: string; endDate: string }
 
 export default function BacklogView() {
     const [sprints, setSprints] = useState<Sprint[]>([])
@@ -27,21 +31,44 @@ export default function BacklogView() {
     const scrollSpeed = useRef(0)
     const scrollFrame = useRef<number | null>(null)
     const footerRef = useRef<HTMLDivElement>(null);
+    const [showSprintForm, setShowSprintForm] = useState(false)
+    const ProjectId = Number(project_name);
+    const { tasks, connection } = useTask()
+    const [selectedSprints, setSelectedSprints] = useState<Set<number>>(new Set());
 
-
-    useEffect(() => { if (project_name) fetchData() }, [project_name])
+    console.log("task in backlog view:", tasks);
+    useEffect(() => {
+        if (!project_name) return
+        fetchData()
+    }, [project_name, tasks])
 
     const fetchData = async () => {
-        const [sprintRes, backlogRes, taskRes] = await Promise.all([
-            axios.get(`/sprints/${project_name}`),
-            axios.get(`/backlogs/${project_name}`),
-            axios.get(`/tasks/${project_name}/list`)
+        const [sprintRes] = await Promise.all([
+            axios.get(`/sprints/${ProjectId}`)
         ])
-        const allTasks: WorkItem[] = taskRes.data.map((t: any) => ({
-            id: t.taskId, key: t.key || `TASK-${t.taskId}`, title: t.title, status: (t.status || 'TO DO').toUpperCase(), sprintId: t.sprintId
-        }))
+        const kkk = sprintRes.data;
+        console.log(kkk);
+        const normalizeStatus = (status: string): 'TO DO' | 'IN PROGRESS' | 'DONE' => {
+            const upper = status?.toUpperCase();
+            if (['TO DO', 'IN PROGRESS', 'DONE'].includes(upper)) {
+                return upper as 'TO DO' | 'IN PROGRESS' | 'DONE';
+            }
+            return 'TO DO';
+        };
+
+        const allTasks: WorkItem[] = tasks.map((t: any) => ({
+            id: t.taskId,
+            key: t.key || `TASK-${t.taskId}`,
+            title: t.title,
+            status: normalizeStatus(t.status),
+            sprintId: t.sprintId,
+            deadline: t.deadline
+        }));
+
+
         const sprintData: Sprint[] = sprintRes.data.map((s: any) => ({
-            ...s, workItems: allTasks.filter(t => t.sprintId === s.sprintId && t.sprintId !== -1)
+            ...s,
+            workItems: allTasks.filter(t => t.sprintId === s.sprintId && t.sprintId !== -1)
         }))
         setSprints(sprintData)
         setBacklogItems(allTasks.filter(t => !t.sprintId || t.sprintId === -1))
@@ -54,47 +81,17 @@ export default function BacklogView() {
 
         try {
             // 1️⃣ Gửi yêu cầu tạo task
-            const body: any = {
-                title,
-                status: "TO DO",
-            };
-            if (sprintId) body.sprintId = sprintId;
-
-            const res = await axios.post(`/tasks/list/${Number(project_name)}`, body);
-            const taskId = res.data.taskId;
-
-            // 2️⃣ Gọi API lấy chi tiết task vừa tạo
-            const detailRes = await axios.get(`/tasks/detail/${Number(project_name)}/${taskId}`);
-            const data = detailRes.data;
-
-            // 3️⃣ Chuẩn hóa dữ liệu để thêm vào UI
-            const newTask: WorkItem = {
-                id: data.taskId,
-                key: data.key || `TASK-${data.taskId}`,
-                title: data.title,
-                status: (data.status || "TO DO").toUpperCase(),
-                sprintId: data.sprintId || null,
-                assignee: data.assigneeName || "",
-                assigneeColor: "#6366F1",
+            const payload = {
+                title: title,
+                sprintId: sprintId && sprintId !== -1 ? sprintId : null,
             };
 
-            // 4️⃣ Cập nhật UI (Sprint hoặc Backlog)
-            if (sprintId) {
-                setSprints((prev) =>
-                    prev.map((s) =>
-                        s.sprintId === sprintId
-                            ? { ...s, workItems: [...s.workItems, newTask] }
-                            : s
-                    )
-                );
-            } else {
-                setBacklogItems((prev) => [...prev, newTask]);
-            }
-
-            // 5️⃣ Reset form
-            setNewTaskTitles((prev) => ({ ...prev, [key]: "" }));
+            await axios.post(`/tasks/quick-create/${ProjectId}`, payload);
+            setNewTaskTitles(prev => ({ ...prev, [key]: "" }));
             setIsCreating(false);
 
+            setNewTaskTitles(prev => ({ ...prev, [key]: "" }));
+            setIsCreating(false);
         } catch (err) {
             console.error("❌ Error creating task:", err);
         }
@@ -102,7 +99,7 @@ export default function BacklogView() {
 
     const handleUpdateTask = async (taskId: number) => {
         try {
-            await axios.patch(`/tasks/${project_name}/tasks/${taskId}/update`, {
+            await axios.patch(`/tasks/${ProjectId}/tasks/${taskId}/update`, {
                 title: editingTitle,
             });
 
@@ -129,53 +126,74 @@ export default function BacklogView() {
 
     // Cho phép thả
     const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault()
+        e.preventDefault();
+        e.stopPropagation();
     };
+
 
     // Khi thả vào Sprint
     const handleDropToSprint = async (e: React.DragEvent, sprintId: number) => {
         const taskId = parseInt(e.dataTransfer.getData("taskId"));
         if (!taskId) return;
+
         const movedTask =
             backlogItems.find(t => t.id === taskId) ||
             sprints.flatMap(s => s.workItems).find(t => t.id === taskId);
-        if (!movedTask) return;
 
+        if (!movedTask) return;
         if (movedTask.sprintId === sprintId) return;
 
-        try {
-            await axios.patch(`/tasks/${project_name}/tasks/${taskId}/update`, { sprintId });
+        // 🔹 Lấy sprint mục tiêu
+        const targetSprint = sprints.find(s => s.sprintId === sprintId);
+        if (!targetSprint) return;
 
-            // Xác định task đang nằm ở đâu (Backlog hay Sprint khác)
-            setSprints(prev =>
-                prev.map(s => {
-                    // Xóa khỏi sprint cũ
+        // 🔹 Kiểm tra hạn task có nằm trong khoảng sprint hay không
+        if (movedTask.deadline) {
+            const deadline = new Date(movedTask.deadline);
+            const start = new Date(targetSprint.startDate!);
+            const end = new Date(targetSprint.endDate!);
+
+            if (deadline < start || deadline > end) {
+                alert(`⚠️ Deadline của task (${deadline.toLocaleDateString()}) không nằm trong thời gian sprint (${start.toLocaleDateString()} → ${end.toLocaleDateString()})`);
+                return; // 🚫 Không cho kéo
+            }
+        }
+
+        // ✅ Nếu hợp lệ thì cập nhật sprintId
+        try {
+            await axios.put(`/tasks/${ProjectId}/tasks/${taskId}/update`, { sprintId });
+            setSprints(prev => {
+                const updated = prev.map(s => {
                     if (s.sprintId === movedTask.sprintId)
                         return { ...s, workItems: s.workItems.filter(t => t.id !== taskId) };
-
-                    // Thêm vào sprint mới
                     if (s.sprintId === sprintId)
                         return { ...s, workItems: [...s.workItems, { ...movedTask, sprintId }] };
-
                     return s;
-                })
-            );
+                });
+                return updated;
+            });
 
-            // Nếu task nằm trong backlog → xóa khỏi backlog
             setBacklogItems(prev => prev.filter(t => t.id !== taskId));
         } catch (err) {
             console.error("❌ Lỗi cập nhật sprintId:", err);
         }
     };
 
+
     // Khi thả lại vào Backlog
     const handleDropToBacklog = async (e: React.DragEvent) => {
         const taskId = parseInt(e.dataTransfer.getData("taskId"));
         if (!taskId) return;
 
+        const movedTask =
+            backlogItems.find(t => t.id === taskId) ||
+            sprints.flatMap(s => s.workItems).find(t => t.id === taskId);
+
+        if (!movedTask) return;
+
         try {
             console.log("🔹PATCH sending:", { sprintId: -1 });
-            await axios.patch(`/tasks/${project_name}/tasks/${taskId}/update`, { sprintId: -1 });
+            await axios.put(`/tasks/${ProjectId}/tasks/${taskId}/update`, { sprintId: -1 });
 
             // Cập nhật UI tại client
             setSprints(prev =>
@@ -184,8 +202,9 @@ export default function BacklogView() {
                     workItems: s.workItems.filter(t => t.id !== taskId),
                 }))
             );
-            const movedTask = sprints.flatMap(s => s.workItems).find(t => t.id === taskId);
-            if (movedTask) setBacklogItems(prev => [...prev, { ...movedTask, sprintId: null }]);
+
+            // 🔸 Thêm vào backlog
+            setBacklogItems(prev => [...prev, { ...movedTask, sprintId: null }]);
         } catch (err) {
             console.error("❌ Lỗi move về backlog:", err);
         }
@@ -267,9 +286,117 @@ export default function BacklogView() {
         const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s
     })
 
+    const handleCreateSprint = async (name: string, startDate: string, endDate: string) => {
+        try {
+            const res = await axios.post(`/sprints/${ProjectId}`, {
+                projectId: ProjectId,
+                name,
+                startDate,
+                endDate,
+            })
+
+            // Giả sử API trả về object sprint vừa tạo (quan trọng!)
+            const newSprint = res.data
+
+            // CẬP NHẬT STATE LOCAL. Đây là chìa khóa!
+            setSprints(prevSprints => [
+                ...prevSprints,
+                { ...newSprint, workItems: [] } // Thêm sprint mới vào state
+            ])
+
+            alert("✅ Sprint created successfully")
+            setShowSprintForm(false) // Đóng form
+
+        } catch (err) {
+            console.error("❌ Create sprint failed:", err)
+            alert("❌ Lỗi tạo sprint")
+        }
+        // KHÔNG RELOAD TRANG
+    }
+
+    const handleDeleteSelectedSprints = async () => {
+        if (selectedSprints.size === 0) return;
+        if (!confirm(`Delete ${selectedSprints.size} selected sprint(s)?`)) return;
+
+        try {
+            await axios.delete(`sprints/${ProjectId}/bulk`, {
+                data: Array.from(selectedSprints),
+            });
+
+            setSprints((prev) => prev.filter((s) => !selectedSprints.has(s.sprintId)));
+            setSelectedSprints(new Set());
+            alert("✅ Deleted successfully");
+        } catch (err) {
+            console.error("❌ Bulk delete failed:", err);
+            alert("❌ Failed to delete selected sprints");
+        }
+    };
+
+    const handleUpdateSprintDate = async (sprintId: number, field: 'startDate' | 'endDate', value: string) => {
+        try {
+            if (field === 'startDate') {
+                const selectedDate = new Date(value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (selectedDate < today) {
+                    alert("⚠️ Ngày bắt đầu Sprint không được nhỏ hơn ngày hiện tại.");
+                    return;
+                }
+                if (selectedDate > new Date(sprints.find(s => s.sprintId === sprintId)?.endDate || '')) {
+                    alert("⚠️ Ngày bắt đầu Sprint không được lớn hơn ngày kết thúc.");
+                    return;
+                }
+            }
+
+            if (field === 'endDate') {
+                const selectedDate = new Date(value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (selectedDate < today) {
+                    alert("⚠️ Ngày kết thúc Sprint không được nhỏ hơn ngày hiện tại.");
+                    return;
+                }
+                if (selectedDate < new Date(sprints.find(s => s.sprintId === sprintId)?.startDate || '')) {
+                    alert("⚠️ Ngày kết thúc Sprint không được nhỏ hơn ngày bắt đầu.");
+                    return;
+                }
+            }
+
+            setSprints((prev) =>
+                prev.map((s) =>
+                    s.sprintId === sprintId ? { ...s, [field]: value } : s
+                )
+            );
+
+            await axios.put(`/sprints/${sprintId}`, { [field]: value });
+            console.log(`✅ Updated ${field} of sprint ${sprintId} to ${value}`);
+        } catch (err) {
+            console.error("❌ Failed to update sprint date:", err);
+            alert("Lỗi khi cập nhật ngày sprint");
+        }
+    };
+
+
+
     return (
         <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm overflow-hidden">
-            <SprintCard />
+            <div className="border-b bg-gray-50 px-4 py-3 flex justify-between items-center">
+                <h1 className="font-semibold text-gray-700">Sprints</h1>
+                <button
+                    onClick={() => setShowSprintForm(true)} // Mở form
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                >
+                    <Plus className="w-4 h-4" />
+                    Add Sprint
+                </button>
+            </div>
+            <SprintCard
+                showForm={showSprintForm}
+                onClose={() => setShowSprintForm(false)}
+                onCreate={handleCreateSprint}
+            />
             <div
                 ref={scrollContainerRef}
                 className="flex flex-col overflow-y-auto bg-white border rounded-lg shadow-sm"
@@ -277,12 +404,27 @@ export default function BacklogView() {
             >
                 <BacklogContent
                     {...{
-                        sprints, backlogItems, expandedSprints, selectedTasks, editingTaskId, editingTitle, isCreating, newTaskTitles,
+                        ProjectId, sprints, backlogItems, expandedSprints, selectedTasks, editingTaskId, editingTitle, isCreating, newTaskTitles,
                         toggleSprint, handleDragOver, handleDropToSprint, handleDropToBacklog, handleUpdateTask, createTask,
-                        setEditingTaskId, setEditingTitle, setSelectedTaskId, setSelectedTasks, setIsCreating, setNewTaskTitles
+                        setEditingTaskId, setEditingTitle, setSelectedTaskId, setSelectedTasks, setIsCreating, setNewTaskTitles, selectedSprints, setSelectedSprints, handleUpdateSprintDate
                     }}
                 />
             </div>
+
+            {selectedSprints.size > 0 && (
+                <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-white shadow-lg border rounded-lg px-6 py-3 flex items-center gap-4 z-50">
+                    <span className="text-sm text-gray-700">
+                        {selectedSprints.size} sprint{selectedSprints.size > 1 ? "s" : ""} selected
+                    </span>
+                    <button
+                        onClick={handleDeleteSelectedSprints}
+                        className="px-4 py-1.5 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                        Delete
+                    </button>
+                </div>
+            )}
+
             {/* Footer cố định */}
             <div className="h-[60px] border-t bg-gray-50 flex items-center justify-between px-4">
                 <span className="text-sm text-gray-500">+ Create new work item</span>

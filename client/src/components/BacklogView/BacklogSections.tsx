@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Plus, ChevronDown, ChevronRight } from 'lucide-react'
 
 interface WorkItem {
@@ -11,6 +11,7 @@ interface WorkItem {
     assignee?: string
     assigneeColor?: string
     sprintId?: number | null
+    deadline?: string
 }
 
 interface Sprint {
@@ -40,6 +41,7 @@ interface BacklogContentProps {
     handleDropToBacklog: (e: React.DragEvent) => void
     handleUpdateTask: (id: number) => void
     createTask: (sprintId?: number) => void
+    handleUpdateSprintDate: (sprintId: number, field: 'startDate' | 'endDate', value: string) => void
 
     // state setters
     setEditingTaskId: (id: number | null) => void
@@ -48,6 +50,8 @@ interface BacklogContentProps {
     setSelectedTasks: React.Dispatch<React.SetStateAction<Set<number>>>
     setIsCreating: (v: false | number | 'backlog') => void
     setNewTaskTitles: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>
+    selectedSprints: Set<number>
+    setSelectedSprints: React.Dispatch<React.SetStateAction<Set<number>>>
 }
 
 export default function BacklogContent({
@@ -71,6 +75,9 @@ export default function BacklogContent({
     setSelectedTasks,
     setIsCreating,
     setNewTaskTitles,
+    selectedSprints,
+    setSelectedSprints,
+    handleUpdateSprintDate
 }: BacklogContentProps) {
 
     const getStatusCounts = (items: WorkItem[]) => ({
@@ -91,18 +98,48 @@ export default function BacklogContent({
                     <div key={sprint.sprintId} className="mb-6 border-b border-gray-100 pb-4">
                         <div className="flex items-center justify-between py-3 group relative">
                             <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedSprints.has(sprint.sprintId)}
+                                    onChange={(e) => {
+                                        const newSet = new Set(selectedSprints);
+                                        e.target.checked ? newSet.add(sprint.sprintId) : newSet.delete(sprint.sprintId);
+                                        setSelectedSprints(newSet);
+                                    }}
+                                    className="w-4 h-4"
+                                />
                                 <button onClick={() => toggleSprint(sprint.sprintId.toString())} className="hover:bg-gray-100 p-1 rounded">
                                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                                 </button>
                                 <h2 className="font-semibold">{sprint.name}</h2>
                                 <span className="text-sm text-gray-500">({sprint.workItems.length} work items)</span>
+
+                                {/* 🗓 Hiển thị start/end date có thể chỉnh sửa */}
+                                <div className="flex items-center gap-2 ml-6 text-sm text-gray-600">
+                                    <label className="text-gray-500">Start:</label>
+                                    <input
+                                        type="date"
+                                        min={new Date().toISOString().split('T')[0]}
+                                        value={sprint.startDate ? sprint.startDate.split('T')[0] : ''}
+                                        onChange={(e) => handleUpdateSprintDate(sprint.sprintId, 'startDate', e.target.value)}
+                                        className="border rounded px-1 py-0.5 text-sm"
+                                    />
+                                    <label className="text-gray-500 ml-2">End:</label>
+                                    <input
+                                        type="date"
+                                        min={new Date().toISOString().split('T')[0]}
+                                        value={sprint.endDate ? sprint.endDate.split('T')[0] : ''}
+                                        onChange={(e) => handleUpdateSprintDate(sprint.sprintId, 'endDate', e.target.value)}
+                                        className="border rounded px-1 py-0.5 text-sm"
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
-                                    <span className="px-2 py-1 bg-gray-100 rounded text-sm">{counts.todo}</span>
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">{counts.inProgress}</span>
-                                    <span className="px-2 py-1 bg-gray-100 rounded text-sm">{counts.done}</span>
+                                    <span className="px-2 py-1 bg-gray-100 rounded text-sm" title={`To Do: ${counts.todo} (work item count)`}>{counts.todo}</span>
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm" title={`In Progress: ${counts.inProgress} (work item count)`}>{counts.inProgress}</span>
+                                    <span className="px-2 py-1 bg-green-100 rounded text-sm" title={`Done: ${counts.done} (work item count)`}>{counts.done}</span>
                                 </div>
                             </div>
                         </div>
@@ -147,6 +184,11 @@ export default function BacklogContent({
                                                 />
                                             ) : (
                                                 <span className="text-sm text-gray-600">{item.title}</span>
+                                            )}
+                                            {item.deadline && (
+                                                <span className="ml-3 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                                    🗓 {new Date(item.deadline).toLocaleDateString('vi-VN')}
+                                                </span>
                                             )}
                                         </div>
                                     </div>
@@ -223,6 +265,43 @@ export default function BacklogContent({
                             </div>
                         ))}
                     </div>
+                )}
+                {isCreating === 'backlog' ? (
+                    <div className="flex items-center gap-2 mt-2">
+                        <input
+                            type="text"
+                            placeholder="Enter new task title..."
+                            value={newTaskTitles['backlog'] || ''}
+                            onChange={(e) =>
+                                setNewTaskTitles((prev) => ({ ...prev, backlog: e.target.value }))
+                            }
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') createTask();
+                                if (e.key === 'Escape') setIsCreating(false);
+                            }}
+                            className="border rounded px-2 py-1 text-sm w-64"
+                            autoFocus
+                        />
+                        <button
+                            onClick={() => createTask()}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                        >
+                            Add
+                        </button>
+                        <button
+                            onClick={() => setIsCreating(false)}
+                            className="px-3 py-1 bg-gray-200 text-sm rounded hover:bg-gray-300"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => setIsCreating('backlog')}
+                        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mt-2"
+                    >
+                        <Plus className="w-4 h-4" /> Create
+                    </button>
                 )}
             </div>
         </div>

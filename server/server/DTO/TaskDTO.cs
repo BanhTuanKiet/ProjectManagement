@@ -39,6 +39,13 @@ namespace server.DTO
             public DateTime? Deadline { get; set; }
         }
 
+        public class QuickCreate
+        {
+            public string Title { get; set; } = null!;
+            public int? SprintId { get; set; } // null = backlog
+        }
+
+
         public class BasicTask
         {
             public int TaskId { get; set; }
