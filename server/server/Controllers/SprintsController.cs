@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using server.DTO;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using server.Services.Sprint;
 using server.Models;
 using server.Configs;
@@ -8,6 +10,7 @@ namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SprintsController : ControllerBase
     {
         private readonly ISprints _service;
@@ -66,6 +69,18 @@ namespace server.Controllers
                 throw new ErrorException(404, "Sprint not found or delete failed");
 
             return Ok(new { message = "Deleted successfully" });
+        }
+
+        [HttpDelete("{projectId}/bulk")]
+        public async Task<IActionResult> DeleteSprintBulk(int projectId, [FromBody] List<int> sprintIds)
+        {
+            Console.WriteLine($"Received sprint IDs for bulk delete: {string.Join(", ", sprintIds)}");
+            var result = await _service.DeleteBulk(projectId, sprintIds);
+
+            if (result == 0)
+                throw new ErrorException(400, "Bulk delete failed");
+
+            return Ok(new { message = "Bulk deleted successfully" });
         }
     }
 }

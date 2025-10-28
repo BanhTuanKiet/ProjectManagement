@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using server.Configs;
 using server.DTO;
 using server.Models;
 
@@ -71,6 +72,19 @@ namespace server.Services.Sprint
             _context.Sprints.Remove(sprint);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<int> DeleteBulk(int projectId, List<int> SprintIds)
+        {
+            Console.WriteLine($"Deleting sprints with IDs: {string.Join(", ", SprintIds)} for project ID: {projectId}");
+            var sprints = await _context.Sprints
+                .Where(s => s.ProjectId == projectId && SprintIds.Contains(s.SprintId))
+                .ToListAsync();
+            // if (sprints.Count == 0)
+            //     throw new ErrorException(404, "No sprints found to delete");
+            _context.Sprints.RemoveRange(sprints);
+            await _context.SaveChangesAsync();
+            return sprints.Count;
         }
     }
 }

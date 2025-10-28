@@ -161,10 +161,11 @@ namespace server.Controllers
             return Ok(tasks);
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
+            Console.WriteLine("Received updates for task patch aaaaaaaaaaaaaaaaaaaaaaaaaaaaa:", JsonConvert.SerializeObject(updates));
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
@@ -334,5 +335,42 @@ namespace server.Controllers
             var result = await _tasksService.FilterDeletedTasks(projectId, filters, keyword);
             return Ok(result);
         }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPost("quick-create/{projectId}")]
+        public async Task<ActionResult> QuickCreateTask([FromBody] TaskDTO.QuickCreate dto, int projectId)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string userName = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                return BadRequest(new { message = "Title is required" });
+
+            var newTask = new Models.Task
+            {
+                ProjectId = projectId,
+                Title = dto.Title, // hoặc tách riêng Title/Description nếu FE có 2 input
+                Description = null,
+                SprintId = dto.SprintId > 0 ? dto.SprintId : null,
+                Status = "Todo",
+                Priority = 1,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow,
+                // BacklogId = dto.SprintId == null ? -1 : null
+            };
+
+            var addedTask = await _tasksService.AddNewTask(newTask);
+
+            // 🔔 Gửi thông báo realtime qua SignalR
+            var basicTask = _mapper.Map<TaskDTO.BasicTask>(addedTask);
+            await TaskHubConfig.AddedTask(_taskHubContext, projectId, userId, basicTask);
+
+            return Ok(new
+            {
+                message = "✅ Task created successfully",
+                task = basicTask
+            });
+        }
+
     }
 }
