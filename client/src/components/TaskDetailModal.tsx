@@ -41,6 +41,7 @@ import type { ActiveUser } from "@/utils/IUser";
 import { Trash } from "lucide-react";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { useUser } from "@/app/(context)/UserContext";
+import { title } from "process";
 
 interface Comment {
     commentId: number;
@@ -70,6 +71,7 @@ export default function TaskDetailModal({
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
     const { user } = useUser();
     const { project_name } = useProject();
+    const projectId = Number(project_name)
     const [files, setFiles] = useState<any[]>([]);
     const [previewFile, setPreviewFile] = useState<any | null>(null);
     const [description, setDescription] = useState(task?.description || "");
@@ -78,6 +80,16 @@ export default function TaskDetailModal({
     const [editStartDate, setEditStartDate] = useState(false);
     const [dueDate, setDueDate] = useState(task?.deadline || "");
     const [editDueDate, setEditDueDate] = useState(false);
+    const [title, setTitle] = useState(task?.title || "");
+    const [editTitle, setEditTitle] = useState(false);
+    const [priority, setPriority] = useState(task?.priority);
+    const [open, setOpen] = useState(false);
+
+    const priorities = [
+        { label: "High", value: 1 },
+        { label: "Medium", value: 2 },
+        { label: "Low", value: 3 },
+    ];
 
     // fetch task detail + comments
     useEffect(() => {
@@ -294,7 +306,12 @@ export default function TaskDetailModal({
 
     const handleUpdateDescription = async (updateDescription: string) => {
         try {
-            const response = await axios.put(`/tasks/updateDescription/${taskId}`, {
+            if (updateDescription == "") {
+                setDescription(task?.title || "")
+                setEditDescription(false);
+                return
+            }
+            const response = await axios.put(`/tasks/updateDescription/${projectId}/${taskId}`, {
                 description: updateDescription,
             });
             setEditDescription(false);
@@ -306,7 +323,7 @@ export default function TaskDetailModal({
 
     const handleStartDate = async (newStartDate: string) => {
         try {
-            const response = await axios.put(`/tasks/updateStartDate/${taskId}`, {
+            const response = await axios.put(`/tasks/updateStartDate/${projectId}/${taskId}`, {
                 createdAt: newStartDate,
             });
             setEditStartDate(false);
@@ -318,13 +335,49 @@ export default function TaskDetailModal({
 
     const handleDueDate = async (newDueDate: string) => {
         try {
-            const response = await axios.put(`/tasks/updateDueDate/${taskId}`, {
+            const response = await axios.put(`/tasks/updateDueDate/${projectId}/${taskId}`, {
                 deadline: newDueDate,
             });
             setEditDueDate(false);
             console.log(response);
         } catch (error) {
             console.log(error);
+        }
+    };
+
+    const handleTitle = async (newTitle: string) => {
+        try {
+            if (newTitle == "") {
+                setTitle(task?.title || "")
+                setEditTitle(false);
+                return
+            }
+            const response = await axios.put(`/tasks/updateTitle/${projectId}/${taskId}`, {
+                title: newTitle,
+            });
+            setEditTitle(false);
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleSelect = async (value: number) => {
+        if (value === priority) {
+            setOpen(false);
+            return;
+        }
+
+        try {
+            const response = await axios.put(`/tasks/updatePriority/${projectId}/${taskId}`, {
+                priority: value,
+            });
+            console.log("Updated:", response.data);
+            setPriority(value);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setOpen(false);
         }
     };
 
@@ -567,6 +620,33 @@ export default function TaskDetailModal({
                                                 </div>
                                             ))}
                                         </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    {/* <h3 className="text font-medium text-gray-900 mb-2">
+                                        Title
+                                    </h3> */}
+
+                                    {!editTitle ? (
+                                        <div
+                                            className="text-2xl text-black-600 min-h-[60px] cursor-pointer hover:bg-gray-100"
+                                            onClick={() => setEditTitle(true)}
+                                        >
+                                            <strong>{title || task.title}</strong>
+                                        </div>
+                                    ) : (
+                                        <textarea
+                                            autoFocus
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            onBlur={() => {
+                                                handleTitle(title);
+                                                setEditTitle(false);
+                                            }}
+                                            className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
+                                            placeholder={task.title}
+                                        />
                                     )}
                                 </div>
 
@@ -886,7 +966,7 @@ export default function TaskDetailModal({
                                                     </button>
                                                 </div>
 
-                                                <div>
+                                                {/* <div>
                                                     <label className="text-xs font-medium text-gray-700 block mb-2">
                                                         Priority
                                                     </label>
@@ -896,6 +976,36 @@ export default function TaskDetailModal({
                                                             Medium
                                                         </span>
                                                     </div>
+                                                </div> */}
+
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-700 block mb-2">
+                                                        Priority
+                                                    </label>
+
+                                                    <div
+                                                        className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded-md hover:bg-gray-100 transition"
+                                                        onClick={() => setOpen(!open)}
+                                                    >
+                                                        {getPriorityIcon(priority || task.priority)}
+                                                        <span className="text-sm text-gray-600">{priorities.find(p => p.value === priority)?.label || priorities.find(p => p.value === task.priority)?.label}</span>
+                                                    </div>
+
+                                                    {open && (
+                                                        <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-32">
+                                                            {priorities.map((p) => (
+                                                                <div
+                                                                    key={p.value}
+                                                                    onClick={() => handleSelect(p.value)}
+                                                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 ${p.value === priority ? "bg-gray-50" : ""
+                                                                        }`}
+                                                                >
+                                                                    {getPriorityIcon(p.label)}
+                                                                    <span className="text-sm">{p.label}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div>
