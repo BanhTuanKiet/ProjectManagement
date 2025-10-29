@@ -17,7 +17,7 @@ import SortableTaskCard from "@/components/SortableTaskCard";
 import { useParams } from "next/navigation";
 import { BasicTask } from "@/utils/ITask";
 import { taskStatus } from "@/utils/statusUtils";
-import TaskDetailDrawer from "@/components/TaskDetailDrawer";
+import TaskDetailDrawer from "@/components/TaskDetailModal";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Input } from "@/components/ui/input";
 import { useTask } from "@/app/(context)/TaskContext"
@@ -43,7 +43,7 @@ function DroppableColumn({
 
 export default function BoardView() {
   const [features, setFeatures] = useState<BasicTask[]>([]);
-  const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null);
+  const [selectedTask, setSelectedTask] = useState<number | null>(null);
   const [seeMore, setSeeMore] = useState<Record<string, boolean>>({});
   const [openDialog, setOpenDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -188,7 +188,7 @@ export default function BoardView() {
                         <div key={task.taskId} className="relative group">
                           <SortableTaskCard
                             task={task}
-                            onClick={() => setSelectedTask(task)}
+                            onClick={() => setSelectedTask(task.taskId)}
                           />
                           <button
                             onClick={() => deleteTask(task.taskId)}
@@ -244,7 +244,7 @@ export default function BoardView() {
 
       {selectedTask && (
         <TaskDetailDrawer
-          task={selectedTask}
+          taskId={selectedTask}
           onClose={() => setSelectedTask(null)}
         />
       )}

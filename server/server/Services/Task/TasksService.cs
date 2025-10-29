@@ -231,44 +231,50 @@ namespace server.Services.Project
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
             DateTime? deadline = task.Deadline;
-            if (deadline.HasValue && startDate.HasValue)
+            if (!deadline.HasValue && !startDate.HasValue)
             {
-                if (deadline.Value.Year < startDate.Value.Year || deadline.Value.Month < startDate.Value.Month ||
-                 (deadline.Value.Month == startDate.Value.Month && deadline.Value.Day < startDate.Value.Day) ||
-                 (deadline.Value.Day == startDate.Value.Day && deadline.Value.TimeOfDay < startDate.Value.TimeOfDay))
-                {
-                    throw new Exception("Ngày kết thúc không được sớm hơn ngày bắt đầu");
-                }
-                else
-                {
-                    task.CreatedAt = startDate ?? DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
-                    return task;
-                }
+                return null;
             }
-            return null;
+            task.CreatedAt = startDate ?? DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return task;
         }
 
         public async Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate)
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
             DateTime? startDate = task.CreatedAt;
-            if (startDate.HasValue && dueDate.HasValue)
+            if (!startDate.HasValue && !dueDate.HasValue)
             {
-                if (dueDate.Value.Year < startDate.Value.Year || dueDate.Value.Month < startDate.Value.Month ||
-                (dueDate.Value.Month == startDate.Value.Month && dueDate.Value.Day < startDate.Value.Day) ||
-                 (dueDate.Value.Day == startDate.Value.Day && dueDate.Value.TimeOfDay < startDate.Value.TimeOfDay))
-                {
-                    throw new Exception("Ngày kết thúc không được sớm hơn ngày bắt đầu");
-                }
-                else
-                {
-                    task.Deadline = dueDate;
-                    await _context.SaveChangesAsync();
-                    return task;
-                }
+                return null;
             }
-            return null;
+            task.Deadline = dueDate;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskTitle(int taskId, string title)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+            if (title == null || title == "")
+                return null;
+            task.Title = title;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskPriority(int taskId, byte priority)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+            if (priority == null)
+                return null;
+            task.Priority = priority;
+            await _context.SaveChangesAsync();
+            return task;
         }
 
         public async Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId)

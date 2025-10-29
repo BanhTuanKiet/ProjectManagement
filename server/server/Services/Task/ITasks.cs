@@ -26,6 +26,11 @@ namespace server.Services.Task
         Task<Models.Task> UpdateTaskStartDate(int taskId, DateTime? startDate);
 
         Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate);
+
+        Task<Models.Task> UpdateTaskTitle(int taskId, string title);
+
+        Task<Models.Task> UpdateTaskPriority(int taskId, byte priority);
+
         Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId);
 
         Task<Models.Task> RestoreTaskFromHistory(int taskId);
