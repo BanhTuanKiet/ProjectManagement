@@ -13,3 +13,7 @@ export interface PlanDetail {
   description: string
   features: FeatureDetail[]
 }
+
+export interface PlanLevel {
+    [key: string]: number
+}

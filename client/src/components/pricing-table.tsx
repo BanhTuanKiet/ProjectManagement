@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react'
 import axios from "@/config/axiosConfig"
 import { PlanDetail } from "@/utils/IPlan"
 import { formatPrice } from "@/utils/stringUitls"
+import { useSearchParams } from "next/navigation"
 
 export default function PricingTable({
     selectedPlan,
@@ -13,7 +14,8 @@ export default function PricingTable({
     setSelectedPlan: React.Dispatch<React.SetStateAction<PlanDetail | undefined>>
 }) {
     const [plans, setPlans] = useState<PlanDetail[]>([])
-
+    const searchParams = useSearchParams()
+    
     useEffect(() => {
         const fetchPlans = async () => {
             try {
@@ -26,6 +28,13 @@ export default function PricingTable({
         }
         fetchPlans()
     }, [])
+
+    useEffect(() => {
+        const planName = searchParams.get("plan")
+        if (!planName) return
+        const plan = plans.find(p => p.name.toLocaleLowerCase() === planName)
+        setSelectedPlan(plan)
+    }, [plans, searchParams])
 
     const allFeatures = Array.from(
         new Set(plans.flatMap(p => p.features.map(f => f.featureName)))

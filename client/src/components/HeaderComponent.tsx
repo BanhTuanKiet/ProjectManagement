@@ -9,7 +9,7 @@ export default function HeaderComponent() {
         <header className="w-full border-b border-slate-200 bg-white">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
-                    <div className="flex items-center gap-2" onClick={() => router.push("/")} >
+                    <div className="cursor-pointer flex items-center gap-2" onClick={() => router.push("/")} >
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
                             <span className="text-lg font-bold text-white">P</span>
                         </div>
@@ -21,7 +21,7 @@ export default function HeaderComponent() {
                             Sign In
                         </a>
                         <Link
-                            href="/plan-payment"
+                            href="/plan-payment?plan=free"
                             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
                         >
                             Start Free

@@ -119,22 +119,24 @@ namespace server.Controllers
             var captureUrl = $"{baseUrl}/v2/checkout/orders/{request.OrderId}/capture";
             var captureResponse = await _httpClient.PostAsJsonAsync(captureUrl, new { });
             var captureResult = await captureResponse.Content.ReadAsStringAsync();
+            DateTime expiredAt = DateTime.UtcNow;
 
             Payments paypal = new Payments
             {
                 UserId = userId,
-                Amount = request.Amount,
+                Amount = request.BillingPeriod == "monthly" ? request.Amount : request.Amount * 12 * 0.95m,
                 Currency = "USD",
                 Gateway = "Paypal",
                 GatewayRef = request.OrderId,
                 Status = "Paid",
-                Description = request.Description
+                Description = request.Description,
+                ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
             };
 
             await _paymentsService.SavePaypalPayment(paypal);
 
-            string message = request.Name ==
-                "Free"
+            string message = request.Name.ToLower() ==
+                "free"
                     ? "You’re currently using the Free Plan."
                     : $"Thank you for upgrading to the {request.Name} Plan! Your payment has been successfully processed.";
                     

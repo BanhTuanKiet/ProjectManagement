@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import { Check, Lock, ArrowRight } from "lucide-react"
 import PricingTable from "@/components/pricing-table"
-import type { PlanDetail } from "@/utils/IPlan"
+import type { PlanDetail, PlanLevel } from "@/utils/IPlan"
 import axios from "@/config/axiosConfig"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { formatPrice } from "@/utils/stringUitls"
 
 const paymentMethods = [
@@ -29,23 +29,35 @@ export default function PlanPaymentPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
     const searchParams = useSearchParams()
+    const router = useRouter()
 
     useEffect(() => {
+        const status = searchParams.get("status")
+        const token = searchParams.get("token")
+        const planStored = sessionStorage.getItem("pendingPayment")
+
+        if (!status || !token || !selectedPlan || !planStored) return
+
+        if (sessionStorage.getItem("paymentProcessed") === token) return
+
         const verifyPayment = async () => {
             try {
-                const status = searchParams.get("status")
-                const token = searchParams.get("token")
+                const { amount, name, description, typePlan } = JSON.parse(planStored)
                 const order = {
                     orderId: token,
-                    amount: selectedPlan?.price,
-                    name: selectedPlan?.name,
-                    description: `Payment for ${selectedPlan?.name} Plan`,
+                    amount: amount,
+                    name: name,
+                    description: description,
+                    billingPeriod: typePlan
                 }
-                if (status) await axios.post("/payments/capture-order", order)
+
+                await axios.post("/payments/capture-order", order)
+                sessionStorage.setItem("paymentProcessed", token)
             } catch (error) {
                 console.log(error)
             } finally {
                 window.history.replaceState({}, document.title, window.location.pathname)
+                sessionStorage.removeItem("paymentProcessed")
             }
         }
 
@@ -56,7 +68,7 @@ export default function PlanPaymentPage() {
         if (!selectedPlan?.price) return 0
         const basePrice = Number(selectedPlan.price)
         if (billingPeriod === "yearly") {
-            return basePrice * 12 * 0.95 // 5% discount for yearly
+            return basePrice * 12 * 0.95
         }
         return basePrice
     }
@@ -67,7 +79,10 @@ export default function PlanPaymentPage() {
     const discountAmount = yearlyPrice * 0.05
 
     const handlePayment = async () => {
+        if (!selectedPlan) return
+        if (selectedPlan?.id === 1) return router.push('/login')
         setIsLoading(true)
+
         const order = {
             amount: finalPrice,
             currency: "USD",
@@ -76,6 +91,16 @@ export default function PlanPaymentPage() {
             returnUrl: "http://localhost:3000/plan-payment?status=true",
             cancelUrl: "http://localhost:3000/plan-payment?status=false",
         }
+
+        sessionStorage.setItem(
+            "pendingPayment",
+            JSON.stringify({
+                amount: selectedPlan.price,
+                name: selectedPlan.name,
+                description: `Payment for ${selectedPlan.name} Plan`,
+                typePlan: billingPeriod
+            })
+        )
 
         try {
             const response = await axios.post(`/payments/checkout/paypal`, order)
@@ -93,7 +118,7 @@ export default function PlanPaymentPage() {
             <header className="sticky top-0 z-40 border-b border-slate-200/50 bg-white/80 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="cursor-pointer flex items-center gap-2" onClick={() => router.push("/")} >
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-600 shadow-lg">
                                 <span className="text-lg font-bold text-white">P</span>
                             </div>
@@ -117,7 +142,6 @@ export default function PlanPaymentPage() {
             </header>
 
             <section className="mx-auto max-w-7xl px-6 lg:px-8 py-16">
-                {/* Section Title */}
                 <div className="mb-16 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Choose Your Plan</h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
@@ -213,8 +237,8 @@ export default function PlanPaymentPage() {
                                     <button
                                         onClick={() => setBillingPeriod("monthly")}
                                         className={`cursor-pointer px-4 py-2 rounded-md font-medium transition-all ${billingPeriod === "monthly"
-                                                ? "bg-white text-blue-600 shadow-sm"
-                                                : "text-slate-600 hover:text-slate-900"
+                                            ? "bg-white text-blue-600 shadow-sm"
+                                            : "text-slate-600 hover:text-slate-900"
                                             }`}
                                     >
                                         Monthly
@@ -223,8 +247,8 @@ export default function PlanPaymentPage() {
                                     <button
                                         onClick={() => setBillingPeriod("yearly")}
                                         className={`cursor-pointer px-4 py-2 rounded-md font-medium transition-all relative ${billingPeriod === "yearly"
-                                                ? "bg-white text-blue-600 shadow-sm"
-                                                : "text-slate-600 hover:text-slate-900"
+                                            ? "bg-white text-blue-600 shadow-sm"
+                                            : "text-slate-600 hover:text-slate-900"
                                             }`}
                                     >
                                         Yearly

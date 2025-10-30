@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import HeaderComponent from "@/components/HeaderComponent"
+import { useRouter } from "next/navigation"
 
 const features = [
     {
@@ -67,7 +68,8 @@ const stats = [
 ]
 
 export default function Page() {
-    function CountUpNumber({ value, duration }: { value: string, duration: number }) {
+    const router = useRouter()
+    const CountUpNumber = ({ value, duration }: { value: string, duration: number }) => {
         const count = useMotionValue(0)
         const rounded = useTransform(count, (latest) => Math.floor(latest))
 
@@ -100,10 +102,11 @@ export default function Page() {
 
                     <div className="flex items-center justify-center gap-4 pt-4">
                         <Link
-                            href="/plan-payment"
+                            href="/plan-payment?plan=free"
                             className="rounded-full bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
                         >
-                            Get Started <ArrowRight className="h-4 w-4" />
+                            Get Started 
+                            <ArrowRight className="h-4 w-4" />
                         </Link>
                         <button className="rounded-full border border-slate-300 px-8 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">
                             Watch Demo
@@ -163,7 +166,7 @@ export default function Page() {
                         Join thousands of teams using ProjectHub to manage projects effectively.
                     </p>
                     <Link
-                        href="/plan-payment"
+                        href="/plan-payment?plan=free"
                         className="inline-block rounded-full bg-white px-8 py-3 text-blue-600 font-semibold hover:bg-blue-50 transition"
                     >
                         Start Free Now
