@@ -1,36 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, Lock, ArrowRight } from 'lucide-react'
+import { Check, Lock, ArrowRight } from "lucide-react"
 import PricingTable from "@/components/pricing-table"
-import { PlanDetail } from "@/utils/IPlan"
+import type { PlanDetail } from "@/utils/IPlan"
 import axios from "@/config/axiosConfig"
 import { useSearchParams } from "next/navigation"
+import { formatPrice } from "@/utils/stringUitls"
 
 const paymentMethods = [
     {
         id: "vnpay",
         name: "VNPay",
         description: "Bank card, e-wallet",
-        logo: (
-            <img
-                src="/vn-pay.png"
-                alt="VNPay"
-                className="h-10 w-auto object-contain"
-            />
-        ),
+        logo: <img src="/vn-pay.png" alt="VNPay" className="h-10 w-auto object-contain" />,
     },
     {
         id: "paypal",
         name: "PayPal",
         description: "Your PayPal account",
-        logo: (
-            <img
-                src="/pay-pal.png"
-                alt="PayPal"
-                className="h-10 w-auto object-contain"
-            />
-        ),
+        logo: <img src="/pay-pal.png" alt="PayPal" className="h-10 w-auto object-contain" />,
     },
 ]
 
@@ -38,6 +27,7 @@ export default function PlanPaymentPage() {
     const [selectedMethod, setSelectedMethod] = useState<"vnpay" | "paypal">("vnpay")
     const [selectedPlan, setSelectedPlan] = useState<PlanDetail | undefined>()
     const [isLoading, setIsLoading] = useState(false)
+    const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
     const searchParams = useSearchParams()
 
     useEffect(() => {
@@ -62,22 +52,35 @@ export default function PlanPaymentPage() {
         verifyPayment()
     }, [searchParams, selectedPlan])
 
+    const calculatePrice = () => {
+        if (!selectedPlan?.price) return 0
+        const basePrice = Number(selectedPlan.price)
+        if (billingPeriod === "yearly") {
+            return basePrice * 12 * 0.95 // 5% discount for yearly
+        }
+        return basePrice
+    }
+
+    const finalPrice = calculatePrice()
+    const monthlyPrice = Number(selectedPlan?.price) || 0
+    const yearlyPrice = monthlyPrice * 12
+    const discountAmount = yearlyPrice * 0.05
+
     const handlePayment = async () => {
         setIsLoading(true)
         const order = {
-            amount: selectedPlan?.price,
+            amount: finalPrice,
             currency: "USD",
             // planId: selectedPlan?.id,
-            description: `Payment for ${selectedPlan?.name} Plan`,
+            description: `Payment for ${selectedPlan?.name} Plan - ${billingPeriod === "yearly" ? "Yearly" : "Monthly"}`,
             returnUrl: "http://localhost:3000/plan-payment?status=true",
-            cancelUrl: "http://localhost:3000/plan-payment?status=false"
+            cancelUrl: "http://localhost:3000/plan-payment?status=false",
         }
 
         try {
             const response = await axios.post(`/payments/checkout/paypal`, order)
             const links = response.data.links ?? []
             window.open(links[1].href)
-            console.log(response)
         } catch (error) {
             console.log(error)
         } finally {
@@ -193,7 +196,7 @@ export default function PlanPaymentPage() {
                                     </>
                                 ) : (
                                     <>
-                                        Continue to Payment
+                                        {selectedPlan?.id === 1 ? "Sign in to continue using the free plan" : "Continue to Payment"}
                                         <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -203,46 +206,88 @@ export default function PlanPaymentPage() {
 
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">
-                            <h3 className="text-2xl font-bold text-slate-900 mb-4">Order Summary</h3>
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
+
+                                <div className="flex gap-2 bg-slate-100 p-1 rounded-lg w-fit">
+                                    <button
+                                        onClick={() => setBillingPeriod("monthly")}
+                                        className={`cursor-pointer px-4 py-2 rounded-md font-medium transition-all ${billingPeriod === "monthly"
+                                                ? "bg-white text-blue-600 shadow-sm"
+                                                : "text-slate-600 hover:text-slate-900"
+                                            }`}
+                                    >
+                                        Monthly
+                                    </button>
+
+                                    <button
+                                        onClick={() => setBillingPeriod("yearly")}
+                                        className={`cursor-pointer px-4 py-2 rounded-md font-medium transition-all relative ${billingPeriod === "yearly"
+                                                ? "bg-white text-blue-600 shadow-sm"
+                                                : "text-slate-600 hover:text-slate-900"
+                                            }`}
+                                    >
+                                        Yearly
+                                        {billingPeriod === "yearly" && (
+                                            <span className="absolute -top-2 -right-5 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                -5%
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
 
                             <div className="space-y-6">
                                 <div className="space-y-4 pb-4 mb-4 border-b border-slate-200">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-3">
-                                            <p className="text-sm text-slate-600">Monthly Billing</p>
+                                            <p className="text-sm text-slate-600">
+                                                {billingPeriod === "yearly" ? "Yearly Billing" : "Monthly Billing"}
+                                            </p>
                                         </div>
-                                        <p className="font-semibold text-slate-900 mt-auto">{selectedPlan?.price}</p>
+                                        <p className="font-semibold text-slate-900 mt-auto">{formatPrice(finalPrice)}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4 mb-4">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-600">Base Price</span>
-                                        <span className="text-slate-900 font-medium">{selectedPlan?.price}</span>
+                                        <span className="text-slate-600">
+                                            {billingPeriod === "yearly" ? "Base Price (12 months)" : "Base Price"}
+                                        </span>
+                                        <span className="text-slate-900 font-medium">
+                                            {formatPrice(billingPeriod === "yearly" ? yearlyPrice : monthlyPrice)}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-600">Tax (0%)</span>
-                                        <span className="text-slate-900 font-medium">0</span>
-                                    </div>
+                                    {selectedPlan?.id !== 1 && billingPeriod === "yearly" && (
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-emerald-600 font-medium">Discount (5%)</span>
+                                            <span className="text-emerald-600 font-medium">-{formatPrice(discountAmount)}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl mb-4 p-4 border border-blue-200">
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-slate-900">Total</span>
-                                        <span className="text-3xl font-bold text-blue-600">{selectedPlan?.price}</span>
+                                        <span className="text-3xl font-bold text-blue-600">{formatPrice(finalPrice)}</span>
                                     </div>
-                                    <p className="text-xs text-slate-600 mt-2">You will be charged on December 15</p>
+                                    <p className="text-xs text-slate-600 mt-2">
+                                        You will be charged on December 15
+                                        {billingPeriod === "yearly" && " for 12 months"}
+                                    </p>
                                 </div>
 
                                 <div className="pt-4 border-t border-slate-200 mb-4">
                                     <p className="text-sm font-semibold text-slate-900 mb-4">{`You'll get:`}</p>
                                     <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
-                                        {selectedPlan?.features?.map((feature, idx) => (
-                                            <li key={idx} className="flex items-center gap-3 text-sm text-slate-700">
-                                                <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                                                <span>{feature?.featureName}</span>
-                                            </li>
-                                        ))}
+                                        {selectedPlan?.features
+                                            ?.filter((feature) => feature.value !== "false")
+                                            .map((feature, idx) => (
+                                                <li key={idx} className="flex items-center gap-3 text-sm text-slate-700">
+                                                    <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                                                    <span>{feature?.featureName}</span>
+                                                </li>
+                                            ))}
                                     </ul>
                                 </div>
 

@@ -8,6 +8,8 @@ import { useState } from "react"
 import axios from "@/config/axiosConfig"
 import { useRouter } from "next/navigation"
 import { useUser } from "../(context)/UserContext";
+import FooterComponent from "@/components/FooterComponent";
+import HeaderComponent from "@/components/HeaderComponent";
 
 
 export default function Login() {
@@ -36,6 +38,7 @@ export default function Login() {
     }
     return (
         <>
+        <HeaderComponent />
             <div className="bg-blue-100">
                 <div className="grid grid-cols-7 gap-4 p-6 mx-auto justify-center items-center text-center mr-40 ml-40">
                     <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">
@@ -102,12 +105,12 @@ export default function Login() {
                         </form>
 
                         <div className="space-y-4">
-                            <div className="relative">
+                            <div className="relative my-4">
                                 <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300"></div>
+                                    {/* <div className="w-full border-t border-gray-300"></div> */}
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-sky-100 text-gray-500">Or continue with</span>
+                                    <span className="px-2 text-gray-500">Or continue with</span>
                                 </div>
                             </div>
 
@@ -155,34 +158,7 @@ export default function Login() {
                     </div>
                 </div>
             </div>
-            <footer className="bg-gray-100 mt-10 ml-30 mr-30">
-                <div className="grid grid-cols-4 gap-4 p-6">
-                    <div><Mountain className="h-6 w-6" /></div>
-                    <div><strong>Products</strong></div>
-                    <div><strong>Resources</strong></div>
-                    <div><strong>Learn</strong></div>
-                    <div><strong>Company</strong></div>
-                    <div>Rovo</div>
-                    <div>Technical support</div>
-                    <div>Partners</div>
-                    <div><strong>Careers</strong></div>
-                    <div>Jira</div>
-                    <div>Purchasing & licensing</div>
-                    <div>Training & certification</div>
-                    <div><strong>Events</strong></div>
-                    <div>Jira Align</div>
-                    <div>Atlassian Community</div>
-                    <div>Documentation</div>
-                    <div><strong>Blogs</strong></div>
-                    <div>Jira Service Management</div>
-                    <div>Knowledge base</div>
-                    <div>Developer resources</div>
-                    <div><strong>Investor Relations</strong></div>
-                    <div>Confluence</div>
-                    <div>Marketplace</div>
-                    <div>Enterprise services</div>
-                </div>
-            </footer>
+            <FooterComponent />
         </>
     )
 }

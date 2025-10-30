@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Check, X } from 'lucide-react'
 import axios from "@/config/axiosConfig"
 import { PlanDetail } from "@/utils/IPlan"
+import { formatPrice } from "@/utils/stringUitls"
 
 export default function PricingTable({
     selectedPlan,
@@ -92,7 +93,7 @@ export default function PricingTable({
                                                 value === "true" ? (
                                                     <Check className="h-5 w-5 text-emerald-500 mx-auto" />
                                                 ) : (
-                                                    <X className="h-5 w-5 text-slate-300 mx-auto" />
+                                                    <X className="h-5 w-5 text-red-500 mx-auto" />
                                                 )
                                             ) : (
                                                 <span className="text-slate-700 font-medium">
@@ -116,7 +117,7 @@ export default function PricingTable({
                                         : "text-slate-900"
                                         }`}
                                 >
-                                    {plan.price}
+                                    {plan.price.toString() === "0" ? "Free" : formatPrice(Number(plan.price))}
                                 </td>
                             ))}
                         </tr>
