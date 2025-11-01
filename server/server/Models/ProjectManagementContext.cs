@@ -34,7 +34,12 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<Task> Tasks { get; set; }
     public virtual DbSet<Backlog> Backlogs { get; set; }
     public virtual DbSet<TaskHistory> TaskHistories { get; set; }
-    public DbSet<ProjectInvitations> ProjectInvitations { get; set; }
+    public virtual DbSet<ProjectInvitations> ProjectInvitations { get; set; }
+    public virtual DbSet<Plans> Plans { get; set; }
+    public virtual DbSet<Features> Features { get; set; }
+    public virtual DbSet<PlanFeatures> PlanFeatures { get; set; }
+    public virtual DbSet<Payments> Payments { get; set; }
+    public virtual DbSet<Subscriptions> Subscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,23 +70,21 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasKey(l => new { l.LoginProvider, l.ProviderKey });
         });
 
-        // ApplicationUserToken: composite key
         modelBuilder.Entity<ApplicationUserToken>(entity =>
         {
             entity.HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
         });
 
-        // ApplicationRoleClaim
         modelBuilder.Entity<ApplicationRoleClaim>(entity =>
         {
             entity.HasKey(rc => rc.Id);
         });
 
-        // ApplicationUserClaim
         modelBuilder.Entity<ApplicationUserClaim>(entity =>
         {
             entity.HasKey(uc => uc.Id);
         });
+       
         modelBuilder.Entity<ActivityLog>(entity =>
         {
             entity.HasKey(e => e.LogId).HasName("PK__Activity__5E54864844AAB951");
@@ -219,6 +222,98 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasForeignKey(d => d.CreatedId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
             // .HasConstraintName("FK_Notification_AspNetUsers_CreatedId");
+        });
+
+        modelBuilder.Entity<Subscriptions>(entity =>
+        {
+            entity.ToTable("Subscriptions");
+
+            entity.HasKey(s => s.Id);
+
+            entity.Property(s => s.Id)
+                .HasDefaultValueSql("NEWID()");
+
+            entity.Property(s => s.UserId)
+                .HasMaxLength(128)
+                .IsRequired();
+
+            entity.Property(s => s.PlanId)
+                .HasColumnType("int")
+                .IsRequired();
+
+            entity.Property(s => s.PaymentId)
+                .HasColumnType("uniqueidentifier")
+                .IsRequired();
+
+            entity.Property(s => s.StartedAt)
+                .HasColumnType("datetime");
+
+            entity.Property(s => s.ExpiredAt)
+                .HasColumnType("datetime");
+
+            entity.HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Subscriptions_Users");
+
+            entity.HasOne(s => s.Plan)
+                .WithMany()
+                .HasForeignKey(s => s.PlanId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Subscriptions_Plans");
+
+            entity.HasOne(s => s.Payment)
+                .WithMany()
+                .HasForeignKey(s => s.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Subscriptions_Payments");
+        });
+
+        modelBuilder.Entity<Payments>(entity =>
+        {
+            entity.ToTable("Payments");
+
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.Id)
+                  .HasDefaultValueSql("NEWID()");
+
+            entity.Property(p => p.UserId)
+                  .HasMaxLength(128)
+                  .IsRequired();
+
+            entity.Property(p => p.Amount)
+                  .HasColumnType("decimal(18,2)")
+                  .IsRequired();
+
+            entity.Property(p => p.Currency)
+                  .HasMaxLength(3)
+                  .HasDefaultValue("VND")
+                  .IsRequired();
+
+            entity.Property(p => p.Gateway)
+                  .HasMaxLength(20)
+                  .HasDefaultValue("VNPay")
+                  .IsRequired();
+
+            entity.Property(p => p.Status)
+                  .HasMaxLength(20)
+                  .HasDefaultValue("Pending")
+                  .IsRequired();
+
+            entity.Property(p => p.CreatedAt)
+                  .HasDefaultValueSql("GETUTCDATE()");
+
+            // entity.HasOne<ApplicationUser>()
+            //       .WithMany()
+            //       .HasForeignKey(p => p.UserId)
+            //       .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Project>(entity =>
@@ -469,7 +564,63 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             //       .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<Plans>(entity =>
+        {
+            entity.ToTable("Plans");
+
+            entity.HasKey(e => e.PlanId);
+
+            entity.Property(e => e.Name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+
+            entity.Property(e => e.Price)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.Description)
+                  .HasMaxLength(255);
+
+            entity.Property(e => e.Badge)
+                  .HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<Features>(entity =>
+        {
+            entity.ToTable("Features");
+
+            entity.HasKey(e => e.FeatureId);
+
+            entity.Property(e => e.Name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<PlanFeatures>(entity =>
+        {
+            entity.ToTable("PlanFeatures");
+
+            entity.HasKey(e => e.PlanFeatureId);
+
+            entity.Property(e => e.ValueType)
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.Value)
+                  .HasMaxLength(255);
+
+            // Thiết lập quan hệ
+            entity.HasOne(e => e.Plans)
+                  .WithMany(p => p.PlanFeatures)
+                  .HasForeignKey(e => e.PlanId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Features)
+                  .WithMany(f => f.PlanFeatures)
+                  .HasForeignKey(e => e.FeatureId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
         OnModelCreatingPartial(modelBuilder);
+
         modelBuilder.Entity<Task>()
             .ToTable(tb => tb.HasTrigger("trg_TaskHistory_Snapshot"));
 

@@ -29,9 +29,9 @@ instance.interceptors.response.use(function (response) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
     if (error && error.response && error.response.data) {
-        const errorMessage = error.response.data.ErrorMessage || error.response.data.errorMessage
-        const statusCode = error.response.status    
-console.log(error)
+        const errorMessage = error.response.data.ErrorMessage || error.response.data.errorMessage || error.message
+        const statusCode = error.response.status || 500
+
         if (statusCode === 401 && error.response.data?.RetryRequest && !error.config.retry) {
             error.config.retry = true
             return instance(error.config)
@@ -53,9 +53,9 @@ console.log(error)
                 localStorage.setItem("prevPage", currentPath)
                 WarningNotify(errorMessage)
 
-                // setTimeout(() => {
-                //   window.location.href = "/"
-                // }, 1700)
+                setTimeout(() => {
+                  window.location.href = "/"
+                }, 1700)
                 break
             default:
                 ErrorNotify(errorMessage)

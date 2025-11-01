@@ -753,7 +753,7 @@ export default function TaskDetailModal({
                                                 </div>
                                             </div>
 
-                                            {comments.map((c) => (
+                                            {comments && comments?.map((c) => (
                                                 <div key={c.commentId} className="flex gap-3 pb-3">
                                                     <ColoredAvatar
                                                         id={c.userId}

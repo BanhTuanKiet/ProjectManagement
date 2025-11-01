@@ -62,8 +62,8 @@ namespace server.Configs
 
             CreateMap<Sprint, SprintDTO.BasicSprint>();
             CreateMap<SprintDTO.Create, Sprint>()
-                .ForMember(dest => dest.SprintId, opt => opt.Ignore()) // để DB tự tăng
-                .ForMember(dest => dest.Project, opt => opt.Ignore()); // tránh map navigation
+                .ForMember(dest => dest.SprintId, opt => opt.Ignore())
+                .ForMember(dest => dest.Project, opt => opt.Ignore());
 
             CreateMap<SprintDTO.Update, Sprint>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
@@ -76,6 +76,16 @@ namespace server.Configs
 
             CreateMap<BacklogDTO.Update, Backlog>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Plans, PlanDTO.PlanDetail>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PlanId))
+                .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.PlanFeatures));
+
+            CreateMap<PlanFeatures, PlanDTO.FeatureDetail>()
+                .ForMember(dest => dest.FeatureId, opt => opt.MapFrom(src => src.FeatureId))
+                .ForMember(dest => dest.ValueType, opt => opt.MapFrom(src => src.ValueType))
+                .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Value))
+                .ForMember(dest => dest.FeatureName, opt => opt.MapFrom(src => src.Features.Name));
         }
     }
 }

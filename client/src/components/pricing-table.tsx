@@ -1,117 +1,132 @@
 "use client"
-import { useState } from "react"
-import { Check, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Check, X } from 'lucide-react'
+import axios from "@/config/axiosConfig"
+import { PlanDetail } from "@/utils/IPlan"
+import { formatPrice } from "@/utils/stringUitls"
+import { useSearchParams } from "next/navigation"
 
-export default function PricingTable() {
-    const [selectedPlan, setSelectedPlan] = useState<string>("Pro")
+export default function PricingTable({
+    selectedPlan,
+    setSelectedPlan,
+}: {
+    selectedPlan: PlanDetail | undefined
+    setSelectedPlan: React.Dispatch<React.SetStateAction<PlanDetail | undefined>>
+}) {
+    const [plans, setPlans] = useState<PlanDetail[]>([])
+    const searchParams = useSearchParams()
+    
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const response = await axios.get(`/plans`)
+                setPlans(response.data)
+                if (response.data.length > 0) setSelectedPlan(response.data[1])
+            } catch (error) {
+                console.error(error)
+            }
+        }
+        fetchPlans()
+    }, [])
 
-    const handleSelectPlan = (planName: string) => {
-        setSelectedPlan(planName)
-    }
+    useEffect(() => {
+        const planName = searchParams.get("plan")
+        if (!planName) return
+        const plan = plans.find(p => p.name.toLocaleLowerCase() === planName)
+        setSelectedPlan(plan)
+    }, [plans, searchParams])
 
-    const features = [
-        { name: "Số dự án", free: "3", pro: "Unlimited", enterprise: "Unlimited" },
-        { name: "Số thành viên/team", free: "5", pro: "Unlimited", enterprise: "Unlimited" },
-        { name: "Gantt chart", free: false, pro: true, enterprise: true },
-        { name: "Advanced reports", free: false, pro: true, enterprise: true },
-        { name: "File upload (GB)", free: "1GB", pro: "50GB", enterprise: "Unlimited" },
-        { name: "Integrations (Slack, Drive)", free: false, pro: true, enterprise: true },
-        { name: "API access", free: false, pro: true, enterprise: true },
-        { name: "Priority support", free: false, pro: false, enterprise: true },
-        { name: "Custom workflows", free: false, pro: true, enterprise: true },
-    ]
-
-    const plans = [
-        { name: "Free", price: "Miễn phí" },
-        { name: "Pro", price: "99.000đ/tháng" },
-        { name: "Enterprise", price: "Liên hệ" },
-    ]
+    const allFeatures = Array.from(
+        new Set(plans.flatMap(p => p.features.map(f => f.featureName)))
+    )
 
     return (
-        <section className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="text-center mb-12">
-                <h2 className="text-4xl font-bold mb-4">Phạm vi sử dụng các gói</h2>
-                <p className="text-gray-600 text-lg">Chọn gói phù hợp với nhu cầu của bạn</p>
-            </div>
-
-            <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200">
+        <section className="mx-auto max-w-7xl">
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm bg-white">
                 <table className="w-full">
                     <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
-                            <th className="px-6 py-4 text-left font-semibold text-gray-900">Tính năng</th>
-                            {plans.map((plan) => (
+                        <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+                            <th className="px-8 py-6 text-left font-semibold text-slate-900">
+                                Feature
+                            </th>
+                            {plans && plans?.map(plan => (
                                 <th
-                                    key={plan.name}
-                                    onClick={() => handleSelectPlan(plan.name)}
-                                    className={`px-6 py-4 text-center font-semibold cursor-pointer transition 
-                                        ${selectedPlan === plan.name ? "bg-blue-50 text-blue-600" : "text-gray-900 hover:bg-blue-50"}`}
+                                    key={plan.id}
+                                    onClick={() => setSelectedPlan(plan)}
+                                    className={`px-8 py-6 text-center font-semibold cursor-pointer transition-all duration-200 ${selectedPlan?.name === plan.name
+                                        ? "bg-gradient-to-b from-blue-50 to-blue-100 text-blue-700"
+                                        : "text-slate-900 hover:bg-slate-50"
+                                        }`}
                                 >
-                                    {plan.name}
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span>{plan.name}</span>
+                                        {plan.badge && (
+                                            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                                                {plan.description}
+                                            </span>
+                                        )}
+                                    </div>
                                 </th>
                             ))}
                         </tr>
                     </thead>
+
                     <tbody>
-                        {features.map((feature, idx) => (
-                            <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                                <td className="px-6 py-4 font-medium text-gray-900">{feature.name}</td>
-
-                                <td
-                                    onClick={() => handleSelectPlan("Free")}
-                                    className={`px-6 py-4 text-center cursor-pointer transition ${selectedPlan === "Free" ? "bg-blue-50" : ""}`}
-                                >
-                                    {typeof feature.free === "boolean" ? (
-                                        feature.free ? (
-                                            <Check className="h-5 w-5 text-green-500 mx-auto" />
-                                        ) : (
-                                            <X className="h-5 w-5 text-red-500 mx-auto" />
-                                        )
-                                    ) : (
-                                        <span className="text-gray-700">{feature.free}</span>
-                                    )}
+                        {allFeatures.map((featureName, idx) => (
+                            <tr
+                                key={idx}
+                                className={`border-b border-slate-200 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+                                    }`}
+                            >
+                                <td className="px-8 py-4 font-medium text-slate-900">
+                                    {featureName}
                                 </td>
 
-                                <td
-                                    onClick={() => handleSelectPlan("Pro")}
-                                    className={`px-6 py-4 text-center cursor-pointer transition ${selectedPlan === "Pro" ? "bg-blue-50" : ""}`}
-                                >
-                                    {typeof feature.pro === "boolean" ? (
-                                        feature.pro ? (
-                                            <Check className="h-5 w-5 text-green-500 mx-auto" />
-                                        ) : (
-                                            <X className="h-5 w-5 text-red-500 mx-auto" />
-                                        )
-                                    ) : (
-                                        <span className="text-gray-700 font-semibold">{feature.pro}</span>
-                                    )}
-                                </td>
+                                {plans.map(plan => {
+                                    const feature = plan.features.find(
+                                        f => f.featureName === featureName
+                                    )
+                                    const value = feature ? feature.value : "-"
+                                    const isBoolean =
+                                        feature?.valueType === "boolean" &&
+                                        (value === "true" || value === "false")
 
-                                <td
-                                    onClick={() => handleSelectPlan("Enterprise")}
-                                    className={`px-6 py-4 text-center cursor-pointer transition ${selectedPlan === "Enterprise" ? "bg-blue-50" : ""}`}
-                                >
-                                    {typeof feature.enterprise === "boolean" ? (
-                                        feature.enterprise ? (
-                                            <Check className="h-5 w-5 text-green-500 mx-auto" />
-                                        ) : (
-                                            <X className="h-5 w-5 text-red-500 mx-auto" />
-                                        )
-                                    ) : (
-                                        <span className="text-gray-700">{feature.enterprise}</span>
-                                    )}
-                                </td>
+                                    return (
+                                        <td
+                                            key={`${plan.name}-${featureName}`}
+                                            onClick={() => setSelectedPlan(plan)}
+                                            className={`px-8 py-4 text-center cursor-pointer transition-colors ${selectedPlan?.name === plan.name ? "bg-blue-50/50" : ""
+                                                }`}
+                                        >
+                                            {isBoolean ? (
+                                                value === "true" ? (
+                                                    <Check className="h-5 w-5 text-emerald-500 mx-auto" />
+                                                ) : (
+                                                    <X className="h-5 w-5 text-red-500 mx-auto" />
+                                                )
+                                            ) : (
+                                                <span className="text-slate-700 font-medium">
+                                                    {value}
+                                                </span>
+                                            )}
+                                        </td>
+                                    )
+                                })}
                             </tr>
                         ))}
-                        <tr className="bg-gray-50 border-t-2 border-gray-200">
-                            <td className="px-6 py-4 font-semibold text-gray-900">Giá</td>
-                            {plans.map((plan) => (
+
+                        <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-t-2 border-slate-200">
+                            <td className="px-8 py-6 font-semibold text-slate-900">Giá</td>
+                            {plans.map(plan => (
                                 <td
-                                    key={plan.name}
-                                    onClick={() => handleSelectPlan(plan.name)}
-                                    className={`px-6 py-4 text-center font-semibold cursor-pointer transition 
-                                        ${selectedPlan === plan.name ? "bg-blue-50 text-blue-600" : "text-gray-900"}`}
+                                    key={plan.id}
+                                    onClick={() => setSelectedPlan(plan)}
+                                    className={`px-8 py-6 text-center font-bold cursor-pointer transition-all duration-200 ${selectedPlan?.name === plan.name
+                                        ? "text-blue-700 bg-gradient-to-b from-blue-50 to-blue-100"
+                                        : "text-slate-900"
+                                        }`}
                                 >
-                                    {plan.price}
+                                    {plan.price.toString() === "0" ? "Free" : formatPrice(Number(plan.price))}
                                 </td>
                             ))}
                         </tr>
@@ -119,45 +134,71 @@ export default function PricingTable() {
                 </table>
             </div>
 
-            <div className="md:hidden space-y-6">
-                {plans.map((plan) => (
+            <div className="md:hidden space-y-4">
+                {plans.map(plan => (
                     <div
-                        key={plan.name}
-                        onClick={() => handleSelectPlan(plan.name)}
-                        className={`rounded-lg border p-6 cursor-pointer transition 
-                            ${selectedPlan === plan.name ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-blue-50"}`}
+                        key={plan.id}
+                        onClick={() => setSelectedPlan(plan)}
+                        className={`rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 ${selectedPlan?.name === plan.name
+                            ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg"
+                            : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-md"
+                            }`}
                     >
-                        <h3 className={`text-xl font-bold mb-2 ${selectedPlan === plan.name ? "text-blue-600" : "text-gray-900"}`}>
-                            {plan.name}
-                        </h3>
-                        <p className={`text-2xl font-bold mb-4 ${selectedPlan === plan.name ? "text-blue-600" : "text-gray-900"}`}>
+                        <div className="flex items-start justify-between mb-4">
+                            <div>
+                                <h3
+                                    className={`text-xl font-bold ${selectedPlan?.name === plan.name
+                                        ? "text-blue-700"
+                                        : "text-slate-900"
+                                        }`}
+                                >
+                                    {plan.name}
+                                </h3>
+                                {plan.badge && (
+                                    <p className="text-xs font-medium text-blue-600 mt-1">
+                                        {plan.description}
+                                    </p>
+                                )}
+                            </div>
+                            {selectedPlan?.name === plan.name && (
+                                <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                                    <Check className="h-4 w-4 text-white" />
+                                </div>
+                            )}
+                        </div>
+                        <p
+                            className={`text-3xl font-bold mb-6 ${selectedPlan?.name === plan.name ? "text-blue-700" : "text-slate-900"
+                                }`}
+                        >
                             {plan.price}
                         </p>
 
                         <div className="space-y-3">
-                            {features.map((feature, idx) => {
-                                const value =
-                                    plan.name === "Free"
-                                        ? feature.free
-                                        : plan.name === "Pro"
-                                            ? feature.pro
-                                            : feature.enterprise
+                            {plan.features.map(feature => {
+                                const value = feature.value
+                                const isBoolean =
+                                    feature.valueType === "boolean" &&
+                                    (value === "true" || value === "false")
 
                                 return (
                                     <div
-                                        key={idx}
-                                        className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0"
+                                        key={feature.featureId}
+                                        className="flex items-center justify-between py-2 border-b border-slate-200 last:border-0"
                                     >
-                                        <span className="text-gray-700">{feature.name}</span>
+                                        <span className="text-slate-700 text-sm">
+                                            {feature.featureName}
+                                        </span>
                                         <div>
-                                            {typeof value === "boolean" ? (
-                                                value ? (
-                                                    <Check className="h-5 w-5 text-green-500" />
+                                            {isBoolean ? (
+                                                value === "true" ? (
+                                                    <Check className="h-5 w-5 text-emerald-500" />
                                                 ) : (
-                                                    <X className="h-5 w-5 text-red-500" />
+                                                    <X className="h-5 w-5 text-slate-300" />
                                                 )
                                             ) : (
-                                                <span className="font-semibold text-gray-900">{value}</span>
+                                                <span className="font-semibold text-slate-900 text-sm">
+                                                    {value}
+                                                </span>
                                             )}
                                         </div>
                                     </div>

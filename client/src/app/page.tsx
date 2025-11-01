@@ -1,104 +1,148 @@
 "use client"
-import { BarChart3, CheckCircle2, FileText, MessageSquare, Shield, Users, Wallet, Zap } from "lucide-react"
-import PricingTable from "@/components/pricing-table"
+import Footer from "@/components/FooterComponent"
+import { motion, useMotionValue, useTransform, animate } from "framer-motion"
+import { useEffect } from "react"
+import {
+    BarChart3,
+    CheckCircle2,
+    FileText,
+    MessageSquare,
+    Shield,
+    Users,
+    Wallet,
+    Zap,
+    ArrowRight,
+} from "lucide-react"
+import Link from "next/link"
+import HeaderComponent from "@/components/HeaderComponent"
+import { useRouter } from "next/navigation"
+
+const features = [
+    {
+        icon: Zap,
+        title: "Project Management",
+        desc: "Organize work efficiently with Kanban boards, timelines, and detailed permission controls",
+    },
+    {
+        icon: Users,
+        title: "Team Collaboration",
+        desc: "Work together in real-time with chat, mentions, and comments directly on tasks",
+    },
+    {
+        icon: CheckCircle2,
+        title: "Progress Tracking",
+        desc: "Monitor project progress, sprints, and milestones with Gantt charts or dashboards",
+    },
+    {
+        icon: Shield,
+        title: "Users & Permissions",
+        desc: "Sign up, login with JWT + OAuth, flexible roles: Admin, Manager, Member, Client",
+    },
+    {
+        icon: Wallet,
+        title: "Payments & Plans",
+        desc: "Track transactions, manage Free / Premium plans and different usage benefits",
+    },
+    {
+        icon: FileText,
+        title: "Documents & Files",
+        desc: "Upload, manage documents, images, PDFs and attach directly to tasks",
+    },
+    {
+        icon: MessageSquare,
+        title: "Notifications & Communication",
+        desc: "Get real-time notifications, email digests and track member online/offline status",
+    },
+    {
+        icon: BarChart3,
+        title: "Reports & Dashboard",
+        desc: "Analyze workload, team performance and detailed statistics by project",
+    },
+]
+
+const stats = [
+    { value: "50", label: "Active Users", unit: "K+" },
+    { value: "10", label: "Teams", unit: "K+" },
+    { value: "99", label: "Uptime", unit: ".9%" },
+    { value: "24", label: "Support", unit: "/7" },
+]
 
 export default function Page() {
-    const features = [
-        {
-            icon: Zap,
-            title: "Quản lý dự án",
-            desc: "Tổ chức công việc hiệu quả với bảng Kanban, timeline và phân quyền chi tiết",
-        },
-        {
-            icon: Users,
-            title: "Cộng tác nhóm",
-            desc: "Làm việc cùng nhau trong thời gian thực với chat, mention và bình luận trong task",
-        },
-        {
-            icon: CheckCircle2,
-            title: "Theo dõi tiến độ",
-            desc: "Giám sát tiến độ dự án, sprint và milestone trên Gantt chart hoặc dashboard",
-        },
-        {
-            icon: Shield,
-            title: "Người dùng & Phân quyền",
-            desc: "Đăng ký, đăng nhập JWT + OAuth, vai trò linh hoạt: Admin, Manager, Member, Client",
-        },
-        {
-            icon: Wallet,
-            title: "Thanh toán & Gói dịch vụ",
-            desc: "Theo dõi giao dịch, quản lý gói Free / Premium và quyền lợi sử dụng khác nhau",
-        },
-        {
-            icon: FileText,
-            title: "Tài liệu & File",
-            desc: "Upload, quản lý tài liệu, hình ảnh, PDF và đính kèm trực tiếp vào task",
-        },
-        {
-            icon: MessageSquare,
-            title: "Thông báo & Giao tiếp",
-            desc: "Nhận thông báo realtime, email digest và theo dõi trạng thái online/offline của thành viên",
-        },
-        {
-            icon: BarChart3,
-            title: "Báo cáo & Dashboard",
-            desc: "Phân tích workload, hiệu suất thành viên và thống kê chi tiết theo dự án",
-        },
-    ]
+    const router = useRouter()
+    const CountUpNumber = ({ value, duration }: { value: string, duration: number }) => {
+        const count = useMotionValue(0)
+        const rounded = useTransform(count, (latest) => Math.floor(latest))
+
+        useEffect(() => {
+            const controls = animate(count, parseFloat(value), {
+                duration,
+                ease: "easeOut",
+            })
+            return controls.stop
+        }, [value])
+
+        return <motion.span>{rounded}</motion.span>
+    }
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-white to-slate-50">
-            <header className="w-full border-b border-slate-200 bg-white">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="flex h-16 items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                                <span className="text-lg font-bold text-white">P</span>
-                            </div>
-                            <span className="text-xl font-bold text-slate-900">ProjectHub</span>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <a
-                                href="http://localhost:3000/login"
-                                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
-                            >
-                                Đăng nhập
-                            </a>
-                            <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
-                                Bắt đầu miễn phí
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <HeaderComponent />
 
             <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
                 <div className="space-y-6">
                     <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 leading-tight">
-                        Quản lý dự án <br className="hidden sm:inline" />
-                        <span className="text-blue-600">đơn giản và hiệu quả</span>
+                        Manage projects <br className="hidden sm:inline" />
+                        <span className="text-blue-600">simply and effectively</span>
                     </h1>
 
                     <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                        Công cụ quản lý dự án toàn diện giúp nhóm của bạn cộng tác, tổ chức công việc và hoàn thành mục tiêu nhanh
-                        hơn.
+                        A comprehensive project management tool that helps your team collaborate, organize work, and achieve goals
+                        faster.
                     </p>
 
                     <div className="flex items-center justify-center gap-4 pt-4">
-                        <button className="rounded-full bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl">
-                            Bắt đầu ngay
-                        </button>
+                        <Link
+                            href="/plan-payment?plan=free"
+                            className="rounded-full bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
+                        >
+                            Get Started 
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
                         <button className="rounded-full border border-slate-300 px-8 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">
-                            Xem demo
+                            Watch Demo
                         </button>
                     </div>
 
-                    <p className="text-sm text-slate-500 pt-4">Không cần thẻ tín dụng • Bắt đầu miễn phí trong 2 phút</p>
+                    <p className="text-sm text-slate-500 pt-4">No credit card required • Start free in 1 minutes</p>
+                </div>
+            </section>
+
+            <section className="mx-auto max-w-6xl px-6 lg:px-8 py-16 bg-white rounded-2xl shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    {stats.map((stat, idx) => (
+                        <motion.div
+                            key={idx}
+                            className="text-center"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: idx * 0.1 }}
+                        >
+                            <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
+                                <CountUpNumber value={stat.value} duration={1} />
+                                {stat.unit}
+                            </div>
+                            <div className="text-sm text-slate-600">{stat.label}</div>
+                        </motion.div>
+                    ))}
                 </div>
             </section>
 
             <section className="mx-auto max-w-6xl px-6 lg:px-8 py-20">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Powerful Features</h2>
+                    <p className="text-lg text-slate-600">Everything you need to manage projects successfully</p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {features.map((feature, idx) => {
                         const Icon = feature.icon
@@ -115,122 +159,22 @@ export default function Page() {
                 </div>
             </section>
 
-            <div className="px-6 lg:px-8 py-20">
-                <PricingTable />
-            </div>
-
             <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
                 <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-16">
-                    <h2 className="text-3xl font-bold text-white mb-4">Sẵn sàng để bắt đầu?</h2>
+                    <h2 className="text-3xl font-bold text-white mb-4">Ready to get started?</h2>
                     <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-                        Tham gia hàng nghìn nhóm đang sử dụng ProjectHub để quản lý dự án hiệu quả.
+                        Join thousands of teams using ProjectHub to manage projects effectively.
                     </p>
-                    <button className="rounded-full bg-white px-8 py-3 text-blue-600 font-semibold hover:bg-blue-50 transition">
-                        Bắt đầu miễn phí ngay
-                    </button>
+                    <Link
+                        href="/plan-payment?plan=free"
+                        className="inline-block rounded-full bg-white px-8 py-3 text-blue-600 font-semibold hover:bg-blue-50 transition"
+                    >
+                        Start Free Now
+                    </Link>
                 </div>
             </section>
 
-            <footer className="border-t border-slate-200 bg-white">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-                        <div>
-                            <h4 className="font-semibold text-slate-900 mb-4">Sản phẩm</h4>
-                            <ul className="space-y-2 text-sm text-slate-600">
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Tính năng
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Giá cả
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Bảo mật
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-slate-900 mb-4">Công ty</h4>
-                            <ul className="space-y-2 text-sm text-slate-600">
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Về chúng tôi
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Blog
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Liên hệ
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-slate-900 mb-4">Hỗ trợ</h4>
-                            <ul className="space-y-2 text-sm text-slate-600">
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Tài liệu
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Hỗ trợ
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Cộng đồng
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold text-slate-900 mb-4">Pháp lý</h4>
-                            <ul className="space-y-2 text-sm text-slate-600">
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Điều khoản
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Quyền riêng tư
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" className="hover:text-slate-900">
-                                        Cookie
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="border-t border-slate-200 pt-8 flex items-center justify-between">
-                        <p className="text-sm text-slate-600">© 2025 ProjectHub. Tất cả quyền được bảo lưu.</p>
-                        <div className="flex gap-4">
-                            <a href="#" className="text-slate-600 hover:text-slate-900">
-                                Twitter
-                            </a>
-                            <a href="#" className="text-slate-600 hover:text-slate-900">
-                                LinkedIn
-                            </a>
-                            <a href="#" className="text-slate-600 hover:text-slate-900">
-                                GitHub
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </main>
     )
 }
