@@ -51,13 +51,30 @@ namespace server.Services.Project
                 .Include(pm => pm.User)
                 .Where(pm => pm.ProjectId == projectId)
                 .ToListAsync();
-                
+
             return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
         }
 
         public async Task<server.Models.Project> FindProjectById(int projectId)
         {
             return await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+        }
+
+        public async Task<Models.Project> GetProjectBasic(int projectId)
+        {
+            var project = await _context.Projects
+                .Where(p => p.ProjectId == projectId)
+                .Select(p => new Models.Project
+                {
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    Description = p.Description,
+                    StartDate = p.StartDate,
+                    EndDate = p.EndDate
+                })
+                .FirstOrDefaultAsync();
+
+            return project;
         }
 
         public async Task<string> GetProjectRole(string userId, int projectId)
@@ -107,21 +124,21 @@ namespace server.Services.Project
                 await _context.SaveChangesAsync();
             }
             var invitation = new ProjectInvitations
-                    {
-                        ProjectId = invitePeopleDTO.ProjectId,
-                        Email = invitePeopleDTO.ToEmail,
-                        RoleInProject = "Leader",
-                        Token = token,
-                        IsAccepted = false,
-                        InvitedAt = DateTime.UtcNow
-                    };
-                    await _context.ProjectInvitations.AddAsync(invitation);
-                    await _context.SaveChangesAsync();
-                    
+            {
+                ProjectId = invitePeopleDTO.ProjectId,
+                Email = invitePeopleDTO.ToEmail,
+                RoleInProject = "Leader",
+                Token = token,
+                IsAccepted = false,
+                InvitedAt = DateTime.UtcNow
+            };
+            await _context.ProjectInvitations.AddAsync(invitation);
+            await _context.SaveChangesAsync();
 
-                string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
 
-                string body = $@"
+            string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
+
+            string body = $@"
                 <div style='font-family:Arial,sans-serif; text-align:center;'>
                     <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
                     <h2>{inviterName} invited you to <b>{projectName}</b></h2>
@@ -147,8 +164,61 @@ namespace server.Services.Project
                     </div>
                 </div>";
 
-                await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
+            await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
             return true;
+        }
+
+        public async Task<Models.Project> UpdateProjectTitle(int projectId, string title)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(t => t.ProjectId == projectId);
+            if (project == null)
+                return null;
+            if (title == null || title == "")
+                return null;
+            project.Name = title;
+            await _context.SaveChangesAsync();
+            return project;
+        }
+
+        public async Task<Models.Project> UpdateProjectDescription(int projectId, string description)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(t => t.ProjectId == projectId);
+            if (project == null)
+                return null;
+            project.Description = description;
+            await _context.SaveChangesAsync();
+            return project;
+        }
+
+        public async Task<Models.Project> UpdateProjectStartDate(int projectId, string startDate)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            if (project == null)
+                return null;
+
+            if (!DateOnly.TryParse(startDate, out DateOnly parsedDate))
+                throw new ErrorException(400, "Invalid start date format");
+
+            project.StartDate = parsedDate;
+
+            await _context.SaveChangesAsync();
+            return project;
+        }
+
+        public async Task<Models.Project> UpdateProjectEndDate(int projectId, string endDate)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            if (project == null)
+                return null;
+
+            if (!DateOnly.TryParse(endDate, out DateOnly parsedDate))
+                throw new ErrorException(400, "Invalid end date format");
+
+            project.EndDate = parsedDate;
+
+            await _context.SaveChangesAsync();
+
+            return project;
         }
     }
 }
