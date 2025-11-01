@@ -39,6 +39,13 @@ namespace server.Controllers
             return Ok(projects);
         }
 
+        [HttpGet("getProjectBasic/{projectId}")]
+        public async Task<ActionResult> GetProjectBasic(int projectId)
+        {
+            var projects = await _projectsServices.GetProjectBasic(projectId);
+            return Ok(projects);
+        }
+
         [Authorize(Policy = "MemberRequirement")]
         [HttpGet("member/{projectId}")]
         public async Task<ActionResult> GetProjectMembers(int projectId)
@@ -90,6 +97,78 @@ namespace server.Controllers
             }
 
             return Ok(new { message = "Invited member successfully!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateTitle/{projectId}")]
+        public async Task<ActionResult> UpdateProjectTitle(int projectId, [FromBody] Dictionary<string, object> updates)
+        {
+            Project project = await _projectsServices.GetProjectBasic(projectId)
+                ?? throw new ErrorException(404, "Project not found");
+
+            if (updates["name"] == "" || updates["name"] == null)
+                throw new ErrorException(400, "Update project failed!");
+
+            string oldTitle = project.Name;
+            string newTitle = updates["name"]?.ToString() ?? oldTitle;
+
+            Project updatedTask = await _projectsServices.UpdateProjectTitle(projectId, newTitle);
+
+            if (updatedTask.Name != newTitle || updatedTask == null)
+                throw new ErrorException(400, "Update project failed!");
+
+            return Ok(new { message = "Update project title successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateDescription/{projectId}")]
+        public async Task<ActionResult> UpdateProjectDescription(int projectId, [FromBody] Dictionary<string, object> updates)
+        {
+            Project project = await _projectsServices.GetProjectBasic(projectId)
+                ?? throw new ErrorException(404, "Project not found");
+
+            if (updates["description"] == "" || updates["description"] == null)
+                throw new ErrorException(400, "Update project failed!");
+
+            string oldDescription = project.Description;
+            string newDescription = updates["description"]?.ToString() ?? oldDescription;
+
+            Project updatedTask = await _projectsServices.UpdateProjectDescription(projectId, newDescription);
+
+            if (updatedTask.Description != newDescription || updatedTask == null)
+                throw new ErrorException(400, "Update project failed!");
+
+            return Ok(new { message = "Update description successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateStartDate/{projectId}")]
+        public async Task<ActionResult> UpdateProjectStartDate(int projectId, [FromBody] Dictionary<string, object> updates)
+        {
+            if (!updates.ContainsKey("startDate") || string.IsNullOrWhiteSpace(updates["startDate"]?.ToString()))
+                throw new ErrorException(400, "Start date is required");
+
+            Project updatedProject = await _projectsServices.UpdateProjectStartDate(projectId, updates["startDate"].ToString());
+
+            return Ok(new
+            {
+                message = "Update start date successful!"
+            });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateEndDate/{projectId}")]
+        public async Task<ActionResult> UpdateProjectEndDate(int projectId, [FromBody] Dictionary<string, object> updates)
+        {
+            if (!updates.ContainsKey("endDate") || string.IsNullOrWhiteSpace(updates["endDate"]?.ToString()))
+                throw new ErrorException(400, "End date is required");
+
+            Project updatedProject = await _projectsServices.UpdateProjectEndDate(projectId, updates["endDate"].ToString());
+
+            return Ok(new
+            {
+                message = "Update end date successful!"
+            });
         }
     }
 }
