@@ -4,25 +4,31 @@ import { useEffect, useState } from "react"
 import type React from "react"
 import { getDaysInMonth } from "@/utils/dateUtils"
 import type { BasicTask } from "@/utils/ITask"
-import { TaskList } from "./TaskList"
-import TaskFilterView from "./TaskFilterView"
-import AddTaskModal from "./AddTaskModal"
-import TaskDetailModal from "./TaskDetailModal"
-import TaskCard from "./TaskCard"
+import { TaskList } from "../TaskList"
+import TaskFilterView from "../TaskFilterView"
+import AddTaskModal from "../AddTaskModal"
+import TaskDetailModal from "../TaskDetailModal"
+import TaskCard from "../TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-react"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 export default function CalendarView() {
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
-    const { tasks, currentDate } = useTask()
+    const { tasks, currentDate, setCurrentDate } = useTask()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
     const [selectedTask, setSelectedTask] = useState<number | null>(null)
     const { project_name, members } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
     const [openDay, setOpenDay] = useState<number | null>(null)
+    const [filters, setFilters] = useState<Record<string, string>>({});
+    const [searchQuery, setSearchQuery] = useState("");
+
 
     useEffect(() => {
         setDays(getDaysInMonth(currentDate))
@@ -33,6 +39,18 @@ export default function CalendarView() {
             setMockTasks([])
         }
     }, [tasks, currentDate])
+
+    const navigateMonth = (direction: "prev" | "next") => {
+        setCurrentDate((prev) => {
+            const newDate = new Date(prev)
+            if (direction === "prev") {
+                newDate.setMonth(prev.getMonth() - 1)
+            } else {
+                newDate.setMonth(prev.getMonth() + 1)
+            }
+            return newDate
+        })
+    }
 
     const getTasksForDay = (day: number) => {
         return mockTasks?.filter(task => {
@@ -52,7 +70,34 @@ export default function CalendarView() {
 
     return (
         <div className="p-6 bg-background min-h-screen bg-dynamic">
-            <TaskFilterView setMockTasks={setMockTasks} />
+            <div className="flex items-center justify-between mb-6 gap-4">
+                <TaskFilterView
+                    tasks={tasks || []}            // 1. Truyền danh sách gốc vào
+                    onFilterComplete={setMockTasks} // 2. Nhận kết quả lọc và cập nhật state
+                />
+                {/* --- Phần điều hướng tháng được đặt ở đây --- */}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="font-medium min-w-24 text-center">
+                            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                        </span>
+                        <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon">
+                            <Calendar className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                            <Grid3X3 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
 
             <div className="border border-border rounded-lg overflow-hidden bg-card bg-dynamic">
                 <div className="grid grid-cols-7 border-b border-border">
@@ -106,7 +151,7 @@ export default function CalendarView() {
                                                 />
                                             ))}
 
-                                                                                        {tasksForDay.length > 1 && (
+                                            {tasksForDay.length > 1 && (
                                                 <div>
                                                     <div
                                                         className="text-xs text-muted-foreground hover:bg-muted hover:border hover:rounded cursor-pointer"

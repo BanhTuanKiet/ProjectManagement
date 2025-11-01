@@ -161,10 +161,11 @@ namespace server.Controllers
             return Ok(tasks);
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
+            Console.WriteLine("Received updates for task patch aaaaaaaaaaaaaaaaaaaaaaaaaaaaa:", JsonConvert.SerializeObject(updates));
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
@@ -178,12 +179,30 @@ namespace server.Controllers
         [HttpDelete("bulk-delete")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
             if (dto.Ids == null || !dto.Ids.Any())
             {
                 return BadRequest(new { message = "No IDs provided." });
             }
 
             var deletedCount = await _tasksService.BulkDeleteTasksAsync(dto.ProjectId, dto.Ids);
+
+            foreach (var taskId in dto.Ids)
+            {
+                Notification notification = new Notification
+                {
+                    ProjectId = dto.ProjectId,
+                    Message = $"Delete task #{taskId} was deleted by {name}",
+                    Link = $"/tasks/{taskId}",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedId = userId,
+                    Type = "task"
+                };
+                await _notificationsService.SaveNotification(notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notification);
+            }
 
             return Ok(new
             {
@@ -192,7 +211,7 @@ namespace server.Controllers
             });
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -210,14 +229,14 @@ namespace server.Controllers
             if (updatedTask.Status != newStatus || updatedTask == null)
                 throw new ErrorException(400, "Update task failed!");
 
-            await _taskHubContext.Clients.Group($"project-{projectId}")
-                .SendAsync("TaskUpdated", updatedTask);
+            // await _taskHubContext.Clients.Group($"project-{projectId}")
+            // .SendAsync("TaskUpdated", updatedTask);
 
             Notification notification = new Notification
             {
                 UserId = null,
                 ProjectId = projectId,
-                Message = $"Task #{taskId} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
+                Message = $"Task #{taskId} {task.Title} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow,
                 Link = $"/tasks/{taskId}",
@@ -232,6 +251,246 @@ namespace server.Controllers
             await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
 
             return Ok(new { message = "Update task successful!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateDescription/{projectId}/{taskId}")]
+        public async Task<ActionResult> UpdateDescriptionTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            if (updates["description"] == "" || updates["description"] == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            string oldDescription = task.Description;
+            string newDescription = updates["description"]?.ToString() ?? oldDescription;
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskDescription(taskId, newDescription);
+
+            if (updatedTask.Description != newDescription || updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            Notification notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"Task #{taskId} {task.Title} description was updated from {oldDescription} to {updatedTask.Description} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"/tasks/{taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
+
+            await _notificationsService.SaveNotification(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+
+            return Ok(new { message = "Update description successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateStartDate/{projectId}/{taskId}")]
+        public async Task<ActionResult> UpdateStartDateTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            DateTime? creatAt = task.CreatedAt;
+            DateTime? deadline = task.Deadline;
+            DateTime? startDate = null;
+            if (updates.ContainsKey("createdAt") && updates["createdAt"] != null)
+            {
+                startDate = DateTime.Parse(updates["createdAt"].ToString());
+            }
+            if (deadline.HasValue && startDate.HasValue)
+            {
+                if (deadline.Value.Year < startDate.Value.Year || deadline.Value.Month < startDate.Value.Month ||
+                 (deadline.Value.Month == startDate.Value.Month && deadline.Value.Day < startDate.Value.Day) ||
+                 (deadline.Value.Day == startDate.Value.Day && deadline.Value.TimeOfDay < startDate.Value.TimeOfDay))
+                {
+                    throw new ErrorException(400, "Ngày kết thúc không được sớm hơn ngày bắt đầu");
+                }
+            }
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskStartDate(taskId, startDate);
+
+            if (updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            Notification notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"Task #{taskId} {task.Title} start date was updated from {creatAt} to {updatedTask.CreatedAt} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"/tasks/{taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
+
+            await _notificationsService.SaveNotification(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+
+            return Ok(new { message = "Update start date successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateDueDate/{projectId}/{taskId}")]
+        public async Task<ActionResult> UpdateDueDateTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+            DateTime? dueDate = task.Deadline;
+            DateTime? startDate = task.CreatedAt;
+            DateTime? deadline = null;
+            if (updates.ContainsKey("deadline") && updates["deadline"] != null)
+            {
+                deadline = DateTime.Parse(updates["deadline"].ToString());
+            }
+
+            if (deadline.HasValue && startDate.HasValue && deadline < startDate)
+            {
+                throw new ErrorException(400, "Ngày kết thúc không được sớm hơn ngày bắt đầu");
+            }
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskDueDate(taskId, deadline);
+
+            if (updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            Notification notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"Task #{taskId} {task.Title} due date was updated from {dueDate} to {updatedTask.Deadline} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"/tasks/{taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
+
+            await _notificationsService.SaveNotification(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+
+            return Ok(new { message = "Update due date successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updateTitle/{projectId}/{taskId}")]
+        public async Task<ActionResult> UpdateTitleTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            if (updates["title"] == "" || updates["title"] == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            string oldTitle = task.Description;
+            string newTitle = updates["title"]?.ToString() ?? oldTitle;
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskTitle(taskId, newTitle);
+
+            if (updatedTask.Title != newTitle || updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            Notification notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"Task #{taskId} {task.Title} title was updated from {oldTitle} to {updatedTask.Title} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"/tasks/{taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
+
+            await _notificationsService.SaveNotification(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+
+            return Ok(new { message = "Update task title successfull!" });
+        }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPut("updatePriority/{projectId}/{taskId}")]
+        public async Task<ActionResult> UpdatePriorityTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            if (!updates.TryGetValue("priority", out var priorityObj))
+            {
+                throw new ErrorException(500, "Missing 'priority' field in request body");
+            }
+
+            if (!byte.TryParse(priorityObj?.ToString(), out byte newPriority))
+            {
+                throw new ErrorException(400, "Invalid priority value");
+            }
+
+            byte oldPriority = task.Priority ?? 1;
+
+            Models.Task updatedTask = await _tasksService.UpdateTaskPriority(taskId, newPriority);
+
+            if (updatedTask.Priority != newPriority || updatedTask == null)
+                throw new ErrorException(400, "Update task failed!");
+
+            var priorities = new Dictionary<byte, string>
+            {
+                { 1, "High" },
+                { 2, "Medium" },
+                { 3, "Low" }
+            };
+
+            Notification notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"Task #{taskId} {task.Title} priority was updated from {priorities[oldPriority]} to {priorities[updatedTask.Priority ?? 1]} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"/tasks/{taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
+
+            await _notificationsService.SaveNotification(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+
+            return Ok(new { message = "Update task priority successfull!" });
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -334,5 +593,42 @@ namespace server.Controllers
             var result = await _tasksService.FilterDeletedTasks(projectId, filters, keyword);
             return Ok(result);
         }
+
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPost("quick-create/{projectId}")]
+        public async Task<ActionResult> QuickCreateTask([FromBody] TaskDTO.QuickCreate dto, int projectId)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string userName = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                return BadRequest(new { message = "Title is required" });
+
+            var newTask = new Models.Task
+            {
+                ProjectId = projectId,
+                Title = dto.Title, // hoặc tách riêng Title/Description nếu FE có 2 input
+                Description = null,
+                SprintId = dto.SprintId > 0 ? dto.SprintId : null,
+                Status = "Todo",
+                Priority = 1,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow,
+                // BacklogId = dto.SprintId == null ? -1 : null
+            };
+
+            var addedTask = await _tasksService.AddNewTask(newTask);
+
+            // 🔔 Gửi thông báo realtime qua SignalR
+            var basicTask = _mapper.Map<TaskDTO.BasicTask>(addedTask);
+            await TaskHubConfig.AddedTask(_taskHubContext, projectId, userId, basicTask);
+
+            return Ok(new
+            {
+                message = "✅ Task created successfully",
+                task = basicTask
+            });
+        }
+
     }
 }

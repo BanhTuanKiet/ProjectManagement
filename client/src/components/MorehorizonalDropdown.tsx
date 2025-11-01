@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreHorizontal, UserPlus, Save, ImageIcon, Archive, Trash2 } from "lucide-react"
+import { MoreHorizontal, UserPlus, Save, ImageIcon, Archive, Trash2, Pencil } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,40 +12,18 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import BackgroundPicker from "./ChangeBackground"
-import axios from "@/config/axiosConfig"
 import { useParams } from "next/navigation"
-import { useProject } from "@/app/(context)/ProjectContext"
 import InvitePeopleDialog from "@/components/InvitePeopleDialog"
+import EditProjectDialog from "@/components/EditProjectDialog"
 
 
 export default function ProjectMenu() {
     const { project_name } = useParams()
     const projectId = Number(project_name)
-    const { projects, setProjects } = useProject()
-    const currentProject = projects?.find(p => p.projectId === projectId)
     const [bgOpen, setBgOpen] = useState(false)
     const [invitePeopleOpen, setInvitePeopleOpen] = useState(false)
-    const [email, setEmail] = useState("")
-    const [role, setRole] = useState("Member")
+    const [editProjectOpen, setEditProjectOpen] = useState(false)
 
-    const handleInvite = async () => {
-        try {
-            const formData = {
-                toEmail: email,
-                projectId: projectId,
-                roleInProject: role
-            }
-
-            const res = await axios.post(`/projects/inviteMember/${projectId}`, formData);
-            console.log("Invite result:", res.data)
-
-            setInvitePeopleOpen(false)
-            setEmail("")
-            setRole("Member")
-        } catch (err) {
-            console.error("Error inviting member:", err)
-        }
-    }
 
     return (
         <>
@@ -65,6 +43,13 @@ export default function ProjectMenu() {
                             <UserPlus className="h-4 w-4 text-blue-600" />
                         </div>
                         <span onClick={() => setInvitePeopleOpen(true)} className="text-sm font-medium">Invite people</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 cursor-pointer">
+                        <div className="p-1 rounded-sm bg-orange-100">
+                            <Pencil className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <span onClick={() => setEditProjectOpen(true)} className="text-sm font-medium">Edit project</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-purple-50 hover:text-purple-700 transition-colors duration-200 cursor-pointer">
@@ -122,6 +107,12 @@ export default function ProjectMenu() {
             <InvitePeopleDialog
                 open={invitePeopleOpen}
                 onOpenChange={setInvitePeopleOpen}
+                projectId={projectId}
+            />
+
+            <EditProjectDialog
+                open={editProjectOpen}
+                onOpenChange={setEditProjectOpen}
                 projectId={projectId}
             />
 

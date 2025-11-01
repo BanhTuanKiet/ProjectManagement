@@ -10,5 +10,6 @@ namespace server.Services.Sprint
         Task<Models.Sprint> Create(int projectId, SprintDTO.Create dto);
         Task<Models.Sprint?> Update(int sprintId, SprintDTO.Update dto);
         Task<bool> Delete(int sprintId);
+        Task<int> DeleteBulk(int projectId, List<int> SprintIds);
     }
 }

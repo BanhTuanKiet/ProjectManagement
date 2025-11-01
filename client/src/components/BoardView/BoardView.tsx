@@ -17,7 +17,7 @@ import SortableTaskCard from "@/components/SortableTaskCard";
 import { useParams } from "next/navigation";
 import { BasicTask } from "@/utils/ITask";
 import { taskStatus } from "@/utils/statusUtils";
-import TaskDetailDrawer from "./TaskDetailDrawer";
+import TaskDetailDrawer from "@/components/TaskDetailModal";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Input } from "@/components/ui/input";
 import { useTask } from "@/app/(context)/TaskContext"
@@ -33,9 +33,8 @@ function DroppableColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`space-y-2 flex-1 overflow-y-auto min-h-[100px] rounded-md p-1 transition ${
-        isOver ? "bg-blue-100" : ""
-      }`}
+      className={`space-y-2 flex-1 overflow-y-auto min-h-[100px] rounded-md p-1 transition ${isOver ? "bg-blue-100" : ""
+        }`}
     >
       {children}
     </div>
@@ -44,7 +43,7 @@ function DroppableColumn({
 
 export default function BoardView() {
   const [features, setFeatures] = useState<BasicTask[]>([]);
-  const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null);
+  const [selectedTask, setSelectedTask] = useState<number | null>(null);
   const [seeMore, setSeeMore] = useState<Record<string, boolean>>({});
   const [openDialog, setOpenDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,85 +52,88 @@ export default function BoardView() {
   const { tasks } = useTask();
 
   useEffect(() => {
-          if (tasks && tasks.length > 0) {
-              setFeatures([...tasks])
-          }
-      }, [tasks])
+    if (tasks && tasks.length > 0) {
+      setFeatures([...tasks])
+    }
+  }, [tasks])
 
   const updateTask = async (taskId: number, newStatus: string) => {
-  try {
-    await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-};
+    try {
+      await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  };
 
-const deleteTask = async (taskId: number) => {
-  try {
-    await axios.delete(`/tasks/bulk-delete/${projectId}`, {
-      data: [taskId],
-    });
-    setFeatures((prev) => prev.filter((t) => t.taskId !== taskId));
-  } catch (error) {
-    console.error("Error deleting task:", error);
-  }
-};
+  const deleteTask = async (taskId: number) => {
+    try {
+      await axios.delete(`/tasks/bulk-delete/`, {
+        data: {
+          ProjectId: projectId,
+          Ids: [taskId],
+        }
+      });
+      setFeatures((prev) => prev.filter((t) => t.taskId !== taskId));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
 
   const handleDragEnd = async (event: any) => {
-  const { active, over } = event;
-  if (!over) return;
+    const { active, over } = event;
+    if (!over) return;
 
-  const activeTaskId = Number(active.id);
-  let newStatus = "";
-  let oldStatus = "";
+    const activeTaskId = Number(active.id);
+    let newStatus = "";
+    let oldStatus = "";
 
-  if (!over.id || typeof over.id !== "string") return;
+    if (!over.id || typeof over.id !== "string") return;
 
-  setFeatures((prev) => {
-    const oldIndex = prev.findIndex((t) => t.taskId === activeTaskId);
-    const overTask = prev.find((t) => t.taskId.toString() === over.id);
+    setFeatures((prev) => {
+      const oldIndex = prev.findIndex((t) => t.taskId === activeTaskId);
+      const overTask = prev.find((t) => t.taskId.toString() === over.id);
 
-    if (!overTask) {
-      // Kéo sang cột trống (chỉ đổi status)
-      newStatus = over.id as string;
-      oldStatus = prev[oldIndex].status;
-
-      const validStatuses = ["Todo", "Doing", "Done", "Cancel"];
-      if (!validStatuses.includes(newStatus)) return prev;
-
-      return prev.map((task) =>
-        task.taskId === activeTaskId ? { ...task, status: newStatus } : task
-      );
-    } else {
-      // Kéo trong cùng cột hoặc sang cột khác
-      const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
-      if (prev[oldIndex].status === overTask.status) {
-        return arrayMove(prev, oldIndex, newIndex);
-      } else {
-        newStatus = overTask.status;
+      if (!overTask) {
+        // Kéo sang cột trống (chỉ đổi status)
+        newStatus = over.id as string;
         oldStatus = prev[oldIndex].status;
+
+        const validStatuses = ["Todo", "Doing", "Done", "Cancel"];
+        if (!validStatuses.includes(newStatus)) return prev;
+
         return prev.map((task) =>
           task.taskId === activeTaskId ? { ...task, status: newStatus } : task
         );
+      } else {
+        // Kéo trong cùng cột hoặc sang cột khác
+        const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
+        if (prev[oldIndex].status === overTask.status) {
+          return arrayMove(prev, oldIndex, newIndex);
+        } else {
+          newStatus = overTask.status;
+          oldStatus = prev[oldIndex].status;
+          return prev.map((task) =>
+            task.taskId === activeTaskId ? { ...task, status: newStatus } : task
+          );
+        }
       }
+    });
+
+    if (!newStatus) return;
+
+    const success = await updateTask(activeTaskId, newStatus);
+
+    // ❗ Nếu lỗi → khôi phục lại trạng thái cũ
+    if (!success) {
+      setFeatures((prev) =>
+        prev.map((task) =>
+          task.taskId === activeTaskId ? { ...task, status: oldStatus } : task
+        )
+      );
     }
-  });
-
-  if (!newStatus) return;
-  
-  const success = await updateTask(activeTaskId, newStatus);
-
-  // ❗ Nếu lỗi → khôi phục lại trạng thái cũ
-  if (!success) {
-    setFeatures((prev) =>
-      prev.map((task) =>
-        task.taskId === activeTaskId ? { ...task, status: oldStatus } : task
-      )
-    );
-  }
-};
+  };
 
   const filteredTasks = features.filter((t) =>
     t.title?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -186,7 +188,7 @@ const deleteTask = async (taskId: number) => {
                         <div key={task.taskId} className="relative group">
                           <SortableTaskCard
                             task={task}
-                            onClick={() => setSelectedTask(task)}
+                            onClick={() => setSelectedTask(task.taskId)}
                           />
                           <button
                             onClick={() => deleteTask(task.taskId)}
@@ -242,7 +244,7 @@ const deleteTask = async (taskId: number) => {
 
       {selectedTask && (
         <TaskDetailDrawer
-          task={selectedTask}
+          taskId={selectedTask}
           onClose={() => setSelectedTask(null)}
         />
       )}

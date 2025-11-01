@@ -8,6 +8,7 @@ export interface TaskDetail {
   assigneeId: string
   assignee: ApplicationUser | null
   createdByNavigation:  null
+  createdAt: string | null
   deadline: string | null 
   estimateHours: number | null
   comments: Comment[]

@@ -217,6 +217,66 @@ namespace server.Services.Project
             return task;
         }
 
+        public async Task<Models.Task> UpdateTaskDescription(int taskId, string description)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+            task.Description = description;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskStartDate(int taskId, DateTime? startDate)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            DateTime? deadline = task.Deadline;
+            if (!deadline.HasValue && !startDate.HasValue)
+            {
+                return null;
+            }
+            task.CreatedAt = startDate ?? DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            DateTime? startDate = task.CreatedAt;
+            if (!startDate.HasValue && !dueDate.HasValue)
+            {
+                return null;
+            }
+            task.Deadline = dueDate;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskTitle(int taskId, string title)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+            if (title == null || title == "")
+                return null;
+            task.Title = title;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<Models.Task> UpdateTaskPriority(int taskId, byte priority)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            if (task == null)
+                return null;
+            if (priority == null)
+                return null;
+            task.Priority = priority;
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
         public async Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId)
         {
             var query = _context.Tasks

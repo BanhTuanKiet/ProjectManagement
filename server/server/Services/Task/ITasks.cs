@@ -1,4 +1,5 @@
-﻿using server.DTO;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using server.DTO;
 
 namespace server.Services.Task
 {
@@ -19,6 +20,16 @@ namespace server.Services.Task
         Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids);
 
         Task<Models.Task> UpdateTaskStatus(int taskId, string newStatus);
+
+        Task<Models.Task> UpdateTaskDescription(int taskId, string description);
+
+        Task<Models.Task> UpdateTaskStartDate(int taskId, DateTime? startDate);
+
+        Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate);
+
+        Task<Models.Task> UpdateTaskTitle(int taskId, string title);
+
+        Task<Models.Task> UpdateTaskPriority(int taskId, byte priority);
 
         Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId);
 

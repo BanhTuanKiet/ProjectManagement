@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import TableWrapper from "../TableWrapper";
+import TableWrapper from "../ListView/TableWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "@/config/axiosConfig";
@@ -141,10 +141,10 @@ export default function ListPage() {
       status: apiTask.status,
       assignee: assigneeName
         ? {
-            name: assigneeName,
-            avatar: "", // có thể lấy từ API sau
-            initials: assigneeName.charAt(0).toUpperCase(),
-          }
+          name: assigneeName,
+          avatar: "", // có thể lấy từ API sau
+          initials: assigneeName.charAt(0).toUpperCase(),
+        }
         : undefined,
       dueDate: apiTask.deadline
         ? new Date(apiTask.deadline).toISOString().split("T")[0]
@@ -154,10 +154,10 @@ export default function ListPage() {
         : undefined,
       reporter: reporterName
         ? {
-            name: reporterName,
-            avatar: "",
-            initials: reporterName.charAt(0).toUpperCase(),
-          }
+          name: reporterName,
+          avatar: "",
+          initials: reporterName.charAt(0).toUpperCase(),
+        }
         : undefined,
       type: "Task",
       ...apiTask,
