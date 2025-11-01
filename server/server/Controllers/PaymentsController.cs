@@ -127,7 +127,6 @@ namespace server.Controllers
                 GatewayRef = request.OrderId,
                 Status = "Paid",
                 Description = request.Description,
-                ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
             };
 
             Payments payments = await _paymentsService.SavePaypalPayment(paypal);

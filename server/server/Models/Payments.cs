@@ -36,7 +36,6 @@ namespace server.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime? ExpiredAt { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser User { get; set; } = null!;
     }
