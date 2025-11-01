@@ -53,9 +53,9 @@ instance.interceptors.response.use(function (response) {
                 localStorage.setItem("prevPage", currentPath)
                 WarningNotify(errorMessage)
 
-                // setTimeout(() => {
-                //   window.location.href = "/"
-                // }, 1700)
+                setTimeout(() => {
+                  window.location.href = "/"
+                }, 1700)
                 break
             default:
                 ErrorNotify(errorMessage)

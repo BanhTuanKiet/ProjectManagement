@@ -28,41 +28,7 @@ export default function PlanPaymentPage() {
     const [selectedPlan, setSelectedPlan] = useState<PlanDetail | undefined>()
     const [isLoading, setIsLoading] = useState(false)
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
-    const searchParams = useSearchParams()
     const router = useRouter()
-
-    useEffect(() => {
-        const status = searchParams.get("status")
-        const token = searchParams.get("token")
-        const planStored = sessionStorage.getItem("pendingPayment")
-
-        if (!status || !token || !selectedPlan || !planStored) return
-
-        if (sessionStorage.getItem("paymentProcessed") === token) return
-
-        const verifyPayment = async () => {
-            try {
-                const { amount, name, description, typePlan } = JSON.parse(planStored)
-                const order = {
-                    orderId: token,
-                    amount: amount,
-                    name: name,
-                    description: description,
-                    billingPeriod: typePlan
-                }
-
-                await axios.post("/payments/capture-order", order)
-                sessionStorage.setItem("paymentProcessed", token)
-            } catch (error) {
-                console.log(error)
-            } finally {
-                window.history.replaceState({}, document.title, window.location.pathname)
-                sessionStorage.removeItem("paymentProcessed")
-            }
-        }
-
-        verifyPayment()
-    }, [searchParams, selectedPlan])
 
     const calculatePrice = () => {
         if (!selectedPlan?.price) return 0
@@ -85,11 +51,11 @@ export default function PlanPaymentPage() {
 
         const order = {
             amount: finalPrice,
+            name: selectedPlan.name,
             currency: "USD",
-            // planId: selectedPlan?.id,
-            description: `Payment for ${selectedPlan?.name} Plan - ${billingPeriod === "yearly" ? "Yearly" : "Monthly"}`,
-            returnUrl: "http://localhost:3000/plan-payment?status=true",
-            cancelUrl: "http://localhost:3000/plan-payment?status=false",
+            billingPeriod: billingPeriod,
+            returnUrl: "",
+            cancelUrl: "",
         }
 
         sessionStorage.setItem(

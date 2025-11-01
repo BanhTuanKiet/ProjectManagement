@@ -39,6 +39,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<Features> Features { get; set; }
     public virtual DbSet<PlanFeatures> PlanFeatures { get; set; }
     public virtual DbSet<Payments> Payments { get; set; }
+    public virtual DbSet<Subscriptions> Subscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,23 +70,21 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasKey(l => new { l.LoginProvider, l.ProviderKey });
         });
 
-        // ApplicationUserToken: composite key
         modelBuilder.Entity<ApplicationUserToken>(entity =>
         {
             entity.HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
         });
 
-        // ApplicationRoleClaim
         modelBuilder.Entity<ApplicationRoleClaim>(entity =>
         {
             entity.HasKey(rc => rc.Id);
         });
 
-        // ApplicationUserClaim
         modelBuilder.Entity<ApplicationUserClaim>(entity =>
         {
             entity.HasKey(uc => uc.Id);
         });
+       
         modelBuilder.Entity<ActivityLog>(entity =>
         {
             entity.HasKey(e => e.LogId).HasName("PK__Activity__5E54864844AAB951");
@@ -223,6 +222,52 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasForeignKey(d => d.CreatedId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
             // .HasConstraintName("FK_Notification_AspNetUsers_CreatedId");
+        });
+
+        modelBuilder.Entity<Subscriptions>(entity =>
+        {
+            entity.ToTable("Subscriptions");
+
+            entity.HasKey(s => s.Id);
+
+            entity.Property(s => s.Id)
+                .HasDefaultValueSql("NEWID()");
+
+            entity.Property(s => s.UserId)
+                .HasMaxLength(128)
+                .IsRequired();
+
+            entity.Property(s => s.PlanId)
+                .HasColumnType("int")
+                .IsRequired();
+
+            entity.Property(s => s.PaymentId)
+                .HasColumnType("uniqueidentifier")
+                .IsRequired();
+
+            entity.Property(s => s.StartedAt)
+                .HasColumnType("datetime");
+
+            entity.Property(s => s.ExpiredAt)
+                .HasColumnType("datetime");
+
+            entity.HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Subscriptions_Users");
+
+            entity.HasOne(s => s.Plan)
+                .WithMany()
+                .HasForeignKey(s => s.PlanId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Subscriptions_Plans");
+
+            entity.HasOne(s => s.Payment)
+                .WithMany()
+                .HasForeignKey(s => s.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Subscriptions_Payments");
         });
 
         modelBuilder.Entity<Payments>(entity =>
@@ -519,7 +564,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             //       .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // ===== Plans =====
         modelBuilder.Entity<Plans>(entity =>
         {
             entity.ToTable("Plans");
@@ -540,7 +584,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                   .HasDefaultValue(false);
         });
 
-        // ===== Features =====
         modelBuilder.Entity<Features>(entity =>
         {
             entity.ToTable("Features");
@@ -552,7 +595,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                   .HasMaxLength(100);
         });
 
-        // ===== PlanFeatures =====
         modelBuilder.Entity<PlanFeatures>(entity =>
         {
             entity.ToTable("PlanFeatures");

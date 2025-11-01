@@ -92,7 +92,6 @@ namespace server.Services.Project
             return project.IsStarred;
         }
 
-
         public async Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName)
         {
             var token = Guid.NewGuid();

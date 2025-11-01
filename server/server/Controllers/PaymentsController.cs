@@ -19,12 +19,14 @@ namespace server.Controllers
         private readonly IConfiguration _config;
         private readonly HttpClient _httpClient;
         private readonly IPayments _paymentsService;
+        private readonly ISubscriptions _subscriptionsService;
 
-        public PaymentsController(IConfiguration config, IHttpClientFactory httpClientFactory, IPayments paymentsService)
+        public PaymentsController(IConfiguration config, IHttpClientFactory httpClientFactory, IPayments paymentsService, ISubscriptions subscriptionsService)
         {
             _config = config;
             _httpClient = httpClientFactory.CreateClient();
             _paymentsService = paymentsService;
+            _subscriptionsService = subscriptionsService;
         }
 
         [HttpPost("checkout/paypal")]
@@ -34,13 +36,26 @@ namespace server.Controllers
             var secret = _config["PaypalSettings:Secret"];
             var baseUrl = _config["PaypalSettings:BaseUrl"];
 
+            string returnUrl = $"http://localhost:3000/plan-payment/payment-result?status=true";
+            string cancelUrl = $"http://localhost:3000/plan-payment/payment-result?status=false";
+
+            order.ReturnUrl = returnUrl;
+            order.CancelUrl = cancelUrl;
+
+            var jsonOrder = JsonSerializer.Serialize(order);
+            var encodedOrder = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(jsonOrder));
+
+            returnUrl += $"&order={encodedOrder}";
+            cancelUrl += $"&order={encodedOrder}";
+
             var authToken = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{clientId}:{secret}"));
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
 
-            var tokenResponse = await _httpClient.PostAsync($"{baseUrl}/v1/oauth2/token", new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { "grant_type", "client_credentials" }
-            }));
+            var tokenResponse = await _httpClient.PostAsync($"{baseUrl}/v1/oauth2/token",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "grant_type", "client_credentials" }
+                }));
 
             var tokenJson = await tokenResponse.Content.ReadAsStringAsync();
             var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenJson);
@@ -54,29 +69,10 @@ namespace server.Controllers
                 purchase_units = new[]
                 {
                     new {
-                        // description = order.Description ?? "Payment description",
                         amount = new {
                             currency_code = order.Currency ?? "USD",
-                            value = order.Amount.ToString("F2"),
-                            // breakdown = new {
-                            //     item_total = new {
-                            //         currency_code = order.Currency ?? "USD",
-                            //         value = order.Amount.ToString("F2")
-                            //     }
-                            // }
-                        },
-                        // items = new[]
-                        // {
-                        //     new {
-                        //         name = order.Description ?? "Subscription",
-                        //         description = "Payment for selected plan",
-                        //         quantity = "1",
-                        //         unit_amount = new {
-                        //             currency_code = order.Currency ?? "USD",
-                        //             value = order.Amount.ToString("F2")
-                        //         }
-                        //     }
-                        // }
+                            value = order.Amount.ToString("F2")
+                        }
                     }
                 },
                 application_context = new
@@ -84,13 +80,14 @@ namespace server.Controllers
                     brand_name = "realtime_platform",
                     landing_page = "LOGIN",
                     user_action = "PAY_NOW",
-                    return_url = order.ReturnUrl,
-                    cancel_url = order.CancelUrl
+                    return_url = returnUrl,
+                    cancel_url = cancelUrl
                 }
             };
 
             var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/v2/checkout/orders", orderPayload);
             var result = await response.Content.ReadAsStringAsync();
+
             return Ok(result);
         }
 
@@ -133,15 +130,19 @@ namespace server.Controllers
                 ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
             };
 
-            await _paymentsService.SavePaypalPayment(paypal);
+            Payments payments = await _paymentsService.SavePaypalPayment(paypal);
 
-            string message = request.Name.ToLower() ==
-                "free"
-                    ? "You’re currently using the Free Plan."
-                    : $"Thank you for upgrading to the {request.Name} Plan! Your payment has been successfully processed.";
-                    
-            return Ok(new { captureResponse = captureResponse, message = message });
+            Subscriptions subscriptions = new Subscriptions
+            {
+                UserId = userId,
+                PlanId = 1,
+                PaymentId = payments.Id,
+                ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
+            };
+            
+            await _subscriptionsService.AddSubscription(subscriptions);
 
+            return Ok(new { captureResponse = captureResponse, subscriptions = subscriptions });
         }
     }
 }

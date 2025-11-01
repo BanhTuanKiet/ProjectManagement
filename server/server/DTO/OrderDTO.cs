@@ -6,8 +6,8 @@ namespace server.DTO
         {
             public decimal Amount { get; set; }
             public string Currency { get; set; } = "USD";
-            // public string PlanId { get; set; }
-            public string Description { get; set; }
+            public string Name { get; set; }
+            public string BillingPeriod { get; set; }
             public string ReturnUrl { get; set; }
             public string CancelUrl { get; set; }
         }
