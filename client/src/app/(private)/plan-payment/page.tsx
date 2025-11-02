@@ -58,16 +58,6 @@ export default function PlanPaymentPage() {
             cancelUrl: "",
         }
 
-        sessionStorage.setItem(
-            "pendingPayment",
-            JSON.stringify({
-                amount: selectedPlan.price,
-                name: selectedPlan.name,
-                description: `Payment for ${selectedPlan.name} Plan`,
-                typePlan: billingPeriod
-            })
-        )
-
         try {
             const response = await axios.post(`/payments/checkout/paypal`, order)
             const links = response.data.links ?? []
