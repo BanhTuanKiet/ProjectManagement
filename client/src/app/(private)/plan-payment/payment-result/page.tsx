@@ -43,7 +43,7 @@ export default function PaymentResultPage() {
 
             try {
                 const paymentData = JSON.parse(atob(planStored) )
-                console.log(paymentData)
+
                 if (status) {
                     const order = {
                         orderId: token,
@@ -52,7 +52,6 @@ export default function PaymentResultPage() {
                         description: paymentData.Description,
                         billingPeriod: paymentData.BillingPeriod,
                     }
-                    console.log(order)
 
                     await axios.post("/payments/capture-order", order)
 
@@ -82,8 +81,6 @@ export default function PaymentResultPage() {
                     message: "An error occurred while processing your payment. Please contact support.",
                 }))
             }
-
-            // window.history.replaceState({}, document.title, window.location.pathname)
         }
 
         verifyPayment()

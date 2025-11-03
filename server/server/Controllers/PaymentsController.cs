@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Security.Claims;
+using System.Globalization;
 
 namespace server.Controllers
 {
@@ -42,6 +43,14 @@ namespace server.Controllers
             order.ReturnUrl = returnUrl;
             order.CancelUrl = cancelUrl;
 
+            decimal vndRate = await _paymentsService.GetLatestFxRates(_httpClient, "VND");
+            decimal usdRate = await _paymentsService.GetLatestFxRates(_httpClient, "USD");
+            decimal finalVndRate = vndRate * usdRate;
+
+            decimal finalPrice = order.BillingPeriod == "monthly" ? order.Amount : order.Amount * 12 * 0.95m;
+            string finalPriceString = (finalPrice / finalVndRate).ToString("F2", CultureInfo.InvariantCulture);
+            order.Amount = decimal.Parse(finalPriceString, CultureInfo.InvariantCulture);
+
             var jsonOrder = JsonSerializer.Serialize(order);
             var encodedOrder = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(jsonOrder));
 
@@ -71,7 +80,7 @@ namespace server.Controllers
                     new {
                         amount = new {
                             currency_code = order.Currency ?? "USD",
-                            value = order.Amount.ToString("F2")
+                            value = finalPriceString
                         }
                     }
                 },
@@ -121,7 +130,7 @@ namespace server.Controllers
             Payments paypal = new Payments
             {
                 UserId = userId,
-                Amount = request.BillingPeriod == "monthly" ? request.Amount : request.Amount * 12 * 0.95m,
+                Amount = request.Amount,
                 Currency = "USD",
                 Gateway = "Paypal",
                 GatewayRef = request.OrderId,
@@ -138,7 +147,7 @@ namespace server.Controllers
                 PaymentId = payments.Id,
                 ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
             };
-            
+
             await _subscriptionsService.AddSubscription(subscriptions);
 
             return Ok(new { captureResponse = captureResponse, subscriptions = subscriptions });

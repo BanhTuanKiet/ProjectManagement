@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Check, Lock, ArrowRight } from "lucide-react"
 import PricingTable from "@/components/pricing-table"
-import type { PlanDetail, PlanLevel } from "@/utils/IPlan"
-import axios from "@/config/axiosConfig"
-import { useRouter, useSearchParams } from "next/navigation"
+import type { PlanDetail } from "@/utils/IPlan"
+import { useRouter } from "next/navigation"
 import { formatPrice } from "@/utils/stringUitls"
+import axios from "@/config/axiosConfig"
 
 const paymentMethods = [
     {
@@ -30,16 +30,6 @@ export default function PlanPaymentPage() {
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
     const router = useRouter()
 
-    const calculatePrice = () => {
-        if (!selectedPlan?.price) return 0
-        const basePrice = Number(selectedPlan.price)
-        if (billingPeriod === "yearly") {
-            return basePrice * 12 * 0.95
-        }
-        return basePrice
-    }
-
-    const finalPrice = calculatePrice()
     const monthlyPrice = Number(selectedPlan?.price) || 0
     const yearlyPrice = monthlyPrice * 12
     const discountAmount = yearlyPrice * 0.05
@@ -50,7 +40,8 @@ export default function PlanPaymentPage() {
         setIsLoading(true)
 
         const order = {
-            amount: finalPrice,
+            planId: selectedPlan.id,
+            amount: selectedPlan.price,
             name: selectedPlan.name,
             currency: "USD",
             billingPeriod: billingPeriod,
@@ -225,7 +216,7 @@ export default function PlanPaymentPage() {
                                                 {billingPeriod === "yearly" ? "Yearly Billing" : "Monthly Billing"}
                                             </p>
                                         </div>
-                                        <p className="font-semibold text-slate-900 mt-auto">{formatPrice(finalPrice)}</p>
+                                        <p className="font-semibold text-slate-900 mt-auto">{formatPrice(selectedPlan?.price)}</p>
                                     </div>
                                 </div>
 
@@ -249,7 +240,9 @@ export default function PlanPaymentPage() {
                                 <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl mb-4 p-4 border border-blue-200">
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-slate-900">Total</span>
-                                        <span className="text-3xl font-bold text-blue-600">{formatPrice(finalPrice)}</span>
+                                        <span className="text-3xl font-bold text-blue-600">
+                                            {billingPeriod === "yearly" ? formatPrice(yearlyPrice) : formatPrice(monthlyPrice)}
+                                        </span>
                                     </div>
                                     <p className="text-xs text-slate-600 mt-2">
                                         You will be charged on December 15

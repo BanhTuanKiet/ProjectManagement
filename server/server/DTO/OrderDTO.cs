@@ -4,6 +4,7 @@ namespace server.DTO
     {
         public class PaypalOrder
         {
+            public int PlanId { get; set; }
             public decimal Amount { get; set; }
             public string Currency { get; set; } = "USD";
             public string Name { get; set; }
@@ -14,6 +15,7 @@ namespace server.DTO
 
         public class PaypalCaptureRequest
         {
+            public int PlanId { get; set; }
             public string OrderId { get; set; }
             public decimal Amount { get; set; }
             public string Description { get; set; }
