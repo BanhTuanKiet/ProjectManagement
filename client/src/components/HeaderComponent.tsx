@@ -21,7 +21,7 @@ export default function HeaderComponent() {
                             Sign In
                         </a>
                         <Link
-                            href="/plan-payment?plan=free"
+                            href="/plan?plan=free"
                             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
                         >
                             Start Free

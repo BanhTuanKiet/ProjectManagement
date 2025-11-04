@@ -9,7 +9,6 @@ import axios from "@/config/axiosConfig"
 import { useRouter } from "next/navigation"
 import { useUser } from "../(context)/UserContext";
 import FooterComponent from "@/components/FooterComponent";
-import HeaderComponent from "@/components/HeaderComponent";
 
 
 export default function Login() {
@@ -38,7 +37,6 @@ export default function Login() {
     }
     return (
         <>
-        <HeaderComponent />
             <div className="bg-blue-100">
                 <div className="grid grid-cols-7 gap-4 p-6 mx-auto justify-center items-center text-center mr-40 ml-40">
                     <button className="flex flex-col items-center space-y-2 p-3 rounded-lg hover:bg-gray-50 hover:shadow-md transition duration-200 border border-transparent hover:border-gray-200">

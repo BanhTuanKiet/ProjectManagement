@@ -143,7 +143,7 @@ namespace server.Controllers
             Subscriptions subscriptions = new Subscriptions
             {
                 UserId = userId,
-                PlanId = 1,
+                PlanId = request.PlanId,
                 PaymentId = payments.Id,
                 ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
             };
