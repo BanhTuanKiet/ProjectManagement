@@ -47,13 +47,12 @@ export default function PaymentResultPage() {
             try {
                 const paymentData = JSON.parse(atob(planStored))
 
-                // ✅ Success chỉ khi status === "true"
                 if (status === "true") {
                     const order = {
+                        planId: paymentData.PlanId,
                         orderId: token,
                         amount: paymentData.Amount,
                         name: paymentData.Name,
-                        description: paymentData.Description,
                         billingPeriod: paymentData.BillingPeriod,
                     }
 
@@ -68,7 +67,6 @@ export default function PaymentResultPage() {
                         message: "Your payment has been processed successfully! Your plan is now active.",
                     })
                 } else {
-                    // ❌ Payment fail
                     setPaymentResult({
                         status: "false",
                         orderId: "",

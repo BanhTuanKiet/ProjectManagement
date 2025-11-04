@@ -37,8 +37,8 @@ namespace server.Controllers
             var secret = _config["PaypalSettings:Secret"];
             var baseUrl = _config["PaypalSettings:BaseUrl"];
 
-            string returnUrl = $"http://localhost:3000/plan-payment/payment-result?status=true";
-            string cancelUrl = $"http://localhost:3000/plan-payment/payment-result?status=false";
+            string returnUrl = $"http://localhost:3000/plan/payment-result?status=true";
+            string cancelUrl = $"http://localhost:3000/plan/payment-result?status=false";
 
             order.ReturnUrl = returnUrl;
             order.CancelUrl = cancelUrl;
@@ -135,7 +135,6 @@ namespace server.Controllers
                 Gateway = "Paypal",
                 GatewayRef = request.OrderId,
                 Status = "Paid",
-                Description = request.Description,
             };
 
             Payments payments = await _paymentsService.SavePaypalPayment(paypal);
@@ -150,7 +149,7 @@ namespace server.Controllers
 
             await _subscriptionsService.AddSubscription(subscriptions);
 
-            return Ok(new { captureResponse = captureResponse, subscriptions = subscriptions });
+            return Ok();
         }
     }
 }

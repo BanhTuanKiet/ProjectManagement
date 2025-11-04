@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { Check, Lock, ArrowRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Check, Lock, ArrowRight, AlertCircle } from "lucide-react"
 import PricingTable from "@/components/pricing-table"
 import type { PlanDetail } from "@/utils/IPlan"
 import { useRouter } from "next/navigation"
 import { formatPrice } from "@/utils/stringUitls"
-import axios from "@/config/axiosConfig"
+import axiosConfig from "@/config/axiosConfig"
+import axios from "axios"
 
 const paymentMethods = [
     {
@@ -23,20 +24,77 @@ const paymentMethods = [
     },
 ]
 
+interface FxRate {
+    vndRate: number;
+    usdRate: number;
+}
+
+interface Price {
+    price: number
+    discountPrice: number
+}
+
 export default function PlanPaymentPage() {
     const [selectedMethod, setSelectedMethod] = useState<"vnpay" | "paypal">("vnpay")
     const [selectedPlan, setSelectedPlan] = useState<PlanDetail | undefined>()
     const [isLoading, setIsLoading] = useState(false)
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
+    const [fxRates, setFxRates] = useState<FxRate | null>(null)
+    const [price, setPrice] = useState<Price | null>(null)
     const router = useRouter()
 
-    const monthlyPrice = Number(selectedPlan?.price) || 0
-    const yearlyPrice = monthlyPrice * 12
-    const discountAmount = yearlyPrice * 0.05
+    useEffect(() => {
+        let price = 0
+        let discountPrice = 0
+
+        if (selectedMethod === 'vnpay') {
+            price = Number(selectedPlan?.price) || 0            
+        } else {
+            const vndRate = fxRates?.vndRate
+            const planPrice = Number(selectedPlan?.price) || 0
+            price = vndRate ? planPrice / vndRate : 0
+        } 
+
+        if (billingPeriod === 'monthly') {
+            discountPrice = 0
+        } else {
+            const totalPrice = price * 12
+            price = totalPrice * 0.95
+            discountPrice = totalPrice - price
+        }
+
+        setPrice({
+            price: price,
+            discountPrice: discountPrice
+        })
+    }, [selectedMethod, billingPeriod, fxRates, selectedPlan?.price])
+
+    useEffect(() => {
+        if (selectedMethod !== 'paypal') return
+
+        const fetchLatestFxRates = async () => {
+            try {
+                const response = await axios.get("https://api.fxratesapi.com/latest")
+                const fxRates = response.data.rates
+                const vndRate = fxRates['VND']
+                const usdRate = fxRates['USD']
+                setFxRates({
+                    vndRate,
+                    usdRate,
+                })
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchLatestFxRates()
+    }, [selectedMethod])
+
+    const usdPrice = (fxRates && selectedPlan) ? (Number(selectedPlan.price) / fxRates.vndRate) : null
 
     const handlePayment = async () => {
         if (!selectedPlan) return
-        if (selectedPlan?.id === 1) return router.push('/login')
+        if (selectedPlan?.id === 1) return router.push("/login")
         setIsLoading(true)
 
         const order = {
@@ -50,7 +108,7 @@ export default function PlanPaymentPage() {
         }
 
         try {
-            const response = await axios.post(`/payments/checkout/paypal`, order)
+            const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
             const links = response.data.links ?? []
             window.open(links[1].href)
         } catch (error) {
@@ -60,12 +118,14 @@ export default function PlanPaymentPage() {
         }
     }
 
+    const isVnpay = selectedMethod === 'vnpay' ? true : false
+
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
             <header className="sticky top-0 z-40 border-b border-slate-200/50 bg-white/80 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
-                        <div className="cursor-pointer flex items-center gap-2" onClick={() => router.push("/")} >
+                        <div className="cursor-pointer flex items-center gap-2" onClick={() => router.push("/")}>
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-600 shadow-lg">
                                 <span className="text-lg font-bold text-white">P</span>
                             </div>
@@ -143,8 +203,23 @@ export default function PlanPaymentPage() {
                                 })}
                             </div>
 
+                            {selectedMethod === "paypal" && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                    <div className="flex items-center gap-3">
+                                        <AlertCircle className="h-5 w-5 text-amber-900 flex-shrink-0" />
+                                        <div>
+                                            <p className="font-semibold text-amber-900 text-sm">Payment in USD</p>
+                                            <p className="text-xs text-amber-700 mt-1">
+                                                PayPal transactions will be processed in US Dollars (USD).
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            )}
+
                             <div className="bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-4">
-                                <div className="flex items-start gap-3">
+                                <div className="flex items-center gap-3">
                                     <Lock className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <p className="font-semibold text-emerald-900 text-sm">Secure Payment</p>
@@ -209,30 +284,21 @@ export default function PlanPaymentPage() {
                             </div>
 
                             <div className="space-y-6">
-                                <div className="space-y-4 pb-4 mb-4 border-b border-slate-200">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-3">
-                                            <p className="text-sm text-slate-600">
-                                                {billingPeriod === "yearly" ? "Yearly Billing" : "Monthly Billing"}
-                                            </p>
-                                        </div>
-                                        <p className="font-semibold text-slate-900 mt-auto">{formatPrice(selectedPlan?.price)}</p>
-                                    </div>
-                                </div>
-
                                 <div className="space-y-4 mb-4">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-slate-600">
                                             {billingPeriod === "yearly" ? "Base Price (12 months)" : "Base Price"}
                                         </span>
                                         <span className="text-slate-900 font-medium">
-                                            {formatPrice(billingPeriod === "yearly" ? yearlyPrice : monthlyPrice)}
+                                            {formatPrice(price?.price, isVnpay)}
                                         </span>
                                     </div>
                                     {selectedPlan?.id !== 1 && billingPeriod === "yearly" && (
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-emerald-600 font-medium">Discount (5%)</span>
-                                            <span className="text-emerald-600 font-medium">-{formatPrice(discountAmount)}</span>
+                                            <span className="text-emerald-600 font-medium">
+                                                -{formatPrice(price?.discountPrice, isVnpay)}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
@@ -241,7 +307,7 @@ export default function PlanPaymentPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-slate-900">Total</span>
                                         <span className="text-3xl font-bold text-blue-600">
-                                            {billingPeriod === "yearly" ? formatPrice(yearlyPrice) : formatPrice(monthlyPrice)}
+                                            {price && formatPrice(price?.price - price?.discountPrice, isVnpay)}
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-600 mt-2">
