@@ -8,5 +8,7 @@
         Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name);
         Task<bool> CheckLogin(string email, string password);
         Task<List<ProjectInvitations>> GetUserNotRespondedInvitations();
+        Task<ApplicationUser> GetUserById(string userId);
+        Task<ApplicationUser> UpdateUser(UserDTO.UserProfile user, string userId);
     }
 }

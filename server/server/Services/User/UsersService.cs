@@ -97,5 +97,33 @@ namespace server.Services.User
                 .Where(invitation => invitation.IsAccepted == false)
                 .ToListAsync();
         }
+
+        public async Task<ApplicationUser> GetUserById(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return user;
+        }
+
+        public async Task<ApplicationUser> UpdateUser(UserDTO.UserProfile userDto, string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            user.UserName = userDto.UserName ?? user.UserName;
+            user.Email = userDto.Email ?? user.Email;
+            user.PhoneNumber = userDto.PhoneNumber ?? user.PhoneNumber;
+            user.JobTitle = userDto.JobTitle ?? user.JobTitle;
+            user.Department = userDto.Department ?? user.Department;
+            user.Organization = userDto.Organization ?? user.Organization;
+            user.Location = userDto.Location ?? user.Location;
+            user.Facebook = userDto.Facebook ?? user.Facebook;
+            user.Instagram = userDto.Instagram ?? user.Instagram;
+
+            var result = await _userManager.UpdateAsync(user);
+            return user;
+        }
     }
 }

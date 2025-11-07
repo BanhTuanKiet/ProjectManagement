@@ -33,7 +33,7 @@ namespace server.Controllers
         private readonly IConfiguration _configuration;
         private readonly IHubContext<PresenceHubConfig> _hubContext;
         public readonly ProjectManagementContext _context;
-        
+
         public UsersController(
             IUsers userServices,
             UserManager<ApplicationUser> userManager,
@@ -49,18 +49,18 @@ namespace server.Controllers
         }
 
         [HttpGet("signin-google")]
-        public IActionResult SignGoogle(string? email  = null, string returnUrl = "http://localhost:3000/project")
+        public IActionResult SignGoogle(string? email = null, string returnUrl = "http://localhost:3000/project")
         {
             if (string.IsNullOrEmpty(returnUrl))
             {
                 var configReturnUrl = _configuration["Authentication:Google:ReturnUrl"];
                 returnUrl = configReturnUrl ?? "/";
-            }   
+            }
 
             var properties = new AuthenticationProperties
             {
                 RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl }),
-                Items = { { "email", email  ?? "" } }
+                Items = { { "email", email ?? "" } }
             };
 
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
@@ -117,6 +117,26 @@ namespace server.Controllers
             Console.WriteLine("GetUserNotRespondedInvitations called");
             var invitations = await _userServices.GetUserNotRespondedInvitations();
             return Ok(invitations);
+        }
+
+        [HttpGet("profile")]
+        public async Task<ActionResult<ApplicationUser>> GetUserById()
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userServices.GetUserById(userId);
+            return Ok(user);
+        }
+
+        [HttpPut("editProfile")]
+        public async Task<ActionResult<ApplicationUser>> UpdateUser([FromBody] UserDTO.UserProfile profile)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var updatedUser = await _userServices.UpdateUser(profile, userId);
+            if (updatedUser == null)
+            {
+                throw new ErrorException(500, "Update profile failed");
+            }
+            return Ok(new { message = "Edit profile successfully" });
         }
     }
 }
