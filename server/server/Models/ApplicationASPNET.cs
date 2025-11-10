@@ -15,6 +15,8 @@ namespace server.Models
         public string? Location { get; set; }
         public string? Facebook { get; set; }
         public string? Instagram { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string? ImageCoverUrl { get; set; }
         public virtual ICollection<ApplicationUserRole> UserRoles { get; set; } = new List<ApplicationUserRole>();
         //ActivityLog
         public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();

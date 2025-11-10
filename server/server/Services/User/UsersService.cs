@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
 using System.Text.RegularExpressions;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 
 namespace server.Services.User
 {
@@ -12,12 +14,14 @@ namespace server.Services.User
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly Cloudinary _cloudinary;
 
-        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
+        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager, Cloudinary cloudinary)
         {
             _context = context;
             _mapper = mapper;
             _userManager = userManager;
+            _cloudinary = cloudinary;
         }
         public async Task<List<ApplicationUser>> GetUsers()
         {
@@ -104,7 +108,7 @@ namespace server.Services.User
             return user;
         }
 
-        public async Task<ApplicationUser> UpdateUser(UserDTO.UserProfile userDto, string userId)
+        public async Task<UserDTO.UserProfile> UpdateUser(UserDTO.UserProfile userDto, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -123,7 +127,47 @@ namespace server.Services.User
             user.Instagram = userDto.Instagram ?? user.Instagram;
 
             var result = await _userManager.UpdateAsync(user);
-            return user;
+            return _mapper.Map<UserDTO.UserProfile>(user);
+        }
+
+        public async Task<UserDTO.UserProfile> UpdateUserImage(IFormFile file, string userId, string type)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return null;
+
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("No file uploaded");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            ImageUploadResult imageResult = null;
+            Console.WriteLine($"[UPLOAD DEBUG] FileName: {file.FileName}, Extension: {ext}");
+
+            if (!new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" }.Contains(ext))
+            {
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(file.FileName, file.OpenReadStream()),
+                    Folder = "ProjectManagement/Tasks",
+                    PublicId = $"{userId}_{type}_{Guid.NewGuid()}"
+                };
+                imageResult = await _cloudinary.UploadAsync(uploadParams);
+            }
+
+            Console.WriteLine("Upload result: " + imageResult.ToString());
+            var fileUrl = imageResult?.SecureUrl?.ToString();
+            Console.WriteLine("Uploaded file URL: " + fileUrl);
+
+            if (string.IsNullOrEmpty(fileUrl))
+                throw new Exception("Upload failed or URL missing.");
+
+            if (type == "avatar")
+                user.AvatarUrl = fileUrl;
+            else if (type == "imagecover")
+                user.ImageCoverUrl = fileUrl;
+
+            await _userManager.UpdateAsync(user);
+            return _mapper.Map<UserDTO.UserProfile>(user);
         }
     }
 }

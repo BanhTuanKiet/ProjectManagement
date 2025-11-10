@@ -40,6 +40,7 @@
     "react": "19.1.0",
     "react-day-picker": "^9.9.0",
     "react-dom": "19.1.0",
+    "react-easy-crop": "^5.5.3",
     "react-toastify": "^11.0.5",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1"
@@ -52,6 +53,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-easy-crop": "^1.16.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",

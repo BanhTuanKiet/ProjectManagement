@@ -9,6 +9,7 @@
         Task<bool> CheckLogin(string email, string password);
         Task<List<ProjectInvitations>> GetUserNotRespondedInvitations();
         Task<ApplicationUser> GetUserById(string userId);
-        Task<ApplicationUser> UpdateUser(UserDTO.UserProfile user, string userId);
+        Task<UserDTO.UserProfile> UpdateUser(UserDTO.UserProfile user, string userId);
+        Task<UserDTO.UserProfile> UpdateUserImage(IFormFile file, string userId, string type);
     }
 }

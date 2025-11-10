@@ -86,6 +86,9 @@ namespace server.Configs
                 .ForMember(dest => dest.ValueType, opt => opt.MapFrom(src => src.ValueType))
                 .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Value))
                 .ForMember(dest => dest.FeatureName, opt => opt.MapFrom(src => src.Features.Name));
+
+            CreateMap<ApplicationUser, UserDTO.UserProfile>().ReverseMap()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

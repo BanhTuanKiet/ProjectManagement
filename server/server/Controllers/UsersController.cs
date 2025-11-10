@@ -138,5 +138,27 @@ namespace server.Controllers
             }
             return Ok(new { message = "Edit profile successfully" });
         }
+
+        [HttpPost("upload/{type}")]
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, string type)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                throw new ErrorException(401, "Unauthorized: missing user ID.");
+
+            if (file == null || file.Length == 0)
+                throw new ErrorException(400, "File is missing or empty.");
+
+            if (type != "avatar" && type != "imagecover")
+                throw new ErrorException(400, "Invalid image type. Must be 'avatar' or 'imagecover'.");
+
+            var uploadedFile = await _userServices.UpdateUserImage(file, userId, type);
+
+            if (uploadedFile == null)
+                throw new ErrorException(500, "File upload failed.");
+
+            return Ok(uploadedFile);
+        }
     }
 }

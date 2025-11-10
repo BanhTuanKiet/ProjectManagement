@@ -36,4 +36,6 @@ export interface UserProfile {
     location: string
     facebook: string
     instagram: string
+    imageCoverUrl: string
+    avatarUrl: string
 }
