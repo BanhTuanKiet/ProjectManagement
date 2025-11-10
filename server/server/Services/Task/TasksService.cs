@@ -21,6 +21,15 @@ namespace server.Services.Project
             _mapper = mapper;
         }
 
+        public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId)
+        {
+            var tasks = await _context.Tasks
+                .Where(t => t.AssigneeId == userId)
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+
         public async Task<List<TaskDTO.BasicTask>> GetBasicTasksByMonth(
             int projectId,
             int? month,

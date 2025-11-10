@@ -18,7 +18,7 @@ const ProfilePage = () => {
   return (
     <div className="max-w-6xl mx-auto bg-white min-h-screen">
       {/* Header Cover */}
-      <div className="relative h-48 bg-gray-400 rounded-t-lg">
+      <div className="relative h-80 bg-gray-400 rounded-t-lg">
         <button className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-black/20 text-white rounded-md hover:bg-black/30 transition-colors">
           <Camera size={16} />
           Add cover image
@@ -34,7 +34,7 @@ const ProfilePage = () => {
           </div>
 
           <h1 className="text-2xl font-semibold text-gray-900 mb-4">Bành Tuấn Kiệt</h1>
-          
+
           <button className="text-blue-600 hover:text-blue-700 text-sm mb-8">
             Manage your account
           </button>
@@ -102,9 +102,9 @@ const ProfilePage = () => {
             <div className="space-y-3">
               {projects.map((project, index) => (
                 <div key={project.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md">
-                  <input 
-                    type="checkbox" 
-                    checked 
+                  <input
+                    type="checkbox"
+                    checked
                     readOnly
                     className="w-4 h-4 text-blue-600 rounded border-gray-300"
                   />
@@ -126,7 +126,7 @@ const ProfilePage = () => {
           {/* Places You Work In Section */}
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Places you work in</h2>
-            
+
             <div className="space-y-3">
               {workplaces.map((workplace, index) => (
                 <div key={index} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
