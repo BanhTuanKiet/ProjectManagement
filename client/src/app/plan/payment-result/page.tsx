@@ -31,28 +31,30 @@ export default function PaymentResultPage() {
             const status = searchParams.get("status")
             const token = searchParams.get("token")
             const planStored = searchParams.get("order")
-                
+
             if (!status || !token || !planStored) {
-                setPaymentResult((prev) => ({
-                    ...prev,
+                setPaymentResult({
                     status: "false",
+                    orderId: "",
+                    amount: "",
+                    planName: "",
+                    billingPeriod: "monthly",
                     message: "Payment information not found. Please try again.",
-                }))
+                })
                 return
             }
 
             try {
-                const paymentData = JSON.parse(atob(planStored) )
-                console.log(paymentData)
-                if (status) {
+                const paymentData = JSON.parse(atob(planStored))
+
+                if (status === "true") {
                     const order = {
+                        planId: paymentData.PlanId,
                         orderId: token,
                         amount: paymentData.Amount,
                         name: paymentData.Name,
-                        description: paymentData.Description,
                         billingPeriod: paymentData.BillingPeriod,
                     }
-                    console.log(order)
 
                     await axios.post("/payments/capture-order", order)
 
@@ -67,27 +69,30 @@ export default function PaymentResultPage() {
                 } else {
                     setPaymentResult({
                         status: "false",
-                        orderId: token,
-                        amount: paymentData.Amount,
-                        planName: paymentData.name,
-                        billingPeriod: paymentData.typePlan,
-                        message: "Your payment was declined. Please try again or contact support.",
+                        orderId: "",
+                        amount: paymentData.Amount || "",
+                        planName: paymentData.Name || "",
+                        billingPeriod: paymentData.BillingPeriod || "monthly",
+                        message: "Your payment was declined or cancelled. Please try again.",
                     })
                 }
             } catch (error) {
                 console.error("Payment verification error:", error)
-                setPaymentResult((prev) => ({
-                    ...prev,
+                setPaymentResult({
                     status: "false",
+                    orderId: "",
+                    amount: "",
+                    planName: "",
+                    billingPeriod: "monthly",
                     message: "An error occurred while processing your payment. Please contact support.",
-                }))
+                })
             }
-
-            // window.history.replaceState({}, document.title, window.location.pathname)
         }
 
         verifyPayment()
     }, [searchParams])
+
+    const hasOrderDetail = paymentResult.orderId !== "" && paymentResult.planName !== ""
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -121,7 +126,6 @@ export default function PaymentResultPage() {
                             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-50 border-2 border-emerald-200 flex items-center justify-center">
                                 <Check className="h-10 w-10 text-emerald-600" />
                             </div>
-
                             <div className="space-y-3">
                                 <h1 className="text-4xl font-bold text-slate-900">Payment Successful!</h1>
                                 <p className="text-lg text-slate-600 max-w-md mx-auto">{paymentResult.message}</p>
@@ -134,7 +138,6 @@ export default function PaymentResultPage() {
                             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-50 to-red-50 border-2 border-red-200 flex items-center justify-center">
                                 <X className="h-10 w-10 text-red-600" />
                             </div>
-
                             <div className="space-y-3">
                                 <h1 className="text-4xl font-bold text-slate-900">Payment Failed</h1>
                                 <p className="text-lg text-slate-600 max-w-md mx-auto">{paymentResult.message}</p>
@@ -143,13 +146,16 @@ export default function PaymentResultPage() {
                     )}
                 </div>
 
-                {paymentResult.status !== "loading" && (
+                {/* ✅ Chỉ hiển thị order detail nếu có đủ token + plan */}
+                {paymentResult.status !== "loading" && hasOrderDetail && (
                     <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm mb-8">
                         <div className="space-y-6">
                             <div className="space-y-4 pb-6 border-b border-slate-200">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-slate-600">Order ID</span>
-                                    <span className="font-mono text-sm font-semibold text-slate-900">{paymentResult.orderId}</span>
+                                    <span className="font-mono text-sm font-semibold text-slate-900">
+                                        {paymentResult.orderId}
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-slate-600">Plan</span>
@@ -157,28 +163,15 @@ export default function PaymentResultPage() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-slate-600">Billing Period</span>
-                                    <span className="font-semibold text-slate-900 capitalize">{paymentResult.billingPeriod}</span>
+                                    <span className="font-semibold text-slate-900 capitalize">
+                                        {paymentResult.billingPeriod}
+                                    </span>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl p-4 border border-blue-200">
                                 <span className="font-semibold text-slate-900">Total Paid</span>
                                 <span className="text-2xl font-bold text-blue-600">${paymentResult.amount}</span>
-                            </div>
-
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                                <p className="text-sm text-slate-600">
-                                    {paymentResult.status === "true" ? (
-                                        <>
-                                            A confirmation email has been sent to your registered email address. You now have full access to
-                                            all features included in your plan.
-                                        </>
-                                    ) : (
-                                        <>
-                                            {"If you have any questions or need assistance, please contact our support team. We're here to help!"}
-                                        </>
-                                    )}
-                                </p>
                             </div>
                         </div>
                     </div>

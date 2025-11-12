@@ -102,7 +102,7 @@ export default function Page() {
 
                     <div className="flex items-center justify-center gap-4 pt-4">
                         <Link
-                            href="/plan-payment?plan=free"
+                            href="/plan?plan=free"
                             className="rounded-full bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
                         >
                             Get Started 
@@ -166,7 +166,7 @@ export default function Page() {
                         Join thousands of teams using ProjectHub to manage projects effectively.
                     </p>
                     <Link
-                        href="/plan-payment?plan=free"
+                        href="/plan?plan=free"
                         className="inline-block rounded-full bg-white px-8 py-3 text-blue-600 font-semibold hover:bg-blue-50 transition"
                     >
                         Start Free Now

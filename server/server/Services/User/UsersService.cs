@@ -96,12 +96,16 @@ namespace server.Services.User
 
         public async Task<List<ProjectInvitations>> GetUserNotRespondedInvitations()
         {
-            Console.WriteLine("GetUserNotRespondedInvitations in service called");
             return await _context.ProjectInvitations
                 .Where(invitation => invitation.IsAccepted == false)
                 .ToListAsync();
         }
 
+        public async Task<ApplicationUser> FindUserById(string id)
+        {
+            return await _userManager.FindByIdAsync(id);
+        }
+        
         public async Task<ApplicationUser> GetUserById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -167,7 +171,7 @@ namespace server.Services.User
                 user.ImageCoverUrl = fileUrl;
 
             await _userManager.UpdateAsync(user);
-            return _mapper.Map<UserDTO.UserProfile>(user);
+            return _mapper.Map<UserDTO.UserProfile>(user);=
         }
     }
 }

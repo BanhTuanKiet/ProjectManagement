@@ -24,7 +24,7 @@ public class LoadContextMiddleware
             var routeValues = context.Request.RouteValues;
             int? projectId = routeValues.TryGetValue("projectId", out var pid) && int.TryParse(pid?.ToString(), out var p) ? p : null;
             int? taskId = routeValues.TryGetValue("taskId", out var tid) && int.TryParse(tid?.ToString(), out var t) ? t : null;
-            Console.WriteLine("Load context: " + projectId);
+
             if (projectId != null)
             {
                 var projectMember = await dbContext.ProjectMembers

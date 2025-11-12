@@ -17,7 +17,6 @@ public class MemberHandler : AuthorizationHandler<OnlyMemberRequirement>
 
         if (projectMember != null)
         {
-            Console.WriteLine("He is memberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
             context.Succeed(requirement);
             return System.Threading.Tasks.Task.CompletedTask;
         }
