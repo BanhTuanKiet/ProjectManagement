@@ -41,6 +41,14 @@ namespace server.Controllers
             _mapper = mapper;
         }
 
+        [HttpGet("user")]
+        public async Task<ActionResult> GetTaskByUserId()
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var tasks = await _tasksService.GetTaskByUserId(userId);
+            return Ok(tasks);
+        }
+
         [Authorize(Policy = "MemberRequirement")]
         [HttpGet("{projectId}")]
         public async Task<ActionResult> GetBasicTasksByMonth(int projectId, int? month, int? year, string? filters)

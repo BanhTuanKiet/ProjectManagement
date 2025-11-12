@@ -25,3 +25,17 @@ export interface User {
     token: string
     email: string
 }
+
+export interface UserProfile {
+    userName: string
+    email: string
+    phoneNumber: string
+    jobTitle: string
+    department: string
+    organization: string
+    location: string
+    facebook: string
+    instagram: string
+    imageCoverUrl: string
+    avatarUrl: string
+}
