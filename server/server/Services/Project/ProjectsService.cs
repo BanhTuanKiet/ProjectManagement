@@ -219,6 +219,11 @@ namespace server.Services.Project
 
             return project;
         }
+
+        public async Task<int> CountProject(string ownerId)
+        {
+            return await _context.Projects.CountAsync(p => p.CreatedBy == ownerId);
+        }
     }
 }
 

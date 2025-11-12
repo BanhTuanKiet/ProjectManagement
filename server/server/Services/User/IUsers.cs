@@ -8,5 +8,6 @@
         Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name);
         Task<bool> CheckLogin(string email, string password);
         Task<List<ProjectInvitations>> GetUserNotRespondedInvitations();
+        Task<ApplicationUser> FindUserById(string id);
     }
 }

@@ -17,5 +17,6 @@ namespace server.Models
         Task<Project> UpdateProjectDescription(int projectId, string description);
         Task<Project> UpdateProjectStartDate(int projectId, string startDate);
         Task<Project> UpdateProjectEndDate(int projectId, string endDate);
+        Task<int> CountProject(string ownerId);
     }
 }

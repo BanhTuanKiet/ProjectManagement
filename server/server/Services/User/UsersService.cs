@@ -92,10 +92,14 @@ namespace server.Services.User
 
         public async Task<List<ProjectInvitations>> GetUserNotRespondedInvitations()
         {
-            Console.WriteLine("GetUserNotRespondedInvitations in service called");
             return await _context.ProjectInvitations
                 .Where(invitation => invitation.IsAccepted == false)
                 .ToListAsync();
+        }
+
+        public async Task<ApplicationUser> FindUserById(string id)
+        {
+            return await _userManager.FindByIdAsync(id);
         }
     }
 }

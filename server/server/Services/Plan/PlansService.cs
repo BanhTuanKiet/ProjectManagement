@@ -26,5 +26,10 @@ namespace server.Services.Project
 
             return _mapper.Map<List<PlanDTO.PlanDetail>>(plans);
         }
+
+        public async Task<PlanFeatures> FindPlanFeature(int planId, int featureId)
+        {
+            return await _context.PlanFeatures.FirstOrDefaultAsync(p => p.PlanId == planId && p.FeatureId == featureId);
+        }
     }
 }

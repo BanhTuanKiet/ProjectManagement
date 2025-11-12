@@ -5,5 +5,6 @@ namespace server.Models
     public interface ISubscriptions
     {
         Task<Subscriptions> AddSubscription(Subscriptions subscriptions);
+        Task<Subscriptions> FindSubcriptionByUserId(string userId);
     }
 }

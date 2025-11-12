@@ -44,10 +44,8 @@ namespace server.Controllers
             if (taskId <= 0)
                 throw new ErrorException(400, "Invalid task ID.");
 
-            var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId);
-
-            if (uploadedFile == null)
-                throw new ErrorException(500, "File upload failed.");
+            var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId) 
+                ?? throw new ErrorException(500, "File upload failed.");
 
             return Ok(uploadedFile);
         }

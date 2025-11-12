@@ -29,6 +29,11 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return entry.Entity;
         }
+
+        public async Task<Subscriptions> FindSubcriptionByUserId(string userId)
+        {
+            return await _context.Subscriptions.FirstOrDefaultAsync(sub => sub.UserId == userId);
+        }
     }
 }
 

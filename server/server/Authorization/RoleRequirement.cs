@@ -12,6 +12,16 @@ public class RoleRequirement : IAuthorizationRequirement
     }
 }
 
+public class SubscriptionRequirement : IAuthorizationRequirement
+{
+    public string PolicyName { get; }
+
+    public SubscriptionRequirement(string policyName)
+    {
+        PolicyName = policyName;
+    }
+}
+
 public class OnlyMemberRequirement : RoleRequirement
 {
     public OnlyMemberRequirement()
@@ -34,4 +44,19 @@ public class OnlyPMRequirement : RoleRequirement
 {
     public OnlyPMRequirement()
         : base(new[] { "Project Manager", }, new[] { "POST", "PUT", "PATCH", "DELETE" }) { }
+}
+
+public class ProjectLimitRequirement : SubscriptionRequirement
+{
+    public ProjectLimitRequirement() : base("Project Limit") { }
+}
+
+public class MemberLimitRequirement : SubscriptionRequirement
+{
+    public MemberLimitRequirement() : base("Member Limit") { }
+}
+
+public class FileStorageLimitRequirement : SubscriptionRequirement
+{
+    public FileStorageLimitRequirement() : base("File Storage Limit") { }
 }
