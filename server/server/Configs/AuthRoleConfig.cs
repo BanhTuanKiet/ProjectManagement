@@ -29,7 +29,7 @@ public static class AuthRoleConfig
         builder.Services.AddSingleton<IAuthorizationHandler, AssigneeHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, PMorLeaderHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, ProjectManagerHandler>();
-        // builder.Services.AddSingleton<IAuthorizationHandler, ProjectLimi>();
+        builder.Services.AddSingleton<IAuthorizationHandler, ProjectLimitHandler>();
         // builder.Services.AddSingleton<IAuthorizationHandler, MemberLimitRequirement>();
         // builder.Services.AddSingleton<IAuthorizationHandler, FileStorageLimitRequirement>();
 
