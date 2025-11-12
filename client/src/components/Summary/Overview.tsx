@@ -12,10 +12,10 @@ const taskStatuses = [
     { key: 'expired', color: 'from-orange-400 to-orange-500', Icon: CalendarX, textClass: 'text-orange-100', iconClass: 'text-orange-200', isSmall: true, bgColor: "bg-red-400" },
 ]
 
-export default function Overview({ 
-    mockTasks 
-}: { 
-    mockTasks: BasicTask[] 
+export default function Overview({
+    mockTasks
+}: {
+    mockTasks: BasicTask[]
 }) {
     const taskStatistics = Object.values(
         mockTasks.reduce<Record<number, TaskStats>>((acc, task) => {
@@ -47,7 +47,7 @@ export default function Overview({
     )
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
+        <div id="projectOverview" className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
             <div className="lg:col-span-2 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
 

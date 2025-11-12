@@ -42,14 +42,14 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                     </div>
                 </div> */}
                 <div className="flex items-center gap-5 relative">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button id="create-project" className="bg-blue-600 hover:bg-blue-700 text-white">
                         <Plus className="h-4 w-4 mr-2" />
                         Create
                     </Button>
-                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button id="premium-trial" className="bg-purple-600 hover:bg-purple-700 text-white">
                         <span className="text-sm">Premium trial</span>
                     </Button>
-                    <div className="relative">
+                    <div id="notification" className="relative">
                         <Button
                             variant="ghost"
                             size="sm"
@@ -60,7 +60,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                         </Button>
 
                     </div>
-                    <div className="relative">
+                    <div id="user" className="relative">
                         <Avatar className="h-8 w-8 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                             <AvatarImage src="/placeholder.svg?height=32&width=32" />
                             <AvatarFallback className="bg-blue-600 text-white text-sm">BK</AvatarFallback>

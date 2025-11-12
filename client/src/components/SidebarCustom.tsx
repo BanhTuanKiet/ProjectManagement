@@ -51,7 +51,7 @@ export function SidebarCustom({ className }: { className?: string }) {
     return (
         <Sidebar className={`w-72 h-full border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20 ${className || ""}`}>
             {/* Header with Logo and Actions */}
-            <SidebarHeader className="border-b border-border/40 p-4 py-2 bg-background/50 backdrop-blur-sm">                
+            <SidebarHeader className="border-b border-border/40 p-4 py-2 bg-background/50 backdrop-blur-sm">
                 {/* Search Bar */}
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -80,7 +80,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                                     className={`w-full justify-start rounded-xl px-4 py-3 transition-all duration-200 ${handleActiveTab("")}`}
                                     onClick={() => setActiveTab("")}
                                 >
-                                    <Link href="/project" className="flex items-center gap-3">
+                                    <Link id="dashboard" href="/project" className="flex items-center gap-3">
                                         <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-md shadow-blue-500/30">
                                             <User className="h-4 w-4 text-white" />
                                         </div>
@@ -95,7 +95,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                                     className={`w-full rounded-xl px-4 py-3 transition-all duration-200 ${handleActiveTab("plans")}`}
                                     onClick={() => setActiveTab("plans")}
                                 >
-                                    <Link href="/project/plan" className="flex items-center gap-3">
+                                    <Link id="plans" href="/project/plan" className="flex items-center gap-3">
                                         <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/30">
                                             <CreditCard className="h-4 w-4 text-white" />
                                         </div>
@@ -106,11 +106,11 @@ export function SidebarCustom({ className }: { className?: string }) {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-                          
+
                             <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-4" />
 
                             {/* Projects Section */}
-                            <SidebarMenuItem>
+                            <SidebarMenuItem id="project">
                                 <Collapsible open={isProjectsOpen} onOpenChange={setIsProjectsOpen} className="group/collapsible">
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton className="w-full justify-between rounded-xl px-4 py-3 hover:bg-accent/60 transition-all duration-200 group">
@@ -153,11 +153,10 @@ export function SidebarCustom({ className }: { className?: string }) {
                                                             <SidebarMenuSubButton asChild>
                                                                 <button
                                                                     onClick={() => handleClick(project.projectId)}
-                                                                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-                                                                        isActive
+                                                                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
                                                                             ? 'bg-primary/10 border-l-2 border-primary shadow-sm text-primary'
                                                                             : 'hover:bg-accent/60 border-l-2 border-transparent hover:border-muted-foreground/20'
-                                                                    }`}
+                                                                        }`}
                                                                 >
                                                                     <Icon className={`h-4 w-4 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
                                                                     <span className={`text-sm font-medium truncate transition-colors ${isActive ? 'text-primary font-semibold' : 'text-foreground/80 group-hover:text-foreground'}`}>
@@ -180,7 +179,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                             <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-4" />
 
                             {/* Teams Section */}
-                            <SidebarMenuItem>
+                            <SidebarMenuItem id="teams">
                                 <SidebarMenuButton asChild className="w-full justify-between rounded-xl px-4 py-3 hover:bg-accent/60 transition-all duration-200 group">
                                     <a href="#" className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-3">
