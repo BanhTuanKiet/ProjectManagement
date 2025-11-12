@@ -21,7 +21,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddHttpContextAccessor();
 
 //Add authorization config
-builder.Services.AddAuthorizationBuilder().AddCustomPolicies();
+builder.Services.AddAuthorizationBuilder().AddRolePolicies();
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();

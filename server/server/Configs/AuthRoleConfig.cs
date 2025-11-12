@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using server.Configs;
-public static class AuthorizationConfig
+public static class AuthRoleConfig
 {
-    public static AuthorizationBuilder AddCustomPolicies(this AuthorizationBuilder builder)
+    public static AuthorizationBuilder AddRolePolicies(this AuthorizationBuilder builder)
     {
         builder.AddPolicy("MemberRequirement", policy =>
             policy.Requirements.Add(new OnlyMemberRequirement()));
