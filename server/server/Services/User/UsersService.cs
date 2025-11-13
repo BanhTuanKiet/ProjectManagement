@@ -171,7 +171,7 @@ namespace server.Services.User
                 user.ImageCoverUrl = fileUrl;
 
             await _userManager.UpdateAsync(user);
-            return _mapper.Map<UserDTO.UserProfile>(user);=
+            return _mapper.Map<UserDTO.UserProfile>(user);
         }
     }
 }

@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using server.Configs;
 using server.Models;
-using System.Threading.Tasks;
 
 public class ProjectLimitHandler : AuthorizationHandler<ProjectLimitRequirement>
 {
@@ -33,32 +31,66 @@ public class ProjectLimitHandler : AuthorizationHandler<ProjectLimitRequirement>
         var httpContext = _httpContextAccessor.HttpContext;
         var projectMember = httpContext?.Items["ProjectMember"] as ProjectMember;
 
-        string ownerId = projectMember.Project.CreatedBy;
-
-        ApplicationUser owner = await _userServices.FindUserById(ownerId)
-            ?? throw new ErrorException(404, "Owner project not found");
-
-        Subscriptions subscriptions = await _subscriptionServices.FindSubcriptionByUserId(ownerId)
-            ?? throw new ErrorException(404, "Subscription not found");
-
-        Features feature = await _featureServices.FindFeatureByName("Number of projects")
-            ?? throw new ErrorException(404, "Feature not found");
-
-        PlanFeatures planFeatures = await _planServices.FindPlanFeature(subscriptions.PlanId, feature.FeatureId)
-            ?? throw new ErrorException(404, "Plan feature not found");
-
-        int maxProjects = 0;
-        if (!int.TryParse(planFeatures.Value, out maxProjects))
+        if (projectMember == null)
         {
-            throw new ErrorException(500, "Invalid max project value in plan features");
+            httpContext!.Items["AuthorizeErrorMessage"] = "Project member not found in context";
+            context.Fail();
+            return;
+        }
+
+        string ownerId = projectMember.Project?.CreatedBy;
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            httpContext!.Items["AuthorizeErrorMessage"] = "Owner project not found";
+            context.Fail();
+            return;
+        }
+
+        ApplicationUser owner = await _userServices.FindUserById(ownerId);
+        if (owner == null)
+        {
+            httpContext!.Items["AuthorizeErrorMessage"] = "Owner project not found in database";
+            context.Fail();
+            return;
+        }
+
+        Subscriptions subscriptions = await _subscriptionServices.FindSubcriptionByUserId(ownerId);
+        if (subscriptions == null)
+        {
+            httpContext!.Items["AuthorizeErrorMessage"] = "Subscription not found";
+            context.Fail();
+            return;
+        }
+
+        Features feature = await _featureServices.FindFeatureByName("Number of projects");
+        if (feature == null)
+        {
+            httpContext!.Items["AuthorizeErrorMessage"] = "Feature not found";
+            context.Fail();
+            return;
+        }
+
+        PlanFeatures planFeatures = await _planServices.FindPlanFeature(subscriptions.PlanId, feature.FeatureId);
+        if (planFeatures == null)
+        {
+            httpContext!.Items["AuthorizeErrorMessage"] = "Plan feature not found";
+            context.Fail();
+            return;
+        }
+
+        if (!int.TryParse(planFeatures.Value, out int maxProjects))
+        {
+            httpContext!.Items["AuthorizeErrorMessage"] = "Invalid max project value in plan features";
+            context.Fail();
+            return;
         }
 
         int countProject = await _projectServices.CountProject(ownerId);
-
         if (countProject >= maxProjects)
         {
             httpContext!.Items["AuthorizeErrorMessage"] = "You have reached the maximum number of projects allowed by your plan";
             context.Fail();
+            return;
         }
 
         context.Succeed(requirement);
