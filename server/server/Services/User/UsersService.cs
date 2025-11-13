@@ -105,7 +105,7 @@ namespace server.Services.User
         {
             return await _userManager.FindByIdAsync(id);
         }
-        
+
         public async Task<ApplicationUser> GetUserById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
