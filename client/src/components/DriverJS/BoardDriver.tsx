@@ -1,11 +1,11 @@
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-export async function startBoardTour(): Promise<void> {
+export async function startBoardTour(): Promise<boolean> {
     return new Promise((resolve) => {
 
         const driverObj = driver({
-            allowClose: false,
+            allowClose: true,
             showProgress: true,
             animate: true,
             nextBtnText: "Next",
@@ -13,6 +13,7 @@ export async function startBoardTour(): Promise<void> {
             doneBtnText: "Done",
             overlayOpacity: 0.7,
             steps: [
+                // BoardView Tour Steps
                 {
                     element: "#searchTask",
                     popover: {
@@ -69,7 +70,11 @@ export async function startBoardTour(): Promise<void> {
                 },
             ],
             onDestroyed: () => {
-                resolve();
+                resolve(true);
+            },
+            onCloseClick: () => {
+                driverObj.destroy(); // cần gọi để kích hoạt onDestroyed
+                resolve(false); // Người dùng bỏ qua
             },
         });
         driverObj.drive();

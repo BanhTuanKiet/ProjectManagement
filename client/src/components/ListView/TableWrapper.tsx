@@ -225,7 +225,7 @@ export default function TableWrapper({
 
                         {/* Dấu + bên phải cell */}
                         {hoveredTaskId === task.id && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setAddingSubtaskFor(task.id); setExpandedTasks(prev => new Set(prev).add(task.id)); }}>
+                            <Button id="createTaskList" variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setAddingSubtaskFor(task.id); setExpandedTasks(prev => new Set(prev).add(task.id)); }}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         )}
@@ -234,7 +234,7 @@ export default function TableWrapper({
 
             case "key":
                 return (
-                    <span className="text-blue-600 hover:underline cursor-pointer" onClick={() => onTaskClick(task)}>
+                    <span id="ClickTaskDeatailModal" className="text-blue-600 hover:underline cursor-pointer" onClick={() => onTaskClick(task)}>
                         {task.key}
                     </span>
                 )
@@ -242,6 +242,7 @@ export default function TableWrapper({
             case "summary":
                 return isEditing ? (
                     <Input
+                        id="EditList"
                         defaultValue={task.summary}
                         onBlur={(e) => handleCellEdit(task.id, "summary", e.target.value)}
                         onKeyDown={(e) => {
@@ -263,6 +264,7 @@ export default function TableWrapper({
             case "description":
                 return isEditing ? (
                     <Input
+                        id="EditList"
                         defaultValue={task.description}
                         onBlur={(e) => handleCellEdit(task.id, "description", e.target.value)}
                         onKeyDown={(e) => {
@@ -285,7 +287,7 @@ export default function TableWrapper({
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-between bg-transparent">
+                            <Button id="EditList" variant="outline" size="sm" className="w-full justify-between bg-transparent">
                                 {task.status}
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </Button>
@@ -320,7 +322,7 @@ export default function TableWrapper({
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <div className="flex items-center gap-2 cursor-pointer">
+                            <div id="EditList" className="flex items-center gap-2 cursor-pointer">
                                 {typeof task.assignee === "string" ? (
                                     <>
                                         <ColoredAvatar id={task.raw.assigneeId ?? ""} name={task.assignee} size="sm" />
@@ -369,7 +371,7 @@ export default function TableWrapper({
 
             case "reporter":
                 return task.reporter ? (
-                    <div className="flex items-center gap-2">
+                    <div id="EditList" className="flex items-center gap-2">
                         <ColoredAvatar
                             id={task.raw.assigneeId ?? ""}
                             name={task.reporter.name}
@@ -405,6 +407,7 @@ export default function TableWrapper({
 
                 return (
                     <div
+                        id="EditList"
                         key={`${task.id}-${col.key}`}
                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                         style={{ width: col.width, minWidth: col.minWidth }}
@@ -438,12 +441,13 @@ export default function TableWrapper({
 
             case "created":
                 return (
-                    <span className="text-gray-600">{task.created ? format(new Date(task.created), "MMM dd, yyyy") : "-"}</span>
+                    <span id="EditList" className="text-gray-600">{task.created ? format(new Date(task.created), "MMM dd, yyyy") : "-"}</span>
                 )
 
             default:
                 return isEditing ? (
                     <Input
+                        id="EditList"
                         defaultValue={task[col.key] || ""}
                         onBlur={(e) => handleCellEdit(task.id, col.key, e.target.value)}
                         onKeyDown={(e) => {

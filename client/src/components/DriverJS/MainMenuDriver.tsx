@@ -1,10 +1,10 @@
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-export async function startMainMenuTour(): Promise<void> {
+export async function startMainMenuTour(): Promise<boolean> {
     return new Promise((resolve) => {
         const driverjs = driver({
-            allowClose: false,
+            allowClose: true,
             showProgress: true,
             animate: true,
             doneBtnText: 'Done',
@@ -85,8 +85,12 @@ export async function startMainMenuTour(): Promise<void> {
                 }
             ],
             onDestroyed: () => {
-                resolve();
+                resolve(true);
             },
+            onCloseClick: () => {
+                driverjs.destroy();
+                resolve(false);
+            }
         });
         driverjs.drive();
     });

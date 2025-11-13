@@ -29,7 +29,7 @@ function DueDateCell({ task, handleCellEdit }: { task: any; handleCellEdit: Func
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <div className={`${style.container} inline-flex items-center cursor-pointer`}>
+                <div id="EditList" className={`${style.container} inline-flex items-center cursor-pointer`}>
                     {style.icon && <span>{style.icon}</span>}
                     <span className={style.className}>
                         {task.dueDate

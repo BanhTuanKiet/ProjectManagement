@@ -105,7 +105,7 @@ namespace server.Services.User
         {
             return await _userManager.FindByIdAsync(id);
         }
-        
+
         public async Task<ApplicationUser> GetUserById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -171,7 +171,7 @@ namespace server.Services.User
                 user.ImageCoverUrl = fileUrl;
 
             await _userManager.UpdateAsync(user);
-            return _mapper.Map<UserDTO.UserProfile>(user);=
+            return _mapper.Map<UserDTO.UserProfile>(user);
         }
     }
 }

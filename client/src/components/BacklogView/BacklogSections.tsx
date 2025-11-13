@@ -97,7 +97,7 @@ export default function BacklogContent({
                 return (
                     <div key={sprint.sprintId} className="mb-6 border-b border-gray-100 pb-4">
                         <div className="flex items-center justify-between py-3 group relative">
-                            <div className="flex items-center gap-3">
+                            <div id="inforSprint" className="flex items-center gap-3">
                                 <input
                                     type="checkbox"
                                     checked={selectedSprints.has(sprint.sprintId)}
@@ -135,7 +135,7 @@ export default function BacklogContent({
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div id="numberStatusTask" className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
                                     <span className="px-2 py-1 bg-gray-100 rounded text-sm" title={`To Do: ${counts.todo} (work item count)`}>{counts.todo}</span>
                                     <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm" title={`In Progress: ${counts.inProgress} (work item count)`}>{counts.inProgress}</span>
@@ -224,7 +224,7 @@ export default function BacklogContent({
             })}
 
             {/* 🗂 Backlog Section */}
-            <div className="mb-6">
+            <div id="backlogSection" className="mb-6">
                 <div className="flex items-center justify-between py-3 group">
                     <div className="flex items-center gap-3">
                         <button onClick={() => toggleSprint('backlog')} className="hover:bg-gray-100 p-1 rounded">

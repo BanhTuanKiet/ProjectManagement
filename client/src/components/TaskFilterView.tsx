@@ -101,7 +101,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
     const currentPriorityName = priorities.find(p => String(p.value) === filters.priority)?.name || "Priority"
 
     return (
-        <div className="flex items-center gap-4">
+        <div id="ToolsCalendar" className="flex items-center gap-4">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input

@@ -385,7 +385,7 @@ export default function TaskDetailModal({
 
     return (
         <TooltipProvider>
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div id="TaskDetail Modal" className="fixed inset-0 z-50 flex items-center justify-center">
                 <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
                 <div className="relative bg-white w-[1000px] h-[90vh] rounded-lg shadow-xl flex flex-col">
