@@ -22,6 +22,7 @@ import Link from "next/link"
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from "react"
 import { useProject } from '@/app/(context)/ProjectContext'
+import CreateProjectDialog from "@/components/CreateProjectDialog";
 
 export function SidebarCustom({ className }: { className?: string }) {
     const { project_name } = useProject()
@@ -29,6 +30,7 @@ export function SidebarCustom({ className }: { className?: string }) {
     const [isProjectsOpen, setIsProjectsOpen] = useState(true)
     const { projects, setProjects } = useProject()
     const router = useRouter()
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
         const projectIdStored = localStorage.getItem("projectId")
@@ -130,10 +132,21 @@ export function SidebarCustom({ className }: { className?: string }) {
                                                     className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-200"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
+
                                                     }}
                                                 >
-                                                    <Plus className="h-3.5 w-3.5" />
+                                                    <div className="inline">
+                                                        <Button onClick={() => setOpen(true)} className='bg-gray-50 hover:bg-gray-300'>
+                                                            <Plus className="h-3.5 w-3.5 text-black" />
+                                                        </Button>
+                                                    </div>
+
                                                 </Button>
+                                                <CreateProjectDialog
+                                                    open={open}
+                                                    onClose={() => setOpen(false)}
+                                                    onSuccess={() => alert("Project created successfully!")}
+                                                />
                                                 <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isProjectsOpen ? 'rotate-90' : ''}`} />
                                             </div>
                                         </SidebarMenuButton>
@@ -154,8 +167,8 @@ export function SidebarCustom({ className }: { className?: string }) {
                                                                 <button
                                                                     onClick={() => handleClick(project.projectId)}
                                                                     className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
-                                                                            ? 'bg-primary/10 border-l-2 border-primary shadow-sm text-primary'
-                                                                            : 'hover:bg-accent/60 border-l-2 border-transparent hover:border-muted-foreground/20'
+                                                                        ? 'bg-primary/10 border-l-2 border-primary shadow-sm text-primary'
+                                                                        : 'hover:bg-accent/60 border-l-2 border-transparent hover:border-muted-foreground/20'
                                                                         }`}
                                                                 >
                                                                     <Icon className={`h-4 w-4 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
