@@ -72,7 +72,8 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO)
+        [Authorize(Policy = "MemberLimitRequirement")]
+        public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO, int projectId)
         {
             Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;

@@ -28,6 +28,7 @@ public class LoadContextMiddleware
             if (projectId != null)
             {
                 var projectMember = await dbContext.ProjectMembers
+                    .Include(m => m.Project)
                     .FirstOrDefaultAsync(m => m.ProjectId == projectId && m.UserId == userId);
 
                 context.Items["ProjectId"] = projectId;

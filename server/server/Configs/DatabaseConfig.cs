@@ -43,6 +43,7 @@ namespace server.Configs
             services.AddScoped<IPlans, PlansService>();
             services.AddScoped<IPayments, PaymentsService>();
             services.AddScoped<ISubscriptions, SubscriptionssService>();
+            services.AddScoped<IFeature, FeatureServices>();
         }
     }
 }
