@@ -18,7 +18,9 @@ namespace server.Util
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email ?? user.Id.ToString())
+                new Claim(ClaimTypes.Email, user.Email ?? user.Id.ToString()),
+                new Claim("plan_id", user.Subscription.PlanId.ToString() ?? "1"),
+                new Claim("plan_name", user.Subscription.Plan.Name ?? "Free"),
             };
 
             foreach (var role in roles)
@@ -76,6 +78,8 @@ namespace server.Util
             var nameIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid");
             var nameClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name || c.Type == "unique_name");
             var emailClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email || c.Type == "email");
+            var planIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "plan_id");
+            var planNameClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "plan_name");
 
             List<string> roleClaims = jsonToken.Claims
                 .Where(c => c.Type == ClaimTypes.Role || c.Type == "role")
@@ -84,10 +88,12 @@ namespace server.Util
 
             return new TokenDTO.DecodedToken
             {
-                userId = nameIdClaim?.Value,
-                name = nameClaim?.Value,
-                roles = roleClaims,
-                Email = emailClaim?.Value
+                userId = nameIdClaim?.Value ?? "",
+                name = nameClaim?.Value ?? "",
+                roles = roleClaims ?? [],
+                Email = emailClaim?.Value ?? "",
+                PlanId = planIdClaim?.Value ?? "",
+                PlanName = planNameClaim?.Value ?? ""
             };
         }
     }

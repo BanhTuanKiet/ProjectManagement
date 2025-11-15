@@ -45,9 +45,13 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     {
         modelBuilder.Entity<ApplicationUser>(entity =>
         {
-            modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
+            entity.ToTable("AspNetUsers");
 
             entity.HasKey(e => e.Id).HasName("PK_AspNetUsers");
+
+            entity.HasOne(u => u.Subscription)
+                .WithOne(s => s.User)
+                .HasForeignKey<Subscriptions>(s => s.UserId);
         });
 
         modelBuilder.Entity<ApplicationRole>(entity =>
@@ -84,7 +88,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         {
             entity.HasKey(uc => uc.Id);
         });
-       
+
         modelBuilder.Entity<ActivityLog>(entity =>
         {
             entity.HasKey(e => e.LogId).HasName("PK__Activity__5E54864844AAB951");
@@ -252,8 +256,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasColumnType("datetime");
 
             entity.HasOne(s => s.User)
-                .WithMany()
-                .HasForeignKey(s => s.UserId)
+                .WithOne(u => u.Subscription)
+                .HasForeignKey<Subscriptions>(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Subscriptions_Users");
 

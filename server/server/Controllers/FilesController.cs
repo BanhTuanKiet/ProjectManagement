@@ -1,14 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using server.DTO;
-using server.Services;
 using System.Security.Claims;
 using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using System.IO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using server.Models;
-using Microsoft.EntityFrameworkCore;
 using server.Services.File;
 using server.Configs;
 

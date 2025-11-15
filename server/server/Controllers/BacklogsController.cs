@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using server.DTO;
 using server.Services.Backlog;
-using server.Models;
 using server.Configs;
 
 namespace server.Controllers
