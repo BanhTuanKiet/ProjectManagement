@@ -3,7 +3,6 @@ using server.DTO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using server.Services.Sprint;
-using server.Models;
 using server.Configs;
 
 namespace server.Controllers

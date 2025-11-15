@@ -53,11 +53,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         fetchUser()
     }, [searchParams])
 
-
-    // const signinGG = () => {
-    //     window.location.href = "http://localhost:5144/users/signin-google"
-    // }
-
     const signinGG = async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const email = urlParams.get("email");

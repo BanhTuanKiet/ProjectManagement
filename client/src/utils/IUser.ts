@@ -24,6 +24,8 @@ export interface User {
     name: string
     token: string
     email: string
+    planId: string
+    planName: string
 }
 
 export interface UserProfile {

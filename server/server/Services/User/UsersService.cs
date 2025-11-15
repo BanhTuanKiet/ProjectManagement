@@ -29,7 +29,10 @@ namespace server.Services.User
         }
         public async Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _context.ApplicationUsers
+                .Include(u => u.Subscription)
+                .ThenInclude(s => s.Plan)
+                .FirstOrDefaultAsync(u => u.Email == email);
             // string formatedName = name.Replace(" ", "").ToLower();
             string formattedName = Regex.Replace(name ?? email.Split('@')[0], @"[^a-zA-Z0-9]", "").ToLower();
 
