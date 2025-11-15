@@ -279,6 +279,7 @@ export default function TaskDetailModal({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("taskId", taskId.toString());
+        formData.append("projectId", projectId.toString());
 
         try {
             const res = await axios.post(`/files/upload`, formData);
@@ -295,7 +296,12 @@ export default function TaskDetailModal({
         if (!confirmDelete) return;
 
         try {
-            await axios.delete(`/files/${fileId}`);
+            await axios.delete(`/files/${fileId}`, {
+                params: {
+                    taskId: taskId,
+                    projectId: projectId
+                }
+            });
             setFiles((prev) => prev.filter((f) => f.fileId !== fileId));
             alert("Đã xóa file thành công!");
         } catch (err) {

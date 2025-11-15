@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace server.Services.SubTask
 {
-    public class SubTaskService : ISubTasks
+    public class SubTaskServices : ISubTasks
     {
         private readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
 
-        public SubTaskService(ProjectManagementContext context, IMapper mapper)
+        public SubTaskServices(ProjectManagementContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

@@ -42,6 +42,14 @@ interface TableWrapperProps {
     onTaskClick: (task: Task) => void
 }
 
+export const taskStatus = [
+    { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
+    { id: 2, name: 'In Progress', color: '#FACC15' }, // yellow
+    { id: 3, name: 'Done', color: '#10B981' },       // green
+    { id: 4, name: 'Cancel', color: '#F97316' },     // orange
+    { id: 5, name: 'Expired', color: '#EF4444' },    // red
+]
+
 export default function TableWrapper({
     tasks,
     projectId,
@@ -113,8 +121,7 @@ export default function TableWrapper({
                 status: "Todo",
             })
             const created = mapApiTaskToTask(res.data)
-            handleCellEdit(parentId, "subtasks", [...(tasks.find((t) => t.id === parentId)?.subtasks || []), created])
-
+            setSubTask(prev => (prev ? [...prev, created] : [created]));
             setNewSubSummary("")
             setAddingSubtaskFor(null)
         } catch (err) {
@@ -282,39 +289,51 @@ export default function TableWrapper({
                 )
 
             case "status":
+                const currentStatus = taskStatus.find(
+                    (s) => s.name.toLowerCase() === task.status?.toLowerCase()
+                );
+
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-between bg-transparent">
-                                {task.status}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-between bg-transparent"
+                            >
+                                <Badge
+                                    style={{
+                                        backgroundColor: `${currentStatus?.color}20`, // nhạt màu nền
+                                        color: currentStatus?.color || "#6B7280", // fallback gray
+                                    }}
+                                    className="font-medium px-2 py-1 rounded-md"
+                                >
+                                    {task.status || "Todo"}
+                                </Badge>
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </Button>
                         </DropdownMenuTrigger>
+
                         <DropdownMenuContent>
-                            {[
-                                {
-                                    label: "TO DO",
-                                    value: "To Do",
-                                    color: "bg-gray-100 text-gray-800",
-                                },
-                                {
-                                    label: "IN PROGRESS",
-                                    value: "In Progress",
-                                    color: "bg-blue-100 text-blue-800",
-                                },
-                                {
-                                    label: "DONE",
-                                    value: "Done",
-                                    color: "bg-green-100 text-green-800",
-                                },
-                            ].map((s) => (
-                                <DropdownMenuItem key={s.value} onClick={() => handleCellEdit(task.id, "status", s.value)}>
-                                    <Badge className={s.color}>{s.label}</Badge>
+                            {taskStatus.map((s) => (
+                                <DropdownMenuItem
+                                    key={s.id}
+                                    onClick={() => handleCellEdit(task.id, "status", s.name)}
+                                >
+                                    <Badge
+                                        style={{
+                                            backgroundColor: `${s.color}20`,
+                                            color: s.color,
+                                        }}
+                                        className="font-medium px-2 py-1 rounded-md"
+                                    >
+                                        {s.name}
+                                    </Badge>
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                )
+                );
 
             case "assignee":
                 return (
@@ -412,7 +431,7 @@ export default function TableWrapper({
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <span className="flex items-center gap-1 cursor-pointer">
-                                    {getPriorityIcon(priorityStr)}
+                                    {/* {getPriorityIcon(priorityStr)} */}
                                     <Badge className={priorityColorMap[priorityStr]}>{priorityStr}</Badge>
                                 </span>
                             </DropdownMenuTrigger>

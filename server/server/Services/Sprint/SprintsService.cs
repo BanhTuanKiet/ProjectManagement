@@ -6,12 +6,12 @@ using server.Models;
 
 namespace server.Services.Sprint
 {
-    public class SprintsService : ISprints
+    public class SprintServices : ISprints
     {
         private readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
 
-        public SprintsService(ProjectManagementContext context, IMapper mapper)
+        public SprintServices(ProjectManagementContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
