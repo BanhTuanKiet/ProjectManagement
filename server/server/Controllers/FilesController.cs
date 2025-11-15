@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using server.Models;
 using server.Services.File;
 using server.Configs;
+using server.Services.ActivityLog;
 
 namespace server.Controllers
 {
@@ -17,16 +18,18 @@ namespace server.Controllers
         private readonly Cloudinary _cloudinary;
         private readonly ProjectManagementContext _context;
         private readonly IFiles _fileService;
+        private readonly IActivityLog _activityLogService;
 
-        public FilesController(Cloudinary cloudinary, ProjectManagementContext context, IFiles fileService)
+        public FilesController(Cloudinary cloudinary, ProjectManagementContext context, IFiles fileService, IActivityLog activityLogService)
         {
             _cloudinary = cloudinary;
             _context = context;
             _fileService = fileService;
+            _activityLogService = activityLogService;
         }
 
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId)
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId, [FromForm] string projectId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -41,12 +44,25 @@ namespace server.Controllers
 
             var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId) 
                 ?? throw new ErrorException(500, "File upload failed.");
+            if (uploadedFile != null)
+            {
+                // Log the file upload activity
+                string description = $"Uploaded file '{uploadedFile.FileName}' to task ID {taskId}.";
+                await _activityLogService.AddActivityLog(
+                    projectId: int.Parse(projectId),
+                    userId: userId,
+                    action: "Upload File",
+                    targetType: "File",
+                    targetId: uploadedFile.FileId.ToString(),
+                    description: description
+                );
+            }
 
             return Ok(uploadedFile);
         }
 
         [HttpDelete("{fileId}")]
-        public async Task<IActionResult> DeleteFile(int fileId)
+        public async Task<IActionResult> DeleteFile(int fileId, int taskId, int projectId)
         {
             if (fileId <= 0)
                 throw new ErrorException(400, "Invalid file ID.");
@@ -55,6 +71,20 @@ namespace server.Controllers
 
             if (!result.isSuccess)
                 throw new ErrorException(500, result.message ?? "Failed to delete file.");
+
+            if (result.isSuccess)
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string description = $"Deleted file ID {fileId} from task ID {taskId}.";
+                await _activityLogService.AddActivityLog(
+                    projectId: projectId,
+                    userId: userId!,
+                    action: "Delete File",
+                    targetType: "File",
+                    targetId: fileId.ToString(),
+                    description: description
+                );
+            }
 
             return Ok(new { message = result.message });
         }

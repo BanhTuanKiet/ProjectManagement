@@ -6,11 +6,11 @@ using server.Models;
 using server.Services.Task;
 namespace server.Services.Comment
 {
-    public class CommentService : IComment
+    public class CommentServices : IComment
     {
         private readonly ProjectManagementContext _context;
 
-        public CommentService(ProjectManagementContext context)
+        public CommentServices(ProjectManagementContext context)
         {
             _context = context;
         }

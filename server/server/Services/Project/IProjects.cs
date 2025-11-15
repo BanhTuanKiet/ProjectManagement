@@ -18,5 +18,6 @@ namespace server.Models
         Task<Project> UpdateProjectStartDate(int projectId, string startDate);
         Task<Project> UpdateProjectEndDate(int projectId, string endDate);
         Task<int> CountProject(string ownerId);
+        Task<Project> CreateProject(ProjectDTO.CreateProject projectDTO);
     }
 }

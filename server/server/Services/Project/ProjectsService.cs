@@ -10,13 +10,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace server.Services.Project
 {
-    public class ProjectsService : IProjects
+    public class ProjectServices : IProjects
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
 
-        public ProjectsService(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
+        public ProjectServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
@@ -223,6 +223,40 @@ namespace server.Services.Project
         public async Task<int> CountProject(string ownerId)
         {
             return await _context.Projects.CountAsync(p => p.CreatedBy == ownerId);
+        }
+
+        public async Task<Models.Project> CreateProject(ProjectDTO.CreateProject projectDTO)
+        {
+            var project = new Models.Project
+            {
+                Name = projectDTO.Name,
+                Description = projectDTO.Description,
+                StartDate = projectDTO.StartDate,
+                EndDate = projectDTO.EndDate,
+                CreatedBy = projectDTO.CreatedBy,
+                CreatedAt = DateTime.UtcNow,
+                IsStarred = true
+            };
+
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+
+            var projectId = _context.Projects.Where(p => p.Name == projectDTO.Name && p.CreatedBy == projectDTO.CreatedBy)
+                .Select(p => p.ProjectId)
+                .FirstOrDefault();
+
+            var ownerMember = new ProjectMember
+            {
+                ProjectId = project.ProjectId,
+                UserId = projectDTO.CreatedBy,
+                RoleInProject = "Project Manager",
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _context.ProjectMembers.Add(ownerMember);
+            await _context.SaveChangesAsync();
+
+            return project;
         }
     }
 }

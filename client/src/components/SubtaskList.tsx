@@ -67,6 +67,7 @@ export default function SubtaskList({
                 const res = await axios.put(`/SubTasks/${subtaskId}/update`, {
                     subtaskId,
                     taskId,
+                    projectId,
                     [field]: value,
                 })
                 console.log("Subtask updated:", res.data)

@@ -42,6 +42,14 @@ interface TableWrapperProps {
     onTaskClick: (task: Task) => void
 }
 
+export const taskStatus = [
+    { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
+    { id: 2, name: 'In Progress', color: '#FACC15' }, // yellow
+    { id: 3, name: 'Done', color: '#10B981' },       // green
+    { id: 4, name: 'Cancel', color: '#F97316' },     // orange
+    { id: 5, name: 'Expired', color: '#EF4444' },    // red
+]
+
 export default function TableWrapper({
     tasks,
     projectId,
@@ -113,8 +121,7 @@ export default function TableWrapper({
                 status: "Todo",
             })
             const created = mapApiTaskToTask(res.data)
-            handleCellEdit(parentId, "subtasks", [...(tasks.find((t) => t.id === parentId)?.subtasks || []), created])
-
+            setSubTask(prev => (prev ? [...prev, created] : [created]));
             setNewSubSummary("")
             setAddingSubtaskFor(null)
         } catch (err) {
@@ -225,7 +232,7 @@ export default function TableWrapper({
 
                         {/* Dấu + bên phải cell */}
                         {hoveredTaskId === task.id && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setAddingSubtaskFor(task.id); setExpandedTasks(prev => new Set(prev).add(task.id)); }}>
+                            <Button id="createTaskList" variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setAddingSubtaskFor(task.id); setExpandedTasks(prev => new Set(prev).add(task.id)); }}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         )}
@@ -234,7 +241,7 @@ export default function TableWrapper({
 
             case "key":
                 return (
-                    <span className="text-blue-600 hover:underline cursor-pointer" onClick={() => onTaskClick(task)}>
+                    <span id="ClickTaskDeatailModal" className="text-blue-600 hover:underline cursor-pointer" onClick={() => onTaskClick(task)}>
                         {task.key}
                     </span>
                 )
@@ -242,6 +249,7 @@ export default function TableWrapper({
             case "summary":
                 return isEditing ? (
                     <Input
+                        id="EditList"
                         defaultValue={task.summary}
                         onBlur={(e) => handleCellEdit(task.id, "summary", e.target.value)}
                         onKeyDown={(e) => {
@@ -263,6 +271,7 @@ export default function TableWrapper({
             case "description":
                 return isEditing ? (
                     <Input
+                        id="EditList"
                         defaultValue={task.description}
                         onBlur={(e) => handleCellEdit(task.id, "description", e.target.value)}
                         onKeyDown={(e) => {
@@ -282,45 +291,58 @@ export default function TableWrapper({
                 )
 
             case "status":
+                const currentStatus = taskStatus.find(
+                    (s) => s.name.toLowerCase() === task.status?.toLowerCase()
+                );
+
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="w-full justify-between bg-transparent">
-                                {task.status}
+                            <Button
+                                id="EditList"
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-between bg-transparent"
+                            >
+                                <Badge
+                                    style={{
+                                        backgroundColor: `${currentStatus?.color}20`, // nhạt màu nền
+                                        color: currentStatus?.color || "#6B7280", // fallback gray
+                                    }}
+                                    className="font-medium px-2 py-1 rounded-md"
+                                >
+                                    {task.status || "Todo"}
+                                </Badge>
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </Button>
                         </DropdownMenuTrigger>
+
                         <DropdownMenuContent>
-                            {[
-                                {
-                                    label: "TO DO",
-                                    value: "To Do",
-                                    color: "bg-gray-100 text-gray-800",
-                                },
-                                {
-                                    label: "IN PROGRESS",
-                                    value: "In Progress",
-                                    color: "bg-blue-100 text-blue-800",
-                                },
-                                {
-                                    label: "DONE",
-                                    value: "Done",
-                                    color: "bg-green-100 text-green-800",
-                                },
-                            ].map((s) => (
-                                <DropdownMenuItem key={s.value} onClick={() => handleCellEdit(task.id, "status", s.value)}>
-                                    <Badge className={s.color}>{s.label}</Badge>
+                            {taskStatus.map((s) => (
+                                <DropdownMenuItem
+                                    key={s.id}
+                                    onClick={() => handleCellEdit(task.id, "status", s.name)}
+                                >
+                                    <Badge
+                                        style={{
+                                            backgroundColor: `${s.color}20`,
+                                            color: s.color,
+                                        }}
+                                        className="font-medium px-2 py-1 rounded-md"
+                                    >
+                                        {s.name}
+                                    </Badge>
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                )
+                );
 
             case "assignee":
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <div className="flex items-center gap-2 cursor-pointer">
+                            <div id="EditList" className="flex items-center gap-2 cursor-pointer">
                                 {typeof task.assignee === "string" ? (
                                     <>
                                         <ColoredAvatar id={task.raw.assigneeId ?? ""} name={task.assignee} size="sm" />
@@ -369,7 +391,7 @@ export default function TableWrapper({
 
             case "reporter":
                 return task.reporter ? (
-                    <div className="flex items-center gap-2">
+                    <div id="EditList" className="flex items-center gap-2">
                         <ColoredAvatar
                             id={task.raw.assigneeId ?? ""}
                             name={task.reporter.name}
@@ -405,6 +427,7 @@ export default function TableWrapper({
 
                 return (
                     <div
+                        id="EditList"
                         key={`${task.id}-${col.key}`}
                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                         style={{ width: col.width, minWidth: col.minWidth }}
@@ -412,7 +435,7 @@ export default function TableWrapper({
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <span className="flex items-center gap-1 cursor-pointer">
-                                    {getPriorityIcon(priorityStr)}
+                                    {/* {getPriorityIcon(priorityStr)} */}
                                     <Badge className={priorityColorMap[priorityStr]}>{priorityStr}</Badge>
                                 </span>
                             </DropdownMenuTrigger>
@@ -438,12 +461,13 @@ export default function TableWrapper({
 
             case "created":
                 return (
-                    <span className="text-gray-600">{task.created ? format(new Date(task.created), "MMM dd, yyyy") : "-"}</span>
+                    <span id="EditList" className="text-gray-600">{task.created ? format(new Date(task.created), "MMM dd, yyyy") : "-"}</span>
                 )
 
             default:
                 return isEditing ? (
                     <Input
+                        id="EditList"
                         defaultValue={task[col.key] || ""}
                         onBlur={(e) => handleCellEdit(task.id, col.key, e.target.value)}
                         onKeyDown={(e) => {

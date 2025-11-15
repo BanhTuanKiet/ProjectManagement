@@ -29,5 +29,14 @@ namespace server.DTO
             public bool isOwner { get; set; }
             public DateTime joinedAt { get; set; }
         }
+
+        public class CreateProject
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public DateOnly? StartDate { get; set; }
+            public DateOnly? EndDate { get; set; }
+            public string CreatedBy { get; set; }
+        }
     }
 }
