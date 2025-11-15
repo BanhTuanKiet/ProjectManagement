@@ -68,7 +68,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   return (
     <div className="flex flex-col h-full overflow-hidden  mx-auto w-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
+      <div id="toolsList" className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
         <div className="flex items-center gap-4">
           {/* Ô tìm kiếm */}
           <div className="relative">
@@ -239,7 +239,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
 
 
       {/* Table */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div id="descriptTaskList" className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-auto">
           <TableWrapper
             tasks={tasks}
@@ -275,7 +275,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
       </div>
 
       {/* Footer tạo task */}
-      <div className="border-t p-4 shrink-0 bg-white">
+      <div id="createTaskList" className="border-t p-4 shrink-0 bg-white">
         {isCreating ? (
           <div className="flex items-center gap-2">
             <Input

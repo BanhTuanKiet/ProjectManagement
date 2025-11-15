@@ -224,6 +224,40 @@ namespace server.Services.Project
         {
             return await _context.Projects.CountAsync(p => p.CreatedBy == ownerId);
         }
+
+        public async Task<Models.Project> CreateProject(ProjectDTO.CreateProject projectDTO)
+        {
+            var project = new Models.Project
+            {
+                Name = projectDTO.Name,
+                Description = projectDTO.Description,
+                StartDate = projectDTO.StartDate,
+                EndDate = projectDTO.EndDate,
+                CreatedBy = projectDTO.CreatedBy,
+                CreatedAt = DateTime.UtcNow,
+                IsStarred = true
+            };
+
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+
+            var projectId = _context.Projects.Where(p => p.Name == projectDTO.Name && p.CreatedBy == projectDTO.CreatedBy)
+                .Select(p => p.ProjectId)
+                .FirstOrDefault();
+
+            var ownerMember = new ProjectMember
+            {
+                ProjectId = project.ProjectId,
+                UserId = projectDTO.CreatedBy,
+                RoleInProject = "Project Manager",
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _context.ProjectMembers.Add(ownerMember);
+            await _context.SaveChangesAsync();
+
+            return project;
+        }
     }
 }
 

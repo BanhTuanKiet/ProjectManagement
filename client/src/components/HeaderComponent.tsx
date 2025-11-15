@@ -4,7 +4,7 @@ import React from 'react'
 
 export default function HeaderComponent() {
     const router = useRouter()
-    
+
     return (
         <header className="w-full border-b border-slate-200 bg-white">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">

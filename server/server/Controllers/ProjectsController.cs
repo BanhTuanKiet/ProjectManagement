@@ -75,7 +75,8 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO)
+        [Authorize(Policy = "MemberLimitRequirement")]
+        public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO, int projectId)
         {
             Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
@@ -171,6 +172,35 @@ namespace server.Controllers
             return Ok(new
             {
                 message = "Update end date successful!"
+            });
+        }
+
+        [HttpPost("createProject")]
+        public async Task<ActionResult> CreateProject([FromBody] ProjectDTO.CreateProject projectDTO)
+        {
+            if (projectDTO.Name == "" || projectDTO.Description == "")
+            {
+                throw new ErrorException(400, "Name and description cannot be empty");
+            }
+
+            if (projectDTO.StartDate.HasValue == false || projectDTO.EndDate.HasValue == false)
+            {
+                throw new ErrorException(400, "Start date and end date cannot be empty");
+            }
+
+            if (projectDTO.StartDate > projectDTO.EndDate)
+            {
+                throw new ErrorException(400, "Start date must be before end date");
+            }
+
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            projectDTO.CreatedBy = userId;
+
+            Project createdProject = await _projectsServices.CreateProject(projectDTO);
+
+            return Ok(new
+            {
+                message = "Create project successful!"
             });
         }
     }

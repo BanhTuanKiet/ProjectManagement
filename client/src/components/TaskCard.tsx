@@ -13,7 +13,7 @@ export default function TaskCard({
     setSelectedTask: React.Dispatch<React.SetStateAction<number | null>>
 }) {
     return (
-        <div
+        <div id="TaskCard"
             onClick={() => setSelectedTask(task.taskId)}
             className="group w-full bg-card hover:bg-accent/50 border border-border rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md flex flex-col justify-between h-full"
         >
