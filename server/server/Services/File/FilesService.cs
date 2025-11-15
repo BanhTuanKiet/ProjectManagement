@@ -7,12 +7,12 @@ using CloudinaryDotNet.Actions;
 
 namespace server.Services.File
 {
-    public class FileService : IFiles
+    public class FileServices : IFiles
     {
         private readonly Cloudinary _cloudinary;
         private readonly ProjectManagementContext _context;
 
-        public FileService(Cloudinary cloudinary, ProjectManagementContext context)
+        public FileServices(Cloudinary cloudinary, ProjectManagementContext context)
         {
             _cloudinary = cloudinary;
             _context = context;

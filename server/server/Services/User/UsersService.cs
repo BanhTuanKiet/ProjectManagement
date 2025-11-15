@@ -9,14 +9,14 @@ using CloudinaryDotNet.Actions;
 
 namespace server.Services.User
 {
-    public class UsersService : IUsers
+    public class UserServices : IUsers
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Cloudinary _cloudinary;
 
-        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager, Cloudinary cloudinary)
+        public UserServices(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager, Cloudinary cloudinary)
         {
             _context = context;
             _mapper = mapper;

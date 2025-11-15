@@ -4,6 +4,8 @@ using server.Models;
 using server.Services.SubTask;
 using AutoMapper;
 using server.Configs;
+using System.Security.Claims;
+using server.Services.ActivityLog;
 
 namespace server.Controllers
 {
@@ -13,11 +15,13 @@ namespace server.Controllers
     {
         private readonly ISubTasks _subTasksService;
         private readonly IMapper _mapper;
+        private readonly IActivityLog _activityLogService;
 
-        public SubTasksController(ISubTasks subTasksService, IMapper mapper)
+        public SubTasksController(ISubTasks subTasksService, IMapper mapper, IActivityLog activityLogService)
         {
             _subTasksService = subTasksService;
             _mapper = mapper;
+            _activityLogService = activityLogService;
         }
 
         [HttpPost]
@@ -31,6 +35,21 @@ namespace server.Controllers
             var subtask = _mapper.Map<Models.SubTask>(subTask);
             Console.WriteLine("Creating subtask: ", subtask);
             var createdSubTask = await _subTasksService.CreateSubTaskAsync(subtask);
+            if (createdSubTask != null)
+            {
+                // Log the subtask creation activity
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string description = $"Created subtask '{createdSubTask.Title}' for task ID {createdSubTask.TaskId}.";
+                await _activityLogService.AddActivityLog(
+                    projectId: subTask.ProjectId,
+                    userId: userId!,
+                    action: "Create Subtask",
+                    targetType: "Subtask",
+                    targetId: createdSubTask.SubTaskId.ToString(),
+                    description: description
+                );
+            }
+
             return Ok(createdSubTask);
         }
 
@@ -59,7 +78,7 @@ namespace server.Controllers
         }
 
         [HttpPut("{subTaskId}/update")]
-        public async Task<IActionResult> UpdateSubTask(int subTaskId, [FromBody] SubTaskDTO.UpdateSubTask dto)
+        public async Task<IActionResult> UpdateSubTask(int subTaskId, int projectId, [FromBody] SubTaskDTO.UpdateSubTask dto)
         {
             if (dto == null)
                 throw new ErrorException(400, "Invalid update data.");
@@ -73,6 +92,20 @@ namespace server.Controllers
                 throw new ErrorException(404, "Subtask not found.");
 
             var result = _mapper.Map<SubTaskDTO.BasicSubTask>(updated);
+            if (result != null)
+            {
+                // Log the subtask creation activity
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                string description = $"Created subtask '{result.Title}' for task ID {result.TaskId}.";
+                await _activityLogService.AddActivityLog(
+                    projectId: projectId,
+                    userId: userId!,
+                    action: "Create Subtask",
+                    targetType: "Subtask",
+                    targetId: result.SubTaskId.ToString(),
+                    description: description
+                );
+            }
             return Ok(result);
         }
     }

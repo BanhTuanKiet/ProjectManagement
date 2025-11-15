@@ -10,12 +10,12 @@ using System.Text.Json;
 
 namespace server.Services.Project
 {
-    public class TasksService : ITasks
+    public class TaskServices : ITasks
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
 
-        public TasksService(ProjectManagementContext context, IMapper mapper)
+        public TaskServices(ProjectManagementContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
