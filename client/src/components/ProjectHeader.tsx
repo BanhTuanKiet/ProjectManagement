@@ -1,14 +1,13 @@
 "use client"
 
-import { Search, Plus, Bell, Settings, User, Users, LogOut, Sun, Moon, Check } from "lucide-react"
+import { Plus, Bell, Settings, User, Users, LogOut, Sun, Moon, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useNotification } from "@/app/(context)/Notfication"
 import { useState } from "react"
 import { useUser } from "@/app/(context)/UserContext"
 import { useRouter } from "next/navigation"
 import ColoredAvatar from "./ColoredAvatar"
+import { Input } from "./ui/input"
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false)

@@ -47,38 +47,35 @@ export default function Overview({
     )
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
-            <div className="lg:col-span-2 space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 bg-gray-50 bg-white">
+            <div className="lg:col-span-2 space-y-6">
+                <h2 className="text-xl font-semibold text-gray-900">Task Statistics by Priority</h2>
 
                 {taskStatistics.map((stat) => {
                     const completionRate = Math.round((stat.done / stat.total) * 100)
 
                     return (
-                        <div key={stat.priority} className="bg-white rounded-lg border border-gray-200 p-5">
+                        <div key={stat.priority} className="bg-white rounded-xl border border-gray-200 p-6 py-3 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${getPriorityBadge(stat.priority)}`} />
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-4 h-4 rounded-full ${getPriorityBadge(stat.priority)}`} />
                                     <h3 className="font-semibold text-gray-900">{getPriorityLabel(stat.priority)}</h3>
                                     <span className="text-sm text-gray-500">({stat.total} tasks)</span>
                                 </div>
                                 <span className="text-sm font-medium text-gray-700">{completionRate}%</span>
                             </div>
 
-                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
-                                <div className="h-full flex">
-                                    {taskStatuses.filter(t => t.key !== 'total').map((status) => (
-                                        <div
-                                            key={status.key}
-                                            className={status.bgColor}
-                                            style={{ width: `${(stat[status.key as keyof TaskStats] / stat.total) * 100}%` }}
-                                        />
-
-                                    ))}
-                                </div>
+                            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4 flex">
+                                {taskStatuses.filter(t => t.key !== 'total').map((status) => (
+                                    <div
+                                        key={status.key}
+                                        className={`${status.bgColor}`}
+                                        style={{ width: `${(stat[status.key as keyof TaskStats] / stat.total) * 100}%` }}
+                                    />
+                                ))}
                             </div>
 
-                            <div className="grid grid-cols-5 gap-3">
+                            <div className="grid grid-cols-5 gap-4">
                                 {taskStatuses.filter(t => t.key !== 'total').map((status) => (
                                     <div key={status.key} className="flex flex-col items-center">
                                         <span className={getTaskStatusBadge(status.key)}>
@@ -92,23 +89,22 @@ export default function Overview({
                 })}
             </div>
 
-            <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+            <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-900">Summary</h2>
                 {taskStatuses.map((status) => {
                     const StatusIcon = status.Icon
+                    const totalCount = taskStatistics.reduce((sum, stat) => sum + stat[status.key as keyof TaskStats], 0)
 
                     return (
                         <div
                             key={status.key}
-                            className={`bg-gradient-to-br rounded-lg p-6 text-white ${status.color} cursor-pointer transition-transform duration-300 hover:scale-105`}
+                            className={`bg-gradient-to-br rounded-xl p-6 text-white ${status.color} cursor-pointer transition-transform duration-300 hover:scale-105 shadow-md`}
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`${status.textClass}`}>{formatTaskStatus(status.key)}</span>
-                                <StatusIcon size={20} className={status.iconClass} />
+                            <div className="flex items-center justify-between mb-3">
+                                <span className={`${status.textClass} font-medium`}>{formatTaskStatus(status.key)}</span>
+                                <StatusIcon size={22} className={status.iconClass} />
                             </div>
-                            <div className="text-2xl font-bold">
-                                {taskStatistics.reduce((sum, stat) => sum + stat[status.key as keyof TaskStats], 0)}
-                            </div>
+                            <div className="text-3xl font-bold">{totalCount}</div>
                         </div>
                     )
                 })}

@@ -9,9 +9,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
             <ProjectProvider>
                 <PresenceProvider>
                     <NotificationProvider>
-        <>
-            {children}
-        </>
+                        {children}
                     </NotificationProvider>
                 </PresenceProvider>
             </ProjectProvider>
