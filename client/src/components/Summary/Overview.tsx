@@ -18,6 +18,16 @@ export default function Overview({
 }: {
     mockTasks: BasicTask[]
 }) {
+
+    const handleNavigateWithStatus = (statusKey: string) => {
+        if (statusKey === "inProgress")
+            statusKey = "In Progress"
+        if (statusKey === "todo")
+            statusKey = "ToDo"
+        const newHash = `list?status=${encodeURIComponent(statusKey)}`
+        window.location.hash = newHash
+    }
+
     const taskStatistics = Object.values(
         mockTasks.reduce<Record<number, TaskStats>>((acc, task) => {
             const p = task.priority
@@ -101,6 +111,7 @@ export default function Overview({
                     return (
                         <div
                             key={status.key}
+                            onClick={() => status.key !== "total" && handleNavigateWithStatus(status.key)}
                             className={`bg-gradient-to-br rounded-lg p-6 text-white ${status.color} cursor-pointer transition-transform duration-300 hover:scale-105`}
                         >
                             <div className="flex items-center justify-between mb-2">
