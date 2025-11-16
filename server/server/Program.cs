@@ -22,6 +22,10 @@ builder.Services.AddHttpContextAccessor();
 
 //Add authorization config
 builder.Services.AddAuthorizationBuilder().AddRolePolicies();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();

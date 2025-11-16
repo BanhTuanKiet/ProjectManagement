@@ -7,7 +7,7 @@ import type { BasicTask } from "@/utils/ITask"
 import { TaskList } from "../TaskList"
 import TaskFilterView from "../TaskFilterView"
 import AddTaskModal from "../AddTaskModal"
-import TaskDetailModal from "../TaskDetailModal"
+import TaskDetailModal from "../TaskDetail/TaskDetailModal";
 import TaskCard from "../TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
