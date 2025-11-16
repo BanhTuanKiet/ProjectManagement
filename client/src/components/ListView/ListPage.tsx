@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TableWrapper from "./TableWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,22 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { project_name } = useProject();
   const stableFilters = useMemo(() => filters, [filters.Status, filters.Priority, filters.AssigneeId]);
+
+  useEffect(() => {
+    const rawHash = decodeURIComponent(window.location.hash.replace("#", ""))
+    const [tab, queryString] = rawHash.split("?")
+
+    if (!queryString) return
+
+    const params = new URLSearchParams(queryString)
+    const status = params.get("status")
+
+    if (status) {
+      setFilters(prev => ({ ...prev, Status: status }))
+    }
+  }, [])
+
+
 
   return (
     <div className="flex flex-col h-full overflow-hidden  mx-auto w-full">
