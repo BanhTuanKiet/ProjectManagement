@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.DTO;
 using server.Models;
+using server.Services.ActivityLog;
 using System.Security.Claims;
 
 namespace server.Controllers

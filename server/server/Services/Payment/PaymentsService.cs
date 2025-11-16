@@ -13,9 +13,9 @@ namespace server.Services.Project
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<PaymentsService> _logger;
+        private readonly ILogger<PaymentServices> _logger;
 
-        public PaymentsService(ProjectManagementContext context, IMapper mapper, IConfiguration configuration, ILogger<PaymentsService> logger)
+        public PaymentServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration, ILogger<PaymentServices> logger)
         {
             _context = context;
             _mapper = mapper;
