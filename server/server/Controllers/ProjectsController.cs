@@ -77,7 +77,6 @@ namespace server.Controllers
         {
             Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
-            Console.WriteLine("Invitation email sent successfully.");
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
             if (user != null)
@@ -86,15 +85,14 @@ namespace server.Controllers
                     .FirstOrDefaultAsync(pm => pm.ProjectId == invitePeopleDTO.ProjectId && pm.UserId == user.Id);
 
                 if (existingMember != null)
-                    throw new ErrorException(400, "Tài khoản đã là thành viên của dự án.");
+                    throw new ErrorException(400, "The account is already a member of the project.");
             }
 
-            bool isSuccess = await _projectsServices.InviteMemberToProject(invitePeopleDTO, "trandat2280600642@gmail.com", projectName);
-            Console.WriteLine("Invitation email sent successfully 2.");
+            bool isSuccess = await _projectsServices.InviteMemberToProject(invitePeopleDTO, user.UserName, projectName);
 
             if (!isSuccess)
             {
-                throw new ErrorException(500, $"Không thể gửi email");
+                throw new ErrorException(500, $"Cannot send email to invite member!");
             }
 
             return Ok(new { message = "Invited member successfully!" });

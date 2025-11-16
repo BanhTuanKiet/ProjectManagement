@@ -48,12 +48,12 @@ export default function PlanPaymentPage() {
         let discountPrice = 0
 
         if (selectedMethod === 'vnpay') {
-            price = Number(selectedPlan?.price) || 0            
+            price = Number(selectedPlan?.price) || 0
         } else {
             const vndRate = fxRates?.vndRate
             const planPrice = Number(selectedPlan?.price) || 0
             price = vndRate ? planPrice / vndRate : 0
-        } 
+        }
 
         if (billingPeriod === 'monthly') {
             discountPrice = 0
@@ -108,9 +108,19 @@ export default function PlanPaymentPage() {
         }
 
         try {
-            const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
-            const links = response.data.links ?? []
-            window.open(links[1].href)
+            // const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
+            // const links = response.data.links ?? []
+            // window.open(links[1].href)
+            if (selectedMethod === "paypal") {
+                const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
+                const links = response.data.links ?? []
+                window.open(links[1].href)
+            }
+            else if (selectedMethod === "vnpay") {
+                const response = await axiosConfig.post(`/payments/create-vnpay`, order)
+                const payUrl = response.data?.paymentUrl
+                if (payUrl) window.location.href = payUrl
+            }
         } catch (error) {
             console.log(error)
         } finally {

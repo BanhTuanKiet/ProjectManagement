@@ -9,6 +9,8 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Security.Claims;
 using System.Globalization;
+using server.Util;
+using Microsoft.EntityFrameworkCore;
 
 namespace server.Controllers
 {
@@ -21,13 +23,21 @@ namespace server.Controllers
         private readonly HttpClient _httpClient;
         private readonly IPayments _paymentsService;
         private readonly ISubscriptions _subscriptionsService;
+        public readonly ProjectManagementContext _context;
+        static int recordId = 1;
 
-        public PaymentsController(IConfiguration config, IHttpClientFactory httpClientFactory, IPayments paymentsService, ISubscriptions subscriptionsService)
+        public PaymentsController(
+            IConfiguration config,
+            IHttpClientFactory httpClientFactory,
+            IPayments paymentsService,
+            ISubscriptions subscriptionsService,
+            ProjectManagementContext context)
         {
             _config = config;
             _httpClient = httpClientFactory.CreateClient();
             _paymentsService = paymentsService;
             _subscriptionsService = subscriptionsService;
+            _context = context;
         }
 
         [HttpPost("checkout/paypal")]
@@ -150,6 +160,100 @@ namespace server.Controllers
             await _subscriptionsService.AddSubscription(subscriptions);
 
             return Ok();
+        }
+
+        [HttpPost("create-vnpay")]
+        public async Task<IActionResult> CreatePayment([FromBody] OrderDTO.PaypalOrder order)
+        {
+            decimal finalPrice = order.BillingPeriod == "monthly" ? order.Amount : order.Amount * 12 * 0.95m;
+            var plan = await _context.Plans.FirstOrDefaultAsync(p => p.PlanId == order.PlanId);
+
+            if (plan == null)
+            {
+                throw new ErrorException(400, "Plan not found");
+            }
+
+            string orderType = "other";
+            string orderDescription = $"Payment {plan.Name} {order.BillingPeriod} subscription";
+            string name = User.FindFirst(ClaimTypes.Name)?.Value ?? "Customer";
+
+            var paymentUrl = await _paymentsService.CreatePaymentUrl(HttpContext, finalPrice, recordId.ToString(), orderType, orderDescription, name, order);
+            if (paymentUrl == null)
+            {
+                throw new ErrorException(500, "Cannot create payment URL");
+            }
+            return Ok(new { paymentUrl });
+        }
+
+        [HttpGet("callback")]
+        public async Task<OrderDTO.PaymentInformationModel> PaymentCallbackVnpay()
+        {
+            var response = _paymentsService.PaymentExecute(Request.Query);
+
+            Console.WriteLine("VNPAY Callback Response: " + JsonSerializer.Serialize(response));
+            recordId++;
+
+            if (response.VnPayResponseCode == "00" && response.TransactionCode == "00")
+            {
+                recordId++;
+                DateTime expiredAt = DateTime.UtcNow;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+                var amount = decimal.Parse(response.Amount, CultureInfo.InvariantCulture);
+                var orderDescription = response.PaymentInfo;
+                var parts = orderDescription.Split(' ');
+                string planName = parts[2];
+                string billingPeriod = parts[3];
+                var plan = await _context.Plans.FirstOrDefaultAsync(p => p.Name == planName);
+
+                Payments vnpay = new Payments
+                {
+                    UserId = userId,
+                    Amount = amount,
+                    Currency = "VND",
+                    Gateway = "Vnpay",
+                    GatewayRef = response.PaymentId,
+                    Status = "Paid",
+                };
+
+                Payments payments = await _paymentsService.SavePaypalPayment(vnpay);
+
+                Subscriptions subscriptions = new Subscriptions
+                {
+                    UserId = userId,
+                    PlanId = plan.PlanId,
+                    PaymentId = payments.Id,
+                    ExpiredAt = billingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
+                };
+
+                await _subscriptionsService.AddSubscription(subscriptions);
+
+                string email = User.FindFirst(ClaimTypes.Email)?.Value ?? throw new ErrorException(400, "Customer email not found!");
+
+                OrderDTO.PaymentInformationModel paymentInfo = new OrderDTO.PaymentInformationModel
+                {
+                    PaymentId = response.TransactionNo,
+                    Amount = response.Amount,
+                    Success = "success",
+                    Name = userName ?? "unknown",
+                    OrderDescription = response.PaymentInfo,
+                    Date = response.PaymentDateTime
+                };
+                // await EmailUtils.SendEmailPayment(paymentInfo, email);
+                return paymentInfo;
+            }
+            else
+            {
+                return new OrderDTO.PaymentInformationModel
+                {
+                    PaymentId = "",
+                    Amount = "0",
+                    Success = "fail",
+                    OrderDescription = "",
+                    Name = "",
+                    Date = DateTime.MinValue
+                };
+            }
         }
     }
 }
