@@ -10,13 +10,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace server.Services.Project
 {
-    public class ProjectsService : IProjects
+    public class ProjectServices : IProjects
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
 
-        public ProjectsService(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
+        public ProjectServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;

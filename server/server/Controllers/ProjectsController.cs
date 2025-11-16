@@ -1,17 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.DTO;
 using server.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace server.Controllers
 {
@@ -23,12 +18,14 @@ namespace server.Controllers
         private readonly IProjects _projectsServices;
         private readonly UserManager<ApplicationUser> _userManager;
         public readonly ProjectManagementContext _context;
+        private readonly IActivityLog _activityLogServices;
 
-        public ProjectsController(IProjects projectsServices, UserManager<ApplicationUser> userManager, ProjectManagementContext context)
+        public ProjectsController(IProjects projectsServices, UserManager<ApplicationUser> userManager, ProjectManagementContext context, IActivityLog activityLog)
         {
             _projectsServices = projectsServices;
             _userManager = userManager;
             _context = context;
+            _activityLogServices = activityLog;
         }
 
         [HttpGet()]

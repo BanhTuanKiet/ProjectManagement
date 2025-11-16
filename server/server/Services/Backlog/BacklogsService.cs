@@ -5,12 +5,12 @@ using server.Models;
 
 namespace server.Services.Backlog
 {
-    public class BacklogsService : IBacklogs
+    public class BacklogServices : IBacklogs
     {
         private readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
 
-        public BacklogsService(ProjectManagementContext context, IMapper mapper)
+        public BacklogServices(ProjectManagementContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

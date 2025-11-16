@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using server.DTO;
 using server.Models;
@@ -10,6 +9,7 @@ using server.Services.Task;
 using server.Configs;
 using Microsoft.AspNetCore.SignalR;
 using AutoMapper;
+using server.Services.ActivityLog;
 
 namespace server.Controllers
 {
@@ -23,6 +23,8 @@ namespace server.Controllers
         private readonly INotifications _notificationsService;
         private readonly IHubContext<NotificationHub> _notificationHubContext;
         private readonly IHubContext<TaskHubConfig> _taskHubContext;
+        private readonly IActivityLog _activityLogServices;
+
         private readonly IMapper _mapper;
 
         public TasksController(
@@ -31,6 +33,7 @@ namespace server.Controllers
             INotifications notificationsService,
             IHubContext<NotificationHub> notificationHubContext,
             IHubContext<TaskHubConfig> taskHubContext,
+            IActivityLog activityLog,
             IMapper mapper)
         {
             _context = context;
@@ -38,6 +41,7 @@ namespace server.Controllers
             _notificationsService = notificationsService;
             _notificationHubContext = notificationHubContext;
             _taskHubContext = taskHubContext;
+            _activityLogServices = activityLog;
             _mapper = mapper;
         }
 
@@ -94,20 +98,26 @@ namespace server.Controllers
             // try
             // {
             DateTime dateTimeCurrent = DateTime.UtcNow;
-            DateTime deadline = DateTime.Parse(newTask.Deadline);
+
             string status;
 
-            // Nếu không có deadline → để trạng thái mặc định
-            if (string.IsNullOrEmpty(newTask.Deadline))
+            DateTime? deadline = null;
+
+            if (!string.IsNullOrEmpty(newTask.Deadline))
+            {
+                deadline = DateTime.Parse(newTask.Deadline);
+            }
+
+            if (deadline == null)
             {
                 status = "Todo";
             }
             else
             {
-                if (deadline.Date < dateTimeCurrent.Date)
+                if (deadline.Value.Date < dateTimeCurrent.Date)
                     throw new ErrorException(400, "Deadline must be after the current date");
 
-                if (deadline.Date == dateTimeCurrent.Date)
+                if (deadline.Value.Date == dateTimeCurrent.Date)
                     status = "InProgress";
                 else
                     status = "Todo";
@@ -129,6 +139,14 @@ namespace server.Controllers
             };
 
             Models.Task addedTask = await _tasksService.AddNewTask(formatedTask);
+            await _activityLogServices.AddActivityLog(
+                projectId: projectId,
+                userId: userId,
+                action: "Create_TASK",
+                targetType: "TASK",
+                targetId: addedTask.TaskId.ToString(),
+                description: $"User {name} created task #{addedTask.TaskId} with title: '{addedTask.Title}' in project #{projectId}"
+            );
 
             if (newTask.AssigneeId != null)
             {
@@ -173,6 +191,8 @@ namespace server.Controllers
         [HttpPut("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
             Console.WriteLine("Received updates for task patch aaaaaaaaaaaaaaaaaaaaaaaaaaaaa:", JsonConvert.SerializeObject(updates));
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
@@ -180,6 +200,36 @@ namespace server.Controllers
             var result = await _tasksService.PatchTaskField(projectId, taskId, updates)
                 ?? throw new ErrorException(404, "Task not found");
 
+            var logGenerators = new Dictionary<string, Func<string>>
+            {
+                ["title"] = () => $"User {name} updated task #{taskId} with title: '{result.Title}' in project #{projectId}",
+                ["description"] = () => $"User {name} updated task #{taskId} with description: '{result.Description}' in project #{projectId}",
+                ["status"] = () => $"User {name} updated status of task #{taskId} to '{result.Status}' in project #{projectId}",
+                ["priority"] = () => $"User {name} updated priority of task #{taskId} to '{result.Priority}' in project #{projectId}",
+                ["assigneeid"] = () => $"User {name} changed assignee of task #{taskId} to '{result.AssigneeId}' in project #{projectId}",
+                ["deadline"] = () => $"User {name} updated deadline of task #{taskId} to '{result.Deadline}'",
+                ["estimatehours"] = () => $"User {name} updated estimated hours of task #{taskId} to '{result.EstimateHours}'",
+                ["sprintid"] = () => $"User {name} moved task #{taskId} to sprint '{result.SprintId}'",
+                ["backlogid"] = () => $"User {name} moved task #{taskId} to backlog '{result.BacklogId}'",
+            };
+            foreach (var kvp in updates)
+            {
+                var key = kvp.Key.ToLower();
+
+                if (logGenerators.ContainsKey(key))
+                {
+                    string description = logGenerators[key]();
+
+                    await _activityLogServices.AddActivityLog(
+                        projectId: projectId,
+                        userId: userId,
+                        action: "Update_TASK",
+                        targetType: "TASK",
+                        targetId: taskId.ToString(),
+                        description: description
+                    );
+                }
+            }
             return Ok(new { message = "Update successful" });
         }
 
@@ -189,6 +239,7 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
             if (dto.Ids == null || !dto.Ids.Any())
             {
                 return BadRequest(new { message = "No IDs provided." });
@@ -236,7 +287,14 @@ namespace server.Controllers
 
             if (updatedTask.Status != newStatus || updatedTask == null)
                 throw new ErrorException(400, "Update task failed!");
-
+            await _activityLogServices.AddActivityLog(
+                projectId: projectId,
+                userId: userId,
+                action: "Update_TASK",
+                targetType: "TASK",
+                targetId: taskId.ToString(),
+                description: $"User {name} updated task #{taskId} with title: '{updatedTask.Title}' in project #{projectId}"
+            );
             // await _taskHubContext.Clients.Group($"project-{projectId}")
             // .SendAsync("TaskUpdated", updatedTask);
 
@@ -316,6 +374,7 @@ namespace server.Controllers
             DateTime? creatAt = task.CreatedAt;
             DateTime? deadline = task.Deadline;
             DateTime? startDate = null;
+
             if (updates.ContainsKey("createdAt") && updates["createdAt"] != null)
             {
                 startDate = DateTime.Parse(updates["createdAt"].ToString());
@@ -368,6 +427,7 @@ namespace server.Controllers
             DateTime? dueDate = task.Deadline;
             DateTime? startDate = task.CreatedAt;
             DateTime? deadline = null;
+
             if (updates.ContainsKey("deadline") && updates["deadline"] != null)
             {
                 deadline = DateTime.Parse(updates["deadline"].ToString());
@@ -572,7 +632,9 @@ namespace server.Controllers
         public async Task<IActionResult> GetAllDeletedTasks(int projectId)
         {
             Console.WriteLine("Fetching all deleted tasks for projectId AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", projectId);
+
             var result = await _tasksService.GetAllDeletedTasksAsync(projectId);
+
             if (result == null)
                 throw new ErrorException(404, "No deleted tasks found.");
             return Ok(result);
@@ -637,6 +699,5 @@ namespace server.Controllers
                 task = basicTask
             });
         }
-
     }
 }

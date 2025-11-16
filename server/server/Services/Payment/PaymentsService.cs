@@ -8,7 +8,7 @@ using server.Util;
 
 namespace server.Services.Project
 {
-    public class PaymentsService : IPayments
+    public class PaymentServices : IPayments
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;

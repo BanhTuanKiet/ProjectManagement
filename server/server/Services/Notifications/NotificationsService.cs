@@ -6,12 +6,12 @@ using server.Models;
 
 namespace server.Services.Project
 {
-    public class NotificationsService : INotifications
+    public class NotificationServices : INotifications
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
 
-        public NotificationsService(ProjectManagementContext context, IMapper mapper)
+        public NotificationServices(ProjectManagementContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

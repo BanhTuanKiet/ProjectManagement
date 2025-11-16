@@ -9,14 +9,14 @@ using CloudinaryDotNet.Actions;
 
 namespace server.Services.User
 {
-    public class UsersService : IUsers
+    public class UserServices : IUsers
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Cloudinary _cloudinary;
 
-        public UsersService(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager, Cloudinary cloudinary)
+        public UserServices(ProjectManagementContext context, IMapper mapper, UserManager<ApplicationUser> userManager, Cloudinary cloudinary)
         {
             _context = context;
             _mapper = mapper;
@@ -29,7 +29,10 @@ namespace server.Services.User
         }
         public async Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _context.ApplicationUsers
+                .Include(u => u.Subscription)
+                .ThenInclude(s => s.Plan)
+                .FirstOrDefaultAsync(u => u.Email == email);
             // string formatedName = name.Replace(" ", "").ToLower();
             string formattedName = Regex.Replace(name ?? email.Split('@')[0], @"[^a-zA-Z0-9]", "").ToLower();
 

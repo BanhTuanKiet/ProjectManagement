@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { formatPrice } from "@/utils/stringUitls"
 import axiosConfig from "@/config/axiosConfig"
 import axios from "axios"
+import { useUser } from "../(context)/UserContext"
 
 const paymentMethods = [
     {
@@ -41,6 +42,7 @@ export default function PlanPaymentPage() {
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
     const [fxRates, setFxRates] = useState<FxRate | null>(null)
     const [price, setPrice] = useState<Price | null>(null)
+    const { user } = useUser()
     const router = useRouter()
 
     useEffect(() => {
@@ -94,7 +96,13 @@ export default function PlanPaymentPage() {
 
     const handlePayment = async () => {
         if (!selectedPlan) return
-        if (selectedPlan?.id === 1) return router.push("/login")
+        if (selectedPlan.id === 1) {
+            if (user) {
+                return router.push("/project")
+            }
+
+            return router.push("/login")
+        }
         setIsLoading(true)
 
         const order = {
@@ -240,23 +248,30 @@ export default function PlanPaymentPage() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handlePayment}
-                                disabled={isLoading}
-                                className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        {selectedPlan?.id === 1 ? "Sign in to continue using the free plan" : "Continue to Payment"}
-                                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                    </>
-                                )}
-                            </button>
+<button
+    onClick={handlePayment}
+    disabled={isLoading}
+    className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+>
+    {isLoading ? (
+        <>
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Processing...
+        </>
+    ) : (
+        <>
+            {selectedPlan && user ? (
+                selectedPlan.id <= Number(user.planId)
+                    ? "Go to your Projects"
+                    : "Upgrade to this plan"
+            ) : (
+                "Continue to Payment"
+            )}
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+        </>
+    )}
+</button>
+
                         </div>
                     </div>
 

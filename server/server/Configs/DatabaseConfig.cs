@@ -8,6 +8,7 @@ using server.Services.SubTask;
 using server.Services.Comment;
 using server.Services.Sprint;
 using server.Services.Backlog;
+using server.Services.ActivityLog;
 using server.Services;
 using server.Services.File;
 
@@ -31,19 +32,20 @@ namespace server.Configs
                 .AddEntityFrameworkStores<ProjectManagementContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddScoped<IUsers, UsersService>();
-            services.AddScoped<IProjects, ProjectsService>();
-            services.AddScoped<ITasks, TasksService>();
-            services.AddScoped<INotifications, NotificationsService>();
-            services.AddScoped<ISubTasks, SubTaskService>();
-            services.AddScoped<IComment, CommentService>();
-            services.AddScoped<ISprints, SprintsService>();
-            services.AddScoped<IBacklogs, BacklogsService>();
-            services.AddScoped<IFiles, FileService>();
-            services.AddScoped<IPlans, PlansService>();
-            services.AddScoped<IPayments, PaymentsService>();
-            services.AddScoped<ISubscriptions, SubscriptionssService>();
+            services.AddScoped<IUsers, UserServices>();
+            services.AddScoped<IProjects, ProjectServices>();
+            services.AddScoped<ITasks, TaskServices>();
+            services.AddScoped<INotifications, NotificationServices>();
+            services.AddScoped<ISubTasks, SubTaskServices>();
+            services.AddScoped<IComment, CommentServices>();
+            services.AddScoped<ISprints, SprintServices>();
+            services.AddScoped<IBacklogs, BacklogServices>();
+            services.AddScoped<IFiles, FileServices>();
+            services.AddScoped<IPlans, PlanServices>();
+            services.AddScoped<IPayments, PaymentServices>();
+            services.AddScoped<ISubscriptions, SubscriptionServices>();
             services.AddScoped<IFeature, FeatureServices>();
+            services.AddScoped<IActivityLog, ActivityLogServices>();
         }
     }
 }
