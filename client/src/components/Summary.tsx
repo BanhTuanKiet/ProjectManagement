@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Calendar, Users, BarChart3, Plus, Settings, TrendingUp } from "lucide-react"
+import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react"
 import { useProject } from "@/app/(context)/ProjectContext"
 import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
@@ -12,7 +12,6 @@ import { useHash } from "@/hooks/useHash"
 import Members from "./Summary/MemberList"
 import MemberList from "./MemberList"
 import SettingsPopup from "./SettingsPopup"
-import GanttChartTab from "./Timeline"
 
 export default function Summary() {
     const { hash: activeTab, setHash: setActiveTab } = useHash("")
@@ -43,13 +42,11 @@ export default function Summary() {
     const renderContent = (activeTab: string) => {
         switch (activeTab) {
             case "":
-                return
+                return <Overview mockTasks={mockTasks} />
             case "members":
                 if (project) {
                     return <Members project={project} />
                 }
-            case "chart":
-                return <GanttChartTab />
             default:
                 return (
                     <div className="py-12 text-center">
@@ -110,7 +107,32 @@ export default function Summary() {
                     </div>
                 </div>
 
-                <Overview mockTasks={mockTasks} />
+                <div className="border-b border-gray-200 bg-white rounded-t-lg">
+                    <div className="flex gap-8 px-6">
+                        <button
+                            onClick={() => setActiveTab("")}
+                            className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === ""
+                                ? "border-blue-600 text-blue-600"
+                                : "border-transparent text-gray-500 hover:text-gray-700"
+                                }`}
+                        >
+                            <BarChart3 size={16} className="inline mr-2" />
+                            Overview
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("members")}
+                            className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "members"
+                                ? "border-blue-600 text-blue-600"
+                                : "border-transparent text-gray-500 hover:text-gray-700"
+                                }`}
+                        >
+                            <Users size={16} className="inline mr-2" />
+                            Members
+                        </button>
+                    </div>
+
+                    {renderContent(activeTab)}
+                </div>
             </div>
         </div>
     )

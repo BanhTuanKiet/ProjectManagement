@@ -28,7 +28,6 @@ import TrashView from '@/components/TrashView/TrashView'
 import { useProject } from '@/app/(context)/ProjectContext'
 import Summary from '@/components/Summary'
 import { useHash } from '@/hooks/useHash'
-import Timeline from '@/components/Timeline'
 
 interface NavigationTab {
     id: string
@@ -78,8 +77,6 @@ export default function ProjectInterface() {
         switch (activeTab) {
             case "":
                 return <Summary />
-            case "timeline": 
-                return <Timeline />
             case "backlog":
                 return <BacklogView />
             case "calendar":
