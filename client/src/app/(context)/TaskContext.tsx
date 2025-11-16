@@ -83,7 +83,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
                         filters: null,
                     },
                 })
-
+console.log(response.data)
                 setTasks(response.data)
             } catch (error) {
                 console.log(error)

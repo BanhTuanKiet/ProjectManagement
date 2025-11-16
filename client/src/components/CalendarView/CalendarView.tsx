@@ -119,7 +119,7 @@ export default function CalendarView() {
                         return (
                             <div
                                 key={index}
-                                className="relative min-h-32 border-r border-b border-border p-3 bg-card"
+                                className="relative min-h-32 border-r border-b border-border p-2 bg-card"
                             >
                                 {day && (
                                     <>

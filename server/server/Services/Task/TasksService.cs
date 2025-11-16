@@ -67,7 +67,7 @@ namespace server.Services.Project
 
         public async Task<List<TaskDTO.BasicTask>> GetBasicTasksById(int projectId)
         {
-            List<server.Models.Task> tasks = await _context.Tasks
+            List<Models.Task> tasks = await _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.CreatedByNavigation)
                 .Where(t => t.ProjectId == projectId)
