@@ -8,6 +8,8 @@ using server.DTO;
 using server.Models;
 using server.Services.ActivityLog;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
+
 
 namespace server.Controllers
 {
@@ -70,9 +72,22 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        [Authorize(Policy = "MemberLimitRequirement")]
+        // [Authorize(Policy = "MemberLimitRequirement")]
         public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO, int projectId)
         {
+            if (invitePeopleDTO.ToEmail == "" || invitePeopleDTO.ToEmail == null)
+            {
+                throw new ErrorException(400, "Email cannot be empty");
+            }
+            else
+            {
+                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+                if (!emailRegex.IsMatch(invitePeopleDTO.ToEmail))
+                {
+                    throw new ErrorException(400, "Invalid email");
+                }
+            }
+
             Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
 

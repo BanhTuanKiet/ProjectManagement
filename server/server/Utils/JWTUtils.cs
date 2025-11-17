@@ -19,8 +19,8 @@ namespace server.Util
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email ?? user.Id.ToString()),
-                new Claim("plan_id", user.Subscription.PlanId.ToString() ?? "1"),
-                new Claim("plan_name", user.Subscription.Plan.Name ?? "Free"),
+                new Claim("plan_id", user?.Subscription?.PlanId.ToString() ?? "1"),
+                new Claim("plan_name", user?.Subscription?.Plan?.Name ?? "Free"),
             };
 
             foreach (var role in roles)

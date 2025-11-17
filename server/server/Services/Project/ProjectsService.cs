@@ -126,7 +126,7 @@ namespace server.Services.Project
             {
                 ProjectId = invitePeopleDTO.ProjectId,
                 Email = invitePeopleDTO.ToEmail,
-                RoleInProject = "Leader",
+                RoleInProject = invitePeopleDTO.RoleInProject,
                 Token = token,
                 IsAccepted = false,
                 InvitedAt = DateTime.UtcNow
