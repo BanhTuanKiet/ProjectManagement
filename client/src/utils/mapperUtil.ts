@@ -1,4 +1,4 @@
-import type { BasicTask } from "@/utils/ITask"
+import type { BasicTask, TaskDetail, UpdateTask } from "@/utils/ITask"
 import type { UserMini } from "@/utils/IUser"
 
 export interface Task {
@@ -126,4 +126,14 @@ export const mapTaskToApiUpdatePayload = (task: Task): Record<string, any> => {
   }
 
   return payload
+}
+
+export const mapTaskDetailToUpdateTask = (taskDetail: TaskDetail): UpdateTask => {
+  return {
+    Title: taskDetail.title,
+    Description: taskDetail.description,
+    Priority: taskDetail.priority,
+    CreatedAt: taskDetail.createdAt,
+    Deadline: taskDetail.deadline,
+  }
 }

@@ -10,7 +10,7 @@ export default function WorkOn() {
             <div className="overflow-x-auto scrollbar-custom pb-4">
                 <div className="flex gap-4 min-w-max">
                     {projects?.map((p) => (
-                        <div key={p.projectId} className="flex-none w-80">
+                        <div key={p.projectId} className="flex-none w-80 ms-1">
                             <ProjectCard project={p} />
                         </div>
                     ))}

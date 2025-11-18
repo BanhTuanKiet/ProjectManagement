@@ -67,7 +67,7 @@ namespace server.Services.Project
 
         public async Task<List<TaskDTO.BasicTask>> GetBasicTasksById(int projectId)
         {
-            List<server.Models.Task> tasks = await _context.Tasks
+            List<Models.Task> tasks = await _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.CreatedByNavigation)
                 .Where(t => t.ProjectId == projectId)
@@ -226,62 +226,18 @@ namespace server.Services.Project
             return task;
         }
 
-        public async Task<Models.Task> UpdateTaskDescription(int taskId, string description)
+        public async Task<Models.Task?> UpdateTask(int taskId, TaskDTO.UpdateTask updatedData)
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
             if (task == null)
                 return null;
-            task.Description = description;
-            await _context.SaveChangesAsync();
-            return task;
-        }
 
-        public async Task<Models.Task> UpdateTaskStartDate(int taskId, DateTime? startDate)
-        {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
-            DateTime? deadline = task.Deadline;
-            if (!deadline.HasValue && !startDate.HasValue)
-            {
-                return null;
-            }
-            task.CreatedAt = startDate ?? DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return task;
-        }
+            task.Title = updatedData.Title ?? task.Title;
+            task.Description = updatedData.Description ?? task.Description;
+            task.Priority = updatedData.Priority ?? task.Priority;
+            task.CreatedAt = updatedData.CreatedAt ?? task.CreatedAt;
+            task.Deadline = updatedData.Deadline ?? task.Deadline;
 
-        public async Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate)
-        {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
-            DateTime? startDate = task.CreatedAt;
-            if (!startDate.HasValue && !dueDate.HasValue)
-            {
-                return null;
-            }
-            task.Deadline = dueDate;
-            await _context.SaveChangesAsync();
-            return task;
-        }
-
-        public async Task<Models.Task> UpdateTaskTitle(int taskId, string title)
-        {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
-            if (task == null)
-                return null;
-            if (title == null || title == "")
-                return null;
-            task.Title = title;
-            await _context.SaveChangesAsync();
-            return task;
-        }
-
-        public async Task<Models.Task> UpdateTaskPriority(int taskId, byte priority)
-        {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
-            if (task == null)
-                return null;
-            if (priority == null)
-                return null;
-            task.Priority = priority;
             await _context.SaveChangesAsync();
             return task;
         }

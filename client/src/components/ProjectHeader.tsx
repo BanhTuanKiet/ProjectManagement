@@ -46,8 +46,8 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                         <Plus className="h-4 w-4 mr-2" />
                         Create
                     </Button>
-                    <Button id="premium-trial" className="bg-purple-600 hover:bg-purple-700 text-white">
-                        <span className="text-sm">Premium trial</span>
+                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                        <span className="text-sm">{user?.planName} Plan</span>
                     </Button>
                     <div id="notification" className="relative">
                         <Button

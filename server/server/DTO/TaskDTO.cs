@@ -45,7 +45,6 @@ namespace server.DTO
             public int? SprintId { get; set; } // null = backlog
         }
 
-
         public class BasicTask
         {
             public int TaskId { get; set; }
@@ -76,6 +75,15 @@ namespace server.DTO
         {
             public int ProjectId { get; set; }
             public List<int> Ids { get; set; } = new List<int>();
+        }
+
+        public class UpdateTask
+        {
+            public string? Title { get; set; }
+            public string? Description { get; set; }
+            public byte? Priority { get; set; }
+            public DateTime? CreatedAt { get; set; }
+            public DateTime? Deadline { get; set; }
         }
     }
 }

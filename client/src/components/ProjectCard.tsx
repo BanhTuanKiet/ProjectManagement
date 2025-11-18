@@ -11,7 +11,7 @@ import MemberList from "./MemberList"
 
 export function ProjectCard({ project }: { project: ProjectBasic }) {
     return (
-        <Card className="w-full max-w-[320px] relative overflow-hidden hover:shadow-md transition-shadow py-0">
+        <Card className="w-full max-w-[320px] relative overflow-hidden hover:shadow-md transition-shadow py-0 hover:scale-[1.02] ">
             <div className="absolute left-0 top-0 bottom-0 w-3 bg-cyan-200" />
 
             <CardHeader className="pl-5 pr-4 space-y-1 pt-3 cursor-pointer">

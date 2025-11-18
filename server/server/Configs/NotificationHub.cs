@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.SignalR;
+using server.DTO;
 using server.Models;
 
 namespace server.Configs
 {
     public class NotificationHub : Hub
     {
-        public static async System.Threading.Tasks.Task SendTaskAssignedNotification(IHubContext<NotificationHub> hubContext, string userId, Notification notification)
+        public static async System.Threading.Tasks.Task SendTaskAssignedNotification(IHubContext<NotificationHub> hubContext, string userId, DTO.NotificationDTO.NotificationBasic notification)
         {
             await hubContext.Clients.User(userId).SendAsync("NotifyTaskAssigned", notification);
         }
