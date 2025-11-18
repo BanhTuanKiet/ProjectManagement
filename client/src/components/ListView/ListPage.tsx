@@ -77,6 +77,12 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
     if (status) {
       setFilters(prev => ({ ...prev, Status: status }))
     }
+
+    const assignee = params.get("assignee");
+    if (assignee) {
+      setFilters(prev => ({ ...prev, AssigneeId: assignee }));
+    }
+
   }, [])
 
 
@@ -149,7 +155,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
               <Button variant="outline" className="gap-2 bg-transparent">
                 {filters.Priority ? (
                   <div className="flex items-center gap-2">
-                    {getPriorityIcon(filters.Priority)}
+                    {/* {getPriorityIcon(filters.Priority)} */}
                     <span className={getPriorityBadge(filters.Priority.toLowerCase())}>
                       {filters.Priority}
                     </span>
