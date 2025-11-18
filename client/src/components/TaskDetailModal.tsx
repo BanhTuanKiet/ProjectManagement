@@ -33,7 +33,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { TaskDetail } from "@/utils/ITask";
+import type { TaskDetail, UpdateTask } from "@/utils/ITask";
 import { getPriorityIcon, getTaskStatusBadge } from "@/utils/statusUtils";
 import * as signalR from "@microsoft/signalr";
 import ColoredAvatar from "./ColoredAvatar";
@@ -42,6 +42,8 @@ import { Trash } from "lucide-react";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { useUser } from "@/app/(context)/UserContext";
 import { title } from "process";
+import { mapTaskDetailToUpdateTask } from "@/utils/mapperUtil";
+import { setPriority } from "os";
 
 interface Comment {
     commentId: number;
@@ -74,16 +76,18 @@ export default function TaskDetailModal({
     const projectId = Number(project_name)
     const [files, setFiles] = useState<any[]>([]);
     const [previewFile, setPreviewFile] = useState<any | null>(null);
-    const [description, setDescription] = useState(task?.description || "");
-    const [editDescription, setEditDescription] = useState(false);
-    const [startDate, setStartDate] = useState(task?.createdAt || "");
-    const [editStartDate, setEditStartDate] = useState(false);
-    const [dueDate, setDueDate] = useState(task?.deadline || "");
-    const [editDueDate, setEditDueDate] = useState(false);
-    const [title, setTitle] = useState(task?.title || "");
+    const [formUpdate, setForm] = useState<UpdateTask>({
+        Title: null,
+        Description: null,
+        Priority: null,
+        CreatedAt: null,
+        Deadline: null,
+    });
     const [editTitle, setEditTitle] = useState(false);
-    const [priority, setPriority] = useState(task?.priority);
-    const [open, setOpen] = useState(false);
+    const [editDescription, setEditDescription] = useState(false);
+    const [editStartDate, setEditStartDate] = useState(false);
+    const [editDueDate, setEditDueDate] = useState(false);
+    const [editPriority, setEditPriority] = useState(false);
 
     const priorities = [
         { label: "High", value: 1 },
@@ -99,6 +103,7 @@ export default function TaskDetailModal({
                     `/tasks/detail/${project_name}/${taskId}`
                 );
                 setTask(response.data);
+                setForm(mapTaskDetailToUpdateTask(response.data))
             } catch (error) {
                 console.error("Fetch task detail error:", error);
             }
@@ -310,80 +315,13 @@ export default function TaskDetailModal({
         }
     };
 
-    const handleUpdateDescription = async (updateDescription: string) => {
+    const handleUpdateTask = async () => {
         try {
-            if (updateDescription == "") {
-                setDescription(task?.title || "")
-                setEditDescription(false);
-                return
-            }
-            const response = await axios.put(`/tasks/updateDescription/${projectId}/${taskId}`, {
-                description: updateDescription,
-            });
-            setEditDescription(false);
-            console.log(response);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const handleStartDate = async (newStartDate: string) => {
-        try {
-            const response = await axios.put(`/tasks/updateStartDate/${projectId}/${taskId}`, {
-                createdAt: newStartDate,
-            });
-            setEditStartDate(false);
-            console.log(response);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const handleDueDate = async (newDueDate: string) => {
-        try {
-            const response = await axios.put(`/tasks/updateDueDate/${projectId}/${taskId}`, {
-                deadline: newDueDate,
-            });
-            setEditDueDate(false);
-            console.log(response);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const handleTitle = async (newTitle: string) => {
-        try {
-            if (newTitle == "") {
-                setTitle(task?.title || "")
-                setEditTitle(false);
-                return
-            }
-            const response = await axios.put(`/tasks/updateTitle/${projectId}/${taskId}`, {
-                title: newTitle,
-            });
-            setEditTitle(false);
-            console.log(response);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const handleSelect = async (value: number) => {
-        if (value === priority) {
-            setOpen(false);
-            return;
-        }
-
-        try {
-            const response = await axios.put(`/tasks/updatePriority/${projectId}/${taskId}`, {
-                priority: value,
-            });
+            console.log(formUpdate)
+            const response = await axios.put(`/tasks/updateTask/${projectId}/${taskId}`, formUpdate);
             console.log("Updated:", response.data);
-            setPriority(value);
         } catch (error) {
             console.error(error);
-        } finally {
-            setOpen(false);
         }
     };
 
@@ -639,15 +577,20 @@ export default function TaskDetailModal({
                                             className="text-2xl text-black-600 min-h-[60px] cursor-pointer hover:bg-gray-100"
                                             onClick={() => setEditTitle(true)}
                                         >
-                                            <strong>{title || task.title}</strong>
+                                            <strong>{formUpdate.Title || task.title}</strong>
                                         </div>
                                     ) : (
                                         <textarea
                                             autoFocus
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
+                                            value={formUpdate.Title ?? ""}
+                                            onChange={(e) => {
+                                                setForm({
+                                                    ...formUpdate,
+                                                    Title: e.target.value
+                                                });
+                                            }}
                                             onBlur={() => {
-                                                handleTitle(title);
+                                                handleUpdateTask();
                                                 setEditTitle(false);
                                             }}
                                             className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
@@ -666,15 +609,18 @@ export default function TaskDetailModal({
                                             className="text-sm text-gray-600 bg-gray-50 p-3 rounded border min-h-[60px] cursor-pointer hover:bg-gray-100"
                                             onClick={() => setEditDescription(true)}
                                         >
-                                            {description || task.description}
+                                            {formUpdate.Description || task.description}
                                         </div>
                                     ) : (
                                         <textarea
                                             autoFocus
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
+                                            value={formUpdate.Description ?? ""}
+                                            onChange={(e) => setForm({
+                                                ...formUpdate,
+                                                Description: e.target.value
+                                            })}
                                             onBlur={() => {
-                                                handleUpdateDescription(description);
+                                                handleUpdateTask();
                                                 setEditDescription(false);
                                             }}
                                             className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
@@ -991,19 +937,26 @@ export default function TaskDetailModal({
 
                                                     <div
                                                         className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded-md hover:bg-gray-100 transition"
-                                                        onClick={() => setOpen(!open)}
+                                                        onClick={() => setEditPriority(!editPriority)}
                                                     >
-                                                        {getPriorityIcon(priority || task.priority)}
-                                                        <span className="text-sm text-gray-600">{priorities.find(p => p.value === priority)?.label || priorities.find(p => p.value === task.priority)?.label}</span>
+                                                        {getPriorityIcon(formUpdate.Priority || task.priority)}
+                                                        <span className="text-sm text-gray-600">{priorities.find(p => p.value === formUpdate.Priority)?.label || priorities.find(p => p.value === task.priority)?.label}</span>
                                                     </div>
 
-                                                    {open && (
+                                                    {editPriority && (
                                                         <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-32">
                                                             {priorities.map((p) => (
                                                                 <div
                                                                     key={p.value}
-                                                                    onClick={() => handleSelect(p.value)}
-                                                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 ${p.value === priority ? "bg-gray-50" : ""
+                                                                    onClick={() => {
+                                                                        setForm({
+                                                                            ...formUpdate,
+                                                                            Priority: p.value
+                                                                        })
+                                                                        handleUpdateTask()
+                                                                    }
+                                                                    }
+                                                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 ${p.value === formUpdate.Priority ? "bg-gray-50" : ""
                                                                         }`}
                                                                 >
                                                                     {getPriorityIcon(p.label)}
@@ -1034,15 +987,18 @@ export default function TaskDetailModal({
                                                             onClick={() => setEditDueDate(true)}
                                                         >
                                                             <Calendar className="h-4 w-4" />
-                                                            {dueDate || task.deadline || "Add due date"}
+                                                            {formUpdate.Deadline || task.deadline || "Add due date"}
                                                         </button>
                                                     ) : (
                                                         <input
                                                             type="datetime-local"
                                                             autoFocus
-                                                            value={dueDate ? new Date(dueDate).toISOString().slice(0, 16) : ""}
-                                                            onChange={(e) => setDueDate(e.target.value)}
-                                                            onBlur={() => handleDueDate(dueDate)}
+                                                            value={formUpdate.Deadline ? new Date(formUpdate.Deadline).toISOString().slice(0, 16) : ""}
+                                                            onChange={(e) => setForm({
+                                                                ...formUpdate,
+                                                                Deadline: e.target.value
+                                                            })}
+                                                            onBlur={() => handleUpdateTask()}
                                                             className="text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-200"
                                                         />
                                                     )}
@@ -1059,15 +1015,18 @@ export default function TaskDetailModal({
                                                             onClick={() => setEditStartDate(true)}
                                                         >
                                                             <Calendar className="h-4 w-4" />
-                                                            {startDate || task.createdAt}
+                                                            {formUpdate.CreatedAt || task.createdAt}
                                                         </button>
                                                     ) : (
                                                         <input
                                                             type="datetime-local"
                                                             autoFocus
-                                                            value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ""}
-                                                            onChange={(e) => setStartDate(e.target.value)}
-                                                            onBlur={() => handleStartDate(startDate)}
+                                                            value={formUpdate.CreatedAt ? new Date(formUpdate.CreatedAt).toISOString().slice(0, 16) : ""}
+                                                            onChange={(e) => setForm({
+                                                                ...formUpdate,
+                                                                CreatedAt: e.target.value
+                                                            })}
+                                                            onBlur={() => handleUpdateTask()}
                                                             className="text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-200"
                                                         />
                                                     )}

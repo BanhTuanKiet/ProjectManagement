@@ -13,10 +13,7 @@ namespace server.Models
         Task<bool> ChangeStatusIsStarred(int projectId, bool isStarred);
         Task<bool> GetStatusIsStarred(int projectId);
         Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName);
-        Task<Project> UpdateProjectTitle(int projectId, string title);
-        Task<Project> UpdateProjectDescription(int projectId, string description);
-        Task<Project> UpdateProjectStartDate(int projectId, string startDate);
-        Task<Project> UpdateProjectEndDate(int projectId, string endDate);
+        Task<Models.Project> UpdateProject(int projectId, ProjectDTO.UpdateProject update);
         Task<int> CountProject(string ownerId);
         Task<Project> CreateProject(ProjectDTO.CreateProject projectDTO);
     }

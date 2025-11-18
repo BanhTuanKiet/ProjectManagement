@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleX, XIcon} from "lucide-react"
+import { CircleX, XIcon } from "lucide-react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
@@ -23,7 +23,6 @@ export default function InvitePeopleDialog({
   const [loading, setLoading] = useState(false)
   const [notResponded, setNotResponded] = useState<any[]>([])
 
-  // ✅ Hàm lấy danh sách thành viên chưa phản hồi
   const fetchPendingMembers = async () => {
     try {
       setLoading(true)
@@ -36,12 +35,10 @@ export default function InvitePeopleDialog({
     }
   }
 
-  // ✅ Gọi khi dialog mở
   useEffect(() => {
     if (open) fetchPendingMembers()
   }, [open])
 
-  // ✅ Hàm mời thành viên
   const handleInvite = async () => {
     if (!email) return
     try {
@@ -85,8 +82,8 @@ export default function InvitePeopleDialog({
             className="w-full border border-gray-300 rounded-md p-2 mb-4"
           >
             <option value="Manager">Manager</option>
-            <option value="Member">Member</option>
-            <option value="User">User</option>
+            <option value="Member">Leader</option>
+            <option value="User">Member</option>
           </select>
 
           <div className="flex justify-end gap-3 mb-6">

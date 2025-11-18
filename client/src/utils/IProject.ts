@@ -10,3 +10,10 @@ export interface ProjectBasic {
     owner: string
     members: Member[]
 }
+
+export interface UpdateProject {
+    title?: string
+    description?: string
+    startDate?: string
+    endDate?: string
+}
