@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { addDays, differenceInDays, formatDate, formatShortDate } from "@/utils/dateUtils"
 import { BasicTask } from "@/utils/ITask"
@@ -12,256 +12,15 @@ import { useTask } from "@/app/(context)/TaskContext"
 import ColoredAvatar from "./ColoredAvatar"
 import useTimelineDates from "@/hooks/useTimelineDates"
 
-// const mockTasks: BasicTask[] = [
-//     // ---- Sprint 1 ----
-//     {
-//         taskId: 1,
-//         projectId: 1,
-//         title: "Project requirement analysis",
-//         description: "Gather and document system requirements",
-//         status: "completed",
-//         priority: 1,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 9, 29).toISOString(),
-//         deadline: new Date(2024, 10, 3).toISOString(),
-//         sprintId: 1,
-//     },
-//     {
-//         taskId: 2,
-//         projectId: 1,
-//         title: "Setup project workspace",
-//         status: "completed",
-//         priority: 2,
-//         assigneeId: "u2",
-//         assignee: "Bob",
-//         createdBy: "Bob",
-//         createdAt: new Date(2024, 9, 29).toISOString(),
-//         deadline: new Date(2024, 9, 30).toISOString(),
-//         sprintId: 1,
-//     },
-
-//     // ---- Sprint 2 ----
-//     {
-//         taskId: 3,
-//         projectId: 1,
-//         title: "Database ERD design",
-//         status: "completed",
-//         priority: 1,
-//         assigneeId: "u3",
-//         assignee: "Charlie",
-//         createdBy: "Charlie",
-//         createdAt: new Date(2024, 10, 6).toISOString(),
-//         deadline: new Date(2024, 10, 8).toISOString(),
-//         sprintId: 2,
-//     },
-//     {
-//         taskId: 4,
-//         projectId: 1,
-//         title: "Setup initial database migrations",
-//         status: "completed",
-//         priority: 2,
-//         assigneeId: "u2",
-//         assignee: "Bob",
-//         createdBy: "Bob",
-//         createdAt: new Date(2024, 10, 7).toISOString(),
-//         deadline: new Date(2024, 10, 11).toISOString(),
-//         sprintId: 2,
-//     },
-
-//     // ---- Sprint 3 ----
-//     {
-//         taskId: 5,
-//         projectId: 1,
-//         title: "Project CRUD API",
-//         status: "in-progress",
-//         priority: 1,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 10, 13).toISOString(),
-//         deadline: new Date(2024, 10, 17).toISOString(),
-//         sprintId: 3,
-//     },
-//     {
-//         taskId: 6,
-//         projectId: 1,
-//         title: "Project list UI",
-//         status: "pending",
-//         priority: 2,
-//         assigneeId: "u3",
-//         assignee: "Charlie",
-//         createdBy: "Charlie",
-//         createdAt: new Date(2024, 10, 14).toISOString(),
-//         deadline: new Date(2024, 10, 19).toISOString(),
-//         sprintId: 3,
-//     },
-
-//     // ---- Sprint 4 ----
-//     {
-//         taskId: 7,
-//         projectId: 1,
-//         title: "Task CRUD API",
-//         status: "pending",
-//         priority: 1,
-//         assigneeId: "u2",
-//         assignee: "Bob",
-//         createdBy: "Bob",
-//         createdAt: new Date(2024, 10, 20).toISOString(),
-//         deadline: new Date(2024, 10, 25).toISOString(),
-//         sprintId: 4,
-//     },
-//     {
-//         taskId: 8,
-//         projectId: 1,
-//         title: "Drag and drop task board",
-//         status: "pending",
-//         priority: 3,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 10, 21).toISOString(),
-//         deadline: new Date(2024, 10, 27).toISOString(),
-//         sprintId: 4,
-//     },
-
-//     // ---- Sprint 5 ----
-//     {
-//         taskId: 9,
-//         projectId: 1,
-//         title: "Gantt chart backend API",
-//         status: "pending",
-//         priority: 1,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 10, 27).toISOString(),
-//         deadline: new Date(2024, 11, 1).toISOString(),
-//         sprintId: 5,
-//     },
-//     {
-//         taskId: 10,
-//         projectId: 1,
-//         title: "Gantt chart UI integration",
-//         status: "pending",
-//         priority: 2,
-//         assigneeId: "u3",
-//         assignee: "Charlie",
-//         createdBy: "Charlie",
-//         createdAt: new Date(2024, 10, 28).toISOString(),
-//         deadline: new Date(2024, 11, 3).toISOString(),
-//         sprintId: 5,
-//     },
-
-//     // ---- Sprint 6 ----
-//     {
-//         taskId: 11,
-//         projectId: 1,
-//         title: "Analytics dashboard",
-//         status: "pending",
-//         priority: 2,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 11, 3).toISOString(),
-//         deadline: new Date(2024, 11, 8).toISOString(),
-//         sprintId: 6,
-//     },
-//     {
-//         taskId: 12,
-//         projectId: 1,
-//         title: "Task statistics API",
-//         status: "pending",
-//         priority: 1,
-//         assigneeId: "u2",
-//         assignee: "Bob",
-//         createdBy: "Bob",
-//         createdAt: new Date(2024, 11, 4).toISOString(),
-//         deadline: new Date(2024, 11, 9).toISOString(),
-//         sprintId: 6,
-//     },
-
-//     // ---- Sprint 7 ----
-//     {
-//         taskId: 13,
-//         projectId: 1,
-//         title: "Member invitation flow",
-//         status: "pending",
-//         priority: 1,
-//         assigneeId: "u3",
-//         assignee: "Charlie",
-//         createdBy: "Charlie",
-//         createdAt: new Date(2024, 11, 10).toISOString(),
-//         deadline: new Date(2024, 11, 12).toISOString(),
-//         sprintId: 7,
-//     },
-//     {
-//         taskId: 14,
-//         projectId: 1,
-//         title: "Role-based permissions",
-//         status: "pending",
-//         priority: 3,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 11, 11).toISOString(),
-//         deadline: new Date(2024, 11, 17).toISOString(),
-//         sprintId: 7,
-//     },
-
-//     // ---- Sprint 8 ----
-//     {
-//         taskId: 15,
-//         projectId: 1,
-//         title: "UI/UX polishing",
-//         status: "pending",
-//         priority: 2,
-//         assigneeId: "u2",
-//         assignee: "Bob",
-//         createdBy: "Bob",
-//         createdAt: new Date(2024, 11, 17).toISOString(),
-//         deadline: new Date(2024, 11, 21).toISOString(),
-//         sprintId: 8,
-//     },
-
-//     // ---- Sprint 9 ----
-//     {
-//         taskId: 16,
-//         projectId: 1,
-//         title: "System QA testing",
-//         status: "pending",
-//         priority: 3,
-//         assigneeId: "u1",
-//         assignee: "Alice",
-//         createdBy: "Alice",
-//         createdAt: new Date(2024, 11, 24).toISOString(),
-//         deadline: new Date(2024, 11, 28).toISOString(),
-//         sprintId: 9,
-//     },
-
-//     // ---- Sprint 10 ----
-//     {
-//         taskId: 17,
-//         projectId: 1,
-//         title: "Production deployment",
-//         status: "pending",
-//         priority: 1,
-//         assigneeId: "u2",
-//         assignee: "Bob",
-//         createdBy: "Bob",
-//         createdAt: new Date(2024, 11, 30).toISOString(),
-//         deadline: new Date(2024, 11, 30).toISOString(),
-//         sprintId: 10,
-//     },
-// ];
-
 export default function Timeline() {
     const [viewMode, setViewMode] = useState("day")
     const [sprints, setSprints] = useState<BasicSprint[]>()
     const { project_name } = useProject()
     const { tasks } = useTask()
     const { startDate, endDate, totalDays } = useTimelineDates(tasks)
+
+    // Store width for each task (day mode)
+    const widthMapRef = useRef<Record<number, number>>({})
 
     useEffect(() => {
         const fetchSrpint = async () => {
@@ -334,18 +93,16 @@ export default function Timeline() {
         let left = 0
         let width = 0
 
-        // DAY MODE
+        // DAY MODE — pixel width
         if (viewMode === "day") {
             const startOffset = differenceInDays(taskStart, startDate)
             const duration = differenceInDays(taskEnd, taskStart) + 1
 
-            const total = timelineUnits.length
-
-            left = (startOffset / total) * 100
-            width = (duration / total) * 100
+            left = 40 * startOffset
+            widthMapRef.current[task.taskId] = 40 * duration
         }
 
-        // WEEK MODE
+        // WEEK MODE — % width
         if (viewMode === "week") {
             const startOffset = differenceInDays(taskStart, startDate)
             const startWeek = Math.floor(startOffset / 7)
@@ -359,7 +116,7 @@ export default function Timeline() {
             width = (taskWeeks / total) * 100
         }
 
-        // MONTH MODE
+        // MONTH MODE — % width
         if (viewMode === "month") {
             const total = timelineUnits.length
 
@@ -379,7 +136,6 @@ export default function Timeline() {
 
         return { left, width }
     }
-
 
     const tasksBySprint = useMemo(() => {
         const grouped: Record<string, BasicTask[]> = {}
@@ -410,10 +166,11 @@ export default function Timeline() {
                         <button
                             key={m}
                             onClick={() => setViewMode(m)}
-                            className={`px-3 py-1 rounded text-sm font-medium transition-colors duration-200 ${viewMode === m
-                                ? "bg-blue-600 text-white hover:bg-blue-700"
-                                : "bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600"
-                                }`}
+                            className={`px-3 py-1 rounded text-sm font-medium transition-colors duration-200 ${
+                                viewMode === m
+                                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                                    : "bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600"
+                            }`}
                         >
                             {m.toUpperCase()}
                         </button>
@@ -424,6 +181,8 @@ export default function Timeline() {
             <Card className="border border-slate-200 dark:border-slate-800 py-0">
                 <div className="overflow-x-auto">
                     <div className="min-w-full">
+
+                        {/* TIMELINE HEADER */}
                         <div className="flex border-b border-slate-200 dark:border-slate-800">
                             <div className="w-64 flex-shrink-0 px-4 py-3 bg-slate-50 dark:bg-slate-900
                                 border-r border-slate-200 dark:border-slate-800 flex items-center">
@@ -432,11 +191,12 @@ export default function Timeline() {
                                 </p>
                             </div>
 
-                            <div className="flex-1 flex">
+                            <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${timelineUnits.length}, 1fr)` }}>
                                 {timelineUnits.map((u, i) => (
                                     <div
                                         key={i}
-                                        className="flex-1 px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400"
+                                        className="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400"
+                                        style={ viewMode === "day" ? { width: "40px" } : {} }
                                     >
                                         {u.label}
                                     </div>
@@ -462,7 +222,7 @@ export default function Timeline() {
                                     </div>
                                 )}
 
-                                {sprintTasks && sprintTasks?.map((task: BasicTask) => {
+                                {sprintTasks.map((task: BasicTask) => {
                                     const { left, width } = getTaskBarPosition(task)
 
                                     return (
@@ -470,7 +230,7 @@ export default function Timeline() {
                                             key={task.taskId}
                                             className="flex border-b border-slate-100 dark:border-slate-800"
                                         >
-                                            <div className="w-64 flex-shrink-0 px-4 py-3 border-r border-slate-200 dark:border-slate-800">
+                                            <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-slate-200 dark:border-slate-800">
                                                 <p className="text-sm text-slate-900 dark:text-white mb-1">
                                                     {task.title}
                                                 </p>
@@ -487,21 +247,25 @@ export default function Timeline() {
                                                 </div>
                                             </div>
 
-<div className="flex-1 relative py-3 px-2">
-    <div className="relative h-8">
-        <div
-            className={`absolute top-0 h-8 rounded ${getStatusColor(task.status)} flex items-center`}
-            style={{
-                left: `${left}%`,
-                width: `${Math.max(width, 10)}%`,
-            }}
-        >
-            <span className="text-xs px-2 break-words dark:text-white truncate">
-                {task.createdAt}
-            </span>
-        </div>
-    </div>
-</div>
+                                            <div className="flex-1 relative my-auto">
+                                                <div className="relative h-8">
+                                                    <div
+                                                        className={`absolute top-0 h-8 rounded ${getStatusColor(task.status)} flex items-center`}
+                                                        style={{
+                                                            left: `${left}px`,
+                                                            width:
+                                                                viewMode === "day"
+                                                                    ? `${widthMapRef.current[task.taskId] || 0}px`
+                                                                    : `${width}%`,
+                                                        }}
+                                                    >
+                                                        <span className="text-xs px-2 break-words dark:text-white truncate">
+                                                            {task.description}
+                                                        </span>
+                                                    </div>
+
+                                                </div>
+                                            </div>
                                         </div>
                                     )
                                 })}

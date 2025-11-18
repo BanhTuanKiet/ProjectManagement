@@ -60,6 +60,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             .catch(error => console.log("❌ SignalR connection failed", error))
 
         connection.on("NotifyTaskAssigned", (notification: Notification) => {
+            console.log(notification)
             setNotifications(prev => ({
                 ...prev,
                 task: [notification, ...prev.task],

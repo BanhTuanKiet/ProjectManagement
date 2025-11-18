@@ -85,18 +85,11 @@ namespace server.Controllers
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             string name = User.FindFirst(ClaimTypes.Name)?.Value;
-            // var strategy = _context.Database.CreateExecutionStrategy();
 
-            // return await strategy.ExecuteAsync(async () =>
-            // {
-            //     await using var transaction = await _context.Database.BeginTransactionAsync();
-            // try
-            // {
             DateTime dateTimeCurrent = DateTime.UtcNow;
             DateTime deadline = DateTime.Parse(newTask.Deadline);
             string status;
 
-            // Nếu không có deadline → để trạng thái mặc định
             if (string.IsNullOrEmpty(newTask.Deadline))
             {
                 status = "Todo";
@@ -143,21 +136,14 @@ namespace server.Controllers
                     Type = "task"
                 };
                 TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(addedTask);
-
+                NotificationDTO.NotificationBasic notificationBasic = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                
                 await _notificationsService.SaveNotification(notification);
                 await TaskHubConfig.AddedTask(_taskHubContext, projectId, userId, basicTask);
-                await NotificationHub.SendTaskAssignedNotification(_notificationHubContext, notification.UserId, notification);
+                await NotificationHub.SendTaskAssignedNotification(_notificationHubContext, notification.UserId, notificationBasic);
             }
-            // await transaction.CommitAsync();
 
             return Ok(new { message = "Add new task successful!" });
-            // }
-            // catch (ErrorException ex)
-            // {
-            //     await transaction.RollbackAsync();
-            //     throw new ErrorException(500, ex.Message);
-            // }
-            // });
         }
 
         [Authorize(Policy = "MemberRequirement")]

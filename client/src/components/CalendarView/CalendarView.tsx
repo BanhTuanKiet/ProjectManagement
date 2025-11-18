@@ -23,16 +23,13 @@ export default function CalendarView() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
     const [selectedTask, setSelectedTask] = useState<number | null>(null)
-    const { project_name, members } = useProject()
+    const { members } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
     const [openDay, setOpenDay] = useState<number | null>(null)
-    const [filters, setFilters] = useState<Record<string, string>>({});
-    const [searchQuery, setSearchQuery] = useState("");
-
 
     useEffect(() => {
         setDays(getDaysInMonth(currentDate))
-
+        console.log("Length: ", tasks.length)
         if (Array.isArray(tasks)) {
             setMockTasks([...tasks])
         } else {
@@ -72,10 +69,9 @@ export default function CalendarView() {
         <div className="p-6 bg-background min-h-screen bg-dynamic">
             <div className="flex items-center justify-between mb-6 gap-4">
                 <TaskFilterView
-                    tasks={tasks || []}            // 1. Truyền danh sách gốc vào
-                    onFilterComplete={setMockTasks} // 2. Nhận kết quả lọc và cập nhật state
+                    tasks={tasks || []}    
+                    onFilterComplete={setMockTasks} 
                 />
-                {/* --- Phần điều hướng tháng được đặt ở đây --- */}
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
