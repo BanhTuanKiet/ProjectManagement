@@ -112,75 +112,50 @@ namespace server.Controllers
         }
 
         // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateTitle/{projectId}")]
-        public async Task<ActionResult> UpdateProjectTitle(int projectId, [FromBody] Dictionary<string, object> updates)
+        [HttpPut("updateProject/{projectId}")]
+        public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectDTO.UpdateProject updatedData)
         {
-            Project project = await _projectsServices.GetProjectBasic(projectId)
-                ?? throw new ErrorException(404, "Project not found");
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            if (project == null)
+                return NotFound("Project not found");
 
-            if (updates["name"] == "" || updates["name"] == null)
-                throw new ErrorException(400, "Update project failed!");
-
-            string oldTitle = project.Name;
-            string newTitle = updates["name"]?.ToString() ?? oldTitle;
-
-            Project updatedTask = await _projectsServices.UpdateProjectTitle(projectId, newTitle);
-
-            if (updatedTask.Name != newTitle || updatedTask == null)
-                throw new ErrorException(400, "Update project failed!");
-
-            return Ok(new { message = "Update project title successfull!" });
-        }
-
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateDescription/{projectId}")]
-        public async Task<ActionResult> UpdateProjectDescription(int projectId, [FromBody] Dictionary<string, object> updates)
-        {
-            Project project = await _projectsServices.GetProjectBasic(projectId)
-                ?? throw new ErrorException(404, "Project not found");
-
-            if (updates["description"] == "" || updates["description"] == null)
-                throw new ErrorException(400, "Update project failed!");
-
-            string oldDescription = project.Description;
-            string newDescription = updates["description"]?.ToString() ?? oldDescription;
-
-            Project updatedTask = await _projectsServices.UpdateProjectDescription(projectId, newDescription);
-
-            if (updatedTask.Description != newDescription || updatedTask == null)
-                throw new ErrorException(400, "Update project failed!");
-
-            return Ok(new { message = "Update description successfull!" });
-        }
-
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateStartDate/{projectId}")]
-        public async Task<ActionResult> UpdateProjectStartDate(int projectId, [FromBody] Dictionary<string, object> updates)
-        {
-            if (!updates.ContainsKey("startDate") || string.IsNullOrWhiteSpace(updates["startDate"]?.ToString()))
-                throw new ErrorException(400, "Start date is required");
-
-            Project updatedProject = await _projectsServices.UpdateProjectStartDate(projectId, updates["startDate"].ToString());
-
-            return Ok(new
+            if (updatedData.StartDate.HasValue && updatedData.EndDate.HasValue &&
+                updatedData.StartDate.Value > updatedData.EndDate.Value)
             {
-                message = "Update start date successful!"
-            });
-        }
+                return BadRequest("Start date cannot be greater than End date");
+            }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateEndDate/{projectId}")]
-        public async Task<ActionResult> UpdateProjectEndDate(int projectId, [FromBody] Dictionary<string, object> updates)
-        {
-            if (!updates.ContainsKey("endDate") || string.IsNullOrWhiteSpace(updates["endDate"]?.ToString()))
-                throw new ErrorException(400, "End date is required");
+            bool hasChanges = false;
 
-            Project updatedProject = await _projectsServices.UpdateProjectEndDate(projectId, updates["endDate"].ToString());
-
-            return Ok(new
+            if (!string.IsNullOrWhiteSpace(updatedData.Title) && updatedData.Title != project.Name)
             {
-                message = "Update end date successful!"
-            });
+                project.Name = updatedData.Title.Trim();
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updatedData.Description) && updatedData.Description != project.Description)
+            {
+                project.Description = updatedData.Description.Trim();
+                hasChanges = true;
+            }
+
+            if (updatedData.StartDate.HasValue && updatedData.StartDate.Value != project.StartDate)
+            {
+                project.StartDate = updatedData.StartDate.Value;
+                hasChanges = true;
+            }
+
+            if (updatedData.EndDate.HasValue && updatedData.EndDate.Value != project.EndDate)
+            {
+                project.EndDate = updatedData.EndDate.Value;
+                hasChanges = true;
+            }
+
+            if (!hasChanges)
+                throw new ErrorException(400, "No changes were made");
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Update project successfully!!" });
         }
 
         [HttpPost("createProject")]

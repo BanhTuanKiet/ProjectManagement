@@ -167,56 +167,18 @@ namespace server.Services.Project
             return true;
         }
 
-        public async Task<Models.Project> UpdateProjectTitle(int projectId, string title)
+        public async Task<Models.Project> UpdateProject(int projectId, ProjectDTO.UpdateProject updatedData)
         {
             var project = await _context.Projects.FirstOrDefaultAsync(t => t.ProjectId == projectId);
             if (project == null)
                 return null;
-            if (title == null || title == "")
-                return null;
-            project.Name = title;
-            await _context.SaveChangesAsync();
-            return project;
-        }
 
-        public async Task<Models.Project> UpdateProjectDescription(int projectId, string description)
-        {
-            var project = await _context.Projects.FirstOrDefaultAsync(t => t.ProjectId == projectId);
-            if (project == null)
-                return null;
-            project.Description = description;
-            await _context.SaveChangesAsync();
-            return project;
-        }
-
-        public async Task<Models.Project> UpdateProjectStartDate(int projectId, string startDate)
-        {
-            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
-            if (project == null)
-                return null;
-
-            if (!DateOnly.TryParse(startDate, out DateOnly parsedDate))
-                throw new ErrorException(400, "Invalid start date format");
-
-            project.StartDate = parsedDate;
+            project.Name = updatedData.Title ?? project.Name;
+            project.Description = updatedData.Description ?? project.Description;
+            project.StartDate = updatedData.StartDate ?? project.StartDate;
+            project.EndDate = updatedData.EndDate ?? project.EndDate;
 
             await _context.SaveChangesAsync();
-            return project;
-        }
-
-        public async Task<Models.Project> UpdateProjectEndDate(int projectId, string endDate)
-        {
-            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
-            if (project == null)
-                return null;
-
-            if (!DateOnly.TryParse(endDate, out DateOnly parsedDate))
-                throw new ErrorException(400, "Invalid end date format");
-
-            project.EndDate = parsedDate;
-
-            await _context.SaveChangesAsync();
-
             return project;
         }
 
