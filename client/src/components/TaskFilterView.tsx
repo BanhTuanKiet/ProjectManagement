@@ -178,7 +178,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                     <Button variant="outline" className="gap-2 w-40 justify-start">
                         {filters.priority && filters.priority !== '0' ? (
                             <div className="flex items-center gap-2">
-                                {getPriorityIcon(currentPriorityName)}
+                                {/* {getPriorityIcon(currentPriorityName)} */}
                                 <span className={getPriorityBadge(currentPriorityName.toLowerCase())}>{currentPriorityName}</span>
                             </div>
                         ) : (
