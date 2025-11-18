@@ -15,7 +15,8 @@ import {
     Archive,
     Plus,
     Square,
-    Trash
+    Trash,
+    User2
 } from 'lucide-react'
 import CalendarView from '@/components/CalendarView/CalendarView'
 import BoardView from '@/components/BoardView/BoardView'
@@ -29,6 +30,7 @@ import { useProject } from '@/app/(context)/ProjectContext'
 import Summary from '@/components/Summary'
 import { useHash } from '@/hooks/useHash'
 import Timeline from '@/components/Timeline'
+import MemberList from '@/components/Summary/MemberList'
 
 interface NavigationTab {
     id: string
@@ -39,6 +41,7 @@ interface NavigationTab {
 
 const navigationTabs: NavigationTab[] = [
     { id: '', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
+    { id: 'member', label: 'Member', icon: <User2 className='w-4 h-3' /> },
     { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'backlog', label: 'Backlog', icon: <Square className="w-4 h-4" /> },
     { id: 'board', label: 'Board', icon: <Square className="w-4 h-4" /> },
@@ -51,7 +54,7 @@ const navigationTabs: NavigationTab[] = [
 
 export default function ProjectInterface() {
     const [tasks, setTasks] = useState<BasicTask[]>([])
-    const { project_name } = useProject()
+    const { project_name, projects } = useProject()
     const { hash: activeTab, setHash: setActiveTab } = useHash("")
 
     useEffect(() => {
@@ -73,6 +76,7 @@ export default function ProjectInterface() {
         fetchProjects()
     }, [project_name])
 
+    const project = projects.find(p => p.projectId === Number(project_name))
 
     const renderContent = (activeTab: string) => {
         switch (activeTab) {
@@ -90,6 +94,9 @@ export default function ProjectInterface() {
                 return <ListPage tasksNormal={tasks} projectId={Number(project_name)} />
             case "trash":
                 return <TrashView projectId={Number(project_name)} />
+            case "member":
+                if (project)
+                return <MemberList project={project} />
             default:
                 return (
                     <div className="py-12 text-center">
