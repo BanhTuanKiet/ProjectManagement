@@ -106,3 +106,24 @@ export const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`
 }
+
+export const formatShortDate = (date: string) => {
+    if (!date) return ""
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return ""
+    return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    })
+}
+
+export const differenceInDays = (date1: Date, date2: Date) => {
+    const diff = date1.getTime() - date2.getTime()
+    return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+export const addDays = (date: Date, days: number) => {
+    const result = new Date(date)
+    result.setDate(result.getDate() + days)
+    return result
+}

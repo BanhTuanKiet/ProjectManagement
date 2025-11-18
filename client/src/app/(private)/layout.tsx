@@ -11,9 +11,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
                 <PresenceProvider>
                     <NotificationProvider>
                         <DriverManager />
-                        <>
                             {children}
-                        </>
                     </NotificationProvider>
                 </PresenceProvider>
             </ProjectProvider>

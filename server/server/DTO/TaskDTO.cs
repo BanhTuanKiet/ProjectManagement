@@ -45,7 +45,6 @@ namespace server.DTO
             public int? SprintId { get; set; } // null = backlog
         }
 
-
         public class BasicTask
         {
             public int TaskId { get; set; }

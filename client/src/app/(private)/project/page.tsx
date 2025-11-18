@@ -40,7 +40,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1400px] mx-auto px-10 py-4 space-y-10">
+      <div className="max-w-[1400px] mx-auto px-12 py-4 space-y-10">
         <section className="space-y-6">
           <div className="border-b border-border">
             <nav className="flex flex-wrap gap-6">
