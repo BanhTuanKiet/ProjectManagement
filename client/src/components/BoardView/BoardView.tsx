@@ -141,7 +141,7 @@ export default function BoardView() {
 
   return (
     <div className="p-4 bg-dynamic">
-      <div className="flex items-center mb-4 relative">
+      <div id="searchTask" className="flex items-center mb-4 relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
           placeholder="Search task..."
@@ -152,7 +152,7 @@ export default function BoardView() {
       </div>
 
       <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-5 gap-4">
+        <div id="boardArea" className="grid grid-cols-5 gap-4">
           {taskStatus.map((status) => {
             const columnTasks = filteredTasks.filter(
               (t) => t.status === status.name
@@ -165,6 +165,7 @@ export default function BoardView() {
 
             return (
               <div
+                id={`column-${status.name}`}
                 key={status.id}
                 className="bg-gray-50 rounded-xl p-3 shadow-md flex flex-col"
               >
@@ -230,6 +231,7 @@ export default function BoardView() {
 
                 <div className="mt-2 flex justify-between">
                   <button
+                    id={`create-${status.name}`}
                     onClick={() => setOpenDialog(true)}
                     className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
                   >

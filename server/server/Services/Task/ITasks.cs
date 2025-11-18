@@ -15,11 +15,7 @@ namespace server.Services.Task
         Task<Models.Task> AddNewTask(Models.Task newTask);
         Task<int> BulkDeleteTasksAsync(int projectId, List<int> ids);
         Task<Models.Task> UpdateTaskStatus(int taskId, string newStatus);
-        Task<Models.Task> UpdateTaskDescription(int taskId, string description);
-        Task<Models.Task> UpdateTaskStartDate(int taskId, DateTime? startDate);
-        Task<Models.Task> UpdateTaskDueDate(int taskId, DateTime? dueDate);
-        Task<Models.Task> UpdateTaskTitle(int taskId, string title);
-        Task<Models.Task> UpdateTaskPriority(int taskId, byte priority);
+        Task<Models.Task> UpdateTask(int taskId, TaskDTO.UpdateTask updateTask);
         Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId);
         Task<Models.Task> RestoreTaskFromHistory(int taskId);
         Task<IEnumerable<object>> GetAllDeletedTasksAsync(int projectId);

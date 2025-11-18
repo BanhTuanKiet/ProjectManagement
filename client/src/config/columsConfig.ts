@@ -21,8 +21,8 @@ export const initialColumns: Column[] = [
   {
     key: "status",
     title: "Status",
-    width: 120,
-    minWidth: 100,
+    width: 150,
+    minWidth: 150,
     resizable: true,
   },
   {

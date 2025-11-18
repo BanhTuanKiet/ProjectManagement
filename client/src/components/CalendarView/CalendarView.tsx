@@ -7,7 +7,7 @@ import type { BasicTask } from "@/utils/ITask"
 import { TaskList } from "../TaskList"
 import TaskFilterView from "../TaskFilterView"
 import AddTaskModal from "../AddTaskModal"
-import TaskDetailModal from "../TaskDetailModal"
+import TaskDetailModal from "../TaskDetail/TaskDetailModal";
 import TaskCard from "../TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
@@ -107,7 +107,7 @@ export default function CalendarView() {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-7">
+                <div id="CalendarDays" className="grid grid-cols-7">
                     {days?.map((day, index) => {
                         const tasksForDay = day ? getTasksForDay(day) : []
                         const isToday = day === new Date().getDate()
@@ -125,7 +125,7 @@ export default function CalendarView() {
                                             >
                                                 {day}
                                             </span>
-                                            <span
+                                            <span id="AddTaskButton"
                                                 className="px-1 hover:bg-gray-200 hover:rounded transition-colors cursor-pointer"
                                                 onClick={() => {
                                                     handleDayClick(day)

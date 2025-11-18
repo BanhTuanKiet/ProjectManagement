@@ -28,7 +28,7 @@ namespace server.Controllers
             var comments = await _commentService.GetCommentsByTaskIdAsync(taskId);
 
             if (comments == null || !comments.Any())
-                return Ok();
+                return Ok(new List<CommentDTO>());
 
             return Ok(comments);
         }

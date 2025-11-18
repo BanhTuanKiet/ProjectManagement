@@ -6,7 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.DTO;
 using server.Models;
+using server.Services.ActivityLog;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
+
 
 namespace server.Controllers
 {
@@ -18,12 +21,14 @@ namespace server.Controllers
         private readonly IProjects _projectsServices;
         private readonly UserManager<ApplicationUser> _userManager;
         public readonly ProjectManagementContext _context;
+        private readonly IActivityLog _activityLogServices;
 
-        public ProjectsController(IProjects projectsServices, UserManager<ApplicationUser> userManager, ProjectManagementContext context)
+        public ProjectsController(IProjects projectsServices, UserManager<ApplicationUser> userManager, ProjectManagementContext context, IActivityLog activityLog)
         {
             _projectsServices = projectsServices;
             _userManager = userManager;
             _context = context;
+            _activityLogServices = activityLog;
         }
 
         [HttpGet()]
@@ -67,12 +72,24 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        [Authorize(Policy = "MemberLimitRequirement")]
+        // [Authorize(Policy = "MemberLimitRequirement")]
         public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO, int projectId)
         {
+            if (invitePeopleDTO.ToEmail == "" || invitePeopleDTO.ToEmail == null)
+            {
+                throw new ErrorException(400, "Email cannot be empty");
+            }
+            else
+            {
+                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+                if (!emailRegex.IsMatch(invitePeopleDTO.ToEmail))
+                {
+                    throw new ErrorException(400, "Invalid email");
+                }
+            }
+
             Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
             string projectName = project.Name;
-            Console.WriteLine("Invitation email sent successfully.");
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
             if (user != null)
@@ -81,89 +98,92 @@ namespace server.Controllers
                     .FirstOrDefaultAsync(pm => pm.ProjectId == invitePeopleDTO.ProjectId && pm.UserId == user.Id);
 
                 if (existingMember != null)
-                    throw new ErrorException(400, "Tài khoản đã là thành viên của dự án.");
+                    throw new ErrorException(400, "The account is already a member of the project.");
             }
 
-            bool isSuccess = await _projectsServices.InviteMemberToProject(invitePeopleDTO, "trandat2280600642@gmail.com", projectName);
-            Console.WriteLine("Invitation email sent successfully 2.");
+            bool isSuccess = await _projectsServices.InviteMemberToProject(invitePeopleDTO, user.UserName, projectName);
 
             if (!isSuccess)
             {
-                throw new ErrorException(500, $"Không thể gửi email");
+                throw new ErrorException(500, $"Cannot send email to invite member!");
             }
 
             return Ok(new { message = "Invited member successfully!" });
         }
 
         // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateTitle/{projectId}")]
-        public async Task<ActionResult> UpdateProjectTitle(int projectId, [FromBody] Dictionary<string, object> updates)
+        [HttpPut("updateProject/{projectId}")]
+        public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectDTO.UpdateProject updatedData)
         {
-            Project project = await _projectsServices.GetProjectBasic(projectId)
-                ?? throw new ErrorException(404, "Project not found");
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            if (project == null)
+                return NotFound("Project not found");
 
-            if (updates["name"] == "" || updates["name"] == null)
-                throw new ErrorException(400, "Update project failed!");
+            if (updatedData.StartDate.HasValue && updatedData.EndDate.HasValue &&
+                updatedData.StartDate.Value > updatedData.EndDate.Value)
+            {
+                return BadRequest("Start date cannot be greater than End date");
+            }
 
-            string oldTitle = project.Name;
-            string newTitle = updates["name"]?.ToString() ?? oldTitle;
+            bool hasChanges = false;
 
-            Project updatedTask = await _projectsServices.UpdateProjectTitle(projectId, newTitle);
+            if (!string.IsNullOrWhiteSpace(updatedData.Title) && updatedData.Title != project.Name)
+            {
+                project.Name = updatedData.Title.Trim();
+                hasChanges = true;
+            }
 
-            if (updatedTask.Name != newTitle || updatedTask == null)
-                throw new ErrorException(400, "Update project failed!");
+            if (!string.IsNullOrWhiteSpace(updatedData.Description) && updatedData.Description != project.Description)
+            {
+                project.Description = updatedData.Description.Trim();
+                hasChanges = true;
+            }
 
-            return Ok(new { message = "Update project title successfull!" });
+            if (updatedData.StartDate.HasValue && updatedData.StartDate.Value != project.StartDate)
+            {
+                project.StartDate = updatedData.StartDate.Value;
+                hasChanges = true;
+            }
+
+            if (updatedData.EndDate.HasValue && updatedData.EndDate.Value != project.EndDate)
+            {
+                project.EndDate = updatedData.EndDate.Value;
+                hasChanges = true;
+            }
+
+            if (!hasChanges)
+                throw new ErrorException(400, "No changes were made");
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Update project successfully!!" });
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateDescription/{projectId}")]
-        public async Task<ActionResult> UpdateProjectDescription(int projectId, [FromBody] Dictionary<string, object> updates)
+        [HttpPost("createProject")]
+        public async Task<ActionResult> CreateProject([FromBody] ProjectDTO.CreateProject projectDTO)
         {
-            Project project = await _projectsServices.GetProjectBasic(projectId)
-                ?? throw new ErrorException(404, "Project not found");
+            if (projectDTO.Name == "" || projectDTO.Description == "")
+            {
+                throw new ErrorException(400, "Name and description cannot be empty");
+            }
 
-            if (updates["description"] == "" || updates["description"] == null)
-                throw new ErrorException(400, "Update project failed!");
+            if (projectDTO.StartDate.HasValue == false || projectDTO.EndDate.HasValue == false)
+            {
+                throw new ErrorException(400, "Start date and end date cannot be empty");
+            }
 
-            string oldDescription = project.Description;
-            string newDescription = updates["description"]?.ToString() ?? oldDescription;
+            if (projectDTO.StartDate > projectDTO.EndDate)
+            {
+                throw new ErrorException(400, "Start date must be before end date");
+            }
 
-            Project updatedTask = await _projectsServices.UpdateProjectDescription(projectId, newDescription);
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            projectDTO.CreatedBy = userId;
 
-            if (updatedTask.Description != newDescription || updatedTask == null)
-                throw new ErrorException(400, "Update project failed!");
-
-            return Ok(new { message = "Update description successfull!" });
-        }
-
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateStartDate/{projectId}")]
-        public async Task<ActionResult> UpdateProjectStartDate(int projectId, [FromBody] Dictionary<string, object> updates)
-        {
-            if (!updates.ContainsKey("startDate") || string.IsNullOrWhiteSpace(updates["startDate"]?.ToString()))
-                throw new ErrorException(400, "Start date is required");
-
-            Project updatedProject = await _projectsServices.UpdateProjectStartDate(projectId, updates["startDate"].ToString());
+            Project createdProject = await _projectsServices.CreateProject(projectDTO);
 
             return Ok(new
             {
-                message = "Update start date successful!"
-            });
-        }
-
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPut("updateEndDate/{projectId}")]
-        public async Task<ActionResult> UpdateProjectEndDate(int projectId, [FromBody] Dictionary<string, object> updates)
-        {
-            if (!updates.ContainsKey("endDate") || string.IsNullOrWhiteSpace(updates["endDate"]?.ToString()))
-                throw new ErrorException(400, "End date is required");
-
-            Project updatedProject = await _projectsServices.UpdateProjectEndDate(projectId, updates["endDate"].ToString());
-
-            return Ok(new
-            {
-                message = "Update end date successful!"
+                message = "Create project successful!"
             });
         }
     }

@@ -6,12 +6,12 @@ using server.Models;
 
 namespace server.Services.Project
 {
-    public class PlansService : IPlans
+    public class PlanServices : IPlans
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
 
-        public PlansService(ProjectManagementContext context, IMapper mapper)
+        public PlanServices(ProjectManagementContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

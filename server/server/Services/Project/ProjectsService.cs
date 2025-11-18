@@ -10,13 +10,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace server.Services.Project
 {
-    public class ProjectsService : IProjects
+    public class ProjectServices : IProjects
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
 
-        public ProjectsService(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
+        public ProjectServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
@@ -126,7 +126,7 @@ namespace server.Services.Project
             {
                 ProjectId = invitePeopleDTO.ProjectId,
                 Email = invitePeopleDTO.ToEmail,
-                RoleInProject = "Leader",
+                RoleInProject = invitePeopleDTO.RoleInProject,
                 Token = token,
                 IsAccepted = false,
                 InvitedAt = DateTime.UtcNow
@@ -167,62 +167,58 @@ namespace server.Services.Project
             return true;
         }
 
-        public async Task<Models.Project> UpdateProjectTitle(int projectId, string title)
+        public async Task<Models.Project> UpdateProject(int projectId, ProjectDTO.UpdateProject updatedData)
         {
             var project = await _context.Projects.FirstOrDefaultAsync(t => t.ProjectId == projectId);
             if (project == null)
                 return null;
-            if (title == null || title == "")
-                return null;
-            project.Name = title;
-            await _context.SaveChangesAsync();
-            return project;
-        }
 
-        public async Task<Models.Project> UpdateProjectDescription(int projectId, string description)
-        {
-            var project = await _context.Projects.FirstOrDefaultAsync(t => t.ProjectId == projectId);
-            if (project == null)
-                return null;
-            project.Description = description;
-            await _context.SaveChangesAsync();
-            return project;
-        }
-
-        public async Task<Models.Project> UpdateProjectStartDate(int projectId, string startDate)
-        {
-            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
-            if (project == null)
-                return null;
-
-            if (!DateOnly.TryParse(startDate, out DateOnly parsedDate))
-                throw new ErrorException(400, "Invalid start date format");
-
-            project.StartDate = parsedDate;
+            project.Name = updatedData.Title ?? project.Name;
+            project.Description = updatedData.Description ?? project.Description;
+            project.StartDate = updatedData.StartDate ?? project.StartDate;
+            project.EndDate = updatedData.EndDate ?? project.EndDate;
 
             await _context.SaveChangesAsync();
-            return project;
-        }
-
-        public async Task<Models.Project> UpdateProjectEndDate(int projectId, string endDate)
-        {
-            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
-            if (project == null)
-                return null;
-
-            if (!DateOnly.TryParse(endDate, out DateOnly parsedDate))
-                throw new ErrorException(400, "Invalid end date format");
-
-            project.EndDate = parsedDate;
-
-            await _context.SaveChangesAsync();
-
             return project;
         }
 
         public async Task<int> CountProject(string ownerId)
         {
             return await _context.Projects.CountAsync(p => p.CreatedBy == ownerId);
+        }
+
+        public async Task<Models.Project> CreateProject(ProjectDTO.CreateProject projectDTO)
+        {
+            var project = new Models.Project
+            {
+                Name = projectDTO.Name,
+                Description = projectDTO.Description,
+                StartDate = projectDTO.StartDate,
+                EndDate = projectDTO.EndDate,
+                CreatedBy = projectDTO.CreatedBy,
+                CreatedAt = DateTime.UtcNow,
+                IsStarred = true
+            };
+
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+
+            var projectId = _context.Projects.Where(p => p.Name == projectDTO.Name && p.CreatedBy == projectDTO.CreatedBy)
+                .Select(p => p.ProjectId)
+                .FirstOrDefault();
+
+            var ownerMember = new ProjectMember
+            {
+                ProjectId = project.ProjectId,
+                UserId = projectDTO.CreatedBy,
+                RoleInProject = "Project Manager",
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _context.ProjectMembers.Add(ownerMember);
+            await _context.SaveChangesAsync();
+
+            return project;
         }
     }
 }

@@ -1,7 +1,8 @@
 import { BasicTask, TaskStats } from '@/utils/ITask'
 import { formatTaskStatus, getPriorityBadge, getPriorityLabel, getTaskStatusBadge } from '@/utils/statusUtils'
 import { AlertCircle, BarChart3, CalendarX, CheckCircle2, Clock, XCircle } from 'lucide-react'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { driver } from 'driver.js'
 
 const taskStatuses = [
     { key: 'total', color: 'from-purple-500 to-purple-600', Icon: BarChart3, textClass: 'text-purple-100', iconClass: 'text-purple-200' },
@@ -12,11 +13,21 @@ const taskStatuses = [
     { key: 'expired', color: 'from-orange-400 to-orange-500', Icon: CalendarX, textClass: 'text-orange-100', iconClass: 'text-orange-200', isSmall: true, bgColor: "bg-red-400" },
 ]
 
-export default function Overview({ 
-    mockTasks 
-}: { 
-    mockTasks: BasicTask[] 
+export default function Overview({
+    mockTasks
+}: {
+    mockTasks: BasicTask[]
 }) {
+
+    const handleNavigateWithStatus = (statusKey: string) => {
+        if (statusKey === "inProgress")
+            statusKey = "In Progress"
+        if (statusKey === "todo")
+            statusKey = "ToDo"
+        const newHash = `list?status=${encodeURIComponent(statusKey)}`
+        window.location.hash = newHash
+    }
+
     const taskStatistics = Object.values(
         mockTasks.reduce<Record<number, TaskStats>>((acc, task) => {
             const p = task.priority
@@ -47,8 +58,8 @@ export default function Overview({
     )
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
-            <div className="lg:col-span-2 space-y-4">
+        <div id="projectOverview" className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
+            <div id="taskStatistics" className="lg:col-span-2 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
 
                 {taskStatistics.map((stat) => {
@@ -92,7 +103,7 @@ export default function Overview({
                 })}
             </div>
 
-            <div className="space-y-4">
+            <div id="taskSummary" className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
                 {taskStatuses.map((status) => {
                     const StatusIcon = status.Icon
@@ -100,6 +111,7 @@ export default function Overview({
                     return (
                         <div
                             key={status.key}
+                            onClick={() => status.key !== "total" && handleNavigateWithStatus(status.key)}
                             className={`bg-gradient-to-br rounded-lg p-6 text-white ${status.color} cursor-pointer transition-transform duration-300 hover:scale-105`}
                         >
                             <div className="flex items-center justify-between mb-2">

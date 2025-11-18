@@ -88,6 +88,8 @@ export default function ProjectInterface() {
                 return <BoardView />
             case "list":
                 return <ListPage tasksNormal={tasks} projectId={Number(project_name)} />
+            case "trash":
+                return <TrashView projectId={Number(project_name)} />
             default:
                 return (
                     <div className="py-12 text-center">

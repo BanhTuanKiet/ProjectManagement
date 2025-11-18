@@ -103,3 +103,11 @@ export interface NewTaskView {
   Priority: number
   Deadline: string   
 }
+
+export interface UpdateTask {
+  Title?: string | null
+  Description?: string | null
+  Priority?: number | null
+  CreatedAt?: string | null
+  Deadline?: string | null 
+}
