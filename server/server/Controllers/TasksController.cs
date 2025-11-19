@@ -101,10 +101,10 @@ namespace server.Controllers
             }
             else
             {
-                if (deadline.Value.Date < dateTimeCurrent.Date)
+                if (deadline.Date < dateTimeCurrent.Date)
                     throw new ErrorException(400, "Deadline must be after the current date");
 
-                if (deadline.Value.Date == dateTimeCurrent.Date)
+                if (deadline.Date == dateTimeCurrent.Date)
                     status = "InProgress";
                 else
                     status = "Todo";

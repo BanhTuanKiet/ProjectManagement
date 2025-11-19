@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using YourNamespace.Models;
 
 namespace server.Models;
 
@@ -40,6 +41,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<PlanFeatures> PlanFeatures { get; set; }
     public virtual DbSet<Payments> Payments { get; set; }
     public virtual DbSet<Subscriptions> Subscriptions { get; set; }
+    public virtual DbSet<Teams> Teams { get; set; }
+    public virtual DbSet<TeamMembers> TeamMembers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +91,20 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         {
             entity.HasKey(uc => uc.Id);
         });
+
+        modelBuilder.Entity<TeamMembers>()
+            .HasKey(tm => new { tm.TeamId, tm.UserId });
+
+        modelBuilder.Entity<TeamMembers>()
+            .HasOne(tm => tm.Team)
+            .WithMany(t => t.Members)
+            .HasForeignKey(tm => tm.TeamId);
+
+        modelBuilder.Entity<TeamMembers>()
+            .HasOne(tm => tm.User)
+            .WithMany()
+            .HasForeignKey(tm => tm.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ActivityLog>(entity =>
         {
