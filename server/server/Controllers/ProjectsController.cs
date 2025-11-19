@@ -71,15 +71,10 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        // [Authorize(Policy = "MemberLimitRequirement")]
-        public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO, int projectId)
+        // [Authorize(Policy = "PMRequirement")]
+        public async Task<ActionResult> InviteMemberToProject([FromBody] UserDTO.InvitePeopleForm invitePeopleForm)
         {
-            if (invitePeopleDTO.ToEmail == null || invitePeopleDTO.ToEmail == null)
-            {
-                throw new ErrorException(400, "Email cannot be empty");
-            }
-
-            var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            int projectId = invitePeopleForm.ProjectId;
 
             Project project = await _projectsServices.FindProjectById(projectId)
                 ?? throw new ErrorException(404, "Project not found");
@@ -88,17 +83,14 @@ namespace server.Controllers
 
             List<object> results = new();
 
-            foreach (var email in invitePeopleDTO.ToEmail)
+            foreach (var person in invitePeopleForm.People)
             {
-                if (!emailRegex.IsMatch(email))
-                {
-                    results.Add(new { email, status = "Invalid email" });
-                    continue;
-                }
+                string email = person.Email;
+                string role = person.Role;
 
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-                // Check nếu đã là member
+                // Nếu user tồn tại -> check đã là member
                 if (user != null)
                 {
                     var existingMember = await _context.ProjectMembers
@@ -106,17 +98,24 @@ namespace server.Controllers
 
                     if (existingMember != null)
                     {
-                        results.Add(new { email, status = "Already a member" });
+                        results.Add(new { email, role, status = "Already a member" });
                         continue;
                     }
                 }
 
-                // Gửi email + create invitation
-                bool ok = await _projectsServices.InviteMemberToProject(projectId, email, invitePeopleDTO.RoleInProject, user?.UserName, projectName);
+                // Gửi mail & tạo lời mời
+                bool ok = await _projectsServices.InviteMemberToProject(
+                    projectId,
+                    email,
+                    role,
+                    user?.UserName,
+                    projectName
+                );
 
                 results.Add(new
                 {
                     email,
+                    role,
                     status = ok ? "Invited" : "Failed to send email"
                 });
             }

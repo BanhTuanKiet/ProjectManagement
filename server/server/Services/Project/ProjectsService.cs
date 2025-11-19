@@ -134,7 +134,6 @@ namespace server.Services.Project
             await _context.ProjectInvitations.AddAsync(invitation);
             await _context.SaveChangesAsync();
 
-
             string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
 
             string body = $@"

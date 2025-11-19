@@ -20,48 +20,44 @@ export default function InvitePeopleDialog({
     onOpenChange,
     projectId,
 }: InvitePeopleDialogProps) {
-    const [emails, setEmails] = useState<{ email: string; role: string }[]>([])
-    const [currentEmail, setCurrentEmail] = useState("")
-    const [role, setRole] = useState("Member")
+    const [invitees, setInvitees] = useState<{ email: string; role: string }[]>([])
+    const [inputEmail, setInputEmail] = useState("")
+    const [selectedRole, setSelectedRole] = useState("Member")
     const [isLoading, setIsLoading] = useState(false)
 
-    const handleAddEmail = () => {
-        if (currentEmail && !emails.some((e) => e.email === currentEmail)) {
-            setEmails([...emails, { email: currentEmail, role }])
-            setCurrentEmail("")
+    const handleAddInvitee = () => {
+        if (inputEmail && !invitees.some((e) => e.email === inputEmail)) {
+            setInvitees([...invitees, { email: inputEmail, role: selectedRole }])
+            setInputEmail("")
         }
     }
 
-    const handleRemoveEmail = (email: string) => {
-        setEmails(emails.filter((e) => e.email !== email))
+    const handleRemoveInvitee = (email: string) => {
+        setInvitees(invitees.filter((e) => e.email !== email))
     }
 
     const handleSendInvites = async () => {
-        if (emails.length === 0) return
-
+        if (invitees.length === 0) return
         setIsLoading(true)
+
         try {
-            console.log("Sending invites for project", projectId, {
-                invites: emails,
-            })
-
             const payload = {
-                toEmails: emails,
-                roleInProject: role,
-                projectId: projectId
-            };
+                projectId,
+                people: invitees.map(i => ({
+                    email: i.email,
+                    role: i.role
+                }))
+            }
 
-            const response = await axios.post(
-                `projects/inviteMember/${projectId}`,
-                payload
-            );
+            console.log("Payload gửi API:", payload)
 
+            await axios.post(`projects/inviteMember/${projectId}`, payload)
 
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
-            setEmails([])
-            setCurrentEmail("")
-            setRole("Member")
+            setInvitees([])
+            setInputEmail("")
+            setSelectedRole("Member")
             onOpenChange(false)
         } catch (error) {
             console.error("Error sending invites:", error)
@@ -81,6 +77,7 @@ export default function InvitePeopleDialog({
                 </DialogHeader>
 
                 <div className="space-y-4">
+
                     {/* Email Input Section */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Email Address</label>
@@ -88,20 +85,20 @@ export default function InvitePeopleDialog({
                             <Input
                                 type="email"
                                 placeholder="Enter email address"
-                                value={currentEmail}
-                                onChange={(e) => setCurrentEmail(e.target.value)}
+                                value={inputEmail}
+                                onChange={(e) => setInputEmail(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         e.preventDefault()
-                                        handleAddEmail()
+                                        handleAddInvitee()
                                     }
                                 }}
                             />
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={handleAddEmail}
-                                disabled={!currentEmail}
+                                onClick={handleAddInvitee}
+                                disabled={!inputEmail}
                             >
                                 Add
                             </Button>
@@ -111,7 +108,7 @@ export default function InvitePeopleDialog({
                     {/* Role Selection */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Role</label>
-                        <Select value={role} onValueChange={setRole}>
+                        <Select value={selectedRole} onValueChange={setSelectedRole}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select role" />
                             </SelectTrigger>
@@ -123,14 +120,14 @@ export default function InvitePeopleDialog({
                         </Select>
                     </div>
 
-                    {/* Email List */}
-                    {emails.length > 0 && (
+                    {/* Invitee List */}
+                    {invitees.length > 0 && (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">
-                                Invited ({emails.length})
+                                Invited ({invitees.length})
                             </label>
                             <div className="space-y-2 bg-gray-50 p-3 rounded-lg max-h-48 overflow-y-auto">
-                                {emails.map((item) => (
+                                {invitees.map((item) => (
                                     <div
                                         key={item.email}
                                         className="flex items-center justify-between bg-white p-2 rounded border border-gray-200"
@@ -144,7 +141,7 @@ export default function InvitePeopleDialog({
 
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveEmail(item.email)}
+                                            onClick={() => handleRemoveInvitee(item.email)}
                                             className="text-gray-400 hover:text-gray-600"
                                         >
                                             <X size={16} />
@@ -167,9 +164,9 @@ export default function InvitePeopleDialog({
                     </Button>
                     <Button
                         onClick={handleSendInvites}
-                        disabled={emails.length === 0 || isLoading}
+                        disabled={invitees.length === 0 || isLoading}
                     >
-                        {isLoading ? "Sending..." : `Send Invites (${emails.length})`}
+                        {isLoading ? "Sending..." : `Send Invites (${invitees.length})`}
                     </Button>
                 </div>
             </DialogContent>

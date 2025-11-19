@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 public class UserDTO
 {
     public class UserProfile
@@ -13,5 +15,19 @@ public class UserDTO
         public string Instagram { get; set; }
         public string AvatarUrl { get; set; }
         public string ImageCoverUrl { get; set; }
+    }
+
+    public class InvitePeopleForm
+    {
+        public int ProjectId { get; set; }
+        public List<People> People { get; set; }
+    }
+
+    public class People
+    {
+        [Required(ErrorMessage = "Email not be empty")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Email is invalid")]
+        public string Email { get; set; }
+        public string Role { get; set; }
     }
 }
