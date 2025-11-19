@@ -21,10 +21,10 @@ namespace server.Services.Project
             _mapper = mapper;
         }
 
-        public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId)
+        public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId)
         {
             var tasks = await _context.Tasks
-                .Where(t => t.AssigneeId == userId)
+                .Where(t => t.AssigneeId == userId && t.ProjectId == projectId)
                 .ToListAsync();
 
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);

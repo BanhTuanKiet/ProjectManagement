@@ -10,6 +10,7 @@ using server.Configs;
 using Microsoft.AspNetCore.SignalR;
 using AutoMapper;
 using server.Services.ActivityLog;
+using Microsoft.AspNetCore.Identity;
 
 namespace server.Controllers
 {
@@ -24,6 +25,9 @@ namespace server.Controllers
         private readonly IHubContext<NotificationHub> _notificationHubContext;
         private readonly IHubContext<TaskHubConfig> _taskHubContext;
         private readonly IActivityLog _activityLogServices;
+        private readonly IUsers _usersService;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IProjectMember _projectMemberService;
 
         private readonly IMapper _mapper;
 
@@ -34,6 +38,9 @@ namespace server.Controllers
             IHubContext<NotificationHub> notificationHubContext,
             IHubContext<TaskHubConfig> taskHubContext,
             IActivityLog activityLog,
+            IUsers usersService,
+            UserManager<ApplicationUser> userManager,
+            IProjectMember projectMemberService,
             IMapper mapper)
         {
             _context = context;
@@ -43,14 +50,37 @@ namespace server.Controllers
             _taskHubContext = taskHubContext;
             _activityLogServices = activityLog;
             _mapper = mapper;
+            _usersService = usersService;
+            _userManager = userManager;
+            _projectMemberService = projectMemberService;
         }
 
-        [HttpGet("user")]
-        public async Task<ActionResult> GetTaskByUserId()
+        [HttpGet("user/{projectId}")]
+        public async Task<ActionResult> GetTaskByUserId(int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var tasks = await _tasksService.GetTaskByUserId(userId);
+            var tasks = await _tasksService.GetTaskByUserId(userId, projectId);
             return Ok(tasks);
+        }
+
+        [HttpGet("userRole/{projectId}")]
+        public async Task<ActionResult> GetTaskByUserRole(int projectId)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+            if (projectMember == null)
+                return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+
+            string role = projectMember.RoleInProject;
+            var tasks = role switch
+            {
+                // "Admin" => new List<TaskDTO.BasicTask>(),
+                "Project Manager" => await _tasksService.GetBasicTasksById(projectId),
+                "Leader" => await _tasksService.GetBasicTasksById(projectId),
+                "Member" => await _tasksService.GetTaskByUserId(userId, projectId),
+            };
+            var result = new { tasks, role };
+            return Ok(result);
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -150,7 +180,7 @@ namespace server.Controllers
                 };
                 TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(addedTask);
                 NotificationDTO.NotificationBasic notificationBasic = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
-                
+
                 await _notificationsService.SaveNotification(notification);
                 await TaskHubConfig.AddedTask(_taskHubContext, projectId, userId, basicTask);
                 await NotificationHub.SendTaskAssignedNotification(_notificationHubContext, notification.UserId, notificationBasic);
