@@ -46,6 +46,7 @@ namespace server.Configs
             services.AddScoped<ISubscriptions, SubscriptionServices>();
             services.AddScoped<IFeature, FeatureServices>();
             services.AddScoped<IActivityLog, ActivityLogServices>();
+            services.AddScoped<ITeams, TeamServices>();
         }
     }
 }

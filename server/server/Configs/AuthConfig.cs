@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
 using server.Util;
+using YourNamespace.Models;
 
 namespace server.Configs
 {
@@ -67,6 +68,19 @@ namespace server.Configs
                                     RoleInProject = invitation.RoleInProject,
                                     JoinedAt = DateTime.UtcNow
                                 });
+                            }
+
+                            if (invitation.RoleInProject == "Leader")
+                            {
+                                var teamServices = context.HttpContext.RequestServices.GetRequiredService<ITeams>();
+                                Teams team = await teamServices.CreateTeam(user.Id);
+
+                                if (team == null)
+                                {
+                                    context.Response.Redirect($"http://localhost:3000/project/{invitation.ProjectId}?joined=true");
+                                    context.HandleResponse();
+                                    return;
+                                }
                             }
 
                             invitation.IsAccepted = true;

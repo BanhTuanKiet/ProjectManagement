@@ -156,6 +156,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                         <ChevronDown className="h-4 w-4 ml-auto" />
                     </Button>
                 </DropdownMenuTrigger>
+                
                 <DropdownMenuContent className="w-44">
                     <DropdownMenuItem onSelect={() => handleFilter("status", "all")}>All</DropdownMenuItem>
                     <DropdownMenuSeparator />

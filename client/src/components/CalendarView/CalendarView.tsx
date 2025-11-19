@@ -15,8 +15,8 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-react"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
 export default function CalendarView() {
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
     const { tasks, currentDate, setCurrentDate } = useTask()
