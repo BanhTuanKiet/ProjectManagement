@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useNotification } from "@/app/(context)/Notfication"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useUser } from "@/app/(context)/UserContext"
 import { useRouter } from "next/navigation"
 import ColoredAvatar from "./ColoredAvatar"
@@ -16,6 +16,10 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const [theme, setTheme] = useState(false)
     const { handleSignout, user } = useUser()
     const router = useRouter()
+
+    useEffect(() => {
+        if (!user) return 
+    }, [user])
 
     return (
         <>

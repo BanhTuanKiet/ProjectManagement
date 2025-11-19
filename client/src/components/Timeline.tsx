@@ -232,7 +232,7 @@ export default function Timeline() {
                                         >
                                             <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-slate-200 dark:border-slate-800">
                                                 <p className="text-sm text-slate-900 dark:text-white mb-1">
-                                                    {task.title}
+                                                    TASK {task.taskId} - {task.title}
                                                 </p>
 
                                                 <div className="flex items-center gap-2">

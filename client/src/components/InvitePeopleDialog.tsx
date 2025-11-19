@@ -114,7 +114,6 @@ export default function InvitePeopleDialog({
                             <SelectContent>
                                 <SelectItem value="Member">Member</SelectItem>
                                 <SelectItem value="Leader">Leader</SelectItem>
-                                <SelectItem value="Project Manager">Project Manager</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

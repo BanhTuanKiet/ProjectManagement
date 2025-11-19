@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Check, X, ArrowRight, Home, RefreshCw } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import axios from "@/config/axiosConfig"
+import { useUser } from "@/app/(context)/UserContext"
 
 interface PaymentResult {
     status: "true" | "false" | "loading"
@@ -17,6 +18,7 @@ interface PaymentResult {
 export default function PaymentResultPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const { user, setUser } = useUser()
     const [paymentResult, setPaymentResult] = useState<PaymentResult>({
         status: "loading",
         orderId: "",
@@ -65,6 +67,15 @@ export default function PaymentResultPage() {
                         planName: paymentData.Name,
                         billingPeriod: paymentData.BillingPeriod,
                         message: "Your payment has been processed successfully! Your plan is now active.",
+                    })
+                    console.log(paymentData)
+                    setUser(prev => {
+                        if (!prev) return prev
+                        return {
+                            ...prev,
+                            planId: paymentData.PlanId,
+                            planName: paymentData.Name
+                        }
                     })
                 } else {
                     setPaymentResult({
