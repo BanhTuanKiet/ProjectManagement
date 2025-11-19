@@ -59,13 +59,13 @@ export default function Summary() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                            {/* <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                                 Export
                             </button>
                             <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
                                 <Plus size={16} className="inline mr-1" />
                                 New Task
-                            </button>
+                            </button> */}
                         </div>
                     </div>
 

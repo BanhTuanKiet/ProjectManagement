@@ -147,15 +147,23 @@ export default function BacklogView() {
         const targetSprint = sprints.find(s => s.sprintId === sprintId);
         if (!targetSprint) return;
 
+        const hasValidDeadline =
+            movedTask.deadline &&
+            movedTask.deadline !== "" &&
+            movedTask.deadline !== "0001-01-01T00:00:00" &&
+            !isNaN(new Date(movedTask.deadline).getTime());
+
         // 🔹 Kiểm tra hạn task có nằm trong khoảng sprint hay không
-        if (movedTask.deadline) {
-            const deadline = new Date(movedTask.deadline);
+        if (hasValidDeadline) {
+            const deadline = new Date(movedTask.deadline as string);
             const start = new Date(targetSprint.startDate!);
             const end = new Date(targetSprint.endDate!);
 
             if (deadline < start || deadline > end) {
-                alert(`⚠️ Deadline của task (${deadline.toLocaleDateString()}) không nằm trong thời gian sprint (${start.toLocaleDateString()} → ${end.toLocaleDateString()})`);
-                return; // 🚫 Không cho kéo
+                alert(
+                    `⚠️ Deadline của task (${deadline.toLocaleDateString()}) không nằm trong thời gian sprint (${start.toLocaleDateString()} → ${end.toLocaleDateString()})`
+                );
+                return;
             }
         }
 
