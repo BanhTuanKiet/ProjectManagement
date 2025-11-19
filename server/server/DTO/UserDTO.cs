@@ -19,7 +19,6 @@ public class UserDTO
 
     public class InvitePeopleForm
     {
-        public int ProjectId { get; set; }
         public List<People> People { get; set; }
     }
 

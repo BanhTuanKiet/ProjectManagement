@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
 using server.Util;
@@ -27,51 +27,54 @@ namespace server.Configs
                 {
                     var email = context.Principal.FindFirstValue(ClaimTypes.Email);
                     var name = context.Principal.FindFirstValue(ClaimTypes.Name);
-                    context.Properties.Items.TryGetValue("email", out var token);
+
+                    Console.WriteLine("GOOGLE EMAIL: " + email);
+                    Console.WriteLine("GOOGLE NAME: " + name);
 
                     var userService = context.HttpContext.RequestServices.GetRequiredService<IUsers>();
                     var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                    var db = context.HttpContext.RequestServices.GetRequiredService<ProjectManagementContext>();
 
                     var user = await userService.FindOrCreateUserByEmailAsync(email, name);
                     var roles = await userManager.GetRolesAsync(user);
 
+                    // Tạo token
                     var accessToken = JwtUtils.GenerateToken(user, roles, 1, configuration);
                     var refreshToken = JwtUtils.GenerateToken(user, roles, 24, configuration);
 
+                    // Lưu cookie
                     CookieUtils.SetCookie(context.Response, "token", accessToken, 24);
                     await userService.SaveRefreshToken(user.Id, refreshToken);
 
+                    // Kiểm tra invitation (nếu có)
+                    context.Properties.Items.TryGetValue("email", out var token);
                     if (!string.IsNullOrEmpty(token))
                     {
-                        var db = context.HttpContext.RequestServices.GetRequiredService<ProjectManagementContext>();
-                        if (token != null)
+                        var invitation = await db.ProjectInvitations
+                            .FirstOrDefaultAsync(i => i.Email == token && i.IsAccepted == false);
+
+                        if (invitation != null && invitation.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
                         {
-                            var invitation = await db.ProjectInvitations
-                                .FirstOrDefaultAsync(i => i.Email == token && i.IsAccepted == false);
+                            var existed = await db.ProjectMembers
+                                .AnyAsync(pm => pm.ProjectId == invitation.ProjectId && pm.UserId == user.Id);
 
-                            if (invitation != null && 
-                                invitation.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+                            if (!existed)
                             {
-                                var existed = await db.ProjectMembers
-                                    .AnyAsync(pm => pm.ProjectId == invitation.ProjectId && pm.UserId == user.Id);
-                                if (!existed)
+                                db.ProjectMembers.Add(new ProjectMember
                                 {
-                                    db.ProjectMembers.Add(new ProjectMember
-                                    {
-                                        ProjectId = invitation.ProjectId,
-                                        UserId = user.Id,
-                                        RoleInProject = invitation.RoleInProject,
-                                        JoinedAt = DateTime.UtcNow
-                                    });
-                                }
-
-                                invitation.IsAccepted = true;
-                                await db.SaveChangesAsync();
-
-                                context.Response.Redirect($"http://localhost:3000/project/{invitation.ProjectId}?joined=true");
-                                context.HandleResponse();
-                                return;
+                                    ProjectId = invitation.ProjectId,
+                                    UserId = user.Id,
+                                    RoleInProject = invitation.RoleInProject,
+                                    JoinedAt = DateTime.UtcNow
+                                });
                             }
+
+                            invitation.IsAccepted = true;
+                            await db.SaveChangesAsync();
+
+                            context.Response.Redirect($"http://localhost:3000/project/{invitation.ProjectId}?joined=true");
+                            context.HandleResponse();
+                            return;
                         }
                     }
 

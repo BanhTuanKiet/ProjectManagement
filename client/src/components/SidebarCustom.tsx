@@ -91,7 +91,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
 
-                            <SidebarMenuItem>
+                            {/* <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
                                     className={`w-full rounded-xl px-4 py-3 transition-all duration-200 ${handleActiveTab("plans")}`}
@@ -107,7 +107,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                                         </Badge>
                                     </Link>
                                 </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            </SidebarMenuItem> */}
 
                             <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-4" />
 
@@ -192,7 +192,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                             <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent my-4" />
 
                             {/* Teams Section */}
-                            <SidebarMenuItem id="teams">
+                            {/* <SidebarMenuItem id="teams">
                                 <SidebarMenuButton asChild className="w-full justify-between rounded-xl px-4 py-3 hover:bg-accent/60 transition-all duration-200 group">
                                     <a href="#" className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-3">
@@ -210,7 +210,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                                         </Button>
                                     </a>
                                 </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            </SidebarMenuItem> */}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>

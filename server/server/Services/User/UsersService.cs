@@ -6,6 +6,7 @@ using server.Models;
 using System.Text.RegularExpressions;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using server.Configs;
 
 namespace server.Services.User
 {
@@ -29,36 +30,53 @@ namespace server.Services.User
         }
         public async Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name)
         {
+            if (string.IsNullOrEmpty(email))
+                throw new ErrorException(400, "Email is required");
+
             var user = await _context.ApplicationUsers
                 .Include(u => u.Subscription)
                 .ThenInclude(s => s.Plan)
                 .FirstOrDefaultAsync(u => u.Email == email);
-            // string formatedName = name.Replace(" ", "").ToLower();
-            string formattedName = Regex.Replace(name ?? email.Split('@')[0], @"[^a-zA-Z0-9]", "").ToLower();
+
+            // Tạo UserName hợp lệ, fallback nếu trùng
+            string baseUserName = Regex.Replace(name ?? email.Split('@')[0], @"[^a-zA-Z0-9]", "").ToLower();
+            string finalUserName = baseUserName;
+            int suffix = 1;
+
+            while (await _userManager.FindByNameAsync(finalUserName) != null)
+            {
+                finalUserName = $"{baseUserName}{suffix}";
+                suffix++;
+            }
 
             if (user == null)
             {
                 user = new ApplicationUser
                 {
                     Email = email,
-                    UserName = formattedName
+                    UserName = finalUserName
                 };
 
                 var result = await _userManager.CreateAsync(user);
 
                 if (!result.Succeeded)
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        Console.WriteLine($"Error: {error.Code} - {error.Description}");
-                    }
+                    var messages = string.Join(" | ", result.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                    throw new ErrorException(400, "Failed to create user: " + messages);
                 }
 
-                await _userManager.AddToRoleAsync(user, "User");
+                // Thêm role mặc định "User"
+                var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                if (!roleResult.Succeeded)
+                {
+                    var messages = string.Join(" | ", roleResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                    throw new ErrorException(400, "Failed to add role: " + messages);
+                }
             }
+
             return user;
         }
-
+        
         public async Task<string> GetRefreshToken(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

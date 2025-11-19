@@ -42,7 +42,6 @@ export default function InvitePeopleDialog({
 
         try {
             const payload = {
-                projectId,
                 people: invitees.map(i => ({
                     email: i.email,
                     role: i.role
