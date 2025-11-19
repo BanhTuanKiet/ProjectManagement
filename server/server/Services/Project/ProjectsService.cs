@@ -109,12 +109,12 @@ namespace server.Services.Project
             return project.IsStarred;
         }
 
-        public async Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName)
+        public async Task<bool> InviteMemberToProject(int projectId, string email, string RoleInProject, string inviterName, string projectName)
         {
             var token = Guid.NewGuid();
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             var existingInvitation = await _context.ProjectInvitations
-                .Where(i => i.Email == invitePeopleDTO.ToEmail && i.ProjectId == invitePeopleDTO.ProjectId && i.IsAccepted == false)
+                .Where(i => i.Email == email && i.ProjectId == projectId && i.IsAccepted == false)
                 .ToListAsync();
 
             if (existingInvitation.Any())
@@ -124,9 +124,9 @@ namespace server.Services.Project
             }
             var invitation = new ProjectInvitations
             {
-                ProjectId = invitePeopleDTO.ProjectId,
-                Email = invitePeopleDTO.ToEmail,
-                RoleInProject = invitePeopleDTO.RoleInProject,
+                ProjectId = projectId,
+                Email = email,
+                RoleInProject = RoleInProject,
                 Token = token,
                 IsAccepted = false,
                 InvitedAt = DateTime.UtcNow
@@ -163,7 +163,7 @@ namespace server.Services.Project
                     </div>
                 </div>";
 
-            await EmailUtils.SendEmailAsync(_configuration, invitePeopleDTO.ToEmail, subject, body);
+            await EmailUtils.SendEmailAsync(_configuration, email, subject, body);
             return true;
         }
 

@@ -10,7 +10,6 @@ using server.Services.ActivityLog;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 
-
 namespace server.Controllers
 {
     [Route("[controller]")]
@@ -75,40 +74,54 @@ namespace server.Controllers
         // [Authorize(Policy = "MemberLimitRequirement")]
         public async Task<ActionResult> InviteMemberToProject([FromBody] InvitePeopleForm invitePeopleDTO, int projectId)
         {
-            if (invitePeopleDTO.ToEmail == "" || invitePeopleDTO.ToEmail == null)
+            if (invitePeopleDTO.ToEmail == null || invitePeopleDTO.ToEmail == null)
             {
                 throw new ErrorException(400, "Email cannot be empty");
             }
-            else
-            {
-                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-                if (!emailRegex.IsMatch(invitePeopleDTO.ToEmail))
-                {
-                    throw new ErrorException(400, "Invalid email");
-                }
-            }
 
-            Project project = await _projectsServices.FindProjectById(invitePeopleDTO.ProjectId) ?? throw new ErrorException(500, "Project not found");
+            var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+            Project project = await _projectsServices.FindProjectById(projectId)
+                ?? throw new ErrorException(404, "Project not found");
+
             string projectName = project.Name;
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitePeopleDTO.ToEmail);
-            if (user != null)
-            {
-                var existingMember = await _context.ProjectMembers
-                    .FirstOrDefaultAsync(pm => pm.ProjectId == invitePeopleDTO.ProjectId && pm.UserId == user.Id);
+            List<object> results = new();
 
-                if (existingMember != null)
-                    throw new ErrorException(400, "The account is already a member of the project.");
+            foreach (var email in invitePeopleDTO.ToEmail)
+            {
+                if (!emailRegex.IsMatch(email))
+                {
+                    results.Add(new { email, status = "Invalid email" });
+                    continue;
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+                // Check nếu đã là member
+                if (user != null)
+                {
+                    var existingMember = await _context.ProjectMembers
+                        .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == user.Id);
+
+                    if (existingMember != null)
+                    {
+                        results.Add(new { email, status = "Already a member" });
+                        continue;
+                    }
+                }
+
+                // Gửi email + create invitation
+                bool ok = await _projectsServices.InviteMemberToProject(projectId, email, invitePeopleDTO.RoleInProject, user?.UserName, projectName);
+
+                results.Add(new
+                {
+                    email,
+                    status = ok ? "Invited" : "Failed to send email"
+                });
             }
 
-            bool isSuccess = await _projectsServices.InviteMemberToProject(invitePeopleDTO, user.UserName, projectName);
-
-            if (!isSuccess)
-            {
-                throw new ErrorException(500, $"Cannot send email to invite member!");
-            }
-
-            return Ok(new { message = "Invited member successfully!" });
+            return Ok(new { results });
         }
 
         // [Authorize(Policy = "PMOrLeaderRequirement")]
@@ -116,6 +129,7 @@ namespace server.Controllers
         public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectDTO.UpdateProject updatedData)
         {
             var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
             if (project == null)
                 return NotFound("Project not found");
 

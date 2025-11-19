@@ -12,7 +12,7 @@ namespace server.Models
         Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId);
         Task<bool> ChangeStatusIsStarred(int projectId, bool isStarred);
         Task<bool> GetStatusIsStarred(int projectId);
-        Task<bool> InviteMemberToProject(InvitePeopleForm invitePeopleDTO, string inviterName, string projectName);
+        Task<bool> InviteMemberToProject(int projectId, string email, string RoleInProject, string inviterName, string projectName);
         Task<Models.Project> UpdateProject(int projectId, ProjectDTO.UpdateProject update);
         Task<int> CountProject(string ownerId);
         Task<Project> CreateProject(ProjectDTO.CreateProject projectDTO);

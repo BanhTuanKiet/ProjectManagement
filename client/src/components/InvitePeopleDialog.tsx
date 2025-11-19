@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from 'lucide-react'
+import axios from "@/config/axiosConfig";
+
 
 interface InvitePeopleDialogProps {
     open: boolean
@@ -42,6 +44,18 @@ export default function InvitePeopleDialog({
             console.log("Sending invites for project", projectId, {
                 invites: emails,
             })
+
+            const payload = {
+                toEmails: emails,
+                roleInProject: role,
+                projectId: projectId
+            };
+
+            const response = await axios.post(
+                `projects/inviteMember/${projectId}`,
+                payload
+            );
+
 
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
