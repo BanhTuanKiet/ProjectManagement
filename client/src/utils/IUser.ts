@@ -42,3 +42,8 @@ export interface UserProfile {
     imageCoverUrl: string
     avatarUrl: string
 }
+
+export interface InviteUser {
+  status: string
+  email: string
+}

@@ -134,33 +134,69 @@ namespace server.Services.Project
             await _context.ProjectInvitations.AddAsync(invitation);
             await _context.SaveChangesAsync();
 
-            string subject = $"[JIRA]({inviterName}) invited you to ({projectName})";
+            string subject = $"[JIRA] You've been invited to join project \"{projectName}\"";
 
             string body = $@"
-                <div style='font-family:Arial,sans-serif; text-align:center;'>
-                    <img src='https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png' width='40' style='margin-bottom:20px;'/>
-                    <h2>{inviterName} invited you to <b>{projectName}</b></h2>
-                    <a href='http://localhost:3000/login?email={invitation.Email}'  
-                    style='background:#0052CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block; margin:20px 0;'>
-                        Join the Project
-                    </a>
-                    <hr style='margin:30px 0;'/>
-                    <h3>Use your app to...</h3>
-                    <div style='display:flex; justify-content:center; gap:20px;'>
-                        <div style='max-width:200px;'>
-                            <img src='https://cdn-icons-png.flaticon.com/512/1828/1828961.png' width='50'/>
-                            <p>Collaborate, align, and deliver work, all in <b>one place</b></p>
+            <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background-color:#f4f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;"">
+            <tr>
+                <td align=""center"" style=""padding:40px 20px;"">
+                <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);"">
+                    
+                    <!-- Header -->
+                    <tr>
+                    <td style=""background:#0052CC; padding:24px 32px; text-align:center;"">
+                        <h1 style=""color:#ffffff; margin:0; font-size:24px; font-weight:600; letter-spacing:-0.5px;"">
+                        Project Invitation
+                        </h1>
+                    </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                    <td style=""padding:40px 32px; color:#172b4d; font-size:16px; line-height:1.6;"">
+                        <p style=""margin:0 0 20px; font-size:18px;"">
+                        Hello {user.UserName},
+                        </p>
+
+                        <p style=""margin:0 0 24px;"">
+                        <strong>{inviterName}</strong> has invited you to collaborate on the project
+                        <strong style=""color:#0052cc;"">{projectName}</strong> in JIRA.
+                        </p>
+
+                        <p style=""margin:0 0 32px;"">
+                        Click the button below to accept the invitation and access the project:
+                        </p>
+
+                        <div style=""text-align:center;"">
+                        <a href=""http://localhost:3000/login?email={Uri.EscapeDataString(invitation.Email)}""
+                            style=""background:#0052cc; color:#ffffff; font-weight:600; font-size:16px; padding:14px 32px; border-radius:6px; text-decoration:none; display:inline-block; box-shadow:0 4px 8px rgba(0,82,204,0.25);"">
+                            Accept Invitation
+                        </a>
                         </div>
-                        <div style='max-width:200px;'>
-                            <img src='https://cdn-icons-png.flaticon.com/512/1828/1828859.png' width='50'/>
-                            <p>View work your way using the list, board, calendar and timeline views</p>
-                        </div>
-                        <div style='max-width:200px;'>
-                            <img src='https://cdn-icons-png.flaticon.com/512/1828/1828940.png' width='50'/>
-                            <p>Collect and send work to other teams using <b>forms</b></p>
-                        </div>
-                    </div>
-                </div>";
+
+                        <hr style=""border:none; border-top:1px solid #dfe1e6; margin:40px 0;"" />
+
+                        <p style=""margin:0; font-size:14px; color:#505f79;"">
+                        If you don't have a JIRA account yet, one will be created automatically when you accept this invitation.
+                        </p>
+
+                        <p style=""margin:20px 0 0; font-size:14px; color:#505f79;"">
+                        This invitation will expire in 7 days.
+                        </p>
+                    </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                    <td style=""background:#f4f5f7; padding:20px 32px; text-align:center; color:#6b778c; font-size:12px;"">
+                        © {DateTime.Now:yyyy} JIRA • This is an automated message, please do not reply directly to this email.
+                    </td>
+                    </tr>
+
+                </table>
+                </td>
+            </tr>
+            </table>";
 
             await EmailUtils.SendEmailAsync(_configuration, email, subject, body);
             return true;

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
 using server.Configs;
 using server.DTO;
@@ -30,8 +31,13 @@ namespace server.Controllers
         // [Authorize("PMRequirement")]
         public async Task<ActionResult> AddMembers([FromBody] List<string> memberIds, int projectId, string learderId)
         {
-            List<String> existingMemberIds = await _teamServices.AddMembers(learderId, memberIds);
-            return Ok(existingMemberIds);
+            List<String> existingMemberIds = await _teamServices.AddMembers(learderId, memberIds, projectId);
+            return Ok(new
+            {
+                message = "Add team successfully!",
+                existingMemberIds
+            });
+
         }
 
         [HttpGet("members/{projectId}/{leaderId}")]
