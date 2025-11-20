@@ -229,6 +229,7 @@ namespace server.Services.Project
         public async Task<Models.Task?> UpdateTask(int taskId, TaskDTO.UpdateTask updatedData)
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+
             if (task == null)
                 return null;
 
@@ -628,6 +629,17 @@ namespace server.Services.Project
             List<TaskDTO.BasicTask> Taskavailable = _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
             Console.WriteLine("Tasks found AAAAAAAAAAAAAAA: " + Taskavailable);
             return Taskavailable;
+        }
+
+        public async Task<List<TaskDTO.BasicTask>> GetTasksByUserList(int projectId, List<string> userIds)
+        {
+            var tasks = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .Where(t => t.ProjectId == projectId && userIds.Contains(t.AssigneeId))
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
     }
 }

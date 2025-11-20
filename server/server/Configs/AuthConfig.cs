@@ -69,6 +69,19 @@ namespace server.Configs
                                 });
                             }
 
+                            if (invitation.RoleInProject == "Leader")
+                            {
+                                var teamServices = context.HttpContext.RequestServices.GetRequiredService<ITeams>();
+                                Teams team = await teamServices.CreateTeam(user.Id);
+
+                                if (team == null)
+                                {
+                                    context.Response.Redirect($"http://localhost:3000/project/{invitation.ProjectId}?joined=true");
+                                    context.HandleResponse();
+                                    return;
+                                }
+                            }
+
                             invitation.IsAccepted = true;
                             await db.SaveChangesAsync();
 

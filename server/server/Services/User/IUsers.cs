@@ -1,4 +1,6 @@
-﻿namespace server.Models
+﻿using server.DTO;
+
+namespace server.Models
 {
     public interface IUsers
     {
@@ -12,5 +14,7 @@
         Task<ApplicationUser> GetUserById(string userId);
         Task<UserDTO.UserProfile> UpdateUser(UserDTO.UserProfile user, string userId);
         Task<UserDTO.UserProfile> UpdateUserImage(IFormFile file, string userId, string type);
+        // Task<List<ProjectDTO.ProjectMembers>> GetMembersTeam(string leaderId);
+        Task<string> GetProjectRole(int projectId, string userId);
     }
 }

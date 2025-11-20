@@ -26,6 +26,7 @@ export interface User {
     email: string
     planId: string
     planName: string
+    roles: string[] 
 }
 
 export interface UserProfile {

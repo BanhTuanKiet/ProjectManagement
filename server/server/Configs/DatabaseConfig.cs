@@ -48,6 +48,7 @@ namespace server.Configs
             services.AddScoped<IFeature, FeatureServices>();
             services.AddScoped<IActivityLog, ActivityLogServices>();
             services.AddScoped<IProjectMember, ProjectMemberServices>();
+            services.AddScoped<ITeams, TeamServices>();
         }
     }
 }

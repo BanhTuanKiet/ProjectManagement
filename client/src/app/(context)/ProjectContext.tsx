@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 
 type ProjectContextType = {
     project_name: string
+    projectRole: string
     projects: ProjectBasic[]
     setProjects: React.Dispatch<React.SetStateAction<ProjectBasic[]>>
     members: Member[] | undefined
@@ -16,6 +17,7 @@ type ProjectContextType = {
 
 const ProjectContext = createContext<ProjectContextType>({
     project_name: "",
+    projectRole: "",
     projects: [],
     setProjects: () => { },
     members: undefined,
@@ -25,12 +27,27 @@ const ProjectContext = createContext<ProjectContextType>({
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
     const [projects, setProjects] = useState<ProjectBasic[]>([])
     const [members, setMembers] = useState<Member[]>()
+    const [projectRole, setProjectRole] = useState<string>("")
     const { project_name } = useParams<{ project_name: string }>()
 
     useEffect(() => {
         if (project_name) {
             localStorage.setItem("projectId", JSON.stringify(project_name))
         }
+    }, [project_name])
+
+    useEffect(() => {
+        if (!project_name) return
+        const fetchProjectRole = async () => {
+            try {
+                const reponse = await axios.get(`/users/role/${project_name}`)
+                setProjectRole(reponse.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchProjectRole()
     }, [project_name])
 
     useEffect(() => {
@@ -61,6 +78,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         <ProjectContext.Provider
             value={{
                 project_name,
+                projectRole,
                 projects,
                 setProjects,
                 members,

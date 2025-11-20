@@ -18,9 +18,24 @@ interface BasicTask {
     deadline?: string
 }
 
+interface TeamTaskGroup {
+    teamId: number
+    teamName: string
+    leader: {
+        leaderId: string
+        leaderName: string
+    }
+    members: {
+        userId: string
+        userName: string
+    }[]
+    tasks: BasicTask[]
+}
+
 interface ApiResponse {
     tasks: BasicTask[]
     role: string // "Member" | "Leader" | "Project Manager" | "Admin"
+    teams?: TeamTaskGroup[]
 }
 
 interface ChartViewProps {
@@ -63,7 +78,8 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
     const [priorityFilter, setPriorityFilter] = useState<string>("ALL")
     const [startDateFilter, setStartDateFilter] = useState<string>("")
     const [endDateFilter, setEndDateFilter] = useState<string>("")
-
+    const [teams, setTeams] = useState<TeamTaskGroup[]>([])
+    const [selectedTeamId, setSelectedTeamId] = useState<number | "ALL">("ALL")
 
     useEffect(() => {
         if (!project_name) return
@@ -74,6 +90,11 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                 console.log("Chart Data Response:", res.data)
                 setTasks(res.data.tasks || [])
                 setRole(res.data.role)
+
+                if (res.data.teams) {
+                    setTeams(res.data.teams)
+                }
+
             } catch (error) {
                 console.error("Error fetching chart data:", error)
             } finally {
@@ -86,6 +107,23 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
 
     // Lấy danh sách Unique Users cho Dropdown (Chỉ dành cho Leader/PM)
     const uniqueMembers = useMemo(() => {
+        if (role === "Project Manager" && teams.length > 0) {
+            const memberMap = new Map<string, string>()
+
+            teams.forEach(team => {
+                // Leader
+                memberMap.set(team.leader.leaderId, team.leader.leaderName)
+
+                // Members
+                team.members.forEach(mem => {
+                    memberMap.set(mem.userId, mem.userName)
+                })
+            })
+
+            return Array.from(memberMap.entries()).map(([id, name]) => ({ id, name }))
+        }
+
+        // Leader case (dùng tasks)
         const members = new Map<string, string>()
         tasks.forEach(t => {
             if (t.assigneeId && t.assignee) {
@@ -93,11 +131,33 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
             }
         })
         return Array.from(members.entries()).map(([id, name]) => ({ id, name }))
-    }, [tasks])
+    }, [role, teams, tasks])
+
 
     // Lọc task dựa trên User đang chọn (hoặc lấy hết nếu role là Member hoặc chọn ALL)
     const filteredTasks = useMemo(() => {
         let result = [...tasks]
+
+        // Nếu PM và có chọn member
+        // ========== FILTER BY TEAM (For PM) ==========
+        if (role == "Project Manager" && selectedTeamId !== "ALL") {
+
+            const selectedTeam = teams.find(t => t.teamId === selectedTeamId)
+
+            if (selectedTeam) {
+                const teamMemberIds = [
+                    selectedTeam.leader.leaderId,
+                    ...selectedTeam.members.map(m => m.userId)
+                ]
+
+                result = result.filter(t => teamMemberIds.includes(t.assigneeId!))
+            }
+        }
+
+        // Nếu Leader và có chọn member
+        if (role === "Leader" && selectedMemberId !== "ALL") {
+            result = result.filter(t => t.assigneeId === selectedMemberId)
+        }
 
         // Filter theo member
         if (role !== "Member" && selectedMemberId !== "ALL") {
@@ -187,6 +247,23 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                 </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+                {role === "Project Manager" && (
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600 font-medium">Team:</label>
+                        <select
+                            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={selectedTeamId}
+                            onChange={(e) => setSelectedTeamId(e.target.value === "ALL" ? "ALL" : Number(e.target.value))}
+                        >
+                            <option value="ALL">All Teams</option>
+                            {teams.map(team => (
+                                <option value={team.teamId} key={team.teamId}>
+                                    {team.teamName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
                 {/* Dropdown chỉ hiện nếu là Leader/PM và có thành viên */}
                 {isManager && uniqueMembers.length > 0 && (
                     <div className="flex items-center gap-2">
@@ -331,11 +408,12 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
             </div>
 
             {/* (Optional) Table view chi tiết nếu cần */}
-            {isManager && (
+            {/* {isManager && (
                 <div className="mt-4 text-sm text-gray-500 text-right">
                     * Showing {filteredTasks.length} tasks for {selectedMemberId === "ALL" ? "all members" : "selected member"}.
                 </div>
-            )}
+            )} */}
+
         </div>
     )
 }

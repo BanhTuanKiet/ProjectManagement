@@ -31,6 +31,7 @@ import Summary from '@/components/Summary'
 import { useHash } from '@/hooks/useHash'
 import Timeline from '@/components/Timeline'
 import MemberList from '@/components/Summary/MemberList'
+import { useUser } from '@/app/(context)/UserContext'
 
 interface NavigationTab {
     id: string
@@ -54,8 +55,9 @@ const navigationTabs: NavigationTab[] = [
 
 export default function ProjectInterface() {
     const [tasks, setTasks] = useState<BasicTask[]>([])
-    const { project_name, projects } = useProject()
+    const { project_name, projects, projectRole } = useProject()
     const { hash: activeTab, setHash: setActiveTab } = useHash("")
+    const { user } = useUser()
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -95,8 +97,10 @@ export default function ProjectInterface() {
             case "trash":
                 return <TrashView projectId={Number(project_name)} />
             case "member":
-                if (project)
-                return <MemberList project={project} />
+                if (project && projectRole === "Project Manager") {
+                    return <MemberList project={project} />
+                }
+                break
             default:
                 return (
                     <div className="py-12 text-center">
@@ -150,19 +154,24 @@ export default function ProjectInterface() {
 
                 <div className="px-6 bg-white border-t border-gray-200">
                     <nav className="flex space-x-8 border-b border-gray-200 overflow-x-auto">
-                        {navigationTabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id === "" ? "" : tab.id)}
-                                className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
-                            >
-                                {tab.icon}
-                                <span>{tab.label}</span>
-                            </button>
-                        ))}
+                        {navigationTabs.map((tab) => {
+                            if (tab.id === 'member' && projectRole !== "Project Manager") {
+                                return null
+                            }
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id === "" ? "" : tab.id)}
+                                    className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                                        ? 'border-blue-500 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        }`}
+                                >
+                                    {tab.icon}
+                                    <span>{tab.label}</span>
+                                </button>
+                            )
+                        })}
                         <button className="flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded">
                             <Plus className="w-4 h-4" />
                         </button>

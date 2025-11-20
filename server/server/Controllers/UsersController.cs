@@ -8,6 +8,7 @@ using server.Configs;
 using server.Util;
 using server.DTO;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
 
 namespace server.Controllers
 {
@@ -60,6 +61,14 @@ namespace server.Controllers
             if (token == null) return Ok();
             TokenDTO.DecodedToken decodedToken = JwtUtils.DecodeToken(token);
             return Ok(decodedToken);
+        }
+
+        [HttpGet("role/{projectId}")]
+        public async Task<ActionResult> GetProjectRole(int projectId)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string role = await _userServices.GetProjectRole(projectId, userId);
+            return Ok(role);
         }
 
         [HttpGet("signout")]

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
-using server.Models;
 
-namespace YourNamespace.Models
+namespace server.Models
 {
     public class Teams
     {
@@ -31,18 +30,10 @@ namespace YourNamespace.Models
 
     public class TeamMembers
     {
-        [Key, Column(Order = 0)]
-        [ForeignKey("Team")]
         public Guid TeamId { get; set; }
-
         public Teams Team { get; set; } = null!;
-
-        [Key, Column(Order = 1)]
-        [ForeignKey("User")]
         public string UserId { get; set; } = null!;
-
         public virtual ApplicationUser User { get; set; } = null!;
-
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
     }
 }

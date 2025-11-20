@@ -22,5 +22,6 @@ namespace server.Services.Task
         Task<IEnumerable<object>> FilterDeletedTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> FilterTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> SearchTasks(int projectId, string keyword);
+        Task<List<TaskDTO.BasicTask>> GetTasksByUserList(int projectId, List<string> userIds);
     }
 }

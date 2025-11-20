@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using server.Configs;
+using server.DTO;
 
 namespace server.Services.User
 {
@@ -193,6 +194,14 @@ namespace server.Services.User
 
             await _userManager.UpdateAsync(user);
             return _mapper.Map<UserDTO.UserProfile>(user);
+        }
+
+        public async Task<string> GetProjectRole(int projectId, string userId)
+        {
+            var member = await _context.ProjectMembers
+                .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+
+            return member.RoleInProject;
         }
     }
 }

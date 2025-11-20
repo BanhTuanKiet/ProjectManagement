@@ -50,7 +50,7 @@ export default function InvitePeopleDialog({
 
             console.log("Payload gửi API:", payload)
 
-            await axios.post(`projects/inviteMember/${projectId}`, payload)
+            const response = await axios.post(`projects/inviteMember/${projectId}`, payload)
 
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
