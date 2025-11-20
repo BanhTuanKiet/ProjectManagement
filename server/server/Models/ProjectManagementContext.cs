@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using YourNamespace.Models;
 
 namespace server.Models;
 

@@ -11,6 +11,7 @@ using server.Services.Backlog;
 using server.Services.ActivityLog;
 using server.Services;
 using server.Services.File;
+using server.Services.ProjectMemberService;
 
 namespace server.Configs
 {
@@ -46,6 +47,7 @@ namespace server.Configs
             services.AddScoped<ISubscriptions, SubscriptionServices>();
             services.AddScoped<IFeature, FeatureServices>();
             services.AddScoped<IActivityLog, ActivityLogServices>();
+            services.AddScoped<IProjectMember, ProjectMemberServices>();
             services.AddScoped<ITeams, TeamServices>();
         }
     }

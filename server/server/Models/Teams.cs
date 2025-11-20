@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
-using server.Models;
 
-namespace YourNamespace.Models
+namespace server.Models
 {
     public class Teams
     {

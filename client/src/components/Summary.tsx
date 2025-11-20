@@ -8,6 +8,7 @@ import { formatDate } from "@/utils/dateUtils"
 import { useTask } from "@/app/(context)/TaskContext"
 import type { BasicTask } from "@/utils/ITask"
 import Overview from "./Summary/Overview"
+import ChartView from "./Summary/ChartView"
 import { useHash } from "@/hooks/useHash"
 import MemberList from "./MemberList"
 import SettingsPopup from "./SettingsPopup"
@@ -90,6 +91,11 @@ export default function Summary() {
                 <div className="border-b border-gray-200 bg-white rounded-t-lg">
                     <Overview mockTasks={mockTasks} />
                 </div>
+                {project_name && (
+                    <div className="border-b border-gray-200 bg-white rounded-b-lg">
+                        <ChartView projectId={project_name} />
+                    </div>
+                )}
             </div>
         </div>
     )

@@ -1,5 +1,4 @@
 using server.DTO;
-using YourNamespace.Models;
 
 namespace server.Models
 {
@@ -8,5 +7,6 @@ namespace server.Models
         Task<Teams> CreateTeam(string LeaderId);
         Task<List<String>> AddMembers(string leaderId, List<string> memberIds);
         Task<List<string>> GetTeamMembers(string leaderId);
+        Task<List<Teams>> GetAllTeamsInProject(int projectId);
     }
 }

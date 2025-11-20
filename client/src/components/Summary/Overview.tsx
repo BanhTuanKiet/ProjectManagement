@@ -270,7 +270,7 @@ export default function Overview({
                 })}
             </div>
 
-            <div className="lg:col-span-3 mt-10">
+            {/* <div className="lg:col-span-3 mt-10">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">User Task Breakdown</h2>
 
                 <div className="bg-white border p-4 rounded-lg w-full max-w-sm mb-4">
@@ -454,7 +454,7 @@ export default function Overview({
                         </div>
                     );
                 })()}
-            </div>
+            </div> */}
         </div>
     )
 }
