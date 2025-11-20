@@ -48,8 +48,8 @@ const navigationTabs: NavigationTab[] = [
     { id: 'board', label: 'Board', icon: <Square className="w-4 h-4" /> },
     { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
     { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
-    { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },
-    { id: 'archived', label: 'Archived work items', icon: <Archive className="w-4 h-4" /> },
+    // { id: 'forms', label: 'Forms', icon: <FileText className="w-4 h-4" /> },
+    // { id: 'archived', label: 'Archived work items', icon: <Archive className="w-4 h-4" /> },
     { id: 'trash', label: 'Trash', icon: <Trash className="w-4 h-4" /> },
 ]
 
@@ -62,14 +62,9 @@ export default function ProjectInterface() {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const response = await axios.get(`/tasks/${project_name}`, {
-                    params: {
-                        month: null,
-                        year: null,
-                        filters: null,
-                    },
-                })
-                setTasks(response.data)
+                const response = await axios.get(`/tasks/userRole/${project_name}`)
+                console.log("TASKS FETCHED: ", response.data)
+                setTasks(response.data.tasks)
             } catch (error) {
                 console.log(error)
             }

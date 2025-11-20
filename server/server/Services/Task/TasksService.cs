@@ -127,10 +127,10 @@ namespace server.Services.Project
 
         //     return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         // }
-        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates)
+        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId)
         {
             var task = await _context.Tasks
-                .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+                .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId && t.AssigneeId == userId);
 
             if (task == null) return null;
 

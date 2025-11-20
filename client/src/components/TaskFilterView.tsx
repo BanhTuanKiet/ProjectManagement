@@ -43,7 +43,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
         status: "all",
         priority: "0"
     })
-    const { members } = useProject()
+    const { members, projectRole } = useProject()
 
     useEffect(() => {
         if (!tasks) {
@@ -111,32 +111,32 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                     className="pl-10 w-64"
                 />
             </div>
-
-            <Select
-                value={filters.assignee}
-                onValueChange={(val) => handleFilter("assignee", val)}
-            >
-                <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Assignees</SelectItem>
-                    {members?.map(member => (
-                        <SelectItem key={member.userId} value={member.userId}>
-                            <div className="flex items-center gap-2">
-                                <ColoredAvatar id={member.userId} name={member.name} />
-                                <span>{capitalizeFirstLetter(member.name)}</span>
-                                {member.role && (
-                                    <span className={getRoleBadge(member.role)}>
-                                        {member.role}
-                                    </span>
-                                )}
-                            </div>
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-
+            {projectRole !== "Member" && (
+                <Select
+                    value={filters.assignee}
+                    onValueChange={(val) => handleFilter("assignee", val)}
+                >
+                    <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Assignee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Assignees</SelectItem>
+                        {members?.map(member => (
+                            <SelectItem key={member.userId} value={member.userId}>
+                                <div className="flex items-center gap-2">
+                                    <ColoredAvatar id={member.userId} name={member.name} />
+                                    <span>{capitalizeFirstLetter(member.name)}</span>
+                                    {member.role && (
+                                        <span className={getRoleBadge(member.role)}>
+                                            {member.role}
+                                        </span>
+                                    )}
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            )}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2 w-40 justify-start">
@@ -156,7 +156,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                         <ChevronDown className="h-4 w-4 ml-auto" />
                     </Button>
                 </DropdownMenuTrigger>
-                
+
                 <DropdownMenuContent className="w-44">
                     <DropdownMenuItem onSelect={() => handleFilter("status", "all")}>All</DropdownMenuItem>
                     <DropdownMenuSeparator />

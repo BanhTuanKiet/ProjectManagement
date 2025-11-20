@@ -121,29 +121,28 @@ namespace server.Controllers
 
                     return Ok(new
                     {
-                        role,
                         tasks = allTasks,
                         teams = resultTeams
                     });
 
                 case "Leader":
-                // 1. Lấy team mà Leader đang quản lý
-                var members = await _teamsService.GetTeamMembers(userId);
+                    // 1. Lấy team mà Leader đang quản lý
+                    var members = await _teamsService.GetTeamMembers(userId);
 
-                // 2. Thêm cả leader vào danh sách (để họ xem được task của mình)
-                members.Add(userId);
+                    // 2. Thêm cả leader vào danh sách (để họ xem được task của mình)
+                    members.Add(userId);
 
-                // 3. Lấy task của toàn bộ member trong team
-                tasks = await _tasksService.GetTasksByUserList(projectId, members);
-                break;
+                    // 3. Lấy task của toàn bộ member trong team
+                    tasks = await _tasksService.GetTasksByUserList(projectId, members);
+                    break;
 
-            case "Member":
-                // Member -> xem task của chính mình
-                tasks = await _tasksService.GetTaskByUserId(userId, projectId);
-                break;
+                case "Member":
+                    // Member -> xem task của chính mình
+                    tasks = await _tasksService.GetTaskByUserId(userId, projectId);
+                    break;
             }
 
-            return Ok(new { tasks, role });
+            return Ok(new { tasks });
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -270,7 +269,7 @@ namespace server.Controllers
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
-            var result = await _tasksService.PatchTaskField(projectId, taskId, updates)
+            var result = await _tasksService.PatchTaskField(projectId, taskId, updates, userId)
                 ?? throw new ErrorException(404, "Task not found");
 
             var logGenerators = new Dictionary<string, Func<string>>
@@ -550,7 +549,7 @@ namespace server.Controllers
             }
         }
 
-        [Authorize(Policy = "MemberRequirement")]
+        [Authorize(Policy = "AssigneeRequirement")]
         [HttpGet("{projectId}/filter-by")]
         public async Task<ActionResult> FilterTasks(int projectId, [FromQuery] string? keyword)
         {
@@ -576,7 +575,15 @@ namespace server.Controllers
             }
 
             var result = await _tasksService.FilterTasks(projectId, filters, keyword);
-            return Ok(result);
+            var ans = new List<TaskDTO.BasicTask>();
+            foreach (var task in result)
+            {
+                if (task.AssigneeId == userId)
+                {
+                    ans.Add(task);
+                }
+            }
+            return Ok(ans);
         }
 
         [Authorize(Policy = "MemberRequirement")]

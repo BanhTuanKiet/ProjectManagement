@@ -69,7 +69,7 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 }
 
 function ChartViewComponent({ projectId }: ChartViewProps) {
-    const { project_name } = useProject()
+    const { project_name, projectRole } = useProject()
     const [loading, setLoading] = useState(false)
     const [tasks, setTasks] = useState<BasicTask[]>([])
     const [role, setRole] = useState<string>("")
@@ -242,12 +242,12 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex-1 flex justify-center">
                     <h2 className="text-lg font-semibold text-gray-900">
-                        {role === "Member" ? "Your Performance" : "Team Overview"}
+                        {projectRole === "Member" ? "Your Performance" : "Team Overview"}
                     </h2>
                 </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-                {role === "Project Manager" && (
+                {projectRole === "Project Manager" && (
                     <div className="flex items-center gap-2">
                         <label className="text-sm text-gray-600 font-medium">Team:</label>
                         <select
