@@ -6,7 +6,7 @@ namespace server.Services.Task
     public interface ITasks
     {
         Task<Models.Task> GetTaskById(int taskId);
-        Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId);
+        Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId);
         Task<List<TaskDTO.BasicTask>> GetBasicTasksByMonth(int projectId, int? month, int? year, FilterDTO.FilterCalendarView? filterCalendarView);
         Task<List<TaskDTO.BasicTask>> GetBasicTasksById(int projectId);
         Task<List<TaskDTO.BasicTask>> GetAllBasicTasks();
@@ -22,5 +22,6 @@ namespace server.Services.Task
         Task<IEnumerable<object>> FilterDeletedTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> FilterTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> SearchTasks(int projectId, string keyword);
+        Task<List<TaskDTO.BasicTask>> GetTasksByUserList(int projectId, List<string> userIds);
     }
 }

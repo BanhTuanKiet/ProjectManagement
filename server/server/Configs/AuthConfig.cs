@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
 using server.Util;
-using YourNamespace.Models;
 
 namespace server.Configs
 {

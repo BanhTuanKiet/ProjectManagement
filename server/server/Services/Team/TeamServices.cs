@@ -7,7 +7,6 @@ using server.Util;
 using server.Configs;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
-using YourNamespace.Models;
 
 namespace server.Services.Project
 {
@@ -83,6 +82,14 @@ namespace server.Services.Project
 
             return members;
         }
+
+        public async Task<List<Teams>> GetAllTeamsInProject(int projectId)
+        {
+            return await _context.Teams
+                .Include(t => t.Leader)
+                .Include(t => t.Members).ThenInclude(m => m.User)
+                .Where(t => t.Leader.ProjectMembers.Any(pm => pm.ProjectId == projectId && pm.RoleInProject == "Leader"))
+                .ToListAsync();
+        }
     }
 }
-

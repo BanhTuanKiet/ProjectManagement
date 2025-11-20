@@ -9,7 +9,6 @@ using server.Models;
 using server.Services.ActivityLog;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using YourNamespace.Models;
 
 namespace server.Controllers
 {
