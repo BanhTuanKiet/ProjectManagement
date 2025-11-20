@@ -76,15 +76,9 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
 
         const fetchTasks = async () => {
             try {
-                const response = await axios.get(`/tasks/${project_name}`, {
-                    params: {
-                        month: null,
-                        year: null,
-                        filters: null,
-                    },
-                })
+                const response = await axios.get(`/tasks/userRole/${project_name}`)
 
-                setTasks(response.data)
+                setTasks(response.data.tasks)
             } catch (error) {
                 console.log(error)
             }

@@ -31,7 +31,7 @@ public class OnlyMemberRequirement : RoleRequirement
 public class OnlyAssigneeRequirement : RoleRequirement
 {
     public OnlyAssigneeRequirement()
-        : base(new string[] { }, new[] { "POST", "PUT", "DELETE" }) { }
+        : base(new string[] { }, new[] { "POST", "PUT", "DELETE", "PATCH" }) { }
 }
 
 public class OnlyPMOrLeaderRequirement : RoleRequirement
