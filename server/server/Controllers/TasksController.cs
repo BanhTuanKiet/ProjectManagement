@@ -10,7 +10,9 @@ using server.Configs;
 using Microsoft.AspNetCore.SignalR;
 using AutoMapper;
 using server.Services.ActivityLog;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Identity;
+
 
 namespace server.Controllers
 {
@@ -332,7 +334,8 @@ namespace server.Controllers
                     Type = "task"
                 };
                 await _notificationsService.SaveNotification(notification);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
             }
 
             return Ok(new
@@ -385,8 +388,9 @@ namespace server.Controllers
             TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
             await _notificationsService.SaveNotification(notification);
+            var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
             return Ok(new { message = "Update task successful!" });
         }
@@ -401,7 +405,7 @@ namespace server.Controllers
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
 
-            string changeSummary = $"Task #{taskId} {task.Title}: ";
+            string changeSummary = $"Task #{taskId}: ";
             bool hasChanges = false;
 
             if (!string.IsNullOrEmpty(updates.Title) && task.Title != updates.Title)
@@ -487,8 +491,9 @@ namespace server.Controllers
                 TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
                 await _notificationsService.SaveNotification(notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
                 await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
                 return Ok(new { message = "Update task successfull!" });
             }
@@ -505,14 +510,38 @@ namespace server.Controllers
             return Ok(tasks);
         }
         // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPost("restore/{taskId}")]
-        public async Task<IActionResult> RestoreTask(int taskId)
+        [HttpPost("restore/{projectId}/{taskId}")]
+        public async Task<IActionResult> RestoreTask(int projectId, int taskId)
         {
             try
             {
-                var restoredTask = await _tasksService.RestoreTaskFromHistory(taskId);
+                Models.Task restoredTask = await _tasksService.RestoreTaskFromHistory(taskId);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var name = User.FindFirst(ClaimTypes.Name)?.Value;
+                if (projectId <= 0) throw new Exception("Invalid projectId");
+                if (string.IsNullOrEmpty(userId)) userId = "system";
+
+
+                Notification notification = new Notification
+                {
+                    UserId = null,
+                    ProjectId = projectId,
+                    Message = $"Restore task-{taskId} {restoredTask.Title} by {name}",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
+                    Link = $"/tasks/{taskId}",
+                    CreatedId = userId,
+                    Type = "task"
+                };
 
                 // Optional: gửi notification hoặc signalR
+                TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(restoredTask);
+
+                await _notificationsService.SaveNotification(notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+
                 return Ok(new { message = "Restore successful", task = restoredTask });
             }
             catch (Exception ex)

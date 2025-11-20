@@ -15,7 +15,7 @@ namespace server.Configs
             IHubContext<NotificationHub> hubContext,
             int projectId,
             string userId,
-            Notification notification)
+            NotificationDTO.NotificationBasic notification)
         {
             var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
             await hubContext.Clients.Users(recipients).SendAsync("NotifyTaskChanged", notification);

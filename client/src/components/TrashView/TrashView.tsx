@@ -95,7 +95,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
         try {
             // Gọi API restore cho từng task
             await Promise.all(
-                tasksToRestore.map((taskId) => axios.post(`/tasks/restore/${taskId}`))
+                tasksToRestore.map((taskId) => axios.post(`/tasks/restore/${Number(project_name)}/${taskId}`))
             );
 
             toast.success(`${tasksToRestore.length} task(s) restored successfully!`);
