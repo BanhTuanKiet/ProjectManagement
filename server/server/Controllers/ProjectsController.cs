@@ -9,6 +9,8 @@ using server.Models;
 using server.Services.ActivityLog;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 
 namespace server.Controllers
 {
@@ -21,13 +23,26 @@ namespace server.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         public readonly ProjectManagementContext _context;
         private readonly IActivityLog _activityLogServices;
+        private readonly INotifications _notificationsService;
+        private readonly IMapper _mapper;
+        private readonly IHubContext<NotificationHub> _notificationHubContext;
 
-        public ProjectsController(IProjects projectsServices, UserManager<ApplicationUser> userManager, ProjectManagementContext context, IActivityLog activityLog)
+        public ProjectsController(
+            IProjects projectsServices,
+            UserManager<ApplicationUser> userManager,
+            ProjectManagementContext context,
+            IActivityLog activityLog,
+            INotifications notificationsService,
+            IMapper mapper,
+            IHubContext<NotificationHub> notificationHubContext)
         {
             _projectsServices = projectsServices;
             _userManager = userManager;
             _context = context;
             _activityLogServices = activityLog;
+            _notificationsService = notificationsService;
+            _mapper = mapper;
+            _notificationHubContext = notificationHubContext;
         }
 
         [HttpGet()]
@@ -126,6 +141,8 @@ namespace server.Controllers
         public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectDTO.UpdateProject updatedData)
         {
             var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
 
             if (project == null)
                 return NotFound("Project not found");
@@ -137,35 +154,74 @@ namespace server.Controllers
             }
 
             bool hasChanges = false;
+            string changeSummary = "";
 
             if (!string.IsNullOrWhiteSpace(updatedData.Title) && updatedData.Title != project.Name)
             {
+                string oldTitle = project.Name;
                 project.Name = updatedData.Title.Trim();
+                changeSummary += $"Title changed from '{oldTitle}' to '{updatedData.Title}'; ";
                 hasChanges = true;
             }
 
             if (!string.IsNullOrWhiteSpace(updatedData.Description) && updatedData.Description != project.Description)
             {
                 project.Description = updatedData.Description.Trim();
+                changeSummary += $"Description changed; ";
                 hasChanges = true;
             }
 
             if (updatedData.StartDate.HasValue && updatedData.StartDate.Value != project.StartDate)
             {
+                DateOnly? oldStartDatet = project.StartDate;
                 project.StartDate = updatedData.StartDate.Value;
+                changeSummary += $"Start Date changed from '{oldStartDatet?.ToString()}' to '{project.StartDate?.ToString()}'; ";
+
                 hasChanges = true;
             }
 
             if (updatedData.EndDate.HasValue && updatedData.EndDate.Value != project.EndDate)
             {
+                DateOnly? oldEndDate = project.EndDate;
                 project.EndDate = updatedData.EndDate.Value;
+                changeSummary += $"End Date changed from '{oldEndDate?.ToString()}' to '{project.EndDate?.ToString()}'; ";
                 hasChanges = true;
             }
 
             if (!hasChanges)
                 throw new ErrorException(400, "No changes were made");
 
-            await _context.SaveChangesAsync();
+            Models.Project updatedProject = await _projectsServices.UpdateProject(projectId, updatedData);
+
+            if (updatedProject == null)
+                throw new ErrorException(400, "Update Project Fail!");
+
+            var parts = changeSummary.Split(";", StringSplitOptions.RemoveEmptyEntries);
+            var notifications = new List<Notification>();
+
+            foreach (var p in parts)
+            {
+                var message = p.Trim();
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    var notification = new Notification
+                    {
+                        UserId = null,
+                        ProjectId = projectId,
+                        Message = message,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow,
+                        Link = "",
+                        CreatedId = userId,
+                        Type = "project"
+                    };
+                    await _notificationsService.SaveNotification(notification);
+                    var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                    await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+                }
+            }
+
             return Ok(new { message = "Update project successfully!!" });
         }
 

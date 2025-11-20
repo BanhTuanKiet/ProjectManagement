@@ -12,7 +12,7 @@ interface MainTab {
 
 export default function Page() {
   const { hash: activeTab, setHash: setActiveTab } = useHash("")
-  
+
   const tabs: MainTab[] = [
     { name: "Worked on", tab: "" },
     { name: "Task", tab: "task", count: 2 },
@@ -26,6 +26,8 @@ export default function Page() {
       case "":
         return <WorkOn />
       case "task":
+        return <Assign activeTab={activeTab} />
+      case "project":
         return <Assign activeTab={activeTab} />
       default:
         return (

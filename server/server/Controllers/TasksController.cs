@@ -311,7 +311,7 @@ namespace server.Controllers
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
 
-            string changeSummary = $"Task #{taskId} {task.Title}: ";
+            string changeSummary = $"Task #{taskId}: ";
             bool hasChanges = false;
 
             if (!string.IsNullOrEmpty(updates.Title) && task.Title != updates.Title)
