@@ -89,6 +89,7 @@ namespace server.Controllers
         // [Authorize(Policy = "MemberLimitRequirement")]
         public async Task<ActionResult> InviteMemberToProject([FromBody] UserDTO.InvitePeopleForm invitePeopleForm, int projectId)
         {
+            var inviterName = User.FindFirst(ClaimTypes.Name)?.Value;
             Project project = await _projectsServices.FindProjectById(projectId)
                 ?? throw new ErrorException(404, "Project not found");
 
@@ -121,7 +122,7 @@ namespace server.Controllers
                     projectId,
                     email,
                     role,
-                    user?.UserName,
+                    inviterName,
                     projectName
                 );
 
