@@ -1,5 +1,5 @@
 "use client"
-import { MoreVertical, UserPlus, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
+import { MoreVertical, UserPlus, ChevronLeft, ChevronRight, ChevronDown, Trash2 } from 'lucide-react'
 import { useEffect, useState } from "react"
 import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
@@ -7,71 +7,69 @@ import type { Member } from "@/utils/IUser"
 import { getRoleBadge } from "@/utils/statusUtils"
 import ColoredAvatar from "../ColoredAvatar"
 import InvitePeopleDialog from "@/components/InvitePeopleDialog"
-import { useParams } from "next/navigation"
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-
+import { useParams } from 'next/navigation'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "../ui/button"
 import CreateTeamDialog from "../CreateTeamDialog"
+import axios from '@/config/axiosConfig'
+import { WarningNotify } from '@/utils/toastUtils'
+import { useProject } from '@/app/(context)/ProjectContext'
+
+const itemsPerPage = 10
 
 export default function MemberList({ project }: { project: ProjectBasic }) {
     const [sortedMembers, setSortedMembers] = useState<Member[]>([])
     const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
     const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 10
-    const { project_name } = useParams()
-    const projectId = Number(project_name)
     const [invitePeopleOpen, setInvitePeopleOpen] = useState(false)
     const [createTeamOpen, setCreateTeamOpen] = useState(false)
     const [filterRole, setFilterRole] = useState<"all" | string>("all")
-
-    const roleOrder = ["Project Manager", "Leader", "Member"]
-
-    const roleList = [
-        { id: 1, name: "Project Manager" },
-        { id: 2, name: "Leader" },
-        { id: 3, name: "Member" },
-    ]
+    const [selectedMembers, setSelectedMembers] = useState<string[]>()
+    const { projectRole, project_name } = useProject()
 
     useEffect(() => {
-        if (!project) return
-
-        const membersTemp = [...project.members].sort(
-            (a, b) => roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
-        )
-
-        setSortedMembers(membersTemp)
-        setFilteredMembers(membersTemp)
-        setCurrentPage(1)
+        setSortedMembers(project.members)
+        setFilteredMembers(project.members)
     }, [project])
 
     const handleFilter = (role: string) => {
         setFilterRole(role)
-        setCurrentPage(1)
-
-        if (role === "all") {
-            setFilteredMembers(sortedMembers)
-        } else {
-            setFilteredMembers(sortedMembers.filter((m) => m.role === role))
-        }
+        setFilteredMembers(project.members.filter(m => role === "all" ? true : m.role === role))
     }
 
-    const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
+    const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
     const paginatedMembers = filteredMembers.slice(startIndex, endIndex)
+
+    const handleRemoveMember = async (userIds: string[]) => {
+        try {
+            if (!userIds.length) return
+            const hasLeader = sortedMembers.some(
+                (m) => userIds.includes(m.userId) && m.role === "Leader"
+            )
+            if (hasLeader) {
+                WarningNotify("You cannot delete a member who is currently a Leader in the game. Please transfer the Leader role to someone else before doing this.")
+                return
+            }
+
+            await axios.delete(`/users/${Number(project_name)}`, { data: userIds })
+
+            const updatedMembers = sortedMembers.filter(m => !userIds.includes(m.userId))
+            setSortedMembers(updatedMembers)
+            setFilteredMembers(updatedMembers.filter(m =>
+                filterRole === "all" ? true : m.role === filterRole
+            ))
+        } catch (error) {
+            console.error("Failed to remove member:", error)
+        }
+    }
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Members</h2>
 
                     <div className="flex items-center gap-3">
                         <DropdownMenu>
@@ -88,14 +86,14 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
 
-                                {roleList.map((role) => (
+                                {["Leader", "Member"].map((role, index) => (
                                     <DropdownMenuItem
-                                        key={role.id}
-                                        onSelect={() => handleFilter(role.name)}
+                                        key={index}
+                                        onSelect={() => handleFilter(role)}
                                     >
                                         <div className="flex items-center gap-2">
-                                            <span className={`${getRoleBadge(role.name)}`}>
-                                                {role.name}
+                                            <span className={`${getRoleBadge(role)}`}>
+                                                {role}
                                             </span>
                                         </div>
                                     </DropdownMenuItem>
@@ -119,10 +117,20 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                             Invite people
                         </button>
 
+                        <Button
+                            variant="outline"
+                            className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            disabled={selectedMembers?.length === 0}
+                            onClick={() => handleRemoveMember(selectedMembers ?? [])}
+                        >
+                            <Trash2 size={16} className="inline mr-1" />
+                            Delete
+                        </Button>
+
                         <InvitePeopleDialog
                             open={invitePeopleOpen}
                             onOpenChange={setInvitePeopleOpen}
-                            projectId={projectId}
+                            projectId={Number(project_name)}
                         />
 
                         <CreateTeamDialog
@@ -158,9 +166,15 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {paginatedMembers.map((member, index) => (
                             <tr key={member.userId} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 text-sm text-gray-600">
-                                    {startIndex + index + 1}
-                                </td>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedMembers?.includes(member.userId)}
+                                    onClick={() => {
+                                        if (selectedMembers?.includes(member.userId)) setSelectedMembers(selectedMembers.filter(m => m !== member.userId))
+                                        setSelectedMembers([...(selectedMembers ?? []), member.userId])
+                                    }}
+                                    className="w-4 h-4 block m-auto my-6"
+                                />
 
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
@@ -178,9 +192,22 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                                 </td>
 
                                 <td className="px-6 py-4 text-right">
-                                    <button className="text-gray-400 hover:text-gray-600">
-                                        <MoreVertical size={20} />
-                                    </button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button className="text-gray-400 hover:text-gray-600 p-2 rounded hover:bg-gray-100">
+                                                <MoreVertical size={20} />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                onClick={() => handleRemoveMember([member.userId])}
+                                                className="text-red-600 hover:text-red-700 cursor-pointer"
+                                            >
+                                                <Trash2 size={16} className="mr-2" />
+                                                Remove Member
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </td>
                             </tr>
                         ))}
@@ -227,5 +254,6 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                 </div>
             </div>
         </div>
+
     )
 }
