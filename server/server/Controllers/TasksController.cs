@@ -150,7 +150,7 @@ namespace server.Controllers
                 };
                 TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(addedTask);
                 NotificationDTO.NotificationBasic notificationBasic = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
-                
+
                 await _notificationsService.SaveNotification(notification);
                 await TaskHubConfig.AddedTask(_taskHubContext, projectId, userId, basicTask);
                 await NotificationHub.SendTaskAssignedNotification(_notificationHubContext, notification.UserId, notificationBasic);
@@ -240,7 +240,8 @@ namespace server.Controllers
                     Type = "task"
                 };
                 await _notificationsService.SaveNotification(notification);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
             }
 
             return Ok(new
@@ -293,8 +294,9 @@ namespace server.Controllers
             TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
             await _notificationsService.SaveNotification(notification);
+            var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
             return Ok(new { message = "Update task successful!" });
         }
@@ -395,8 +397,9 @@ namespace server.Controllers
                 TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
                 await _notificationsService.SaveNotification(notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
                 await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
                 return Ok(new { message = "Update task successfull!" });
             }
