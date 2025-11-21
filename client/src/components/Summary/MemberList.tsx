@@ -1,105 +1,183 @@
 "use client"
-import { MoreVertical, UserPlus, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
+import { UserPlus, ChevronLeft, ChevronRight, ChevronDown, Trash2, Edit2 } from 'lucide-react'
 import { useEffect, useState } from "react"
 import type { ProjectBasic } from "@/utils/IProject"
-import { formatDate } from "@/utils/dateUtils"
+import { filterMembersByDate, formatDate } from "@/utils/dateUtils"
 import type { Member } from "@/utils/IUser"
 import { getRoleBadge } from "@/utils/statusUtils"
 import ColoredAvatar from "../ColoredAvatar"
 import InvitePeopleDialog from "@/components/InvitePeopleDialog"
-import { useParams } from "next/navigation"
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "../ui/button"
 import CreateTeamDialog from "../CreateTeamDialog"
+import axios from '@/config/axiosConfig'
+import { WarningNotify } from '@/utils/toastUtils'
+import { useProject } from '@/app/(context)/ProjectContext'
+import ChangeLeaderDialog from '../ChangeLeaderDialog'
+
+const itemsPerPage = 10
 
 export default function MemberList({ project }: { project: ProjectBasic }) {
     const [sortedMembers, setSortedMembers] = useState<Member[]>([])
     const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
     const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 10
-    const { project_name } = useParams()
-    const projectId = Number(project_name)
     const [invitePeopleOpen, setInvitePeopleOpen] = useState(false)
     const [createTeamOpen, setCreateTeamOpen] = useState(false)
-    const [filterRole, setFilterRole] = useState<"all" | string>("all")
-
-    const roleOrder = ["Project Manager", "Leader", "Member"]
-
-    const roleList = [
-        { id: 1, name: "Project Manager" },
-        { id: 2, name: "Leader" },
-        { id: 3, name: "Member" },
-    ]
+    const [changeLeaderDialog, setChangeLeaderDialog] = useState(false)
+    const [filters, setFilters] = useState({
+        role: "all",
+        dateRange: "all"
+    })
+    const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
+    const { projectRole, project_name } = useProject()
 
     useEffect(() => {
-        if (!project) return
-
-        const membersTemp = [...project.members].sort(
-            (a, b) => roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role)
-        )
-
-        setSortedMembers(membersTemp)
-        setFilteredMembers(membersTemp)
-        setCurrentPage(1)
+        setSortedMembers(project.members)
+        setFilteredMembers(project.members)
     }, [project])
 
-    const handleFilter = (role: string) => {
-        setFilterRole(role)
+    const applyFilters = (members: Member[], filters: { role: string, dateRange: string }) => {
+        let result = members
+
+        if (filters.role !== "all") {
+            result = result.filter(m => m.role === filters.role)
+        }
+
+        result = filterMembersByDate(result, filters.dateRange)
+
+        return result
+    }
+
+    const handleFilterRole = (role: string) => {
+        const newFilters = { ...filters, role }
+        setFilters(newFilters)
         setCurrentPage(1)
 
-        if (role === "all") {
-            setFilteredMembers(sortedMembers)
+        const filtered = applyFilters(project.members, newFilters)
+        setFilteredMembers(filtered)
+    }
+
+    const handleFilterJoinDate = (dateRange: string) => {
+        const newFilters = { ...filters, dateRange }
+        setFilters(newFilters)
+        setCurrentPage(1)
+
+        const filtered = applyFilters(project.members, newFilters)
+        setFilteredMembers(filtered)
+    }
+
+    const handleSelectMember = (userId: string) => {
+        const newSelected = new Set(selectedMembers)
+        if (newSelected.has(userId)) {
+            newSelected.delete(userId)
         } else {
-            setFilteredMembers(sortedMembers.filter((m) => m.role === role))
+            newSelected.add(userId)
+        }
+        setSelectedMembers(newSelected)
+    }
+
+    const handleSelectAll = () => {
+        if (selectedMembers.size === paginatedMembers.length && paginatedMembers.length > 0) {
+            setSelectedMembers(new Set())
+        } else {
+            const allUserIds = new Set(paginatedMembers.map(m => m.userId))
+            setSelectedMembers(allUserIds)
         }
     }
 
-    const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
+    const totalPages = Math.ceil(filteredMembers.length / itemsPerPage)
     const paginatedMembers = filteredMembers.slice(startIndex, endIndex)
+
+    const handleRemoveMember = async (userIds: string[]) => {
+        try {
+            if (!userIds.length) return
+            const hasLeader = sortedMembers.some(
+                (m) => userIds.includes(m.userId) && m.role === "Leader"
+            )
+            if (hasLeader) {
+                WarningNotify("You cannot delete a member who is currently a Leader in the game. Please transfer the Leader role to someone else before doing this.")
+                return
+            }
+
+            await axios.delete(`/users/${Number(project_name)}`, { data: userIds })
+
+            const updatedMembers = sortedMembers.filter(m => !userIds.includes(m.userId))
+            setSortedMembers(updatedMembers)
+            const filtered = applyFilters(updatedMembers, filters)
+            setFilteredMembers(filtered)
+            setSelectedMembers(new Set())
+        } catch (error) {
+            console.error("Failed to remove member:", error)
+        }
+    }
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Members</h2>
 
                     <div className="flex items-center gap-3">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="gap-2 w-40 justify-start">
-                                    {filterRole !== "all" ? filterRole : "Filter by Role"}
+                                    {filters.role !== "all" ? filters.role : "Filter by Role"}
                                     <ChevronDown className="h-4 w-4 ml-auto" />
                                 </Button>
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent className="w-44">
-                                <DropdownMenuItem onSelect={() => handleFilter("all")}>
+                                <DropdownMenuItem onSelect={() => handleFilterRole("all")}>
                                     All
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
 
-                                {roleList.map((role) => (
+                                {["Leader", "Member"].map((role, index) => (
                                     <DropdownMenuItem
-                                        key={role.id}
-                                        onSelect={() => handleFilter(role.name)}
+                                        key={index}
+                                        onSelect={() => handleFilterRole(role)}
                                     >
                                         <div className="flex items-center gap-2">
-                                            <span className={`${getRoleBadge(role.name)}`}>
-                                                {role.name}
+                                            <span className={`${getRoleBadge(role)}`}>
+                                                {role}
                                             </span>
                                         </div>
                                     </DropdownMenuItem>
                                 ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="gap-2 w-40 justify-start">
+                                    {filters.dateRange === "all"
+                                        ? "All Dates"
+                                        : filters.dateRange === "today"
+                                            ? "Today"
+                                            : filters.dateRange === "7days"
+                                                ? "Last 7 Days"
+                                                : "Last 30 Days"
+                                    }
+                                    <ChevronDown className="h-4 w-4 ml-auto" />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent className="w-44">
+                                <DropdownMenuItem onSelect={() => handleFilterJoinDate("all")}>
+                                    All Dates
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => handleFilterJoinDate("today")}>
+                                    Today
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleFilterJoinDate("7days")}>
+                                    Last 7 Days
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleFilterJoinDate("30days")}>
+                                    Last 30 Days
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -119,15 +197,38 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                             Invite people
                         </button>
 
+                        <Button
+                            variant="outline"
+                            className="border-yellow-500 text-yellow-400 hover:bg-yellow-100 hover:text-yellow-500"
+                            onClick={() => setChangeLeaderDialog(true)}
+                        >
+                            Change Leader
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            disabled={selectedMembers.size === 0}
+                            onClick={() => handleRemoveMember(Array.from(selectedMembers))}
+                        >
+                            <Trash2 size={16} className="inline mr-1" />
+                            Delete ({selectedMembers.size})
+                        </Button>
+
                         <InvitePeopleDialog
                             open={invitePeopleOpen}
                             onOpenChange={setInvitePeopleOpen}
-                            projectId={projectId}
+                            projectId={Number(project_name)}
                         />
 
                         <CreateTeamDialog
                             open={createTeamOpen}
                             onOpenChange={setCreateTeamOpen}
+                        />
+
+                        <ChangeLeaderDialog
+                            open={changeLeaderDialog}
+                            onOpenChange={setChangeLeaderDialog}
                         />
                     </div>
                 </div>
@@ -138,10 +239,18 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                                STT
+                                <input
+                                    type="checkbox"
+                                    checked={selectedMembers.size === paginatedMembers.length && paginatedMembers.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 cursor-pointer"
+                                />
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 User Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Role
@@ -149,17 +258,19 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Joined At
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                            </th>
                         </tr>
                     </thead>
 
                     <tbody className="bg-white divide-y divide-gray-200">
                         {paginatedMembers.map((member, index) => (
                             <tr key={member.userId} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 text-sm text-gray-600">
-                                    {startIndex + index + 1}
+                                <td className="px-6 py-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedMembers.has(member.userId)}
+                                        onChange={() => handleSelectMember(member.userId)}
+                                        className="w-4 h-4 cursor-pointer"
+                                    />
                                 </td>
 
                                 <td className="px-6 py-4">
@@ -170,17 +281,15 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                                 </td>
 
                                 <td className="px-6 py-4">
+                                    <div className="font-medium text-gray-900">{member.email}</div>
+                                </td>
+
+                                <td className="px-6 py-4">
                                     <span className={getRoleBadge(member.role)}>{member.role}</span>
                                 </td>
 
                                 <td className="px-6 py-4 text-sm text-gray-600">
                                     {formatDate(member.joinedAt)}
-                                </td>
-
-                                <td className="px-6 py-4 text-right">
-                                    <button className="text-gray-400 hover:text-gray-600">
-                                        <MoreVertical size={20} />
-                                    </button>
                                 </td>
                             </tr>
                         ))}

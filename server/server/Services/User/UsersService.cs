@@ -77,7 +77,7 @@ namespace server.Services.User
 
             return user;
         }
-        
+
         public async Task<string> GetRefreshToken(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -202,6 +202,34 @@ namespace server.Services.User
                 .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
 
             return member.RoleInProject;
+        }
+
+        public async Task<List<ApplicationUser>> FindUserListByIds(List<string> ids)
+        {
+            var users = await _userManager.Users
+                .Where(u => ids.Contains(u.Id))
+                .ToListAsync();
+            return users;
+        }
+
+        public async Task<bool> DeleteMembers(int projectId, List<string> userIds)
+        {
+            var members = await _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId && userIds.Contains(pm.UserId))
+                .ToListAsync();
+
+            if (!members.Any())
+                return false;
+
+            _context.ProjectMembers.RemoveRange(members);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<Subscriptions> GetSubscriptions(string userId)
+        {
+            return await _context.Subscriptions.Include(s => s.Plan).FirstOrDefaultAsync(s => s.UserId == userId);
         }
     }
 }

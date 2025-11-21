@@ -1,6 +1,7 @@
 export interface Member {
   userId: string
   name: string
+  email: string
   role: string
   isOwner: boolean
   joinedAt: string
@@ -43,7 +44,12 @@ export interface UserProfile {
     avatarUrl: string
 }
 
+export interface AvailableMember {
+    memberId: string
+    memberName: string
+}
+
 export interface InviteUser {
-  status: string
-  email: string
+    status: string
+    email: string
 }

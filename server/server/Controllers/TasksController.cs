@@ -84,13 +84,8 @@ namespace server.Controllers
             {
                 case "Project Manager":
                     {
-                        Console.WriteLine("Fetching tasks for Project Manager");
-
-                        // Lấy toàn bộ task trong project
                         var allTasks = await _tasksService.GetBasicTasksById(projectId);
-
                         var leaders = await _projectMemberService.GetLeadersInProject(projectId);
-
                         var resultTeams = new List<object>();
 
                         foreach (var leader in leaders)

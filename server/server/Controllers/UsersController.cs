@@ -9,6 +9,11 @@ using server.Util;
 using server.DTO;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Build.Framework;
+using server.Services.Task;
+using Microsoft.EntityFrameworkCore;
+using server.Services.User;
 
 namespace server.Controllers
 {
@@ -21,19 +26,21 @@ namespace server.Controllers
         private readonly IConfiguration _configuration;
         private readonly IHubContext<PresenceHubConfig> _hubContext;
         public readonly ProjectManagementContext _context;
-
+        public readonly ITasks _taskService;
         public UsersController(
             IUsers userServices,
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
             IHubContext<PresenceHubConfig> hubContext,
-            ProjectManagementContext context)
+            ProjectManagementContext context,
+            ITasks taskService)
         {
             _userServices = userServices;
             _userManager = userManager;
             _configuration = configuration;
             _hubContext = hubContext;
             _context = context;
+            _taskService = taskService;
         }
 
         [HttpGet("signin-google")]
@@ -156,5 +163,55 @@ namespace server.Controllers
 
             return Ok(uploadedFile);
         }
+
+        [HttpDelete("{projectId}")]
+        [Authorize(Policy = "PMRequirement")]
+        public async Task<ActionResult> DeleteMembers([FromBody] List<string> userIds, int projectId)
+        {
+            if (userIds == null || userIds.Count == 0)
+                throw new ErrorException(400, "The list to delete must not be empty");
+
+            foreach (var uid in userIds)
+            {
+                string role = await _userServices.GetProjectRole(projectId, uid);
+
+                if (role == "Leader")
+                {
+                    throw new ErrorException(400, $"User {uid} is the Leader and cannot be removed");
+                }
+            }
+
+            foreach (var uid in userIds)
+            {
+                List<TaskDTO.BasicTask> tasks = await _taskService.GetTaskByUserId(uid, projectId);
+
+                if (tasks.Count > 0)
+                {
+                    var user = await _context.ApplicationUsers
+                        .Where(u => u.Id == uid)
+                        .Select(u => u.UserName)
+                        .FirstOrDefaultAsync();
+
+                    string userName = user ?? uid;
+
+                    throw new ErrorException(
+                        400,
+                        $"Cannot delete member '{userName}' because it has received {tasks.Count} task(s) in the project"
+                    );
+                }
+            }
+
+            bool isDeleted = await _userServices.DeleteMembers(projectId, userIds);
+            if (!isDeleted) throw new ErrorException(400, "Removed failed");
+            return Ok(new { userIds = userIds, message = "Removed successfully" });
+        }
+
+            [HttpGet("subscription")]
+            public async Task<ActionResult> GetSubscriptions()
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Subscriptions subscription = await _userServices.GetSubscriptions(userId);
+                return Ok(subscription.Plan.Name);
+            }
     }
 }

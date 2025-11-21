@@ -15,22 +15,14 @@ import { useProject } from "@/app/(context)/ProjectContext"
 import { Member } from "@/utils/IUser"
 import ColoredAvatar from "./ColoredAvatar"
 import axios from "@/config/axiosConfig"
+import { DialogProps, MembersSelection } from "@/utils/IDialogProps"
 
-interface CreateTeamDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-}
 
-interface TeamMemberSelection {
-    id: string
-    name: string
-}
-
-export default function CreateTeamDialog({ open, onOpenChange }: CreateTeamDialogProps) {
+export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
     const { members, project_name } = useProject()
     const [mockMembers, setMockMembers] = useState<Member[]>()
     const [mockLeaders, setMockLeaders] = useState<Member[]>()
-    const [selectedMembers, setSelectedMembers] = useState<TeamMemberSelection[]>([])
+    const [selectedMembers, setSelectedMembers] = useState<MembersSelection[]>([])
     const [leaderId, setLeaderId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
 

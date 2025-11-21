@@ -137,10 +137,6 @@ export default function BacklogView({ projectId }: { projectId: ParamValue }) {
     }
   };
 
-
-
-
-
   const toggleSprint = (sprintId: string) => {
     setExpandedSprints(prev => {
       const newSet = new Set(prev)

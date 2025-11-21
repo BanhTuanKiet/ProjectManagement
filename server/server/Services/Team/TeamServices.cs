@@ -163,11 +163,35 @@ namespace server.Services.Project
         {
             return await _context.Teams
                 .Include(t => t.Leader)
-                .Include(t => t.Members).ThenInclude(m => m.User)
+                .Include(t => t.Members)
+                    .ThenInclude(m => m.User)
                 .Where(t => t.Leader.ProjectMembers.Any(pm => pm.ProjectId == projectId && pm.RoleInProject == "Leader"))
                 .ToListAsync();
         }
 
+        public async Task<List<UserDTO.AvailableMember>> FindAvilableMembers(int projectId, string leaderId)
+        {
+            var memberIds = _context.ProjectMembers
+                .Include(pm => pm.User)
+                .Where(pm => pm.RoleInProject == "Member" && pm.ProjectId == projectId)
+                .Select(pm => pm.UserId);
+
+            var teamMemberIds = _context.TeamMembers
+                .Include(tm => tm.Team)
+                .Where(tm => tm.Team.ProjectId == projectId)
+                .Select(tm => tm.UserId);
+
+            var availableMemberIds = memberIds.Except(teamMemberIds);
+
+            var availableMembers = await _context.Users
+                .Where(u => availableMemberIds.Contains(u.Id))
+                .ToListAsync();
+
+            var availableMembersDTO = _mapper.Map<List<UserDTO.AvailableMember>>(availableMembers);
+
+            return availableMembersDTO;
+        }
+        
         public async Task<Teams> GetTeamByLeader(string leaderId)
         {
             return await _context.Teams
