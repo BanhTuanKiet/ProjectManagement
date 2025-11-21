@@ -24,5 +24,13 @@ namespace server.Services.ProjectMemberService
             return await _context.ProjectMembers
                 .FirstOrDefaultAsync(x => x.ProjectId == projectId && x.UserId == userId);
         }
+
+        public async Task<List<ProjectMember>> GetLeadersInProject(int projectId)
+        {
+            return await _context.ProjectMembers
+                .Include(pm => pm.User)
+                .Where(pm => pm.ProjectId == projectId && pm.RoleInProject == "Leader")
+                .ToListAsync();
+        }
     }
 }

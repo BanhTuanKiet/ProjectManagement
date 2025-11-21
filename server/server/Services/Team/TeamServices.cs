@@ -150,6 +150,7 @@ namespace server.Services.Project
         public async Task<List<string>> GetTeamMembers(string leaderId)
         {
             var members = await _context.TeamMembers
+                .AsNoTracking()
                 .Include(t => t.Team)
                 .Where(t => t.Team.LeaderId == leaderId)
                 .Select(t => t.UserId)
@@ -165,6 +166,27 @@ namespace server.Services.Project
                 .Include(t => t.Members).ThenInclude(m => m.User)
                 .Where(t => t.Leader.ProjectMembers.Any(pm => pm.ProjectId == projectId && pm.RoleInProject == "Leader"))
                 .ToListAsync();
+        }
+
+        public async Task<Teams> GetTeamByLeader(string leaderId)
+        {
+            return await _context.Teams
+                .Include(t => t.Leader)
+                .Include(t => t.Members).ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(t => t.LeaderId == leaderId);
+        }
+
+        public async Task<Teams> GetTeamById(Guid teamId)
+        {
+            var team = await _context.Teams
+                .Include(t => t.Leader)
+                .Include(t => t.Members).ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(t => t.Id == teamId);
+
+            if (team == null)
+                throw new ErrorException(400,$"Team with id '{teamId}' was not found.");
+
+            return team;
         }
     }
 }
