@@ -295,7 +295,8 @@ namespace server.Services.Project
             leader.RoleInProject = "Member";
             newLeader.RoleInProject = "Leader";
 
-            await _context.SaveChangesAsync();  
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
