@@ -3,10 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import {
     Users,
-    Maximize2,
-    Share2,
-    Link2,
-    Zap,
     Globe,
     BarChart3,
     Calendar,
@@ -143,7 +139,7 @@ export default function ProjectInterface() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id === "" ? "" : tab.id)}
-                                    className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                                    className={`cursor-pointer flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                                         ? 'border-blue-500 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}

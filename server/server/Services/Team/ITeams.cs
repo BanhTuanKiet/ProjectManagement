@@ -8,5 +8,6 @@ namespace server.Models
         Task<List<String>> AddMembers(string leaderId, List<string> memberIds);
         Task<List<string>> GetTeamMembers(string leaderId);
         Task<List<Teams>> GetAllTeamsInProject(int projectId);
+        Task<List<UserDTO.AvailableMember>> FindAvilableMembers(int projectId, string leaderId);
     }
 }

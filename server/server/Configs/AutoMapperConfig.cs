@@ -91,6 +91,10 @@ namespace server.Configs
 
             CreateMap<ApplicationUser, UserDTO.UserProfile>().ReverseMap()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<ApplicationUser, UserDTO.AvailableMember>()
+                .ForMember(dest => dest.MemberId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.MemberName, opt => opt.MapFrom(src => src.UserName));
         }
     }
 }

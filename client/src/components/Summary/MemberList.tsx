@@ -1,5 +1,5 @@
 "use client"
-import { MoreVertical, UserPlus, ChevronLeft, ChevronRight, ChevronDown, Trash2, Edit2 } from 'lucide-react'
+import { UserPlus, ChevronLeft, ChevronRight, ChevronDown, Trash2, Edit2 } from 'lucide-react'
 import { useEffect, useState } from "react"
 import type { ProjectBasic } from "@/utils/IProject"
 import { filterMembersByDate, formatDate } from "@/utils/dateUtils"
@@ -29,8 +29,8 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
         dateRange: "all"
     })
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
-    const { projectRole, project_name, members } = useProject()
-console.log(project)
+    const { projectRole, project_name } = useProject()
+
     useEffect(() => {
         setSortedMembers(project.members)
         setFilteredMembers(project.members)

@@ -43,3 +43,8 @@ export interface UserProfile {
     imageCoverUrl: string
     avatarUrl: string
 }
+
+export interface AvailableMember {
+    memberId: string
+    memberName: string
+}
