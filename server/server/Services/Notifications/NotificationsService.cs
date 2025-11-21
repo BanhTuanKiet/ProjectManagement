@@ -48,8 +48,9 @@ namespace server.Services.Project
             var notifications = await _context.Notifications
                 .Include(n => n.User)
                 .Include(n => n.CreatedBy)
-                .Where(n => n.UserId == userId && n.Type == type)
+                .Where(n => (n.UserId == userId || n.UserId == null) && n.Type == type)
                 .OrderBy(n => n.CreatedAt)
+                .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
             return _mapper.Map<List<NotificationDTO.NotificationBasic>>(notifications);

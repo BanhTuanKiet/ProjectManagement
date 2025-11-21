@@ -48,3 +48,8 @@ export interface AvailableMember {
     memberId: string
     memberName: string
 }
+
+export interface InviteUser {
+    status: string
+    email: string
+}

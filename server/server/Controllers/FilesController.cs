@@ -29,6 +29,7 @@ namespace server.Controllers
         }
 
         [HttpPost("upload")]
+        [Authorize(Policy = "OnlyAssigneeRequirement", Roles = "LeaderRequirement, PMRequirement")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId, [FromForm] string projectId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -62,6 +63,8 @@ namespace server.Controllers
         }
 
         [HttpDelete("{fileId}")]
+        [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement")]
+
         public async Task<IActionResult> DeleteFile(int fileId, int taskId, int projectId)
         {
             if (fileId <= 0)

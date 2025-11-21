@@ -10,6 +10,7 @@ using server.Configs;
 using Microsoft.AspNetCore.SignalR;
 using AutoMapper;
 using server.Services.ActivityLog;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Identity;
 
 namespace server.Controllers
@@ -75,73 +76,78 @@ namespace server.Controllers
                 return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
 
             string role = projectMember.RoleInProject;
+            Console.WriteLine("User Role AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " + role);
 
             List<TaskDTO.BasicTask> tasks = new();
 
             switch (role)
             {
                 case "Project Manager":
-                    // 1. Lấy toàn bộ task của project
-                    var allTasks = await _tasksService.GetBasicTasksById(projectId);
-
-                    // 2. Lấy toàn bộ team của các Leader trong project
-                    var teams = await _teamsService.GetAllTeamsInProject(projectId);
-
-                    // Console.WriteLine("Teams AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", JsonConvert.SerializeObject(teams));
-
-                    // 3. Nhóm task theo team
-                    var resultTeams = new List<object>();
-
-                    foreach (var team in teams)
                     {
-                        var memberIds = team.Members.Select(m => m.UserId).ToList();
-                        memberIds.Add(team.LeaderId);
+                        var allTasks = await _tasksService.GetBasicTasksById(projectId);
+                        var leaders = await _projectMemberService.GetLeadersInProject(projectId);
+                        var resultTeams = new List<object>();
 
-                        var teamTasks = allTasks.Where(t => memberIds.Contains(t.AssigneeId)).ToList();
-
-                        resultTeams.Add(new
+                        foreach (var leader in leaders)
                         {
-                            teamId = team.Id,
-                            teamName = team.Name,
-                            leader = new
+                            var team = await _teamsService.GetTeamByLeader(leader.UserId);
+
+                            if (team == null) continue;
+
+                            resultTeams.Add(new
                             {
-                                leaderId = team.LeaderId,
-                                leaderName = team.Leader.UserName
-                            },
-                            members = team.Members.Select(m => new
-                            {
-                                userId = m.UserId,
-                                userName = m.User.UserName
-                            }),
-                            tasks = teamTasks
+                                teamId = team.LeaderId,
+                                teamName = team.Leader.UserName,
+                            });
+                        }
+
+                        return Ok(new
+                        {
+                            tasks = allTasks,
+                            teams = resultTeams
                         });
                     }
 
-                    return Ok(new
-                    {
-                        role,
-                        tasks = allTasks,
-                        teams = resultTeams
-                    });
-
                 case "Leader":
-                // 1. Lấy team mà Leader đang quản lý
-                var members = await _teamsService.GetTeamMembers(userId);
+                    // 1. Lấy team mà Leader đang quản lý
+                    var members = await _teamsService.GetTeamMembers(userId);
 
-                // 2. Thêm cả leader vào danh sách (để họ xem được task của mình)
-                members.Add(userId);
+                    // 2. Thêm cả leader vào danh sách (để họ xem được task của mình)
+                    members.Add(userId);
 
-                // 3. Lấy task của toàn bộ member trong team
-                tasks = await _tasksService.GetTasksByUserList(projectId, members);
-                break;
+                    // 3. Lấy task của toàn bộ member trong team
+                    tasks = await _tasksService.GetTasksByUserList(projectId, members);
+                    break;
 
-            case "Member":
-                // Member -> xem task của chính mình
-                tasks = await _tasksService.GetTaskByUserId(userId, projectId);
-                break;
+                case "Member":
+                    // Member -> xem task của chính mình
+                    tasks = await _tasksService.GetTaskByUserId(userId, projectId);
+                    break;
             }
 
-            return Ok(new { tasks, role });
+            return Ok(new { tasks });
+        }
+
+        // GET: /tasks/{projectId}/byTeam?teamId=...
+        [HttpGet("{projectId}/byTeam")]
+        public async Task<ActionResult> GetTasksByTeam(string projectId, [FromQuery] string leaderId)
+        {
+            if (string.IsNullOrEmpty(leaderId))
+            {
+                return Ok(new List<TaskDTO.BasicTask>());
+            }
+
+            // 4. Lấy Members & Tasks
+            var members = await _teamsService.GetTeamMembers(leaderId);
+
+            if (members == null) members = new List<string>();
+
+            if (!members.Contains(leaderId)) members.Add(leaderId);
+
+            var teamTasks = await _tasksService.GetTasksByUserList(int.Parse(projectId), members);
+
+            Console.WriteLine($"Success: Trả về {teamTasks.Count} tasks.");
+            return Ok(teamTasks);
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -268,7 +274,7 @@ namespace server.Controllers
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
-            var result = await _tasksService.PatchTaskField(projectId, taskId, updates)
+            var result = await _tasksService.PatchTaskField(projectId, taskId, updates, userId)
                 ?? throw new ErrorException(404, "Task not found");
 
             var logGenerators = new Dictionary<string, Func<string>>
@@ -332,7 +338,8 @@ namespace server.Controllers
                     Type = "task"
                 };
                 await _notificationsService.SaveNotification(notification);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
             }
 
             return Ok(new
@@ -385,8 +392,9 @@ namespace server.Controllers
             TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
             await _notificationsService.SaveNotification(notification);
+            var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
             return Ok(new { message = "Update task successful!" });
         }
@@ -401,7 +409,7 @@ namespace server.Controllers
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
 
-            string changeSummary = $"Task #{taskId} {task.Title}: ";
+            string changeSummary = $"Task #{taskId}: ";
             bool hasChanges = false;
 
             if (!string.IsNullOrEmpty(updates.Title) && task.Title != updates.Title)
@@ -487,8 +495,9 @@ namespace server.Controllers
                 TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
                 await _notificationsService.SaveNotification(notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
                 await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notification);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
                 return Ok(new { message = "Update task successfull!" });
             }
@@ -505,14 +514,38 @@ namespace server.Controllers
             return Ok(tasks);
         }
         // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpPost("restore/{taskId}")]
-        public async Task<IActionResult> RestoreTask(int taskId)
+        [HttpPost("restore/{projectId}/{taskId}")]
+        public async Task<IActionResult> RestoreTask(int projectId, int taskId)
         {
             try
             {
-                var restoredTask = await _tasksService.RestoreTaskFromHistory(taskId);
+                Models.Task restoredTask = await _tasksService.RestoreTaskFromHistory(taskId);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+                if (projectId <= 0) throw new Exception("Invalid projectId");
+                if (string.IsNullOrEmpty(userId)) userId = "system";
+
+                Notification notification = new Notification
+                {
+                    UserId = null,
+                    ProjectId = projectId,
+                    Message = $"Restore task-{taskId} {restoredTask.Title} by {name}",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow,
+                    Link = $"/tasks/{taskId}",
+                    CreatedId = userId,
+                    Type = "task"
+                };
 
                 // Optional: gửi notification hoặc signalR
+                TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(restoredTask);
+
+                await _notificationsService.SaveNotification(notification);
+                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+
                 return Ok(new { message = "Restore successful", task = restoredTask });
             }
             catch (Exception ex)
@@ -521,7 +554,7 @@ namespace server.Controllers
             }
         }
 
-        [Authorize(Policy = "MemberRequirement")]
+        [Authorize(Policy = "AssigneeRequirement")]
         [HttpGet("{projectId}/filter-by")]
         public async Task<ActionResult> FilterTasks(int projectId, [FromQuery] string? keyword)
         {
@@ -547,7 +580,16 @@ namespace server.Controllers
             }
 
             var result = await _tasksService.FilterTasks(projectId, filters, keyword);
-            return Ok(result);
+            var ans = new List<TaskDTO.BasicTask>();
+
+            foreach (var task in result)
+            {
+                if (task.AssigneeId == userId)
+                {
+                    ans.Add(task);
+                }
+            }
+            return Ok(ans);
         }
 
         [Authorize(Policy = "MemberRequirement")]

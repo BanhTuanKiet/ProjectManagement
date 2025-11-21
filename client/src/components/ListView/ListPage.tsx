@@ -62,7 +62,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { project_name } = useProject();
+  const { project_name, projectRole } = useProject();
   const stableFilters = useMemo(() => filters, [filters.Status, filters.Priority, filters.AssigneeId]);
 
   useEffect(() => {
@@ -185,55 +185,56 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* --- Bộ lọc theo Assignee --- */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 bg-transparent">
-                {filters.AssigneeId ? (
-                  <>
-                    {filters.AssigneeId === "me" ? (
-                      "Assigned to me"
-                    ) : filters.AssigneeId === "null" ? (
-                      "Unassigned"
-                    ) : (
-                      availableUsers.find((u) => u.userId === filters.AssigneeId)?.name || "Assignee"
-                    )}
-                  </>
+          {projectRole !== "Member" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 bg-transparent">
+                  {filters.AssigneeId ? (
+                    <>
+                      {filters.AssigneeId === "me" ? (
+                        "Assigned to me"
+                      ) : filters.AssigneeId === "null" ? (
+                        "Unassigned"
+                      ) : (
+                        availableUsers.find((u) => u.userId === filters.AssigneeId)?.name || "Assignee"
+                      )}
+                    </>
+                  ) : (
+                    "Assignee"
+                  )}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-44">
+                <DropdownMenuLabel>Assignee</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: "me" }))}>
+                  Assigned to me
+                </DropdownMenuItem>
+
+                {availableUsers?.length > 0 ? (
+                  availableUsers.map((user) => (
+                    <DropdownMenuItem
+                      key={user.userId}
+                      onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: user.userId }))}
+                    >
+                      <ColoredAvatar id={user.userId} name={user.name} size="sm" />
+                      <span className="text-sm">{user.name}</span>
+                    </DropdownMenuItem>
+                  ))
                 ) : (
-                  "Assignee"
+                  <DropdownMenuItem disabled>No available users</DropdownMenuItem>
                 )}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-44">
-              <DropdownMenuLabel>Assignee</DropdownMenuLabel>
-              <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: "me" }))}>
-                Assigned to me
-              </DropdownMenuItem>
+                <DropdownMenuSeparator />
 
-              {availableUsers?.length > 0 ? (
-                availableUsers.map((user) => (
-                  <DropdownMenuItem
-                    key={user.userId}
-                    onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: user.userId }))}
-                  >
-                    <ColoredAvatar id={user.userId} name={user.name} size="sm" />
-                    <span className="text-sm">{user.name}</span>
-                  </DropdownMenuItem>
-                ))
-              ) : (
-                <DropdownMenuItem disabled>No available users</DropdownMenuItem>
-              )}
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: "null" }))}>
-                Unassigned
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: "null" }))}>
+                  Unassigned
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
 
           {/* --- Nút clear filter --- */}

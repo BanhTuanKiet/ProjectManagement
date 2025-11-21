@@ -127,10 +127,10 @@ namespace server.Services.Project
 
         //     return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         // }
-        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates)
+        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId)
         {
             var task = await _context.Tasks
-                .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+                .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId && t.AssigneeId == userId);
 
             if (task == null) return null;
 
@@ -318,57 +318,99 @@ namespace server.Services.Project
         //     }
         // }
 
+        // public async Task<Models.Task> RestoreTaskFromHistory(int taskId)
+        // {
+        //     using var conn = _context.Database.GetDbConnection();
+        //     await conn.OpenAsync();
+        //     using var tran = await conn.BeginTransactionAsync();
+        //     using var cmd = conn.CreateCommand();
+        //     cmd.Transaction = tran;
+
+        //     try
+        //     {
+        //         // 🔸 Tắt trigger để tránh snapshot lại khi restore
+        //         cmd.CommandText = "DISABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
+        //         await cmd.ExecuteNonQueryAsync();
+
+        //         // 🔸 Cho phép chèn ID thủ công
+        //         cmd.CommandText = "SET IDENTITY_INSERT Tasks ON;";
+        //         await cmd.ExecuteNonQueryAsync();
+
+        //         // 🔸 Chèn lại task từ history (lấy bản mới nhất)
+        //         cmd.CommandText = @"
+        //     INSERT INTO Tasks 
+        //     (TaskId, ProjectId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt)
+        //     SELECT TOP 1
+        //         TaskId, ProjectHistoryId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt
+        //     FROM TaskHistory
+        //     WHERE TaskId = @taskId
+        //     ORDER BY ChangedAt DESC;";
+        //         var param = cmd.CreateParameter();
+        //         param.ParameterName = "@taskId";
+        //         param.Value = taskId;
+        //         cmd.Parameters.Add(param);
+        //         await cmd.ExecuteNonQueryAsync();
+
+        //         // 🔸 Tắt IDENTITY_INSERT
+        //         cmd.CommandText = "SET IDENTITY_INSERT Tasks OFF;";
+        //         cmd.Parameters.Clear();
+        //         await cmd.ExecuteNonQueryAsync();
+
+        //         // 🔸 Bật lại trigger
+        //         cmd.CommandText = "ENABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
+        //         await cmd.ExecuteNonQueryAsync();
+
+        //         // 🔸 Cập nhật lại lịch sử: gắn IsDeleted = 0
+        //         cmd.CommandText = "UPDATE TaskHistory SET IsDeleted = 0, ChangedAt = SYSDATETIME() WHERE TaskId = @taskId;";
+        //         var param2 = cmd.CreateParameter();
+        //         param2.ParameterName = "@taskId";
+        //         param2.Value = taskId;
+        //         cmd.Parameters.Add(param2);
+        //         await cmd.ExecuteNonQueryAsync();
+
+        //         await tran.CommitAsync();
+
+        //         var restoredTask = await _context.Tasks
+        //             .AsNoTracking()
+        //             .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+        //         return restoredTask ?? throw new Exception("Restore failed: Task not found.");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         await tran.RollbackAsync();
+        //         throw new Exception($"Restore failed for TaskId {taskId}.", ex);
+        //     }
+        // }
+
         public async Task<Models.Task> RestoreTaskFromHistory(int taskId)
         {
-            using var conn = _context.Database.GetDbConnection();
-            await conn.OpenAsync();
-            using var tran = await conn.BeginTransactionAsync();
-            using var cmd = conn.CreateCommand();
-            cmd.Transaction = tran;
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // 🔸 Tắt trigger để tránh snapshot lại khi restore
-                cmd.CommandText = "DISABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
-                await cmd.ExecuteNonQueryAsync();
+                // Dùng ExecuteSqlRawAsync thay vì raw SqlConnection
+                await _context.Database.ExecuteSqlRawAsync("DISABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;");
+                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Tasks ON;");
 
-                // 🔸 Cho phép chèn ID thủ công
-                cmd.CommandText = "SET IDENTITY_INSERT Tasks ON;";
-                await cmd.ExecuteNonQueryAsync();
-
-                // 🔸 Chèn lại task từ history (lấy bản mới nhất)
-                cmd.CommandText = @"
+                // Restore task từ history
+                await _context.Database.ExecuteSqlRawAsync(@"
             INSERT INTO Tasks 
             (TaskId, ProjectId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt)
             SELECT TOP 1
                 TaskId, ProjectHistoryId, Title, Description, AssigneeId, SprintId, Priority, Status, Deadline, CreatedBy, BacklogId, CreatedAt
             FROM TaskHistory
-            WHERE TaskId = @taskId
-            ORDER BY ChangedAt DESC;";
-                var param = cmd.CreateParameter();
-                param.ParameterName = "@taskId";
-                param.Value = taskId;
-                cmd.Parameters.Add(param);
-                await cmd.ExecuteNonQueryAsync();
+            WHERE TaskId = {0}
+            ORDER BY ChangedAt DESC;", taskId);
 
-                // 🔸 Tắt IDENTITY_INSERT
-                cmd.CommandText = "SET IDENTITY_INSERT Tasks OFF;";
-                cmd.Parameters.Clear();
-                await cmd.ExecuteNonQueryAsync();
+                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Tasks OFF;");
+                await _context.Database.ExecuteSqlRawAsync("ENABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;");
 
-                // 🔸 Bật lại trigger
-                cmd.CommandText = "ENABLE TRIGGER trg_TaskHistory_Snapshot ON Tasks;";
-                await cmd.ExecuteNonQueryAsync();
+                // Cập nhật IsDeleted = 0 trong history
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE TaskHistory SET IsDeleted = 0, ChangedAt = SYSDATETIME() WHERE TaskId = {0}", taskId);
 
-                // 🔸 Cập nhật lại lịch sử: gắn IsDeleted = 0
-                cmd.CommandText = "UPDATE TaskHistory SET IsDeleted = 0, ChangedAt = SYSDATETIME() WHERE TaskId = @taskId;";
-                var param2 = cmd.CreateParameter();
-                param2.ParameterName = "@taskId";
-                param2.Value = taskId;
-                cmd.Parameters.Add(param2);
-                await cmd.ExecuteNonQueryAsync();
-
-                await tran.CommitAsync();
+                await transaction.CommitAsync();
 
                 var restoredTask = await _context.Tasks
                     .AsNoTracking()
@@ -378,7 +420,7 @@ namespace server.Services.Project
             }
             catch (Exception ex)
             {
-                await tran.RollbackAsync();
+                await transaction.RollbackAsync();
                 throw new Exception($"Restore failed for TaskId {taskId}.", ex);
             }
         }

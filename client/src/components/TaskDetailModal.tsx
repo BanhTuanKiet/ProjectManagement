@@ -41,9 +41,7 @@ import type { ActiveUser } from "@/utils/IUser";
 import { Trash } from "lucide-react";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { useUser } from "@/app/(context)/UserContext";
-import { title } from "process";
 import { mapTaskDetailToUpdateTask } from "@/utils/mapperUtil";
-import { setPriority } from "os";
 
 interface Comment {
     commentId: number;
@@ -341,7 +339,7 @@ export default function TaskDetailModal({
                                 className="text-blue-600 hover:bg-blue-50"
                             >
                                 <Plus className="h-4 w-4 mr-1" />
-                                Add epic
+                                TASK-{taskId}
                             </Button>
                             <span className="text-gray-400">/</span>
                             <div className="flex items-center gap-2">

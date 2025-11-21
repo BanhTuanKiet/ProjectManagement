@@ -5,8 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X } from 'lucide-react'
+import { X, CheckCircle, XCircle } from 'lucide-react'
 import axios from "@/config/axiosConfig";
+import { toast } from "sonner";
+import { InviteUser } from "@/utils/IUser"
 
 
 interface InvitePeopleDialogProps {
@@ -51,6 +53,17 @@ export default function InvitePeopleDialog({
             console.log("Payload gửi API:", payload)
 
             const response = await axios.post(`projects/inviteMember/${projectId}`, payload)
+            const results = response.data.results;
+
+            results.forEach((r: InviteUser) => {
+                toast(r.status, {
+                    description: r.email,
+                    icon: r.status === "Invited"
+                        ? <CheckCircle className="text-green-500" />
+                        : <XCircle className="text-red-500" />,
+                    duration: 2500
+                });
+            });
 
             await new Promise((resolve) => setTimeout(resolve, 1000))
 
