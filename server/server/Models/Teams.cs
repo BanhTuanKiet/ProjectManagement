@@ -23,9 +23,14 @@ namespace server.Models
         public virtual ApplicationUser Leader { get; set; } = null!;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public int ProjectId { get; set; }
+        
+        //public int ProjectId { get; set; }
+      
+        public int? ProjectId { get; set; } = null;
+
 
         public virtual Project Project { get; set; }
+
         // Danh sách member
         public ICollection<TeamMembers> Members { get; set; } = new List<TeamMembers>();
     }

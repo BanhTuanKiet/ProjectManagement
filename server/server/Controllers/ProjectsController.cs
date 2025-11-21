@@ -255,6 +255,33 @@ namespace server.Controllers
             });
         }
 
+        [HttpDelete("{projectId}")]
+        public async Task<IActionResult> DeleteProject(int projectId)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            bool status = await _projectsServices.DeleteProject(projectId);
+            if (!status)
+                throw new ErrorException("Delete project fail!");
+
+            var notification = new Notification
+            {
+                UserId = null,
+                ProjectId = projectId,
+                Message = $"{project.Name} was deleted by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = "",
+                CreatedId = userId,
+                Type = "project"
+            };
+            await _notificationsService.SaveNotification(notification);
+            var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+            await NotificationHub.SendNotificationProject(_notificationHubContext, projectId, userId, notificationDto);
+            return Ok(new { message = "Delete project successfull!" });
+          }
+
         [HttpPut("leader/{projectId}/{leaderId}/{newLeaderId}")]
         [Authorize(Policy = "PMRequirement")]
         public async Task<ActionResult> ChangeLeader(int projectId, string leaderId, string newLeaderId)

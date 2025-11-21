@@ -27,12 +27,13 @@ namespace server.Services.Project
             _userManager = userManager;
         }
 
-        public async Task<Teams> CreateTeam(string leaderId)
+        public async Task<Teams> CreateTeam(string leaderId, int projectId)
         {
             var team = new Teams
             {
                 Name = $"Team - {leaderId}",
-                LeaderId = leaderId
+                LeaderId = leaderId,
+                ProjectId = projectId
             };
 
             await _context.Teams.AddAsync(team);
@@ -44,26 +45,32 @@ namespace server.Services.Project
         {
             var team = await _context.Teams
                 .Include(t => t.Members)
-                .FirstOrDefaultAsync(t => t.LeaderId == leaderId);
+                .FirstOrDefaultAsync(t => t.LeaderId == leaderId && t.ProjectId == projectId);
 
             if (team == null)
             {
                 team = new Teams
                 {
                     Name = $"Team - {leaderId}",
-                    LeaderId = leaderId
+                    LeaderId = leaderId,
+                    ProjectId = projectId
                 };
 
                 await _context.Teams.AddAsync(team);
                 await _context.SaveChangesAsync();
             }
 
-            var existingMemberIds = team.Members.Select(m => m.UserId).ToList();
+            var existingMemberIds = team.Members
+            .Where(m => m.TeamId == team.Id)
+            .Select(m => m.UserId).ToList();
 
             foreach (var memberId in memberIds)
             {
+                Console.WriteLine("Vào được foreach ");
+                Console.WriteLine("AAAAAAAAAAA" + memberId);
                 if (!existingMemberIds.Contains(memberId))
                 {
+                    Console.WriteLine("AAAAAAAAAAA" + memberId);
                     team.Members.Add(new TeamMembers
                     {
                         TeamId = team.Id,

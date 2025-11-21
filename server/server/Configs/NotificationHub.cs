@@ -20,5 +20,15 @@ namespace server.Configs
             var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
             await hubContext.Clients.Users(recipients).SendAsync("NotifyTaskChanged", notification);
         }
+
+        public static async System.Threading.Tasks.Task SendNotificationProject(
+            IHubContext<NotificationHub> hubContext,
+            int projectId,
+            string userId,
+            NotificationDTO.NotificationBasic notification)
+        {
+            var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
+            await hubContext.Clients.Users(recipients).SendAsync("NotifyProject", notification);
+        }
     }
 }

@@ -158,7 +158,7 @@ namespace server.Services.User
 
         public async Task<UserDTO.UserProfile> UpdateUserImage(IFormFile file, string userId, string type)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
             if (user == null)
                 return null;
 
@@ -169,7 +169,7 @@ namespace server.Services.User
             ImageUploadResult imageResult = null;
             Console.WriteLine($"[UPLOAD DEBUG] FileName: {file.FileName}, Extension: {ext}");
 
-            if (!new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" }.Contains(ext))
+            if (new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" }.Contains(ext))
             {
                 var uploadParams = new ImageUploadParams
                 {

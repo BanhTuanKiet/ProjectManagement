@@ -78,7 +78,7 @@ const ProfilePage2 = () => {
         formData.append("file", file);
 
         try {
-            const res = await axios.post("/users/upload/imagecover", formData, {
+            const res = await axios.post(`/users/upload/${"imagecover"}`, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
@@ -112,7 +112,7 @@ const ProfilePage2 = () => {
         const formData = new FormData();
         formData.append("file", croppedBlob);
 
-        const res = await axios.post("/users/upload/avatar", formData, {
+        const res = await axios.post(`/users/upload/${"avatar"}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
 

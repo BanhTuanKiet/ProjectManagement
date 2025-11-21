@@ -11,6 +11,7 @@ import { useUser } from '@/app/(context)/UserContext'
 import { useRouter } from 'next/navigation'
 import ColoredAvatar from './ColoredAvatar'
 import type { Notification } from '@/utils/INotifications'
+import axios from '@/config/axiosConfig'
 
     const planGradients = {
         "Free": "from-gray-400 to-gray-600",
@@ -26,10 +27,36 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [theme, setTheme] = useState(false)
     const { handleSignout, user } = useUser()
-    const { notifications, setData } = useNotification()
+    const { connection, setData, notifications } = useNotification()
     const router = useRouter()
     const taskNotifications: Notification[] = notifications.task ?? []
     
+    // const unreadCount = taskNotifications.filter(n => !n.read).length
+
+    // // Handler đánh dấu notification đã đọc
+    // const handleMarkRead = (id: string) => {
+    //     setData(
+    //         taskNotifications.map(n => (n.notificationId === id ? { ...n, read: true } : n)),
+    //         'task'
+    //     )
+    // }
+
+    useEffect(() => {
+        if (!connection) return
+
+        const fetchNotifications = async () => {
+            try {
+                const response = await axios.get(`/notifications/${"task"}`)
+                const data: Notification[] = response.data
+                setData(data, "task")
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        fetchNotifications()
+    }, ["task", connection])
+
     return (
         <>
             <header className="relative flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 z-50 w-full overflow-hidden">
