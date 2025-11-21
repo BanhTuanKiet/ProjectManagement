@@ -53,5 +53,12 @@ namespace server.Controllers
 
             return Ok(teamMembers);
         }
+
+        [HttpGet("members/available/{projectId}/{leaderId}")]
+        public async Task<ActionResult> FindAvailableMembers(int projectId, string leaderId)
+        {
+            List<UserDTO.AvailableMember> availableMembers = await _teamServices.FindAvilableMembers(projectId, leaderId);
+            return Ok(availableMembers);
+        }
     }
 }

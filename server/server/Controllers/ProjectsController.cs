@@ -280,6 +280,22 @@ namespace server.Controllers
             var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             await NotificationHub.SendNotificationProject(_notificationHubContext, projectId, userId, notificationDto);
             return Ok(new { message = "Delete project successfull!" });
+          }
+
+        [HttpPut("leader/{projectId}/{leaderId}/{newLeaderId}")]
+        [Authorize(Policy = "PMRequirement")]
+        public async Task<ActionResult> ChangeLeader(int projectId, string leaderId, string newLeaderId)
+        {
+            ApplicationUser leader = await _userManager.FindByIdAsync(leaderId)
+                ?? throw new ErrorException(404, "Leader not found");
+            ApplicationUser newLeader = await _userManager.FindByIdAsync(newLeaderId)
+                ?? throw new ErrorException(404, "New leader not found");
+
+            bool isChanged = await _projectsServices.ChangeLeader(projectId, leaderId, newLeaderId);
+
+            if (!isChanged) throw new ErrorException(400, "Change leader failed");
+
+            return Ok(new { message = "Chang leader successful" });
         }
     }
 }

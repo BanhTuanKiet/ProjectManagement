@@ -286,6 +286,17 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> ChangeLeader(int projectId, string leaderId, string newLeaderId)
+        {
+            ProjectMember leader = await _context.ProjectMembers.FirstOrDefaultAsync(pm => pm.UserId == leaderId && pm.ProjectId == projectId);
+            ProjectMember newLeader = await _context.ProjectMembers.FirstOrDefaultAsync(pm => pm.UserId == newLeaderId && pm.ProjectId == projectId);
+
+            leader.RoleInProject = "Member";
+            newLeader.RoleInProject = "Leader";
+
+            await _context.SaveChangesAsync();  
+        }
     }
 }
 
