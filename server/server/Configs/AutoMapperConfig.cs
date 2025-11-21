@@ -27,6 +27,8 @@ namespace server.Configs
             CreateMap<ProjectMember, ProjectDTO.ProjectMembers>()
                 .ForMember(dest => dest.name,
                             opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.email,
+                            opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.role,
                             opt => opt.MapFrom(src => src.RoleInProject))
                 .ForMember(dest => dest.isOwner,
@@ -41,12 +43,12 @@ namespace server.Configs
 
             CreateMap<SubTaskDTO.UpdateSubTask, SubTask>()
                 .ForMember(dest => dest.Title,
-                            opt => opt.Condition(src => src.Summary != null)) // chỉ map nếu có giá trị
+                            opt => opt.Condition(src => src.Summary != null))
                 .ForMember(dest => dest.Status,
                             opt => opt.Condition(src => src.Status != null))
                 .ForMember(dest => dest.AssigneeId,
                             opt => opt.Condition(src => src.AssigneeId != null))
-                .ForMember(dest => dest.Assignee, opt => opt.Ignore()) // tránh map navigation
+                .ForMember(dest => dest.Assignee, opt => opt.Ignore())
                 .ForMember(dest => dest.Task, opt => opt.Ignore());
 
 

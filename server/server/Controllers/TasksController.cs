@@ -87,7 +87,7 @@ namespace server.Controllers
                     // 2. Lấy toàn bộ team của các Leader trong project
                     var teams = await _teamsService.GetAllTeamsInProject(projectId);
 
-                    Console.WriteLine("Teams AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", JsonConvert.SerializeObject(teams));
+                    // Console.WriteLine("Teams AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", JsonConvert.SerializeObject(teams));
 
                     // 3. Nhóm task theo team
                     var resultTeams = new List<object>();

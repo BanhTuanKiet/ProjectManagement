@@ -18,5 +18,6 @@ namespace server.Models
         // Task<List<ProjectDTO.ProjectMembers>> GetMembersTeam(string leaderId);
         Task<string> GetProjectRole(int projectId, string userId);
         Task<bool> DeleteMembers(int projectId, List<string> userIds);
+        Task<Subscriptions> GetSubscriptions(string userId);
     }
 }

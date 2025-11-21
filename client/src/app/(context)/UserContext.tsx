@@ -44,7 +44,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 const response = await axios.get(`/users/infor`)
                 if (response.data) {
                     setUser(response.data)
-                    console.log(response.data)
                 }
             } catch (error) {
                 console.error(error)

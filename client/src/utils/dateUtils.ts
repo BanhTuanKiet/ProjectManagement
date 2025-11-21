@@ -1,3 +1,5 @@
+import { Member } from "./IUser"
+
 export const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
     const month = date.getMonth()
@@ -126,4 +128,28 @@ export const addDays = (date: Date, days: number) => {
     const result = new Date(date)
     result.setDate(result.getDate() + days)
     return result
+}
+
+export const filterMembersByDate = (members: Member[], timeRange: string): Member[] => {
+    if (timeRange === "all") return members
+
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    return members.filter(m => {
+        const joinDate = new Date(m.joinedAt)
+        const joinDateOnly = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate())
+        const daysDifference = Math.floor((today.getTime() - joinDateOnly.getTime()) / (1000 * 60 * 60 * 24))
+
+        switch (timeRange) {
+            case "today":
+                return daysDifference === 0
+            case "7days":
+                return daysDifference >= 0 && daysDifference <= 7
+            case "30days":
+                return daysDifference >= 0 && daysDifference <= 30
+            default:
+                return true
+        }
+    })
 }

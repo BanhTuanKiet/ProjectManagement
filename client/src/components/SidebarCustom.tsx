@@ -52,9 +52,7 @@ export function SidebarCustom({ className }: { className?: string }) {
 
     return (
         <Sidebar className={`w-72 h-full border-r border-border/40 bg-gradient-to-b from-background via-background to-muted/20 ${className || ""}`}>
-            {/* Header with Logo and Actions */}
-            <SidebarHeader className="border-b border-border/40 p-4 py-2 bg-background/50 backdrop-blur-sm">
-                {/* Search Bar */}
+            {/* <SidebarHeader className="border-b border-border/40 p-4 py-2 bg-background/50 backdrop-blur-sm">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
@@ -63,7 +61,7 @@ export function SidebarCustom({ className }: { className?: string }) {
                         className="w-full pl-9 pr-3 py-2 text-sm bg-muted/50 border border-border/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all placeholder:text-muted-foreground/60"
                     />
                 </div>
-            </SidebarHeader>
+            </SidebarHeader> */}
 
             <SidebarContent className="p-3 h-[calc(100vh-180px)] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                 <SidebarGroup>

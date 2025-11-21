@@ -130,25 +130,6 @@ export default function ProjectInterface() {
                                 <MoreHorizontalDropdown />
                             </div>
                         </div>
-
-                        <div className="flex items-center space-x-2">
-                            <button className="p-2 hover:bg-gray-100 rounded">
-                                <Maximize2 className="w-4 h-4 text-gray-500" />
-                            </button>
-
-                            <button className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                                <Share2 className="w-4 h-4" />
-                                <span className="text-sm font-medium">Share</span>
-                            </button>
-
-                            <button className="p-2 hover:bg-gray-100 rounded">
-                                <Link2 className="w-4 h-4 text-gray-500" />
-                            </button>
-
-                            <button className="p-2 hover:bg-gray-100 rounded">
-                                <Zap className="w-4 h-4 text-gray-500" />
-                            </button>
-                        </div>
                     </div>
                 </div>
 

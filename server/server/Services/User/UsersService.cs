@@ -226,5 +226,10 @@ namespace server.Services.User
 
             return true;
         }
+
+        public async Task<Subscriptions> GetSubscriptions(string userId)
+        {
+            return await _context.Subscriptions.Include(s => s.Plan).FirstOrDefaultAsync(s => s.UserId == userId);
+        }
     }
 }

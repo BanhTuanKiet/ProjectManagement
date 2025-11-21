@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Build.Framework;
 using server.Services.Task;
 using Microsoft.EntityFrameworkCore;
+using server.Services.User;
 
 namespace server.Controllers
 {
@@ -204,5 +205,13 @@ namespace server.Controllers
             if (!isDeleted) throw new ErrorException(400, "Removed failed");
             return Ok(new { userIds = userIds, message = "Removed successfully" });
         }
+
+            [HttpGet("subscription")]
+            public async Task<ActionResult> GetSubscriptions()
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Subscriptions subscription = await _userServices.GetSubscriptions(userId);
+                return Ok(subscription.Plan.Name);
+            }
     }
 }
