@@ -82,7 +82,6 @@ const CustomPieTooltip = ({ active, payload }: any) => {
             <div className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-lg border border-gray-700">
                 <p className="font-semibold text-sm">{d.name}</p>
                 <p className="text-xs font-bold text-blue-300">{d.value} tasks</p>
-                <p className="text-xs text-gray-400">{(d.payload.percent * 100).toFixed(1)}%</p>
             </div>
         )
     }
@@ -330,6 +329,14 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
 
     }, [filteredTasks])
 
+    const handleNavigateWithStatus = (statusLabel: string) => {
+        let query = `status=${encodeURIComponent(statusLabel)}`;
+
+        if (selectedMemberId !== "ALL") {
+            query += `&assignee=${encodeURIComponent(selectedMemberId)}`;
+        }
+        window.location.hash = `list?${query}`;
+    }
 
     // --- Render ---
 
@@ -475,13 +482,15 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                                     nameKey="name"
                                     cx="50%"
                                     cy="50%"
-                                    // GIẢM outerRadius từ 110 xuống 100 hoặc 95 để label không bị cắt
                                     outerRadius={100}
                                     innerRadius={60}
                                     paddingAngle={2}
-                                    // Label: Dời label ra xa một chút để thoáng hơn
                                     label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                                     labelLine={true} // Hiển thị đường kẻ dẫn đến label cho rõ ràng
+                                    onClick={(data) => {
+                                        handleNavigateWithStatus(data.name);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
                                 >
                                     {pieData.map((entry, index) => {
                                         const stKey = normalizeStatus(entry.name)
@@ -493,10 +502,10 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                                 </Pie>
 
                                 {/* Thêm wrapperStyle zIndex để Tooltip luôn nổi lên trên cùng */}
-                                {/* <Tooltip
+                                <Tooltip
                                     content={<CustomPieTooltip />}
                                     wrapperStyle={{ zIndex: 1000 }}
-                                /> */}
+                                />
                                 <Legend verticalAlign="bottom" height={36} />
                             </PieChart>
                         </ResponsiveContainer>

@@ -76,7 +76,6 @@ namespace server.Controllers
                 return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
 
             string role = projectMember.RoleInProject;
-            Console.WriteLine("User Role AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " + role);
 
             List<TaskDTO.BasicTask> tasks = new();
 
@@ -274,12 +273,17 @@ namespace server.Controllers
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var name = User.FindFirst(ClaimTypes.Name)?.Value;
-            Console.WriteLine("Received updates for task patch aaaaaaaaaaaaaaaaaaaaaaaaaaaaa:", JsonConvert.SerializeObject(updates));
+                var name = User.FindFirst(ClaimTypes.Name)?.Value;
+                var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+
+                if (projectMember == null)
+                    return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+
+                string role = projectMember.RoleInProject;
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
-            var result = await _tasksService.PatchTaskField(projectId, taskId, updates, userId)
+            var result = await _tasksService.PatchTaskField(projectId, taskId, updates, userId, role)
                 ?? throw new ErrorException(404, "Task not found");
 
             var logGenerators = new Dictionary<string, Func<string>>
@@ -563,6 +567,14 @@ namespace server.Controllers
         [HttpGet("{projectId}/filter-by")]
         public async Task<ActionResult> FilterTasks(int projectId, [FromQuery] string? keyword)
         {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+
+            if (projectMember == null)
+                return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+
+            string role = projectMember.RoleInProject;
+
             var query = HttpContext.Request.Query;
 
             if (!query.Any())
@@ -570,9 +582,6 @@ namespace server.Controllers
 
             // Lưu key/value từ query vào Dictionary
             var filters = query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-
-            // Nếu có "me" → thay bằng userId
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (filters.ContainsValue("me"))
             {
@@ -586,7 +595,22 @@ namespace server.Controllers
 
             var result = await _tasksService.FilterTasks(projectId, filters, keyword);
             var ans = new List<TaskDTO.BasicTask>();
-
+            if(role == "Project Manager")
+            {
+                return Ok(result);
+            }
+            if(role == "Leader")
+            {
+                var members = await _teamsService.GetTeamMembers(userId);
+                foreach (var task in result)
+                {
+                    if (members.Contains(task.AssigneeId))
+                    {
+                        ans.Add(task);
+                    }
+                }
+                return Ok(ans);
+            }
             foreach (var task in result)
             {
                 if (task.AssigneeId == userId)
