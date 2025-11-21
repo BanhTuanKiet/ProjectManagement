@@ -72,7 +72,7 @@ namespace server.Configs
                             if (invitation.RoleInProject == "Leader")
                             {
                                 var teamServices = context.HttpContext.RequestServices.GetRequiredService<ITeams>();
-                                Teams team = await teamServices.CreateTeam(user.Id);
+                                Teams team = await teamServices.CreateTeam(user.Id, invitation.ProjectId);
 
                                 if (team == null)
                                 {

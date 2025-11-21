@@ -16,5 +16,6 @@ namespace server.Models
         Task<Models.Project> UpdateProject(int projectId, ProjectDTO.UpdateProject update);
         Task<int> CountProject(string ownerId);
         Task<Project> CreateProject(ProjectDTO.CreateProject projectDTO);
+        Task<bool> DeleteProject(int project);
     }
 }

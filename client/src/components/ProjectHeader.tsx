@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Bell, User, LogOut, Sun, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -10,6 +10,7 @@ import { useUser } from '@/app/(context)/UserContext'
 import { useRouter } from 'next/navigation'
 import ColoredAvatar from './ColoredAvatar'
 import type { Notification } from '@/utils/INotifications'
+import axios from '@/config/axiosConfig'
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isUserOpen, setIsUserOpen] = useState(false)
@@ -17,19 +18,35 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const [theme, setTheme] = useState(false)
 
     const { handleSignout, user } = useUser()
-    const { notifications, setData } = useNotification()
+    const { connection, setData, notifications } = useNotification()
     const router = useRouter()
 
     const taskNotifications: Notification[] = notifications.task ?? []
     // const unreadCount = taskNotifications.filter(n => !n.read).length
 
-    // Handler đánh dấu notification đã đọc
+    // // Handler đánh dấu notification đã đọc
     // const handleMarkRead = (id: string) => {
     //     setData(
     //         taskNotifications.map(n => (n.notificationId === id ? { ...n, read: true } : n)),
     //         'task'
     //     )
     // }
+
+    useEffect(() => {
+        if (!connection) return
+
+        const fetchNotifications = async () => {
+            try {
+                const response = await axios.get(`/notifications/${"task"}`)
+                const data: Notification[] = response.data
+                setData(data, "task")
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        fetchNotifications()
+    }, ["task", connection])
 
     return (
         <header className="flex items-end justify-between px-4 py-2 bg-white border-b border-gray-200 z-50 relative w-full">

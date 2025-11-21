@@ -255,6 +255,37 @@ namespace server.Services.Project
 
             return project;
         }
+
+        public async Task<bool> DeleteProject(int projectId)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+            if (project == null) return false;
+
+            var projectMembers = await _context.ProjectMembers
+                .Where(pm => pm.ProjectId == projectId)
+                .ToListAsync();
+
+            var teams = await _context.Teams.Where(t => t.ProjectId == projectId).ToListAsync();
+
+            var teamIds = teams.Select(t => t.Id).ToList();
+
+            var members = await _context.TeamMembers
+                .Where(m => teamIds.Contains(m.TeamId))
+                .ToListAsync();
+
+
+            _context.TeamMembers.RemoveRange(members);
+
+            _context.Teams.RemoveRange(teams);
+
+            _context.ProjectMembers.RemoveRange(projectMembers);
+
+            _context.Projects.Remove(project);
+
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
 

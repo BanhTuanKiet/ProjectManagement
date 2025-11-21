@@ -24,6 +24,8 @@ namespace server.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public int? ProjectId { get; set; } = null;
+
         // Danh sách member
         public ICollection<TeamMembers> Members { get; set; } = new List<TeamMembers>();
     }
