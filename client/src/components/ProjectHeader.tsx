@@ -21,7 +21,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const [isUserOpen, setIsUserOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [theme, setTheme] = useState(false);
-
+    const [plan, setPlan] = useState<keyof typeof planGradients | null>(null)
     const { handleSignout, user } = useUser();
     const { connection, setData, notifications } = useNotification();
     const router = useRouter();
@@ -44,8 +44,18 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
         fetchNotifications();
     }, [connection, setData]);
 
-    const plan = user?.planName ?? "Pro";
-    const gradientColor = planGradients[plan as keyof typeof planGradients] || planGradients.Pro;
+    useEffect(() => {
+        const fetchSubscription = async () => {
+            try {
+                // const response = await axios.get(`/users/subscription`)
+                // setPlan(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchSubscription()
+    }, [])
 
     return (
         <>
@@ -77,7 +87,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
 
                     {/* Plan Button with Flip/Wave Animation */}
                     <Button
-                        className={`bg-gradient-to-r ${gradientColor} hover:shadow-lg text-white font-medium shadow-md transition-all duration-500`}
+                        className={`bg-gradient-to-r ${planGradients[(plan ?? "Free") as keyof typeof planGradients]} hover:shadow-lg text-white font-medium shadow-md transition-all duration-500`}
                     >
                         <style>{`
                             @keyframes flip {
