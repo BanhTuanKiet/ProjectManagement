@@ -12,21 +12,21 @@ import {
 } from "@/components/ui/select"
 import ColoredAvatar from './ColoredAvatar'
 import axios from '@/config/axiosConfig'
-import { Member } from '@/utils/IUser'
+import { Member, TaskAssignee } from '@/utils/IUser'
 import { useParams } from 'next/navigation'
 import { BasicTask, NewTaskView } from '@/utils/ITask'
 import { formattedDate, getDeadlineFromSelectedDay } from '@/utils/dateUtils'
 
 export default function AddTaskViewModal({
     isModalOpen,
-    members,
+    availableUsers,
     currentDate,
     selectedDay,
     setIsModalOpen,
     setTasks
 }: {
     isModalOpen: boolean
-    members: Member[]
+    availableUsers: TaskAssignee[]
     currentDate: Date
     selectedDay: number
     setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -132,7 +132,7 @@ export default function AddTaskViewModal({
                                             <SelectValue placeholder="Select assignee" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {members?.map((member) => (
+                                            {availableUsers?.map((member) => (
                                                 <SelectItem key={member.userId} value={member.userId}>
                                                     <div className="flex items-center gap-2">
                                                         <ColoredAvatar id={member.userId} name={member.name} size="sm" />

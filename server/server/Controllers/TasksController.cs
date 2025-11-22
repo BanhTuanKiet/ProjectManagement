@@ -312,7 +312,7 @@ namespace server.Controllers
                     );
                 }
             }
-            return Ok(new { message = "Update successful" });
+            return Ok(new { message = "Update successful", task = result });
         }
 
         // [Authorize(Policy = "PMOrLeaderRequirement")]

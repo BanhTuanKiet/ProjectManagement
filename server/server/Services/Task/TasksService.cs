@@ -25,6 +25,8 @@ namespace server.Services.Project
         public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId)
         {
             var tasks = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
                 .Where(t => t.AssigneeId == userId && t.ProjectId == projectId)
                 .ToListAsync();
 
@@ -131,6 +133,8 @@ namespace server.Services.Project
         public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId, string role)
         {
             var task = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
                 .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
 
             if (task == null) return null;

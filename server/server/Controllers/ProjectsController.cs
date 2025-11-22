@@ -71,6 +71,14 @@ namespace server.Controllers
             return Ok(projectMembers);
         }
 
+        [HttpGet("{projectId}/member/by-role/{role}")]
+        public async Task<ActionResult> GetProjectMembersByRole(int projectId, string role)
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembersByRole(projectId, role, userId);
+            return Ok(projectMembers);
+        }
+
         [HttpPut("starred/{projectId}/{isStarred}")]
         public async Task<ActionResult> ChangeStatusIsStarred(int projectId, bool isStarred)
         {
