@@ -293,13 +293,14 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
     // Bar Chart Data (Member Performance)
     // Tính toán dựa trên filteredTasks hiện tại
     const memberPerformanceData = useMemo(() => {
-        const memberMap: Record<string, { name: string, done: number, todo: number, inProgress: number, expired: number, total: number }> = {}
+        const memberMap: Record<string, { id: string, name: string, done: number, todo: number, inProgress: number, expired: number, total: number }> = {}
 
         filteredTasks.forEach(t => {
             if (!t.assigneeId || !t.assignee) return; // Bỏ qua task ko có assignee
 
             if (!memberMap[t.assigneeId]) {
                 memberMap[t.assigneeId] = {
+                    id: t.assigneeId,
                     name: t.assignee,
                     done: 0,
                     todo: 0,
@@ -320,6 +321,7 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
         });
 
         return Object.values(memberMap).map(m => ({
+            id: m.id,
             name: m.name,
             done: m.total ? (m.done / m.total) * 100 : 0,
             todo: m.total ? (m.todo / m.total) * 100 : 0,
@@ -336,6 +338,21 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
             query += `&assignee=${encodeURIComponent(selectedMemberId)}`;
         }
         window.location.hash = `list?${query}`;
+    }
+
+    // Xử lý khi click vào Bar Chart (Member)
+    const handleNavigateMember = (data: any) => {
+        if (data && data.payload && data.payload.id) {
+            window.location.hash = `list?assignee=${encodeURIComponent(data.payload.id)}`;
+            return;
+        }
+
+        if (data && data.activePayload && data.activePayload.length > 0) {
+            const memberId = data.activePayload[0].payload.id;
+            if (memberId) {
+                window.location.hash = `list?assignee=${encodeURIComponent(memberId)}`;
+            }
+        }
     }
 
     // --- Render ---
@@ -574,7 +591,11 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                         Member Completion Rate (%)
                     </h3>
                     <ResponsiveContainer width="100%" height={350}>
-                        <BarChart data={memberPerformanceData} layout="vertical" margin={{ left: 20 }}>
+                        <BarChart
+                            data={memberPerformanceData}
+                            layout="vertical"
+                            margin={{ left: 20 }}
+                        >
                             <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                             <XAxis type="number" domain={[0, 100]} unit="%" />
                             <YAxis dataKey="name" type="category" width={120} style={{ fontSize: '12px', fontWeight: 500 }} />
@@ -583,10 +604,43 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                                 contentStyle={{ borderRadius: '8px' }}
                             />
                             <Legend />
-                            <Bar dataKey="done" name="Done" stackId="a" fill="#4ade80" barSize={20} />
-                            <Bar dataKey="progress" name="In Progress" stackId="a" fill="#facc15" barSize={20} />
-                            <Bar dataKey="todo" name="Todo" stackId="a" fill="#60a5fa" barSize={20} />
-                            <Bar dataKey="expired" name="Expired" stackId="a" fill="#f87171" barSize={20} />
+
+                            <Bar
+                                dataKey="done"
+                                name="Done"
+                                stackId="a"
+                                fill="#4ade80"
+                                barSize={20}
+                                onClick={handleNavigateMember}
+                                cursor="pointer"
+                            />
+                            <Bar
+                                dataKey="progress"
+                                name="In Progress"
+                                stackId="a"
+                                fill="#facc15"
+                                barSize={20}
+                                onClick={handleNavigateMember}
+                                cursor="pointer"
+                            />
+                            <Bar
+                                dataKey="todo"
+                                name="Todo"
+                                stackId="a"
+                                fill="#60a5fa"
+                                barSize={20}
+                                onClick={handleNavigateMember}
+                                cursor="pointer"
+                            />
+                            <Bar
+                                dataKey="expired"
+                                name="Expired"
+                                stackId="a"
+                                fill="#f87171"
+                                barSize={20}
+                                onClick={handleNavigateMember}
+                                cursor="pointer"
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
