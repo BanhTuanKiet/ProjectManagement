@@ -29,20 +29,20 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const taskNotifications: Notification[] = notifications.task ?? [];
 
     // Lấy lại notifications khi có connection
-    useEffect(() => {
-        if (!connection) return;
+    // useEffect(() => {
+    //     if (!connection) return;
 
-        const fetchNotifications = async () => {
-            try {
-                const { data } = await axios.get<Notification[]>("/notifications/task");
-                setData(data, "task");
-            } catch (error) {
-                console.error("Failed to fetch notifications:", error);
-            }
-        };
+    //     const fetchNotifications = async () => {
+    //         try {
+    //             const { data } = await axios.get<Notification[]>("/notifications/task");
+    //             setData(data, "task");
+    //         } catch (error) {
+    //             console.error("Failed to fetch notifications:", error);
+    //         }
+    //     };
 
-        fetchNotifications();
-    }, [connection, setData]);
+    //     fetchNotifications();
+    // }, [connection, setData]);
 
     useEffect(() => {
         const fetchSubscription = async () => {
