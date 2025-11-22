@@ -35,6 +35,14 @@ namespace server.Controllers
             return Ok(notifications);
         }
 
+        [HttpGet("myNotifications")]
+        public async Task<IActionResult> GetMyNotifications()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var notifications = await _notificationService.GetNotificationByUserIdAndRole(userId);
+            return Ok(notifications);
+        }
+
         [HttpPut("read/{notifiId}")]
         public async Task<ActionResult> MarkReadNotfify(int notifiId)
         {
