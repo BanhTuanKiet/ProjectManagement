@@ -55,6 +55,54 @@ namespace server.Services.Project
             return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
         }
 
+        public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembersByRole(int projectId, string role, string UserId)
+        {
+            // 1. Khởi tạo Query cơ bản (Chưa chạy xuống DB)
+            var query = _context.ProjectMembers
+                .Include(pm => pm.User)
+                .Include(pm => pm.Project)
+                .Where(pm => pm.ProjectId == projectId)
+                .AsQueryable(); // Chuyển sang IQueryable để có thể nối thêm điều kiện
+
+            // 2. Xử lý logic theo Role
+            switch (role)
+            {
+                case "Project Manager":
+                    // PM lấy tất cả -> Không cần filter thêm gì cả
+                    break;
+
+                case "Member":
+                    // Member chỉ lấy chính bản thân mình
+                    query = query.Where(pm => pm.UserId == UserId);
+                    break;
+
+                case "Leader":
+                    var teamIds = _context.Teams
+                        .Where(t => t.ProjectId == projectId && t.LeaderId == UserId)
+                        .Select(t => t.Id);
+
+                    // B2: Tìm danh sách UserId thuộc các team đó
+                    var teamMemberUserIds = _context.TeamMembers
+                        .Where(tm => teamIds.Contains(tm.TeamId))
+                        .Select(tm => tm.UserId);
+
+                    // B3: Filter ProjectMembers: Phải là (Bản thân Leader) HOẶC (Nằm trong list thành viên team)
+                    query = query.Where(pm => pm.UserId == UserId || teamMemberUserIds.Contains(pm.UserId));
+                    break;
+
+                default:
+                    // Trường hợp role lạ hoặc không xác định -> Trả về rỗng hoặc chỉ trả về bản thân (tùy bạn chọn)
+                    // Ở đây mình để default là chỉ trả về bản thân cho an toàn
+                    query = query.Where(pm => pm.UserId == UserId);
+                    break;
+            }
+
+            // 3. Thực thi Query và Map dữ liệu
+            var projectMembers = await query.ToListAsync();
+
+            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+        }
+
         public async Task<server.Models.Project> FindProjectById(int projectId)
         {
             return await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);

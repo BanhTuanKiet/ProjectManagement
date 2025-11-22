@@ -104,10 +104,14 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
 
                 const updatedTask = { ...currentTask, [field]: value }
                 const payload = mapTaskToApiUpdatePayload(updatedTask)
+                console.log("Payload to update:", payload);
 
-                await axios.put(`/tasks/${Number(project_name)}/tasks/${taskId}/update`, payload);
+                const response = await axios.put(`/tasks/${Number(project_name)}/tasks/${taskId}/update`, payload);
+                console.log("Update response:", response.data);
+                const updatedFromServer = response.data ? mapApiTaskToTask(response.data.task) : updatedTask;
+                console.log("Updated task from server:", updatedFromServer);
                 setTasks((prev) =>
-                    prev.map((t) => (t.id === taskId ? updatedTask : t))
+                    prev.map((t) => (t.id === taskId ? updatedFromServer : t))
                 );
             } catch (error) {
                 console.error("Error updating task:", error);

@@ -13,7 +13,7 @@ import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon } from "@/utils/statusUtils"
-import { Member, UserMini } from "@/utils/IUser"
+import { Member, UserMini, TaskAssignee } from "@/utils/IUser"
 
 
 interface SubtaskListProps {
@@ -27,7 +27,7 @@ interface SubtaskListProps {
     onCreateSubtask: (parentId: number, summary: string) => Promise<void>
     onCancelCreate: () => void
     isAdding: boolean
-    availableUsers?: Member[]
+    availableUsers?: TaskAssignee[]
 }
 
 export default function SubtaskList({

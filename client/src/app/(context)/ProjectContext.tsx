@@ -5,6 +5,7 @@ import type { ProjectBasic } from "../../utils/IProject"
 import axios from "../../config/axiosConfig"
 import { Member } from "@/utils/IUser"
 import { useParams } from "next/navigation"
+import type { TaskAssignee } from "@/utils/IUser"
 
 type ProjectContextType = {
     project_name: string
@@ -13,6 +14,8 @@ type ProjectContextType = {
     setProjects: React.Dispatch<React.SetStateAction<ProjectBasic[]>>
     members: Member[] | undefined
     setMembers: React.Dispatch<React.SetStateAction<Member[] | undefined>>
+    availableUsers: TaskAssignee[]
+    setAvailableUsers: React.Dispatch<React.SetStateAction<TaskAssignee[]>>
 }
 
 const ProjectContext = createContext<ProjectContextType>({
@@ -22,6 +25,8 @@ const ProjectContext = createContext<ProjectContextType>({
     setProjects: () => { },
     members: undefined,
     setMembers: () => { },
+    availableUsers: [],
+    setAvailableUsers: () => { },
 })
 
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
@@ -29,6 +34,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     const [members, setMembers] = useState<Member[]>()
     const [projectRole, setProjectRole] = useState<string>("")
     const { project_name } = useParams<{ project_name: string }>()
+    const [availableUsers, setAvailableUsers] = useState<TaskAssignee[]>([])
 
     useEffect(() => {
         if (project_name) {
@@ -75,6 +81,19 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         if (project_name) fetchMembers()
     }, [project_name])
 
+    useEffect(() => {
+        const fetchMembers = async () => {
+            try {
+                const response = await axios.get(`/projects/${Number(project_name)}/member/by-role/${projectRole}`)
+                console.log("Fetched members for role:", projectRole, response.data)
+                setAvailableUsers(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchMembers();
+    }, [project_name, projectRole])
+
     return (
         <ProjectContext.Provider
             value={{
@@ -84,6 +103,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
                 setProjects,
                 members,
                 setMembers,
+                availableUsers,
+                setAvailableUsers,
             }}
         >
             {children}

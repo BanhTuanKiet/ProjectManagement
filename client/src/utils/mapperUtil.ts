@@ -47,7 +47,7 @@ export const mapPriorityToApi = (priority?: "Low" | "Medium" | "High" | number):
 
 export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
   const assigneeName = apiTask.assignee || null
-  const reporterName = apiTask.createdBy || null
+  const reporterName = apiTask.createdName|| null
   // console.log("Mapping API Task:", apiTask);
   return {
     id: apiTask.subTaskId ?? apiTask.taskId ?? apiTask.id,
@@ -110,8 +110,11 @@ export const mapTaskToApiUpdatePayload = (task: Task): Record<string, any> => {
     payload.priority = mapPriorityToApi(task.priority)
   }
 
-  if (task.assignee?.id !== undefined) {
-    payload.assigneeId = task.assignee?.id
+  if (task.assignee && typeof task.assignee === 'object') {
+    const userObj = task.assignee as any; 
+    payload.assigneeId = userObj.id || userObj.userId || userObj.memberId;
+  } else if (task.assignee === null) {
+    payload.assigneeId = null;
   }
 
   if (task.dueDate !== undefined) {

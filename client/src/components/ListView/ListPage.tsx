@@ -23,6 +23,7 @@ import { mapApiTaskToTask } from "@/utils/mapperUtil";
 import ColoredAvatar from "../ColoredAvatar";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { getTaskStatusBadge, getPriorityBadge, taskStatus } from "@/utils/statusUtils";
+import type { TaskAssignee } from "@/utils/IUser"
 
 interface ListPageProps {
   tasksNormal: BasicTask[];
@@ -60,9 +61,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // Lấy members từ Context để đảm bảo danh sách user luôn đầy đủ
-  const { project_name, projectRole, members } = useProject();
+  const { project_name, projectRole, availableUsers, setAvailableUsers } = useProject();
 
   useEffect(() => {
     const rawHash = decodeURIComponent(window.location.hash.replace("#", ""));
@@ -85,12 +84,12 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
         setFilters((prev) => ({ ...prev, AssigneeId: assignee }));
       }
     }
-  }, [projectRole]);
+  }, [projectRole, project_name, setFilters]);
 
   // PM: Thấy tất cả members
   // Leader: Thấy tất cả members trong team
   // Member: Dropdown bị ẩn
-  const dropdownUsers = members || [];
+  const dropdownUsers = availableUsers || [];
 
   return (
     <div className="flex flex-col h-full overflow-hidden mx-auto w-full">
@@ -220,13 +219,13 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
 
                 {/* Sử dụng dropdownUsers (lấy từ Context) thay vì users từ table */}
                 {dropdownUsers.length > 0 ? (
-                  dropdownUsers.map((user) => (
+                  dropdownUsers.map((availableUsers) => (
                     <DropdownMenuItem
-                      key={user.userId}
-                      onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: user.userId }))}
+                      key={availableUsers.userId}
+                      onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: availableUsers.userId }))}
                     >
-                      <ColoredAvatar id={user.userId} name={user.name} size="sm" />
-                      <span className="text-sm ml-2">{user.name}</span>
+                      <ColoredAvatar id={availableUsers.userId} name={availableUsers.name} size="sm" />
+                      <span className="text-sm ml-2">{availableUsers.name}</span>
                     </DropdownMenuItem>
                   ))
                 ) : (
@@ -286,7 +285,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
             handleColumnDragOver={handleColumnDragOver}
             handleColumnDrop={handleColumnDrop}
             setEditingCell={setEditingCell}
-            availableUsers={members}
+            availableUsers={availableUsers}
             copySelectedTasks={copySelectedTasks}
             deleteSelectedTasks={deleteSelectedTasks}
             onTaskClick={setSelectedTask}

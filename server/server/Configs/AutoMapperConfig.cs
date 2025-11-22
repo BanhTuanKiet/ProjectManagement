@@ -10,9 +10,13 @@ namespace server.Configs
         {
             CreateMap<Models.Task, TaskDTO.BasicTask>()
                 .ForMember(dest => dest.Assignee,
-                            opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
+                    opt => opt.MapFrom(src => src.Assignee != null ? src.Assignee.UserName : null))
+
                 .ForMember(dest => dest.CreatedBy,
-                            opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedByNavigation.UserName : null));
+                    opt => opt.MapFrom(src => src.CreatedBy)) // Lấy ID
+
+                .ForMember(dest => dest.CreatedName,
+                    opt => opt.MapFrom(src => src.CreatedByNavigation != null ? src.CreatedByNavigation.UserName : null));
 
             CreateMap<Project, ProjectDTO.ProjectTitile>();
 
@@ -50,7 +54,6 @@ namespace server.Configs
                             opt => opt.Condition(src => src.AssigneeId != null))
                 .ForMember(dest => dest.Assignee, opt => opt.Ignore())
                 .ForMember(dest => dest.Task, opt => opt.Ignore());
-
 
             CreateMap<Notification, NotificationDTO.NotificationBasic>()
                 .ForMember(dest => dest.AssigneeId,
