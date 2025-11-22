@@ -3,7 +3,7 @@
 import { Search, Plus, Bell, Settings, User, LogOut, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNotification } from "@/app/(context)/Notfication";
 import { useUser } from "@/app/(context)/UserContext";
 import { useRouter } from "next/navigation";
@@ -25,24 +25,32 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const { handleSignout, user } = useUser();
     const { connection, setData, notifications } = useNotification();
     const router = useRouter();
-
+    const fetchedRef = useRef(false)
     const taskNotifications: Notification[] = notifications.task ?? [];
 
-    // Lấy lại notifications khi có connection
-    // useEffect(() => {
-    //     if (!connection) return;
+    useEffect(() => {
+        if (!connection) return;
+        if (fetchedRef.current) return;
+        fetchedRef.current = true;
 
-    //     const fetchNotifications = async () => {
-    //         try {
-    //             const { data } = await axios.get<Notification[]>("/notifications/task");
-    //             setData(data, "task");
-    //         } catch (error) {
-    //             console.error("Failed to fetch notifications:", error);
-    //         }
-    //     };
+        axios.get(`/notifications/task`).then(res => {
+            setData(res.data, "task");
+        });
+        axios.get(`/notifications/project`).then(res => {
+            setData(res.data, "project");
+        });
 
-    //     fetchNotifications();
-    // }, [connection, setData]);
+    }, [connection]);
+
+    const handleNotificationOpen = async () => {
+        try {
+            const { data } = await axios.get<Notification[]>(`/notifications/myNotifications`)
+            setData(data, "task")
+        } catch (error) {
+            console.error("Failed to load notifications:", error)
+        }
+    }
+
 
     // useEffect(() => {
     //     const fetchSubscription = async () => {
