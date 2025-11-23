@@ -62,6 +62,7 @@ namespace server.DTO
             public decimal? EstimateHours { get; set; }
             public int? SprintId { get; set; }
             public int? BacklogId { get; set; }
+            public bool IsActive { get; set; }
         }
 
         public class NewTaskListView

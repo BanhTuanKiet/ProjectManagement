@@ -11,11 +11,17 @@ import {
     AccordionTrigger,
     AccordionContent,
 } from "@/components/ui/accordion";
-import type { TaskDetail } from "@/utils/ITask";
-import { getPriorityIcon } from "@/utils/statusUtils";
+import { Badge } from "@/components/ui/badge";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Task } from "@/utils/mapperUtil";
 
 interface TaskDetailSidebarProps {
-    task: TaskDetail;
+    task: Task;
     taskId: number;
     projectId: number;
 }
@@ -25,80 +31,64 @@ export default function TaskDetailSidebar({
     taskId,
     projectId,
 }: TaskDetailSidebarProps) {
-    // State cho Dates
     const [startDate, setStartDate] = useState(task?.createdAt || "");
-    const [editStartDate, setEditStartDate] = useState(false);
     const [dueDate, setDueDate] = useState(task?.deadline || "");
+    const [priority, setPriority] = useState<number | string | undefined>(task?.priority);
+
+    const [editStartDate, setEditStartDate] = useState(false);
     const [editDueDate, setEditDueDate] = useState(false);
 
-    // State cho Priority
-    const [priority, setPriority] = useState(task?.priority);
-    const [open, setOpen] = useState(false);
-    const priorities = [
-        { label: "High", value: 1 },
-        { label: "Medium", value: 2 },
-        { label: "Low", value: 3 },
-    ];
+    type PriorityLevel = "Low" | "Medium" | "High";
 
-    // Đồng bộ state từ props
+    const priorityColorMap: Record<PriorityLevel, string> = {
+        Low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:bg-green-200",
+        Medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 hover:bg-yellow-200",
+        High: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 hover:bg-red-200",
+    };
+
+    // Helper logic
+    const getPriorityLabel = (p: number | string | undefined): PriorityLevel => {
+        if (p === undefined || p === null) return "Low";
+        if (typeof p === "number") {
+            if (p === 1) return "High";
+            if (p === 2) return "Medium";
+            if (p === 3) return "Low";
+            return "Low";
+        }
+        const strP = String(p);
+        if (["High", "Medium", "Low"].includes(strP)) return strP as PriorityLevel;
+        return "Low";
+    };
+
+    const currentPriorityLabel = getPriorityLabel(priority);
+
+    // Format date
+    const formatForInput = (dateStr: string) => {
+        if (!dateStr) return "";
+        try { return new Date(dateStr).toISOString().slice(0, 16); } catch (e) { return ""; }
+    };
+
     useEffect(() => {
         setStartDate(task.createdAt || "");
         setDueDate(task.deadline || "");
         setPriority(task.priority);
     }, [task.createdAt, task.deadline, task.priority]);
 
-    // --- Handlers cho Dates ---
-    const handleStartDate = async (newStartDate: string) => {
+    const updateTaskField = async (key: string, value: any) => {
         try {
-            await axios.put(`/tasks/updateStartDate/${projectId}/${taskId}`, {
-                createdAt: newStartDate,
+            await axios.put(`/tasks/${projectId}/tasks/${taskId}/update`, {
+                [key]: value
             });
-            setEditStartDate(false);
-            setStartDate(newStartDate);
+
+            switch (key) {
+                case 'priority': setPriority(value); break;
+                case 'deadline': setDueDate(value); break;
+                case 'createdAt': setStartDate(value); break;
+            }
         } catch (error) {
-            console.log(error);
+            console.error(`Failed to update ${key}:`, error);
         }
     };
-
-    const handleDueDate = async (newDueDate: string) => {
-        try {
-            await axios.put(`/tasks/updateDueDate/${projectId}/${taskId}`, {
-                deadline: newDueDate,
-            });
-            setEditDueDate(false);
-            setDueDate(newDueDate);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    // --- Handlers cho Priority ---
-    const handleSelect = async (value: number) => {
-        if (value === priority) {
-            setOpen(false);
-            return;
-        }
-        try {
-            await axios.put(`/tasks/updatePriority/${projectId}/${taskId}`, {
-                priority: value,
-            });
-            setPriority(value);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setOpen(false);
-        }
-    };
-
-    // Helper format ngày cho input
-    const formatForInput = (dateStr: string) => {
-        if (!dateStr) return "";
-        try {
-            // Cần format sang YYYY-MM-DDTHH:mm
-            return new Date(dateStr).toISOString().slice(0, 16);
-        } catch (e) { return ""; }
-    }
-
     return (
         <div className="w-80 border-l bg-gray-50 overflow-auto">
             <div className="p-4">
@@ -113,7 +103,7 @@ export default function TaskDetailSidebar({
                                 {/* Assignee (Chỉ hiển thị) */}
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Assignee
+                                        {task.assignee ? "Assignee" : "Unassigned"}
                                     </label>
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-gray-400" />
@@ -128,56 +118,57 @@ export default function TaskDetailSidebar({
                                     </button>
                                 </div>
 
-                                {/* Priority (Tự quản lý) */}
+                                {/* 2. PRIORITY (Sử dụng updateTaskField) */}
                                 <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Priority
-                                    </label>
-                                    <div
-                                        className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded-md hover:bg-gray-100 transition"
-                                        onClick={() => setOpen(!open)}
-                                    >
-                                        {getPriorityIcon(priority || task.priority)}
-                                        <span className="text-sm text-gray-600">{priorities.find(p => p.value === priority)?.label || priorities.find(p => p.value === task.priority)?.label}</span>
-                                    </div>
-                                    {open && (
-                                        <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-32">
-                                            {priorities.map((p) => (
-                                                <div
-                                                    key={p.value}
-                                                    onClick={() => handleSelect(p.value)}
-                                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 ${p.value === priority ? "bg-gray-50" : ""}`}
+                                    <label className="text-xs font-medium text-gray-700 block mb-2">Priority</label>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <div className="flex items-center gap-2 cursor-pointer bg-white border border-gray-200 p-2 rounded-md hover:bg-gray-100 transition w-fit">
+                                                <Badge className={`${priorityColorMap[currentPriorityLabel]} border-none`}>
+                                                    {currentPriorityLabel}
+                                                </Badge>
+                                                <ChevronDown className="h-3 w-3 text-gray-400" />
+                                            </div>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                            {(["High", "Medium", "Low"] as const).map((p) => (
+                                                <DropdownMenuItem
+                                                    key={p}
+                                                    className="cursor-pointer"
+                                                    onClick={() => {
+                                                        const mapVal = { "High": 1, "Medium": 2, "Low": 3 };
+                                                        updateTaskField("priority", mapVal[p]);
+                                                    }}
                                                 >
-                                                    {getPriorityIcon(p.label)}
-                                                    <span className="text-sm">{p.label}</span>
-                                                </div>
+                                                    <div className="flex items-center gap-2 w-full">
+                                                        <Badge className={`${priorityColorMap[p]} border-none`}>{p}</Badge>
+                                                    </div>
+                                                </DropdownMenuItem>
                                             ))}
-                                        </div>
-                                    )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
 
                                 {/* Parent */}
-                                <div>
+                                {/* <div>
                                     <label className="text-xs font-medium text-gray-700 block mb-2">
                                         Parent
                                     </label>
                                     <button className="text-sm text-gray-500 hover:text-gray-700">
                                         Add parent
                                     </button>
-                                </div>
+                                </div> */}
 
-                                {/* Due Date (Tự quản lý) */}
+                                {/* 4. DUE DATE (Sử dụng updateTaskField) */}
                                 <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Due date
-                                    </label>
+                                    <label className="text-xs font-medium text-gray-700 block mb-2">Due date</label>
                                     {!editDueDate ? (
                                         <button
                                             className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
                                             onClick={() => setEditDueDate(true)}
                                         >
                                             <Calendar className="h-4 w-4" />
-                                            {dueDate ? new Date(dueDate).toLocaleString() : "Add due date"}
+                                            {task.raw.deadline ? new Date(task.raw.deadline).toLocaleString() : "Add due date"}
                                         </button>
                                     ) : (
                                         <input
@@ -185,24 +176,25 @@ export default function TaskDetailSidebar({
                                             autoFocus
                                             value={formatForInput(dueDate)}
                                             onChange={(e) => setDueDate(e.target.value)}
-                                            onBlur={(e) => handleDueDate(e.target.value)}
-                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                            onBlur={(e) => {
+                                                setEditDueDate(false);
+                                                updateTaskField("deadline", e.target.value);
+                                            }}
+                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 w-full focus:outline-none focus:ring focus:ring-blue-200"
                                         />
                                     )}
                                 </div>
 
-                                {/* Start Date (Tự quản lý) */}
+                                {/* 5. START DATE (Sử dụng updateTaskField) */}
                                 <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Start date
-                                    </label>
+                                    <label className="text-xs font-medium text-gray-700 block mb-2">Start date</label>
                                     {!editStartDate ? (
                                         <button
                                             className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
                                             onClick={() => setEditStartDate(true)}
                                         >
                                             <Calendar className="h-4 w-4" />
-                                            {startDate ? new Date(startDate).toLocaleString() : "Add start date"}
+                                            {task.raw.createdAt ? new Date(task.raw.createdAt).toLocaleString() : "Add start date"}
                                         </button>
                                     ) : (
                                         <input
@@ -210,37 +202,41 @@ export default function TaskDetailSidebar({
                                             autoFocus
                                             value={formatForInput(startDate)}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            onBlur={(e) => handleStartDate(e.target.value)}
-                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                            onBlur={(e) => {
+                                                setEditStartDate(false);
+                                                // Key là 'createdAt' để khớp logic backend cũ của bạn
+                                                updateTaskField("createdAt", e.target.value);
+                                            }}
+                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 w-full focus:outline-none focus:ring focus:ring-blue-200"
                                         />
                                     )}
                                 </div>
 
                                 {/* Labels */}
-                                <div>
+                                {/* <div>
                                     <label className="text-xs font-medium text-gray-700 block mb-2">
                                         Labels
                                     </label>
                                     <button className="text-sm text-gray-500 hover:text-gray-700">
                                         Add labels
                                     </button>
-                                </div>
+                                </div> */}
 
                                 {/* Sprint */}
-                                <div>
+                                {/* <div>
                                     <label className="text-xs font-medium text-gray-700 block mb-2">
                                         Sprint
                                     </label>
                                     <button className="text-sm text-gray-500 hover:text-gray-700">
                                         Add to sprint
                                     </button>
-                                </div>
+                                </div> */}
                             </div>
                         </AccordionContent>
                     </AccordionItem>
 
                     {/* Các AccordionItem khác từ file gốc */}
-                    <AccordionItem value="more-fields">
+                    {/* <AccordionItem value="more-fields">
                         <AccordionTrigger className="text-sm font-medium">
                             More fields
                         </AccordionTrigger>
@@ -250,8 +246,7 @@ export default function TaskDetailSidebar({
                                     <span className="block text-xs font-medium text-gray-700 mb-1">
                                         Reporter
                                     </span>
-                                    Anonymous
-                                </div>
+                                    {task.reporter?.name || task.assignee?.name || "Unknown"}                                </div>
                             </div>
                         </AccordionContent>
                     </AccordionItem>
@@ -272,7 +267,7 @@ export default function TaskDetailSidebar({
                                 </div>
                             </div>
                         </AccordionContent>
-                    </AccordionItem>
+                    </AccordionItem> */}
                 </Accordion>
             </div>
         </div>

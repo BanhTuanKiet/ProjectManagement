@@ -20,6 +20,7 @@ public partial class Task
  // === New properties for Sprint & Backlog ===
     public int? SprintId { get; set; }
     public int? BacklogId { get; set; }
+    public bool IsActive { get; set; } = true;
 
     // === Navigation properties ===
     public virtual Sprint? Sprint { get; set; }

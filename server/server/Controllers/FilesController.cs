@@ -7,6 +7,8 @@ using server.Models;
 using server.Services.File;
 using server.Configs;
 using server.Services.ActivityLog;
+using server.Services.Task;
+using Microsoft.Build.Framework;
 
 namespace server.Controllers
 {
@@ -19,18 +21,23 @@ namespace server.Controllers
         private readonly ProjectManagementContext _context;
         private readonly IFiles _fileService;
         private readonly IActivityLog _activityLogService;
-
-        public FilesController(Cloudinary cloudinary, ProjectManagementContext context, IFiles fileService, IActivityLog activityLogService)
+        private readonly IProjectMember _projectMemberService;
+        private readonly ITasks _taskService;
+        public FilesController(Cloudinary cloudinary, ProjectManagementContext context, IFiles fileService, IActivityLog activityLogService, IProjectMember projectMemberService, ITasks taskService)
         {
             _cloudinary = cloudinary;
             _context = context;
             _fileService = fileService;
             _activityLogService = activityLogService;
+            _projectMemberService = projectMemberService;
+            _taskService = taskService;
+
         }
 
-        [HttpPost("upload")]
-        [Authorize(Policy = "OnlyAssigneeRequirement", Roles = "LeaderRequirement, PMRequirement")]
-        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId, [FromForm] string projectId)
+        [HttpPost("upload/{projectId}")]
+        [Authorize]
+        // [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement, AssigneeRequirement, MemberRequirement")]
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId, [FromRoute] int projectId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -42,15 +49,26 @@ namespace server.Controllers
 
             if (taskId <= 0)
                 throw new ErrorException(400, "Invalid task ID.");
+            var task = await _taskService.GetBasicTasksByTaskId(taskId, projectId);
+            if (task == null)
+                throw new ErrorException(404, "Task not found to upload file.");
+            if(task.IsActive == false)
+                throw new ErrorException(400, "Cannot upload file to an inactive task.");
+            var member = await _projectMemberService.GetMemberAsync(projectId, userId);
+            if (member == null)
+            {
+                throw new ErrorException(403, "Bạn không phải là thành viên của dự án này.");
+            }
 
-            var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId) 
+            var uploadedFile = await _fileService.UploadFileAsync(file, taskId, userId)
                 ?? throw new ErrorException(500, "File upload failed.");
+
             if (uploadedFile != null)
             {
                 // Log the file upload activity
                 string description = $"Uploaded file '{uploadedFile.FileName}' to task ID {taskId}.";
                 await _activityLogService.AddActivityLog(
-                    projectId: int.Parse(projectId),
+                    projectId: projectId,
                     userId: userId,
                     action: "Upload File",
                     targetType: "File",
@@ -63,8 +81,7 @@ namespace server.Controllers
         }
 
         [HttpDelete("{fileId}")]
-        [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement")]
-
+        [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement, AssigneeRequirement, MemberRequirement")]
         public async Task<IActionResult> DeleteFile(int fileId, int taskId, int projectId)
         {
             if (fileId <= 0)

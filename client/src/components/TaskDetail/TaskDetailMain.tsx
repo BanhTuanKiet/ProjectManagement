@@ -10,15 +10,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import type { TaskDetail } from "@/utils/ITask";
 import { getTaskStatusBadge } from "@/utils/statusUtils";
 import * as signalR from "@microsoft/signalr";
 import ColoredAvatar from "../ColoredAvatar";
-import { Paperclip } from "lucide-react";
-import { Trash } from "lucide-react";
-import { title } from "process";
-
 import TaskAttachments from "./TaskAttachments";
+import { Task } from "@/utils/mapperUtil";
 
 interface Comment {
     commentId: number;
@@ -31,7 +27,7 @@ interface Comment {
 }
 
 interface TaskDetailMainProps {
-    task: TaskDetail;
+    task: Task;
     taskId: number;
     projectId: number;
     connection: signalR.HubConnection | null;
@@ -43,11 +39,10 @@ export default function TaskDetailMain({
     projectId,
     connection,
 }: TaskDetailMainProps) {
-    // State cho Title
+    // --- STATE ---
     const [title, setTitle] = useState(task?.title || "");
     const [editTitle, setEditTitle] = useState(false);
 
-    // State cho Description
     const [description, setDescription] = useState(task?.description || "");
     const [editDescription, setEditDescription] = useState(false);
 
@@ -59,11 +54,45 @@ export default function TaskDetailMain({
 
     // Đồng bộ state từ props
     useEffect(() => {
-        setTitle(task.title || "");
+        setTitle(task.summary || "");
         setDescription(task.description || "");
     }, [task.title, task.description]);
 
-    // Tự fetch comments
+    // --- CORE FUNCTION: UPDATE FIELD ---
+    const updateTaskField = async (key: string, value: any) => {
+        try {
+            // Validate cơ bản
+            if (key === "title" && !value.trim()) {
+                setTitle(task?.title || ""); // Revert nếu rỗng
+                return;
+            }
+
+            console.log(`Updating [${key}] to:`, value);
+
+            // Gọi API chung
+            await axios.put(`/tasks/${projectId}/tasks/${taskId}/update`, {
+                [key]: value
+            });
+
+            // Cập nhật state UI
+            if (key === "title") {
+                setTitle(value);
+                setEditTitle(false);
+            }
+            if (key === "description") {
+                setDescription(value);
+                setEditDescription(false);
+            }
+
+        } catch (error) {
+            console.error(`Failed to update ${key}:`, error);
+            // Revert data nếu lỗi
+            if (key === "title") setTitle(task.title || "");
+            if (key === "description") setDescription(task.description || "");
+        }
+    };
+
+    // --- COMMENT LOGIC (Giữ nguyên logic cũ vì nó riêng biệt) ---
     useEffect(() => {
         const fetchComments = async () => {
             try {
@@ -76,74 +105,29 @@ export default function TaskDetailMain({
         fetchComments();
     }, [taskId]);
 
-    // Tự lắng nghe sự kiện comment từ SignalR
     useEffect(() => {
         if (!connection) return;
-
         const newCommentHandler = (newComment: Comment) => {
             setComments((prev) => {
                 if (prev.find(c => c.commentId === newComment.commentId)) return prev;
                 return [newComment, ...prev];
             });
         };
-
         connection.on("NewComment", newCommentHandler);
         return () => {
             connection.off("NewComment", newCommentHandler);
         };
     }, [connection]);
 
-    // --- Handlers cho Title ---
-    const handleTitle = async (newTitle: string) => {
-        try {
-            if (newTitle === "") {
-                setTitle(task?.title || "");
-                setEditTitle(false);
-                return;
-            }
-            await axios.put(`/tasks/updateTitle/${projectId}/${taskId}`, {
-                title: newTitle,
-            });
-            setEditTitle(false);
-            setTitle(newTitle);
-        } catch (error) {
-            console.log(error);
-            setTitle(task?.title || "");
-        }
-    };
-
-    // --- Handlers cho Description ---
-    const handleUpdateDescription = async (newDescription: string) => {
-        try {
-            if (newDescription === "") {
-                // Cho phép lưu description rỗng, nhưng nếu logic của bạn là revert, hãy dùng code này
-                // setDescription(task?.description || ""); 
-                // setEditDescription(false);
-                // return;
-
-                // Nếu cho phép lưu rỗng:
-                await axios.put(`/tasks/updateDescription/${projectId}/${taskId}`, {
-                    description: "",
-                });
-            } else {
-                await axios.put(`/tasks/updateDescription/${projectId}/${taskId}`, {
-                    description: newDescription,
-                });
-            }
-            setEditDescription(false);
-            setDescription(newDescription);
-        } catch (error) {
-            console.log(error);
-            setDescription(task?.description || "");
-        }
-    };
-
     const handleAddComment = async () => {
         if (!comment.trim()) return;
+        const contentToSend = comment.trim();
+        setComment("");
+
         try {
             if (editingCommentId) {
                 const res = await axios.put(`/comment/${editingCommentId}`, {
-                    content: comment.trim(),
+                    content: contentToSend,
                 });
                 setComments((prev) =>
                     prev.map((c) => (c.commentId === editingCommentId ? res.data : c))
@@ -152,19 +136,19 @@ export default function TaskDetailMain({
             } else {
                 const newCommentPayload = {
                     TaskId: taskId,
-                    Content: comment.trim(),
+                    Content: contentToSend,
                 };
                 const res = await axios.post(`/comment`, newCommentPayload);
-
                 setComments((prev) => [res.data, ...prev]);
 
                 if (connection && connection.state === signalR.HubConnectionState.Connected) {
                     await connection.invoke("BroadcastNewComment", taskId, res.data);
                 }
             }
-            setComment("");
         } catch (error) {
             console.error("Comment add/edit error:", error);
+            // Nếu lỗi thì trả lại text vào ô input để user sửa
+            setComment(contentToSend);
         }
     };
 
@@ -178,7 +162,6 @@ export default function TaskDetailMain({
         try {
             await axios.delete(`/comment/${id}`);
             setComments((prev) => prev.filter((c) => c.commentId !== id));
-            // TODO: Thông báo cho các user khác qua SignalR
         } catch (error) {
             console.error("Delete comment error:", error);
         }
@@ -207,11 +190,10 @@ export default function TaskDetailMain({
                     projectId={projectId}
                 />
 
-                {/* Title (Tự quản lý) */}
                 <div>
                     {!editTitle ? (
                         <div
-                            className="text-2xl text-black-600 min-h-[60px] cursor-pointer hover:bg-gray-100"
+                            className="text-2xl text-black-600 min-h-[60px] cursor-pointer hover:bg-gray-100 p-2 rounded"
                             onClick={() => setEditTitle(true)}
                         >
                             <strong>{title}</strong>
@@ -221,8 +203,12 @@ export default function TaskDetailMain({
                             autoFocus
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            onBlur={() => {
-                                handleTitle(title);
+                            onBlur={() => updateTaskField("title", title)} // Blur -> Save
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault(); // Chặn xuống dòng
+                                    updateTaskField("title", title); // Save & Close
+                                }
                             }}
                             className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
                             placeholder={task.title}
@@ -230,17 +216,14 @@ export default function TaskDetailMain({
                     )}
                 </div>
 
-                {/* Description (Tự quản lý) */}
+                {/* Description (Sử dụng updateTaskField) */}
                 <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">
-                        Description
-                    </h3>
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
                     {!editDescription ? (
                         <div
                             className="text-sm text-gray-600 bg-gray-50 p-3 rounded border min-h-[60px] cursor-pointer hover:bg-gray-100"
                             onClick={() => setEditDescription(true)}
                         >
-                            {/* Sửa lại logic hiển thị placeholder */}
                             {description || "Add a description..."}
                         </div>
                     ) : (
@@ -248,8 +231,13 @@ export default function TaskDetailMain({
                             autoFocus
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            onBlur={() => {
-                                handleUpdateDescription(description);
+                            onBlur={() => updateTaskField("description", description)} // Blur -> Save
+                            onKeyDown={(e) => {
+                                // Cho phép xuống dòng nếu giữ Shift + Enter
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    updateTaskField("description", description); // Save & Close
+                                }
                             }}
                             className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
                             placeholder="Add a description..."
@@ -258,7 +246,7 @@ export default function TaskDetailMain({
                 </div>
 
                 {/* Subtasks */}
-                <div>
+                {/* <div>
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-medium text-gray-900">
                             Subtasks
@@ -268,17 +256,17 @@ export default function TaskDetailMain({
                     <button className="text-sm text-gray-500 hover:text-gray-700">
                         Add subtask
                     </button>
-                </div>
+                </div> */}
 
                 {/* Linked work items */}
-                <div>
+                {/* <div>
                     <h3 className="text-sm font-medium text-gray-900 mb-3">
                         Linked work items
                     </h3>
                     <button className="text-sm text-gray-500 hover:text-gray-700">
                         Add linked work item
                     </button>
-                </div>
+                </div> */}
 
                 {/* Activity (Tự quản lý) */}
                 <div>
@@ -362,12 +350,10 @@ export default function TaskDetailMain({
                         </TabsContent>
 
                         <TabsContent value="comments" className="mt-4">
-                            {/* Khung nhập Comment */}
+                            {/* Input Comment */}
                             <div className="flex gap-3">
                                 <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="bg-red-500 text-white text-xs">
-                                        ME
-                                    </AvatarFallback>
+                                    <AvatarFallback className="bg-red-500 text-white text-xs">ME</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                     <Textarea
@@ -383,84 +369,36 @@ export default function TaskDetailMain({
                                         }}
                                     />
                                     <div className="flex items-center gap-2 mt-2">
-                                        {/* Nút trả lời nhanh */}
                                         <div className="flex gap-1">
-                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => setComment("🎉 Looks good!")}>
-                                                🎉 Looks good!
-                                            </Button>
-                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => setComment("👋 Need help?")}>
-                                                👋 Need help?
-                                            </Button>
-                                            {/* ... các nút khác ... */}
+                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => setComment("🎉 Looks good!")}>🎉 Looks good!</Button>
+                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => setComment("👋 Need help?")}>👋 Need help?</Button>
                                         </div>
-
-                                        {/* Nút Cancel / Comment */}
                                         <div className="ml-auto flex items-center gap-2">
                                             {editingCommentId && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() => {
-                                                        setEditingCommentId(null);
-                                                        setComment("");
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </Button>
+                                                <Button size="sm" variant="ghost" onClick={() => { setEditingCommentId(null); setComment(""); }}>Cancel</Button>
                                             )}
-                                            <Button size="sm" onClick={handleAddComment}>
-                                                {editingCommentId ? "Update" : "Comment"}
-                                            </Button>
+                                            <Button size="sm" onClick={handleAddComment}>{editingCommentId ? "Update" : "Comment"}</Button>
                                         </div>
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-2">
-                                        Pro tip: press{" "}
-                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">M</kbd>{" "}
-                                        to comment
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Danh sách Comments (hiển thị trong tab "Comments") */}
+                            {/* Render Comments List */}
                             <div className="mt-4 space-y-3">
                                 {comments.map((c) => (
-                                    <div
-                                        key={c.commentId}
-                                        className="flex gap-3 border-b pb-3"
-                                    >
+                                    <div key={c.commentId} className="flex gap-3 border-b pb-3">
                                         <Avatar className="h-8 w-8">
-                                            <AvatarFallback className="bg-gray-500 text-white text-xs">
-                                                {c.userName?.[0] ?? "U"}
-                                            </AvatarFallback>
+                                            <AvatarFallback className="bg-gray-500 text-white text-xs">{c.userName?.[0] ?? "U"}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium">
-                                                    {c.userName ?? "User"}
-                                                </span>
-                                                <span className="text-xs text-gray-400">
-                                                    {new Date(c.createdAt).toLocaleString()}
-                                                </span>
+                                                <span className="text-sm font-medium">{c.userName ?? "User"}</span>
+                                                <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleString()}</span>
                                             </div>
-                                            <div className="text-sm text-gray-700 mt-1">
-                                                {c.content}
-                                            </div>
-                                            {c.isEdited && (
-                                                <span className="text-xs text-gray-400 ml-1">
-                                                    (edited)
-                                                </span>
-                                            )}
+                                            <div className="text-sm text-gray-700 mt-1">{c.content}</div>
                                             <div className="flex gap-2 text-xs text-blue-600 mt-1">
-                                                <button onClick={() => handleEditClick(c)}>
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleDeleteComment(c.commentId)
-                                                    }
-                                                >
-                                                    Delete
-                                                </button>
+                                                <button onClick={() => handleEditClick(c)}>Edit</button>
+                                                <button onClick={() => handleDeleteComment(c.commentId)}>Delete</button>
                                             </div>
                                         </div>
                                     </div>

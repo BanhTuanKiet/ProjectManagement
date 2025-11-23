@@ -154,12 +154,12 @@ namespace server.Services.Project
             return existingMemberIds;
         }
 
-        public async Task<List<string>> GetTeamMembers(string leaderId)
+        public async Task<List<string>> GetTeamMembers(string leaderId, int projectId)
         {
             var members = await _context.TeamMembers
                 .AsNoTracking()
                 .Include(t => t.Team)
-                .Where(t => t.Team.LeaderId == leaderId)
+                .Where(t => t.Team.LeaderId == leaderId && t.Team.ProjectId == projectId)
                 .Select(t => t.UserId)
                 .ToListAsync();
 
@@ -189,13 +189,14 @@ namespace server.Services.Project
 
             return _mapper.Map<List<UserDTO.AvailableMember>>(teamMembers);
         }
+        
+        public async Task<Teams> GetTeamByLeader(string leaderId, int projectId)
 
-        public async Task<Teams> GetTeamByLeader(string leaderId)
         {
             return await _context.Teams
                 .Include(t => t.Leader)
                 .Include(t => t.Members).ThenInclude(m => m.User)
-                .FirstOrDefaultAsync(t => t.LeaderId == leaderId);
+                .FirstOrDefaultAsync(t => t.LeaderId == leaderId && t.ProjectId == projectId);
         }
 
         public async Task<Teams> DemoGetTeamByLeader(int projectId, string leaderId)

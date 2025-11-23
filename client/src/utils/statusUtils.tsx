@@ -94,6 +94,7 @@ export const getPriorityBadge = (priority: string | number) => {
 }
 
 export const getTaskStatusBadge = (status: string) => {
+    if (!status) return "bg-gray-100 text-gray-800 hover:bg-gray-200"
     switch (status.toLowerCase().replace(/\s+/g, "")) {
         case "all":
             return "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -147,12 +148,12 @@ export const getNotificationIcon = (type: string) => {
     }
 }
 
-export const getPriorityIcon = (priority: string | number) => {
-    const level = {
+export const getPriorityIcon = (priority: string | undefined | number) => {
+    const level = typeof priority === 'number' ? {
         1: "high",
         2: "medium",
         3: "low"
-    }[Number(priority)]
+    }[Number(priority)] : priority
 
     switch (level) {
         case "high":

@@ -81,12 +81,11 @@ export default function TaskAttachments({
         formData.append("projectId", projectId.toString());
 
         try {
-            const res = await axios.post(`/files/upload`, formData);
+            const res = await axios.post(`/files/upload/${projectId}`, formData);
             alert("Upload thành công!");
             setFiles((prev) => [res.data, ...prev]);
         } catch (err) {
             console.error("Upload error:", err);
-            alert("Lỗi upload file");
         }
     };
 

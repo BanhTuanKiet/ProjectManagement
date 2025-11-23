@@ -476,6 +476,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.Priority).HasDefaultValue((byte)2);
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.Title).HasMaxLength(300);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
 
             entity.HasOne(d => d.Assignee).WithMany(p => p.TaskAssignees)
                 .HasForeignKey(d => d.AssigneeId)

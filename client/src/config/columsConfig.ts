@@ -53,13 +53,13 @@ export const initialColumns: Column[] = [
     minWidth: 120,
     resizable: true,
   },
-  {
-    key: "labels",
-    title: "Labels",
-    width: 170,
-    minWidth: 120,
-    resizable: true,
-  },
+  // {
+  //   key: "labels",
+  //   title: "Labels",
+  //   width: 170,
+  //   minWidth: 120,
+  //   resizable: true,
+  // },
   {
     key: "created",
     title: "Created",
@@ -67,13 +67,13 @@ export const initialColumns: Column[] = [
     minWidth: 120,
     resizable: true,
   },
-  {
-    key: "updated",
-    title: "Updated",
-    width: 145,
-    minWidth: 120,
-    resizable: true,
-  },
+  // {
+  //   key: "updated",
+  //   title: "Updated",
+  //   width: 145,
+  //   minWidth: 120,
+  //   resizable: true,
+  // },
   {
     key: "reporter",
     title: "Reporter",
@@ -81,5 +81,5 @@ export const initialColumns: Column[] = [
     minWidth: 120,
     resizable: true,
   },
-  { key: "team", title: "Team", width: 160, minWidth: 120, resizable: true },
+  // { key: "team", title: "Team", width: 160, minWidth: 120, resizable: true },
 ];

@@ -14,6 +14,7 @@ export interface Task {
   description?: string
   priority?: "Low" | "Medium" | "High" | number
   estimateHours?: number
+  isActive: boolean
   raw: BasicTask // giữ lại data gốc để sau dễ dùng
   // Thêm các trường khác nếu cần
   subtasks?: Task[]
@@ -74,6 +75,7 @@ export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
     description: apiTask.description,
     type: "Task",
     priority:  mapPriorityFromApi(apiTask.priority),
+    isActive: apiTask.isActive,
     raw: apiTask, // giữ lại data gốc để sau dễ dùng
     subtasks: [],
   }

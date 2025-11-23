@@ -146,12 +146,21 @@ namespace server.Services.Project
             // Danh sách các trường cấm Member sửa (trừ assigneeid sẽ check riêng)
             var restrictedFields = new HashSet<string>
             {
-                "title", "priority", "deadline", "sprintid", "backlogid", "estimatehours"
+                "priority", "deadline", "sprintid", "backlogid", "estimatehours", "status", "title", "description"
             };
 
             foreach (var kvp in updates)
             {
                 string key = kvp.Key.ToLower();
+
+                // --- CHECK CÁC TRƯỜNG KHÁC ---
+                if (restrictedFields.Contains(key))
+                {
+                    if (!isManager)
+                    {
+                        throw new ErrorException(403, $"Thành viên không được phép sửa trường '{key}'.");
+                    }
+                }
 
                 // --- LOGIC RIÊNG CHO ASSIGNEE (Giao việc) ---
                 if (key == "assigneeid")
@@ -181,7 +190,7 @@ namespace server.Services.Project
                             // Logic Leader: Phải tìm Team của Leader này trước
                             var team = await _context.Teams
                                 .AsNoTracking()
-                                .FirstOrDefaultAsync(t => t.LeaderId == userId);
+                                .FirstOrDefaultAsync(t => t.LeaderId == userId && t.ProjectId == projectId);
 
                             // if (team == null)
                             //     throw new ErrorException(400, "Bạn là Leader nhưng chưa được gán quản lý Team nào.");
@@ -199,15 +208,6 @@ namespace server.Services.Project
                     // Gán giá trị và continue để không chạy vào switch bên dưới
                     task.AssigneeId = targetUserId;
                     continue;
-                }
-
-                // --- CHECK CÁC TRƯỜNG KHÁC ---
-                if (restrictedFields.Contains(key))
-                {
-                    if (!isManager)
-                    {
-                        throw new ErrorException(403, $"Thành viên không được phép sửa trường '{key}'.");
-                    }
                 }
 
                 // --- SWITCH UPDATE GIÁ TRỊ ---
@@ -255,6 +255,10 @@ namespace server.Services.Project
             }
 
             await _context.SaveChangesAsync();
+            if (updates.Keys.Any(k => k.ToLower() == "assigneeid"))
+            {
+                await _context.Entry(task).Reference(t => t.Assignee).LoadAsync();
+            }
             return _mapper.Map<TaskDTO.BasicTask>(task);
         }
 
@@ -754,6 +758,29 @@ namespace server.Services.Project
                 .ToListAsync();
 
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+
+        public async Task<bool> ToggleTaskStatus(int taskId, int projectId)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+
+            if (task == null) return false;
+
+            task.IsActive = !task.IsActive;
+
+            await _context.SaveChangesAsync();
+            return task.IsActive;
+        }
+
+        public async Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId)
+        {
+            Models.Task task = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .Where(t => t.ProjectId == projectId && t.TaskId == taskId)
+                .FirstOrDefaultAsync();
+
+            return _mapper.Map<TaskDTO.BasicTask>(task);
         }
     }
 }

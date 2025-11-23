@@ -17,7 +17,7 @@ import {
 import { BasicTask } from "@/utils/ITask";
 import { Task } from "@/utils/mapperUtil";
 import { useTaskTable } from "@/hooks/useResizableColumns";
-import TaskDetailModal from "../TaskDetailModal";
+import TaskDetailModal from "../TaskDetail/TaskDetailModal";
 import axios from "@/config/axiosConfig";
 import { mapApiTaskToTask } from "@/utils/mapperUtil";
 import ColoredAvatar from "../ColoredAvatar";
@@ -85,6 +85,27 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
       }
     }
   }, [projectRole, project_name, setFilters]);
+
+  const handleCreateTask = async () => {
+    if (!newTaskTitle.trim()) return;
+
+    try {
+      const res = await axios.post(`/tasks/view/${projectId}`, {
+        title: newTaskTitle,
+        status: "To Do",
+      });
+      console.log("Task created:", res.data);
+      const rawTask = res.data.addedTask || res.data;
+      const newTaskMapped = mapApiTaskToTask(rawTask);
+      addTask(newTaskMapped);
+
+      setNewTaskTitle("");
+      setIsCreating(false);
+
+    } catch (err) {
+      console.error("Error creating task:", err);
+    }
+  };
 
   // PM: Thấy tất cả members
   // Leader: Thấy tất cả members trong team
@@ -308,39 +329,15 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
               placeholder="Enter task summary..."
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={async (e) => {
-                if (e.key === "Enter" && newTaskTitle.trim()) {
-                  try {
-                    const res = await axios.post(`/tasks/view/${projectId}`, {
-                      title: newTaskTitle,
-                      status: "To Do",
-                    });
-                    addTask(mapApiTaskToTask(res.data));
-                    setNewTaskTitle("");
-                    setIsCreating(false);
-                  } catch (err) {
-                    console.error("Error creating task:", err);
-                  }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateTask(); // Gọi hàm chung
                 }
               }}
               className="w-64"
+              autoFocus // Thêm autoFocus cho tiện
             />
-            <Button
-              onClick={async () => {
-                if (!newTaskTitle.trim()) return;
-                try {
-                  const res = await axios.post(`/tasks/view/${projectId}`, {
-                    title: newTaskTitle,
-                    status: "To Do",
-                  });
-                  addTask(mapApiTaskToTask(res.data));
-                  setNewTaskTitle("");
-                  setIsCreating(false);
-                } catch (err) {
-                  console.error("Error creating task:", err);
-                }
-              }}
-            >
+            <Button onClick={handleCreateTask}> {/* Gọi hàm chung */}
               Save
             </Button>
             <Button
