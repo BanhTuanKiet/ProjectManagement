@@ -111,18 +111,23 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                     className="pl-10 w-64"
                 />
             </div>
+
             {projectRole !== "Member" && (
                 <Select
                     value={filters.assignee}
                     onValueChange={(val) => handleFilter("assignee", val)}
                 >
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-40 text-muted-foreground cursor-pointer">
                         <SelectValue placeholder="Assignee" />
                     </SelectTrigger>
+
                     <SelectContent>
-                        <SelectItem value="all">All Assignees</SelectItem>
+                        <SelectItem className="cursor-pointer" value="all">
+                            All Assignees
+                        </SelectItem>
+
                         {members?.map(member => (
-                            <SelectItem key={member.userId} value={member.userId}>
+                            <SelectItem key={member.userId} value={member.userId} className="cursor-pointer">
                                 <div className="flex items-center gap-2">
                                     <ColoredAvatar id={member.userId} name={member.name} />
                                     <span>{capitalizeFirstLetter(member.name)}</span>
@@ -137,37 +142,41 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                     </SelectContent>
                 </Select>
             )}
+
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2 w-40 justify-start">
+                    <Button variant="outline" className="gap-2 w-40 justify-start cursor-pointer text-muted-foreground">
                         {filters.status && filters.status !== 'all' ? (
                             <span className={`flex items-center gap-2 ${getTaskStatusBadge(filters.status)}`}>
                                 <span
                                     className="w-2.5 h-2.5 rounded-full"
-                                    style={{
-                                        backgroundColor: taskStatus.find((s) => s.name === filters.status)?.color,
-                                    }}
+                                    style={{ backgroundColor: taskStatus.find((s) => s.name === filters.status)?.color }}
                                 />
                                 {filters.status}
                             </span>
                         ) : (
-                            "Status"
+                            <span className="text-muted-foreground font-normal">Status</span>
                         )}
                         <ChevronDown className="h-4 w-4 ml-auto" />
                     </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent className="w-44">
-                    <DropdownMenuItem onSelect={() => handleFilter("status", "all")}>All</DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer" onSelect={() => handleFilter("status", "all")}>
+                        All
+                    </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
+
                     {taskStatus.map((status) => (
                         <DropdownMenuItem
                             key={status.id}
+                            className="cursor-pointer"
                             onSelect={() => handleFilter("status", status.name)}
                         >
                             <div className={`flex items-center gap-2 ${getTaskStatusBadge(status.name)}`}>
                                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: status.color }} />
-                                <span>{status.name}</span>
+                                {status.name}
                             </div>
                         </DropdownMenuItem>
                     ))}
@@ -176,26 +185,28 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2 w-40 justify-start">
-                        {filters.priority && filters.priority !== '0' ? (
+                    <Button variant="outline" className="gap-2 w-40 justify-start cursor-pointer">
+                        {filters.priority !== '0' ? (
                             <div className="flex items-center gap-2">
-                                {/* {getPriorityIcon(currentPriorityName)} */}
-                                <span className={getPriorityBadge(currentPriorityName.toLowerCase())}>{currentPriorityName}</span>
+                                <span className={getPriorityBadge(currentPriorityName.toLowerCase())}>
+                                    {currentPriorityName}
+                                </span>
                             </div>
                         ) : (
-                            "Priority"
+                            <span className="text-muted-foreground font-normal">Priority</span>
                         )}
                         <ChevronDown className="h-4 w-4 ml-auto" />
                     </Button>
                 </DropdownMenuTrigger>
+
                 <DropdownMenuContent className="w-44">
                     {priorities.map((priority) => (
                         <DropdownMenuItem
                             key={priority.value}
+                            className="cursor-pointer"
                             onSelect={() => handleFilter("priority", String(priority.value))}
                         >
                             <div className="flex items-center gap-2">
-                                {/* {getPriorityIcon(priority.name)} */}
                                 <span className={getPriorityBadge(priority.name.toLowerCase())}>{priority.name}</span>
                             </div>
                         </DropdownMenuItem>
@@ -206,10 +217,11 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
             <Button
                 variant="ghost"
                 onClick={clearFilters}
-                className="text-muted-foreground hover:text-red-500"
+                className="text-muted-foreground hover:text-red-500 cursor-pointer"
             >
                 Clear Filters
             </Button>
         </div>
+
     )
 }

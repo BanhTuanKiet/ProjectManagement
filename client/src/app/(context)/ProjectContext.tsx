@@ -47,7 +47,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         const fetchProjectRole = async () => {
             try {
                 const reponse = await axios.get(`/users/role/${project_name}`)
-                console.log("PROJECT ROLE: ", reponse.data)
                 setProjectRole(reponse.data)
             } catch (error) {
                 console.log(error)

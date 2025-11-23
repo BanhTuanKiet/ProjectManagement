@@ -196,12 +196,12 @@ namespace server.Services.User
             return _mapper.Map<UserDTO.UserProfile>(user);
         }
 
-        public async Task<string> GetProjectRole(int projectId, string userId)
+        public async Task<ProjectMember> GetProjectRole(int projectId, string userId)
         {
             var member = await _context.ProjectMembers
-                .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+                .FirstOrDefaultAsync(pm => pm.Project.ProjectId == projectId && pm.User.Id == userId);
 
-            return member.RoleInProject;
+            return member;
         }
 
         public async Task<List<ApplicationUser>> FindUserListByIds(List<string> ids)

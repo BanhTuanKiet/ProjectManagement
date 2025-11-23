@@ -178,32 +178,33 @@ namespace server.Services.Project
 
         public async Task<List<UserDTO.AvailableMember>> FindAvilableMembers(int projectId, string leaderId)
         {
-            var memberIds = _context.ProjectMembers
-                .Include(pm => pm.User)
-                .Where(pm => pm.RoleInProject == "Member" && pm.ProjectId == projectId)
-                .Select(pm => pm.UserId);
+            var team = await _context.Teams
+                .Include(t => t.Members)
+                .ThenInclude(tm => tm.User)
+                .FirstOrDefaultAsync(t => t.ProjectId == projectId && t.LeaderId == leaderId);
 
-            var teamMemberIds = _context.TeamMembers
-                .Include(tm => tm.Team)
-                .Where(tm => tm.Team.ProjectId == projectId)
-                .Select(tm => tm.UserId);
+            var teamMembers = team.Members
+                .Select(tm => tm.User)
+                .ToList();
 
-            var availableMemberIds = memberIds.Except(teamMemberIds);
-
-            var availableMembers = await _context.Users
-                .Where(u => availableMemberIds.Contains(u.Id))
-                .ToListAsync();
-
-            var availableMembersDTO = _mapper.Map<List<UserDTO.AvailableMember>>(availableMembers);
-
-            return availableMembersDTO;
+            return _mapper.Map<List<UserDTO.AvailableMember>>(teamMembers);
         }
         
         public async Task<Teams> GetTeamByLeader(string leaderId, int projectId)
+
         {
             return await _context.Teams
                 .Include(t => t.Leader)
                 .Include(t => t.Members).ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(t => t.LeaderId == leaderId && t.ProjectId == projectId);
+        }
+
+        public async Task<Teams> DemoGetTeamByLeader(int projectId, string leaderId)
+        {
+            return await _context.Teams
+                .Include(t => t.Leader)
+                .Include(t => t.Members)
+                    .ThenInclude(m => m.User)
                 .FirstOrDefaultAsync(t => t.LeaderId == leaderId && t.ProjectId == projectId);
         }
 
@@ -215,7 +216,7 @@ namespace server.Services.Project
                 .FirstOrDefaultAsync(t => t.Id == teamId);
 
             if (team == null)
-                throw new ErrorException(400,$"Team with id '{teamId}' was not found.");
+                throw new ErrorException(400, $"Team with id '{teamId}' was not found.");
 
             return team;
         }

@@ -19,7 +19,7 @@ import { MoveRight } from "lucide-react"
 import { ProjectBasic } from "@/utils/IProject"
 
 export default function ChangeLeaderDialog({ open, onOpenChange }: DialogProps) {
-    const { projects, setProjects, project_name } = useProject()
+    const { projects, setProjects, project_name, members } = useProject()
     const [mockMembers, setMockMembers] = useState<AvailableMember[]>()
     const [mockLeaders, setMockLeaders] = useState<Member[]>()
     const [memberId, setMemberId] = useState<string | null>(null)
@@ -30,12 +30,12 @@ export default function ChangeLeaderDialog({ open, onOpenChange }: DialogProps) 
 
     useEffect(() => {
         if (project) {
-            const leaders = project.members.filter(m => m.role === "Leader")
+            const leaders = members?.filter(m => m.role === "Leader")
             setMockLeaders(leaders)
         } else {
             setMockLeaders([])
         }
-    }, [project])
+    }, [project, members])
 
     useEffect(() => {
         if (!leaderId) {
@@ -69,10 +69,11 @@ export default function ChangeLeaderDialog({ open, onOpenChange }: DialogProps) 
     const handleChangeLeader = async () => {
         setLoading(true)
         try {
+            console.log(leaderId, project_name)
             await axios.put(`/projects/leader/${Number(project_name)}/${leaderId}/${memberId}`)
             const updatedProjects = projects.map(p => {
                 if (p.projectId === Number(project_name)) {
-                    const updatedMembers = p.members.map(m => {
+                    const updatedMembers = members?.map(m => {
                         if (m.userId === leaderId) return { ...m, role: "Member" }
                         if (m.userId === memberId) return { ...m, role: "Leader" }
                         return m

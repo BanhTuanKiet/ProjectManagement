@@ -36,7 +36,22 @@ namespace server.Configs
                 .ForMember(dest => dest.role,
                             opt => opt.MapFrom(src => src.RoleInProject))
                 .ForMember(dest => dest.isOwner,
-                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"));
+                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"))
+                .ForMember(dest => dest.TeamId,
+                    opt => opt.MapFrom(src =>
+                        src.User.TeamMembers
+                            .Where(tm => tm.Team.ProjectId == 2)
+                            // .Where(tm => tm.Team.ProjectId == src.Project.ProjectId)
+                            .Select(tm => tm.TeamId)
+                            .FirstOrDefault()
+                    ))
+                .ForMember(dest => dest.LeaderId,
+                    opt => opt.MapFrom(src =>
+                        src.User.TeamMembers
+                            .Where(tm => !string.IsNullOrEmpty(tm.Team.LeaderId))
+                            .Select(tm => tm.Team.LeaderId)
+                            .FirstOrDefault()
+                    ));
 
             CreateMap<SubTask, SubTaskDTO.BasicSubTask>()
                 .ForMember(dest => dest.Assignee,

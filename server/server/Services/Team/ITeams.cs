@@ -11,5 +11,6 @@ namespace server.Models
         Task<List<UserDTO.AvailableMember>> FindAvilableMembers(int projectId, string leaderId);
         Task<Teams> GetTeamByLeader(string leaderId, int projectId);
         Task<Teams> GetTeamById(Guid teamId);
+        Task<Teams> DemoGetTeamByLeader(int projectId, string leaderId);
     }
 }

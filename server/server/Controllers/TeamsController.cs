@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,11 +21,12 @@ namespace server.Controllers
     {
         private readonly ITeams _teamServices;
         private readonly IProjects _projectServices;
-
-        public TeamsController(ITeams teamServices, IProjects projectServices)
+        private readonly IMapper _mapper;
+        public TeamsController(ITeams teamServices, IProjects projectServices, IMapper mapper)
         {
             _teamServices = teamServices;
             _projectServices = projectServices;
+            _mapper = mapper;
         }
 
         [HttpPost("members/{projectId}/{learderId}")]

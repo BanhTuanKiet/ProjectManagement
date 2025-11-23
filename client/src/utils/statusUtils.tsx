@@ -53,6 +53,25 @@ export const getRoleBadge = (role: string) => {
     }
 }
 
+const teamColors = [
+    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+    'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+    'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+]
+
+export const getTeamBadge = (index?: number) => {
+    if (index === undefined || index < 0) {
+        return 'bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-blue-200'
+    }
+    const colorIndex = index % teamColors.length
+    return `inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${teamColors[colorIndex]}`
+}
+
 export const getPriorityBadge = (priority: string | number) => {
     const level = typeof priority === 'number' ? {
         1: "high",

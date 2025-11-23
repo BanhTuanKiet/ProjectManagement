@@ -16,7 +16,7 @@ namespace server.Models
         Task<UserDTO.UserProfile> UpdateUser(UserDTO.UserProfile user, string userId);
         Task<UserDTO.UserProfile> UpdateUserImage(IFormFile file, string userId, string type);
         // Task<List<ProjectDTO.ProjectMembers>> GetMembersTeam(string leaderId);
-        Task<string> GetProjectRole(int projectId, string userId);
+        Task<ProjectMember> GetProjectRole(int projectId, string userId);
         Task<bool> DeleteMembers(int projectId, List<string> userIds);
         Task<Subscriptions> GetSubscriptions(string userId);
     }
