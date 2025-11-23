@@ -40,6 +40,11 @@ namespace server.Controllers
         [HttpPost("{projectId}")]
         public async Task<IActionResult> Create(int projectId, [FromBody] SprintDTO.Create dto)
         {
+            if (dto.EndDate < dto.StartDate)
+            {
+                ModelState.AddModelError("EndDate", "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
+                return BadRequest(ModelState);
+            }
             var sprint = await _service.Create(projectId, dto);
 
             if (sprint == null)

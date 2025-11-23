@@ -89,7 +89,7 @@ namespace server.Controllers
 
                         foreach (var leader in leaders)
                         {
-                            var team = await _teamsService.GetTeamByLeader(leader.UserId);
+                            var team = await _teamsService.GetTeamByLeader(leader.UserId, projectId);
 
                             if (team == null) continue;
 
@@ -109,7 +109,7 @@ namespace server.Controllers
 
                 case "Leader":
                     // 1. Lấy team mà Leader đang quản lý
-                    var members = await _teamsService.GetTeamMembers(userId);
+                    var members = await _teamsService.GetTeamMembers(userId, projectId);
 
                     // 2. Thêm cả leader vào danh sách (để họ xem được task của mình)
                     members.Add(userId);
@@ -137,7 +137,7 @@ namespace server.Controllers
             }
 
             // 4. Lấy Members & Tasks
-            var members = await _teamsService.GetTeamMembers(leaderId);
+            var members = await _teamsService.GetTeamMembers(leaderId, int.Parse(projectId));
 
             if (members == null) members = new List<string>();
 
@@ -174,9 +174,9 @@ namespace server.Controllers
 
         [Authorize(Policy = "MemberRequirement")]
         [HttpGet("detail/{projectId}/{taskId}")]
-        public async Task<ActionResult> GetDetailTaskById(int taskId)
+        public async Task<ActionResult> GetDetailTaskById(int taskId, int projectId)
         {
-            Models.Task task = await _tasksService.GetTaskById(taskId) ?? throw new ErrorException(404, "Task not found");
+            var task = await _tasksService.GetBasicTasksByTaskId(projectId, taskId) ?? throw new ErrorException(404, "Task not found");
             return Ok(task);
         }
 
@@ -188,19 +188,17 @@ namespace server.Controllers
             string name = User.FindFirst(ClaimTypes.Name)?.Value;
 
             DateTime dateTimeCurrent = DateTime.UtcNow;
-            DateTime deadline = DateTime.Parse(newTask.Deadline);
-            string status;
+            DateTime? deadline = null;
+            string status = "Todo";
 
-            if (string.IsNullOrEmpty(newTask.Deadline))
+            if (!string.IsNullOrEmpty(newTask.Deadline))
             {
-                status = "Todo";
-            }
-            else
-            {
-                if (deadline.Date < dateTimeCurrent.Date)
+                deadline = DateTime.Parse(newTask.Deadline);
+
+                if (deadline.Value.Date < dateTimeCurrent.Date)
                     throw new ErrorException(400, "Deadline must be after the current date");
 
-                if (deadline.Date == dateTimeCurrent.Date)
+                if (deadline.Value.Date == dateTimeCurrent.Date)
                     status = "InProgress";
                 else
                     status = "Todo";
@@ -252,7 +250,7 @@ namespace server.Controllers
                 await NotificationHub.SendTaskAssignedNotification(_notificationHubContext, notification.UserId, notificationBasic);
             }
 
-            return Ok(new { message = "Add new task successful!" });
+            return Ok(new { message = "Add new task successful!", addedTask });
         }
 
         [Authorize(Policy = "MemberRequirement")]
@@ -268,13 +266,14 @@ namespace server.Controllers
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var name = User.FindFirst(ClaimTypes.Name)?.Value;
-                var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+            var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
-                if (projectMember == null)
-                    return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+            if (projectMember == null)
+                return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
 
-                string role = projectMember.RoleInProject;
+            string role = projectMember.RoleInProject;
+
             if (updates == null || !updates.Any())
                 throw new ErrorException(400, "Update failed");
 
@@ -315,8 +314,8 @@ namespace server.Controllers
             return Ok(new { message = "Update successful", task = result });
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
-        [HttpDelete("bulk-delete")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpDelete("bulk-delete/{projectId}")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -403,7 +402,7 @@ namespace server.Controllers
             return Ok(new { message = "Update task successful!" });
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("updateTask/{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateTaskModel(int projectId, int taskId, [FromBody] TaskDTO.UpdateTask updates)
         {
@@ -517,7 +516,8 @@ namespace server.Controllers
             var tasks = await _tasksService.GetTasksBySprintOrBacklog(projectId, sprintId, backlogId);
             return Ok(tasks);
         }
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("restore/{projectId}/{taskId}")]
         public async Task<IActionResult> RestoreTask(int projectId, int taskId)
         {
@@ -590,13 +590,15 @@ namespace server.Controllers
 
             var result = await _tasksService.FilterTasks(projectId, filters, keyword);
             var ans = new List<TaskDTO.BasicTask>();
-            if(role == "Project Manager")
+
+            if (role == "Project Manager")
             {
                 return Ok(result);
             }
-            if(role == "Leader")
+            if (role == "Leader")
             {
-                var members = await _teamsService.GetTeamMembers(userId);
+                var members = await _teamsService.GetTeamMembers(userId, projectId);
+
                 foreach (var task in result)
                 {
                     if (members.Contains(task.AssigneeId))
@@ -697,6 +699,21 @@ namespace server.Controllers
                 message = "✅ Task created successfully",
                 task = basicTask
             });
+        }
+
+        [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpPatch("{projectId}/tasks/{taskId}/toggle-active")]
+        public async Task<IActionResult> ToggleTaskActive(int projectId, int taskId)
+        {
+            try
+            {
+                var newStatus = await _tasksService.ToggleTaskStatus(taskId, projectId);
+                return Ok(new { message = "Success", isActive = newStatus });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

@@ -95,6 +95,7 @@ export interface BasicTask {
   subTaskId?: number
   id?: number
   sprintId?: number
+  isActive: boolean
 }
 
 export interface NewTaskView {

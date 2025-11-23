@@ -3,11 +3,21 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "@/config/axiosConfig";
 import { Member, UserMini } from "@/utils/IUser";
-import { mapApiTaskToTask, mapApiUserToUserMini, Task, mapTaskToApiUpdatePayload } from "@/utils/mapperUtil";
+import {
+    mapApiTaskToTask,
+    mapApiUserToUserMini,
+    Task,
+    mapTaskToApiUpdatePayload,
+} from "@/utils/mapperUtil";
 import { BasicTask } from "@/utils/ITask";
 import { Column, initialColumns } from "@/config/columsConfig";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { useDebounce } from "@/hooks/useDebounce";
+
+type UpdatePayload = {
+    [key: string]: string | number | null | undefined;
+};
+type EditValue = string | number | UserMini | null;
 
 export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -15,10 +25,15 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const [columns, setColumns] = useState<Column[]>(initialColumns);
     const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
     const [searchQuery, setSearchQuery] = useState("");
-    const [editingCell, setEditingCell] = useState<{ taskId: number; field: string } | null>(null);
+    const [editingCell, setEditingCell] = useState<{
+        taskId: number;
+        field: string;
+    } | null>(null);
     const [draggedTask, setDraggedTask] = useState<number | null>(null);
-    const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
-    const { project_name, members } = useProject()
+    const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(
+        null
+    );
+    const { project_name, members } = useProject();
     const [filters, setFilters] = useState<Record<string, string>>({});
     const debouncedSearch = useDebounce(searchQuery, 400);
     // Fetch users + tasks
@@ -44,7 +59,11 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
     }, [tasksnomal]);
 
     // Resize columns
-    const resizingColumn = useRef<{ index: number; startX: number; startWidth: number } | null>(null);
+    const resizingColumn = useRef<{
+        index: number;
+        startX: number;
+        startWidth: number;
+    } | null>(null);
 
     const handleMouseDown = useCallback(
         (e: React.MouseEvent, columnIndex: number) => {
@@ -61,7 +80,9 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
                 const newWidth = Math.max(columns[index].minWidth, startWidth + deltaX);
 
                 setColumns((prev) =>
-                    prev.map((col, i) => (i === index ? { ...col, width: newWidth } : col))
+                    prev.map((col, i) =>
+                        i === index ? { ...col, width: newWidth } : col
+                    )
                 );
             };
 
@@ -96,31 +117,85 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
 
     // Edit cell
     const handleCellEdit = useCallback(
-        async (taskId: number, field: string, value: string) => {
+        async (taskId: number, field: string, value: EditValue) => {
+            // 1. Backup dữ liệu cũ để revert nếu lỗi
+            const currentTask = tasks.find((t) => t.id === taskId);
+            if (!currentTask) return;
+
             try {
-                // Lấy task hiện tại trong state
-                const currentTask = tasks.find((t) => t.id === taskId)
-                if (!currentTask) return
+                // Tạo payload an toàn kiểu dữ liệu
+                const payload: Record<string, string | number | null | undefined> = {};
 
-                const updatedTask = { ...currentTask, [field]: value }
-                const payload = mapTaskToApiUpdatePayload(updatedTask)
-                console.log("Payload to update:", payload);
+                if (field === "assignee") {
+                    if (value && typeof value === "object" && "id" in value) {
+                        payload["assigneeId"] = (value as UserMini).id;
+                    } else {
+                        payload["assigneeId"] = null;
+                    }
+                } else if (field === "priority") {
+                    const priorityMap: Record<string, number> = { High: 1, Medium: 2, Low: 3 };
+                    if (typeof value === "string" && value in priorityMap) {
+                        payload["priority"] = priorityMap[value];
+                    } else if (typeof value === "number") {
+                        payload["priority"] = value;
+                    }
+                } else if (field === "dueDate") {
+                    payload["deadline"] = value as string;
+                } else if (field === "summary") {
+                    payload["title"] = value as string;
+                } else {
+                    if (value !== undefined && value !== null) {
+                        payload[field] = String(value);
+                    }
+                }
 
-                const response = await axios.put(`/tasks/${Number(project_name)}/tasks/${taskId}/update`, payload);
-                console.log("Update response:", response.data);
-                const updatedFromServer = response.data ? mapApiTaskToTask(response.data.task) : updatedTask;
-                console.log("Updated task from server:", updatedFromServer);
+                console.log(`Payload [Task ${taskId}]:`, payload);
+
+                // 2. Optimistic Update: Cập nhật UI ngay để tạo cảm giác mượt
+                // @ts-ignore: Ignore type check tạm thời để spread object nhanh
+                const optimisticTask = { ...currentTask, [field]: value };
+                setTasks((prev) =>
+                    prev.map((t) => (t.id === taskId ? optimisticTask : t))
+                );
+
+                // 3. Gọi API
+                const response = await axios.put(
+                    `/tasks/${Number(project_name)}/tasks/${taskId}/update`,
+                    payload
+                );
+
+                // 4. Sync dữ liệu chuẩn từ Server (nếu thành công)
+                const serverData = response.data.task || response.data;
+                let updatedFromServer = mapApiTaskToTask(serverData);
+
+                // Fix UI: Giữ object assignee vừa chọn nếu server trả về null (tránh nháy UI)
+                if (field === "assignee") {
+                    if (value && typeof value === "object" && !updatedFromServer.assignee) {
+                        updatedFromServer = {
+                            ...updatedFromServer,
+                            assignee: value as UserMini,
+                        };
+                    }
+                    if (value === null) {
+                        updatedFromServer = { ...updatedFromServer, assignee: undefined };
+                    }
+                }
+
                 setTasks((prev) =>
                     prev.map((t) => (t.id === taskId ? updatedFromServer : t))
                 );
-            } catch (error) {
-                console.error("Error updating task:", error);
+
+            } catch (error: any) {
+                console.error("Update failed:", error);
+                setTasks((prev) =>
+                    prev.map((t) => (t.id === taskId ? currentTask : t))
+                );
             } finally {
-                setEditingCell(null)
+                setEditingCell(null);
             }
         },
-        [tasks, project_name] // cần depend vào tasks để lấy task hiện tại
-    )
+        [tasks, project_name]
+    );
 
     // Drag & Drop
     const handleDragStart = useCallback((e: React.DragEvent, taskId: number) => {
@@ -152,10 +227,13 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
     );
 
     // Column Drag & Drop
-    const handleColumnDragStart = useCallback((e: React.DragEvent, index: number) => {
-        setDraggedColumnIndex(index);
-        e.dataTransfer.effectAllowed = "move";
-    }, []);
+    const handleColumnDragStart = useCallback(
+        (e: React.DragEvent, index: number) => {
+            setDraggedColumnIndex(index);
+            e.dataTransfer.effectAllowed = "move";
+        },
+        []
+    );
 
     const handleColumnDragOver = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -165,7 +243,8 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const handleColumnDrop = useCallback(
         (e: React.DragEvent, targetIndex: number) => {
             e.preventDefault();
-            if (draggedColumnIndex === null || draggedColumnIndex === targetIndex) return;
+            if (draggedColumnIndex === null || draggedColumnIndex === targetIndex)
+                return;
 
             const newColumns = [...columns];
             const [moved] = newColumns.splice(draggedColumnIndex, 1);
@@ -177,46 +256,45 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
         [draggedColumnIndex, columns]
     );
 
-useEffect(() => {
-    const fetchFilteredAndSearchedTasks = async () => {
-        try {
-            // Nếu không có lọc và không có search → trả lại danh sách gốc
-            if (
-                Object.keys(filters).length === 0 &&
-                debouncedSearch.trim() === ""
-            ) {
-                const mapped = tasksnomal.map(mapApiTaskToTask);
+    useEffect(() => {
+        const fetchFilteredAndSearchedTasks = async () => {
+            try {
+                // Nếu không có lọc và không có search → trả lại danh sách gốc
+                if (
+                    Object.keys(filters).length === 0 &&
+                    debouncedSearch.trim() === ""
+                ) {
+                    const mapped = tasksnomal.map(mapApiTaskToTask);
+                    setTasks(mapped);
+                    return;
+                }
+
+                // 🔸 Tạo params gửi lên API
+                const params = {
+                    ...filters,
+                    keyword: debouncedSearch.trim() || undefined,
+                };
+
+                console.log("🧭 Gửi request filter/search với params:", params);
+
+                // 🔸 Gọi API duy nhất
+                const res = await axios.get(
+                    `/tasks/${Number(project_name)}/filter-by`,
+                    { params }
+                );
+
+                console.log("✅ API response:", res.data);
+
+                // 🔸 Map dữ liệu sang format hiển thị FE
+                const mapped = res.data.map(mapApiTaskToTask);
                 setTasks(mapped);
-                return;
+            } catch (err) {
+                console.error("❌ Lỗi khi filter/search tasks:", err);
             }
+        };
 
-            // 🔸 Tạo params gửi lên API
-            const params = {
-                ...filters,
-                keyword: debouncedSearch.trim() || undefined,
-            };
-
-            console.log("🧭 Gửi request filter/search với params:", params);
-
-            // 🔸 Gọi API duy nhất
-            const res = await axios.get(
-                `/tasks/${Number(project_name)}/filter-by`,
-                { params }
-            );
-
-            console.log("✅ API response:", res.data);
-
-            // 🔸 Map dữ liệu sang format hiển thị FE
-            const mapped = res.data.map(mapApiTaskToTask);
-            setTasks(mapped);
-        } catch (err) {
-            console.error("❌ Lỗi khi filter/search tasks:", err);
-        }
-    };
-
-    fetchFilteredAndSearchedTasks();
-}, [debouncedSearch, filters, project_name]);
-
+        fetchFilteredAndSearchedTasks();
+    }, [debouncedSearch, filters, project_name]);
 
     const addTask = useCallback((newTask: Task) => {
         setTasks((prev) => [...prev, newTask]);
@@ -231,7 +309,7 @@ useEffect(() => {
         const clonedTasks = tasksToCopy.map((t) => ({
             ...t,
             id: -Math.floor(Math.random() * 1000000), // tạo id tạm, hoặc gọi API BE để add mới
-            key: `${t.key}-COPY`
+            key: `${t.key}-COPY`,
         }));
 
         setTasks((prev) => [...prev, ...clonedTasks]);
@@ -244,7 +322,9 @@ useEffect(() => {
 
         try {
             // Gọi API BE xóa nhiều task (nếu có)
-            await axios.delete("/tasks/bulk-delete", { data: { projectId: 1, ids: toDelete } });
+            await axios.delete(`/tasks/bulk-delete/${project_name}`, {
+                data: { projectId: Number(project_name), ids: toDelete },
+            });
 
             // Xóa trên FE
             setTasks((prev) => prev.filter((t) => !selectedTasks.has(t.id)));
@@ -254,9 +334,10 @@ useEffect(() => {
         }
     }, [selectedTasks, tasks]);
 
-
-
-    const totalWidth = useMemo(() => columns.reduce((s, c) => s + c.width, 0), [columns]);
+    const totalWidth = useMemo(
+        () => columns.reduce((s, c) => s + c.width, 0),
+        [columns]
+    );
 
     return {
         tasks,

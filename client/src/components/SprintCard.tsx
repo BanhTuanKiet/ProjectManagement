@@ -2,7 +2,9 @@
 import { useState } from "react"
 import axios from "@/config/axiosConfig"
 import { useProject } from "@/app/(context)/ProjectContext"
-import { Plus, Trash2 } from "lucide-react"
+import { CircleAlert, Plus, Trash2 } from "lucide-react"
+import toast from "react-hot-toast"
+import error from "@/app/error"
 
 interface SprintCardProps {
   onCreate: (name: string, startDate: string, endDate: string) => Promise<void>
@@ -16,11 +18,16 @@ export default function SprintCard({ onCreate, onClose, showForm }: SprintCardPr
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleCreateClick = async () => {
-    if (!name.trim()) return alert("⚠️ Vui lòng nhập tên Sprint")
+    if (!name.trim()) return setError("Vui lòng nhập tên Sprint")
+    if (!startDate) return setError("Vui lòng chọn ngày bắt đầu")
+    if (!endDate) return setError("Vui lòng chọn ngày kết thúc")
+    if (new Date(startDate) > new Date(endDate))
+      return setError("Ngày kết thúc phải lớn hơn ngày bắt đầu")
     setLoading(true)
-
+    setError(null)
     // Gọi hàm của cha
     await onCreate(name, startDate, endDate)
 
@@ -29,13 +36,27 @@ export default function SprintCard({ onCreate, onClose, showForm }: SprintCardPr
     setName("")
     setStartDate("")
     setEndDate("")
-    // onClose() đã được gọi bên trong hàm `onCreate` của cha
   }
 
   if (!showForm) return null
 
   return (
     <div className="fixed top-24 right-10 bg-white shadow-lg rounded-md p-4 w-80 z-20 border">
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3 flex items-start gap-3">
+          {/* Chọn 1 trong 2 dòng dưới đây */}
+
+          {/* Option 1: Dấu chấm than (Khuyên dùng cho lỗi nhập liệu) */}
+          <CircleAlert className="w-5 h-5 text-red-600 shrink-0" />
+
+          {/* Option 2: Dấu X (Dùng nếu muốn báo lỗi nghiêm trọng hơn) */}
+          {/* <CircleX className="w-5 h-5 text-red-600 shrink-0" /> */}
+
+          <span className="text-sm text-red-600 font-medium leading-tight">
+            {error}
+          </span>
+        </div>
+      )}
       <h3 className="text-sm font-semibold mb-2">Create new Sprint</h3>
       <input
         type="text"

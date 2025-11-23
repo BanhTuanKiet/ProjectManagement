@@ -23,5 +23,7 @@ namespace server.Services.Task
         Task<List<TaskDTO.BasicTask>> FilterTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> SearchTasks(int projectId, string keyword);
         Task<List<TaskDTO.BasicTask>> GetTasksByUserList(int projectId, List<string> userIds);
+        Task<bool> ToggleTaskStatus(int taskId, int projectId);
+        Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId);
     }
 }

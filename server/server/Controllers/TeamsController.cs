@@ -45,7 +45,7 @@ namespace server.Controllers
         public async Task<ActionResult> FindMembersTeam(int projectId, string leaderId)
         {
             List<ProjectDTO.ProjectMembers> projectMembers = await _projectServices.GetProjectMembers(projectId);
-            List<string> teamMemberIds = await _teamServices.GetTeamMembers(leaderId);
+            List<string> teamMemberIds = await _teamServices.GetTeamMembers(leaderId, projectId);
 
             List<ProjectDTO.ProjectMembers> teamMembers = projectMembers
                 .Where(pm => teamMemberIds.Contains(pm.userId))

@@ -11,6 +11,7 @@ import SprintCard from '../SprintCard'
 import { Plus } from 'lucide-react'
 import { useTask } from '@/app/(context)/TaskContext'
 import { Console } from 'console'
+import { Toaster } from 'react-hot-toast'
 
 
 interface WorkItem { id: number; key: string; title: string; status: 'TO DO' | 'IN PROGRESS' | 'DONE'; assignee?: string; assigneeColor?: string; sprintId?: number | null, deadline?: string; }
@@ -400,6 +401,7 @@ export default function BacklogView() {
                     Add Sprint
                 </button>
             </div>
+            <Toaster position="top-right" />
             <SprintCard
                 showForm={showSprintForm}
                 onClose={() => setShowSprintForm(false)}

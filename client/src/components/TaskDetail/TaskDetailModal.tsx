@@ -15,6 +15,7 @@ import { useUser } from "@/app/(context)/UserContext";
 import TaskDetailHeader from "./TaskDetailHeader";
 import TaskDetailMain from "./TaskDetailMain";
 import TaskDetailSidebar from "./TaskDetailSidebar";
+import { mapApiTaskToTask, Task } from "@/utils/mapperUtil";
 
 export default function TaskDetailModal({
     taskId,
@@ -23,7 +24,7 @@ export default function TaskDetailModal({
     taskId: number;
     onClose: () => void;
 }) {
-    const [task, setTask] = useState<TaskDetail | null>(null);
+    const [task, setTask] = useState<Task | null>(null);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(
         null
     );
@@ -37,9 +38,9 @@ export default function TaskDetailModal({
         const fetchTaskDetail = async () => {
             try {
                 const response = await axios.get(
-                    `/tasks/detail/${project_name}/${taskId}`
+                    `/tasks/detail/${projectId}/${taskId}`
                 );
-                setTask(response.data);
+                setTask(mapApiTaskToTask(response.data));
             } catch (error) {
                 console.error("Fetch task detail error:", error);
             }
@@ -73,9 +74,7 @@ export default function TaskDetailModal({
             .start()
             .then(async () => {
                 if (!mounted) return;
-                console.log("Connected to TaskHub");
                 await connection.invoke("JoinTaskGroup", taskId);
-
                 connection.on("UserJoinedTask", (user: ActiveUser) => {
                     setActiveUsers((prev) => {
                         if (prev.find((p) => p.id === user.id)) return prev;
@@ -113,6 +112,10 @@ export default function TaskDetailModal({
 
                 <div className="relative bg-white w-[1000px] h-[90vh] rounded-lg shadow-xl flex flex-col">
                     <TaskDetailHeader
+                        taskId={taskId}
+                        projectId={projectId}
+                        isActive={task.isActive}
+                        onToggleActive={(newStatus) => setTask((prev) => prev ? { ...prev, isActive: newStatus } : prev)}
                         onClose={onClose}
                         activeUsers={activeUsers}
                     />
