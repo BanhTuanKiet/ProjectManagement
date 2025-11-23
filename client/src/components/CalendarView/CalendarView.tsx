@@ -164,7 +164,10 @@ export default function CalendarView() {
 
                                                     {openDay === day && (
                                                         <div className="absolute z-50 mt-2 w-40 bg-card border rounded-lg shadow-lg">
-                                                            <TaskList tasks={tasksForDay} />
+                                                            <TaskList 
+                                                                tasks={tasksForDay} 
+                                                                setSelectedTask={setSelectedTask} 
+                                                            />
                                                         </div>
                                                     )}
                                                 </div>

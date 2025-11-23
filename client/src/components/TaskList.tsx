@@ -1,10 +1,14 @@
 import { BasicTask } from "@/utils/ITask"
 import { Badge } from "@/components/ui/badge"
-import { Clock } from 'lucide-react'
-import ColoredAvatar from "./ColoredAvatar"
 import { getStatusColor } from "@/utils/statusUtils"
 
-export function TaskList({ tasks }: { tasks: BasicTask[] }) {
+export function TaskList({
+    tasks,
+    setSelectedTask
+}: {
+    tasks: BasicTask[]
+    setSelectedTask: React.Dispatch<React.SetStateAction<number | null>>
+}) {
     const isOverdue = (deadline: string) => {
         return new Date(deadline) < new Date()
     }
@@ -23,6 +27,7 @@ export function TaskList({ tasks }: { tasks: BasicTask[] }) {
                             flex items-center gap-2 rounded border 
                             bg-card p-2 hover:bg-accent/50 transition-colors cursor-pointer
                          `}
+                        onClick={() => setSelectedTask(task.taskId)}
                     >
                         <div className="flex items-center gap-1.5 min-w-fit">
                             <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
@@ -32,20 +37,6 @@ export function TaskList({ tasks }: { tasks: BasicTask[] }) {
                                 {task.status}
                             </Badge>
                         </div>
-
-                        {/* <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium truncate">{task.title}</p>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 min-w-fit">
-                            {isOverdue(task.deadline) && (
-                                <div className="flex items-center gap-0.5 text-red-500">
-                                    <Clock className="h-3 w-3" />
-                                    <span className="text-[10px] font-medium">Overdue</span>
-                                </div>
-                            )}
-                            <ColoredAvatar id={task.assigneeId ?? task.createdBy} name={task.assignee} />
-                        </div> */}
                     </div>
                 ))}
             </div>
