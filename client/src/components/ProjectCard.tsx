@@ -6,15 +6,18 @@ import { Users, Calendar } from "lucide-react"
 import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import ColoredAvatar from "./ColoredAvatar"
-import Link from "next/link"
-import { useProject } from "@/app/(context)/ProjectContext"
 import { useEffect, useState } from "react"
 import { Member } from "@/utils/IUser"
+import Link from "next/link"
 
 const maxDisplayedMembers = 6
 
-export function ProjectCard({ project }: { project: ProjectBasic }) {
-    const { members } = useProject()
+export function ProjectCard({ 
+    project, members 
+}: { 
+    project: ProjectBasic, 
+    members: Member[] 
+}) {
     const [mockMembers, setMockMembers] = useState<Member[] | []>()
 
     useEffect(() => {
@@ -24,7 +27,7 @@ export function ProjectCard({ project }: { project: ProjectBasic }) {
     }, [members, project.ownerId])
 
     const displayedMembers = mockMembers?.slice(0, maxDisplayedMembers)
-    const remainingCount = mockMembers && Math.max(0, mockMembers?.length - maxDisplayedMembers)
+    const remainingCount = mockMembers ? Math.max(0, mockMembers?.length - maxDisplayedMembers) : 0
 
     return (
         <Card className="w-full max-w-[320px] relative overflow-hidden hover:shadow-md transition-shadow py-0 hover:scale-[1.02] ">
@@ -67,7 +70,7 @@ export function ProjectCard({ project }: { project: ProjectBasic }) {
                         {mockMembers && mockMembers?.length > 0 && (
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center -space-x-1">
-                                    {displayedMembers && displayedMembers.map((member) => (
+                                    {displayedMembers?.map((member) => (
                                         <ColoredAvatar
                                             key={member.userId}
                                             id={member.userId}
@@ -75,7 +78,7 @@ export function ProjectCard({ project }: { project: ProjectBasic }) {
                                             size="sm"
                                         />
                                     ))}
-                                    {remainingCount && remainingCount > 0 && (
+                                    {remainingCount > 0 && (
                                         <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
                                             <span className="text-[10px] font-medium text-muted-foreground">
                                                 +{remainingCount}
