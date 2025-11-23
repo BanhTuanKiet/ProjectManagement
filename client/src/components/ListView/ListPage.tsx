@@ -17,14 +17,13 @@ import {
 import { BasicTask } from "@/utils/ITask";
 import { Task } from "@/utils/mapperUtil";
 import { useTaskTable } from "@/hooks/useResizableColumns";
-import TaskDetailDrawer from "../TaskDetailDrawer";
 import TaskDetailModal from "../TaskDetailModal";
-import { useParams } from "next/dist/client/components/navigation";
 import axios from "@/config/axiosConfig";
 import { mapApiTaskToTask } from "@/utils/mapperUtil";
 import ColoredAvatar from "../ColoredAvatar";
-import { useProject } from "@/app/(context)/ProjectContext"
-import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon, taskStatus } from "@/utils/statusUtils";
+import { useProject } from "@/app/(context)/ProjectContext";
+import { getTaskStatusBadge, getPriorityBadge, taskStatus } from "@/utils/statusUtils";
+import type { TaskAssignee } from "@/utils/IUser"
 
 interface ListPageProps {
   tasksNormal: BasicTask[];
@@ -34,7 +33,7 @@ interface ListPageProps {
 export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const {
     tasks,
-    availableUsers,
+    // availableUsers, // Xóa cái này, không dùng user từ table để làm filter
     columns,
     selectedTasks,
     searchQuery,
@@ -62,33 +61,38 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const { project_name, projectRole } = useProject();
-  const stableFilters = useMemo(() => filters, [filters.Status, filters.Priority, filters.AssigneeId]);
+  const { project_name, projectRole, availableUsers, setAvailableUsers } = useProject();
 
   useEffect(() => {
-    const rawHash = decodeURIComponent(window.location.hash.replace("#", ""))
-    const [tab, queryString] = rawHash.split("?")
+    const rawHash = decodeURIComponent(window.location.hash.replace("#", ""));
+    const [tab, queryString] = rawHash.split("?");
 
-    if (!queryString) return
+    if (!queryString) return;
 
-    const params = new URLSearchParams(queryString)
-    const status = params.get("status")
+    const params = new URLSearchParams(queryString);
+    const status = params.get("status");
 
     if (status) {
-      setFilters(prev => ({ ...prev, Status: status }))
+      setFilters((prev) => ({ ...prev, Status: status }));
     }
 
     const assignee = params.get("assignee");
     if (assignee) {
-      setFilters(prev => ({ ...prev, AssigneeId: assignee }));
+      if (projectRole === "Member") {
+        setFilters((prev) => ({ ...prev, AssigneeId: "me" }));
+      } else {
+        setFilters((prev) => ({ ...prev, AssigneeId: assignee }));
+      }
     }
+  }, [projectRole, project_name, setFilters]);
 
-  }, [])
-
-
+  // PM: Thấy tất cả members
+  // Leader: Thấy tất cả members trong team
+  // Member: Dropdown bị ẩn
+  const dropdownUsers = availableUsers || [];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden  mx-auto w-full">
+    <div className="flex flex-col h-full overflow-hidden mx-auto w-full">
       {/* Header */}
       <div id="toolsList" className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
         <div className="flex items-center gap-4">
@@ -155,7 +159,6 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
               <Button variant="outline" className="gap-2 bg-transparent">
                 {filters.Priority ? (
                   <div className="flex items-center gap-2">
-                    {/* {getPriorityIcon(filters.Priority)} */}
                     <span className={getPriorityBadge(filters.Priority.toLowerCase())}>
                       {filters.Priority}
                     </span>
@@ -175,7 +178,6 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                   onClick={() => setFilters((prev) => ({ ...prev, Priority: priority }))}
                 >
                   <div className="flex items-center gap-2">
-                    {/* {getPriorityIcon(priority)} */}
                     <span className={getPriorityBadge(priority.toLowerCase())}>
                       {priority}
                     </span>
@@ -185,6 +187,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* --- Bộ lọc Assignee (Chỉ hiện cho PM và Leader) --- */}
           {projectRole !== "Member" && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -196,7 +199,8 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                       ) : filters.AssigneeId === "null" ? (
                         "Unassigned"
                       ) : (
-                        availableUsers.find((u) => u.userId === filters.AssigneeId)?.name || "Assignee"
+                        // Tìm tên trong danh sách members thay vì availableUsers
+                        dropdownUsers.find((u) => u.userId === filters.AssigneeId)?.name || "Assignee"
                       )}
                     </>
                   ) : (
@@ -205,7 +209,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-44">
+              <DropdownMenuContent className="w-44 max-h-80 overflow-y-auto">
                 <DropdownMenuLabel>Assignee</DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
@@ -213,14 +217,15 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                   Assigned to me
                 </DropdownMenuItem>
 
-                {availableUsers?.length > 0 ? (
-                  availableUsers.map((user) => (
+                {/* Sử dụng dropdownUsers (lấy từ Context) thay vì users từ table */}
+                {dropdownUsers.length > 0 ? (
+                  dropdownUsers.map((availableUsers) => (
                     <DropdownMenuItem
-                      key={user.userId}
-                      onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: user.userId }))}
+                      key={availableUsers.userId}
+                      onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: availableUsers.userId }))}
                     >
-                      <ColoredAvatar id={user.userId} name={user.name} size="sm" />
-                      <span className="text-sm">{user.name}</span>
+                      <ColoredAvatar id={availableUsers.userId} name={availableUsers.name} size="sm" />
+                      <span className="text-sm ml-2">{availableUsers.name}</span>
                     </DropdownMenuItem>
                   ))
                 ) : (
@@ -235,7 +240,6 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-
 
           {/* --- Nút clear filter --- */}
           <Button
@@ -259,7 +263,6 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
           </Button>
         </div>
       </div>
-
 
       {/* Table */}
       <div id="descriptTaskList" className="flex-1 flex flex-col overflow-hidden">

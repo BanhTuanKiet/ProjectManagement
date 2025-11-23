@@ -23,7 +23,7 @@ export default function CalendarView() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedDay, setSelectedDay] = useState<number | null>(null)
     const [selectedTask, setSelectedTask] = useState<number | null>(null)
-    const { members } = useProject()
+    const { availableUsers } = useProject()
     const [days, setDays] = useState<(number | null)[] | undefined>()
     const [openDay, setOpenDay] = useState<number | null>(null)
 
@@ -69,8 +69,8 @@ export default function CalendarView() {
         <div className="p-6 bg-background min-h-screen bg-dynamic">
             <div className="flex items-center justify-between mb-6 gap-4">
                 <TaskFilterView
-                    tasks={tasks || []}    
-                    onFilterComplete={setMockTasks} 
+                    tasks={tasks || []}
+                    onFilterComplete={setMockTasks}
                 />
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function CalendarView() {
             {isModalOpen && (
                 <AddTaskModal
                     isModalOpen={isModalOpen}
-                    members={members ?? []}
+                    availableUsers={availableUsers ?? []}
                     currentDate={currentDate}
                     selectedDay={selectedDay ?? currentDate.getDay()}
                     setIsModalOpen={setIsModalOpen}

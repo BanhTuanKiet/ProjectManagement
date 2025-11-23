@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import ColoredAvatar from "@/components/ColoredAvatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
-import type { Member, UserMini } from "@/utils/IUser"
+import type { Member, UserMini, TaskAssignee } from "@/utils/IUser"
 import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import React, { useState, useEffect, useRef } from "react"
@@ -36,7 +36,7 @@ interface TableWrapperProps {
     handleColumnDragOver: (e: React.DragEvent) => void
     handleColumnDrop: (e: React.DragEvent, targetColumnIndex: number) => void
     setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: number; field: string } | null>>
-    availableUsers?: Member[]
+    availableUsers?: TaskAssignee[]
     copySelectedTasks: () => void
     deleteSelectedTasks: () => void
     onTaskClick: (task: Task) => void
@@ -367,7 +367,7 @@ export default function TableWrapper({
                             </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleCellEdit(task.id, "assignee", undefined)}>
+                            <DropdownMenuItem onClick={() => handleCellEdit(task.id, "assignee", null)}>
                                 <div className="flex items-center gap-2">
                                     <ColoredAvatar id={task.raw.assigneeId ?? ""} name="Unassigned" size="sm" />
                                     <span>Unassigned</span>

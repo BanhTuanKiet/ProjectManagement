@@ -45,15 +45,44 @@ namespace server.Services.Project
 
         public async Task<List<NotificationDTO.NotificationBasic>> GetNotificationByType(string userId, string type)
         {
-            var notifications = await _context.Notifications
-                .Include(n => n.User)
-                .Include(n => n.CreatedBy)
-                .Where(n => (n.UserId == userId || n.UserId == null) && n.Type == type)
-                .OrderBy(n => n.CreatedAt)
-                .OrderByDescending(n => n.CreatedAt)
+            var projectRoles = await _context.ProjectMembers
+                .Where(pm => pm.UserId == userId)
+                .Select(pm => new { pm.ProjectId, pm.RoleInProject })
                 .ToListAsync();
 
-            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(notifications);
+            var allNotifications = new List<Models.Notification>();
+
+            foreach (var pr in projectRoles)
+            {
+                int projectId = pr.ProjectId;
+                string role = pr.RoleInProject ?? "";
+
+                IQueryable<Models.Notification> query = _context.Notifications
+                    .Include(n => n.User)
+                    .Include(n => n.CreatedBy)
+                    .Where(n => n.ProjectId == projectId && n.Type == type);
+
+                if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(n => n.UserId == userId);
+                }
+                else
+                {
+                    query = query.Where(n => n.UserId == userId || n.UserId == null);
+                }
+
+                var notifications = await query
+                    .OrderByDescending(n => n.CreatedAt)
+                    .ToListAsync();
+
+                allNotifications.AddRange(notifications);
+            }
+
+            var orderedAll = allNotifications
+                .OrderByDescending(n => n.CreatedAt)
+                .ToList();
+
+            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(orderedAll);
         }
 
         public async Task<Notification> GetNotificationById(long notificationId)
@@ -75,6 +104,50 @@ namespace server.Services.Project
             return await _context.Notifications
                 .Where(n => n.NotificationId == notifyId)
                 .ExecuteDeleteAsync();
+        }
+
+        public async Task<List<NotificationDTO.NotificationBasic>> GetNotificationByUserIdAndRole(string userId)
+        {
+            var projectRoles = await _context.ProjectMembers
+                .Where(pm => pm.UserId == userId)
+                .Select(pm => new { pm.ProjectId, pm.RoleInProject })
+                .ToListAsync();
+
+            var projectIdRole = projectRoles.ToDictionary(x => x.ProjectId, x => x.RoleInProject);
+
+            var allNotifications = new List<Models.Notification>();
+
+            foreach (var kvp in projectIdRole)
+            {
+                int projectId = kvp.Key;
+                string role = kvp.Value ?? "";
+
+                IQueryable<Models.Notification> query = _context.Notifications
+                    .Include(n => n.User)
+                    .Include(n => n.CreatedBy)
+                    .Where(n => n.ProjectId == projectId);
+
+                if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(n => n.UserId == userId);
+                }
+                else
+                {
+                    query = query.Where(n => n.UserId == userId || n.UserId == null);
+                }
+
+                var notifications = await query
+                    .OrderByDescending(n => n.CreatedAt)
+                    .ToListAsync();
+
+                allNotifications.AddRange(notifications);
+            }
+
+            var orderedAll = allNotifications
+                .OrderByDescending(n => n.CreatedAt)
+                .ToList();
+
+            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(orderedAll);
         }
     }
 }

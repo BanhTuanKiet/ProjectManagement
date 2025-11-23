@@ -61,3 +61,9 @@ export interface InviteUser {
     status: string
     email: string
 }
+
+export interface TaskAssignee {
+    userId: string;
+    name: string;
+    avatar?: string | null;
+}

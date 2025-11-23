@@ -7,6 +7,7 @@ using server.Services.Task;
 using server.Services.Sprint;
 using server.Services.Backlog;
 using System.Text.Json;
+using server.Configs;
 
 namespace server.Services.Project
 {
@@ -24,6 +25,8 @@ namespace server.Services.Project
         public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId)
         {
             var tasks = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
                 .Where(t => t.AssigneeId == userId && t.ProjectId == projectId)
                 .ToListAsync();
 
@@ -127,16 +130,88 @@ namespace server.Services.Project
 
         //     return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         // }
-        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId)
+        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId, string role)
         {
             var task = await _context.Tasks
-                .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId && t.AssigneeId == userId);
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
 
             if (task == null) return null;
 
+            bool isPM = role == "Project Manager";
+            bool isLeader = role == "Leader";
+            bool isManager = isPM || isLeader;
+
+            // Danh sách các trường cấm Member sửa (trừ assigneeid sẽ check riêng)
+            var restrictedFields = new HashSet<string>
+            {
+                "title", "priority", "deadline", "sprintid", "backlogid", "estimatehours"
+            };
+
             foreach (var kvp in updates)
             {
-                switch (kvp.Key.ToLower())
+                string key = kvp.Key.ToLower();
+
+                // --- LOGIC RIÊNG CHO ASSIGNEE (Giao việc) ---
+                if (key == "assigneeid")
+                {
+                    // Member không được phép assign task
+                    if (!isManager)
+                    {
+                        throw new ErrorException(403, "Bạn không có quyền giao task (Assign).");
+                    }
+
+                    string? targetUserId = kvp.Value?.ToString();
+
+                    // Nếu targetUserId không null (tức là đang gán cho ai đó)
+                    if (!string.IsNullOrEmpty(targetUserId))
+                    {
+                        if (isPM)
+                        {
+                            // Logic PM: Chỉ cần người được gán thuộc Project
+                            bool isInProject = await _context.ProjectMembers
+                                .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == targetUserId);
+
+                            if (!isInProject)
+                                throw new ErrorException(400, "Người được gán không thuộc dự án này.");
+                        }
+                        else if (isLeader)
+                        {
+                            // Logic Leader: Phải tìm Team của Leader này trước
+                            var team = await _context.Teams
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(t => t.LeaderId == userId);
+
+                            // if (team == null)
+                            //     throw new ErrorException(400, "Bạn là Leader nhưng chưa được gán quản lý Team nào.");
+                            // Kiểm tra người được gán có thuộc Team này không
+                            bool isInTeam = await _context.TeamMembers
+                                .AnyAsync(tm => tm.TeamId == team.Id && tm.UserId == targetUserId);
+
+                            if (!isInTeam && targetUserId != userId)
+                            {
+                                throw new ErrorException(403, "Leader chỉ được giao task cho thành viên trong Team mình.");
+                            }
+                        }
+                    }
+
+                    // Gán giá trị và continue để không chạy vào switch bên dưới
+                    task.AssigneeId = targetUserId;
+                    continue;
+                }
+
+                // --- CHECK CÁC TRƯỜNG KHÁC ---
+                if (restrictedFields.Contains(key))
+                {
+                    if (!isManager)
+                    {
+                        throw new ErrorException(403, $"Thành viên không được phép sửa trường '{key}'.");
+                    }
+                }
+
+                // --- SWITCH UPDATE GIÁ TRỊ ---
+                switch (key)
                 {
                     case "title":
                         task.Title = kvp.Value?.ToString();
@@ -155,10 +230,6 @@ namespace server.Services.Project
                             task.Priority = prio;
                         break;
 
-                    case "assigneeid":
-                        task.AssigneeId = kvp.Value?.ToString();
-                        break;
-
                     case "deadline":
                         if (DateTime.TryParse(kvp.Value?.ToString(), out var date))
                             task.Deadline = date;
@@ -168,6 +239,7 @@ namespace server.Services.Project
                         if (decimal.TryParse(kvp.Value?.ToString(), out var hrs))
                             task.EstimateHours = hrs;
                         break;
+
                     case "sprintid":
                         if (int.TryParse(kvp.Value?.ToString(), out var sprintId))
                             task.SprintId = sprintId == -1 ? null : sprintId;
