@@ -128,7 +128,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                     {filters.Status}
                   </span>
                 ) : (
-                  "Status"
+                  <span className="text-muted-foreground font-normal">Status</span>
                 )}
                 <ChevronDown className="h-4 w-4" />
               </Button>
@@ -164,7 +164,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                     </span>
                   </div>
                 ) : (
-                  "Priority"
+                  <span className="text-muted-foreground font-normal">Priority</span>
                 )}
                 <ChevronDown className="h-4 w-4" />
               </Button>
@@ -204,7 +204,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                       )}
                     </>
                   ) : (
-                    "Assignee"
+                    <span className="text-muted-foreground font-normal">Assignee</span>
                   )}
                   <ChevronDown className="h-4 w-4" />
                 </Button>

@@ -12,7 +12,7 @@ import TaskCard from "../TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Calendar, Grid3X3 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Grid3X3 } from "lucide-react"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -82,14 +82,6 @@ export default function CalendarView() {
                         </span>
                         <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}>
                             <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon">
-                            <Calendar className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                            <Grid3X3 className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
