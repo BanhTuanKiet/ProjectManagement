@@ -51,7 +51,6 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
         }
     }
 
-
     // useEffect(() => {
     //     const fetchSubscription = async () => {
     //         try {

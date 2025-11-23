@@ -29,6 +29,8 @@ namespace server.DTO
             public string role { get; set; }
             public bool isOwner { get; set; }
             public DateTime joinedAt { get; set; }
+            public string TeamId { get; set; }
+            public string LeaderId { get; set; }
         }
 
         public class CreateProject

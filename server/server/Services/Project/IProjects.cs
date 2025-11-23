@@ -18,6 +18,6 @@ namespace server.Models
         Task<int> CountProject(string ownerId);
         Task<Project> CreateProject(ProjectDTO.CreateProject projectDTO);
         Task<bool> DeleteProject(int project);
-        Task<bool> ChangeLeader(int projectId, string leaderId, string newLeaderId);
+        Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId);
     }
 }

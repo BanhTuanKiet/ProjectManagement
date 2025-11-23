@@ -17,7 +17,8 @@ public class MemberLimitHandler : AuthorizationHandler<MemberLimitRequirement>
         IProjects projectServices,
         IPlans planServices,
         ISubscriptions subscriptionServices,
-        IFeature featureServices)
+        IFeature featureServices,
+        ITeams teamServices)
     {
         _httpContextAccessor = httpContextAccessor;
         _userServices = userServices;

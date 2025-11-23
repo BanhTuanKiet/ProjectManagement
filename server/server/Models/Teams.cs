@@ -19,18 +19,11 @@ namespace server.Models
         [Required]
         [ForeignKey("Leader")]
         public string LeaderId { get; set; } = null!;
-
         public virtual ApplicationUser Leader { get; set; } = null!;
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
-        //public int ProjectId { get; set; }
-      
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
         public int? ProjectId { get; set; } = null;
-
-
         public virtual Project Project { get; set; }
-
         // Danh sách member
         public ICollection<TeamMembers> Members { get; set; } = new List<TeamMembers>();
     }
@@ -38,7 +31,7 @@ namespace server.Models
     public class TeamMembers
     {
         public Guid TeamId { get; set; }
-        public Teams Team { get; set; } = null!;
+        public virtual Teams Team { get; set; } = null!;
         public string UserId { get; set; } = null!;
         public virtual ApplicationUser User { get; set; } = null!;
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;

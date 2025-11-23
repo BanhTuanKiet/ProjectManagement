@@ -25,4 +25,5 @@ public partial class Project
     public virtual ICollection<Backlog> Backlogs { get; set; } = new List<Backlog>();
     public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
     public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
+    public virtual ICollection<Teams> Teams { get; set; } = new List<Teams>();
 }

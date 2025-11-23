@@ -9,12 +9,10 @@ import { useTask } from "@/app/(context)/TaskContext"
 import type { BasicTask } from "@/utils/ITask"
 import Overview from "./Summary/Overview"
 import ChartView from "./Summary/ChartView"
-import { useHash } from "@/hooks/useHash"
 import MemberList from "./MemberList"
 import SettingsPopup from "./SettingsPopup"
 
 export default function Summary() {
-    const { hash: activeTab, setHash: setActiveTab } = useHash("")
     const { projects, project_name, members } = useProject()
     const [project, setProject] = useState<ProjectBasic | undefined>()
     const { tasks } = useTask()
@@ -31,9 +29,6 @@ export default function Summary() {
     useEffect(() => {
         if (project && tasks) setMockTasks(tasks)
     }, [project, tasks])
-
-    const projectManager = members?.find((m) => m.isOwner)
-    const projectMembers = members?.filter((m) => !m.isOwner)
 
     const totalTasks = mockTasks.length ?? 0
     const doneTasks = mockTasks.filter((t) => t.status.toLocaleLowerCase() === "done").length
@@ -56,17 +51,13 @@ export default function Summary() {
                                     <span>Created {formatDate(project?.startDate ?? "")}</span>
                                 </div>
 
-                                {projectManager && projectMembers && <MemberList object={{ projectManager, projectMembers }} />}
+                                {project && members && (
+                                    <MemberList
+                                        project={project}
+                                        members={members}
+                                    />
+                                )}
                             </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {/* <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                                Export
-                            </button>
-                            <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                                <Plus size={16} className="inline mr-1" />
-                                New Task
-                            </button> */}
                         </div>
                     </div>
 

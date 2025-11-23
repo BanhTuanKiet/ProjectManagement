@@ -74,8 +74,8 @@ namespace server.Controllers
         public async Task<ActionResult> GetProjectRole(int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            string role = await _userServices.GetProjectRole(projectId, userId);
-            return Ok(role);
+            ProjectMember member = await _userServices.GetProjectRole(projectId, userId) ?? throw new ErrorException(404, "Member not found");
+            return Ok(member.RoleInProject);
         }
 
         [HttpGet("signout")]
@@ -173,9 +173,9 @@ namespace server.Controllers
 
             foreach (var uid in userIds)
             {
-                string role = await _userServices.GetProjectRole(projectId, uid);
+                ProjectMember member = await _userServices.GetProjectRole(projectId, uid);
 
-                if (role == "Leader")
+                if (member.RoleInProject == "Leader")
                 {
                     throw new ErrorException(400, $"User {uid} is the Leader and cannot be removed");
                 }

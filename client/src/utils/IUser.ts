@@ -5,6 +5,14 @@ export interface Member {
   role: string
   isOwner: boolean
   joinedAt: string
+  teamId: string
+  leaderId: string
+}
+
+export interface Teams {
+    teamId: string
+    leaderId: string
+    members: Member[]
 }
 
 export interface UserMini {

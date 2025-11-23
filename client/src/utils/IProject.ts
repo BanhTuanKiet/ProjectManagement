@@ -1,5 +1,3 @@
-import { Member } from "./IUser"
-
 export interface ProjectBasic {
     projectId: number
     name: string
@@ -8,7 +6,6 @@ export interface ProjectBasic {
     endDate: string
     ownerId: string
     owner: string
-    members: Member[]
 }
 
 export interface UpdateProject {
