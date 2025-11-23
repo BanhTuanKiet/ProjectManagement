@@ -47,6 +47,7 @@ namespace server.Models
         public virtual ICollection<Task> TaskCreatedByNavigations { get; set; } = new List<Task>();
         //SubTask
         public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
+        public virtual ICollection<TeamMembers> TeamMembers { get; set; } = new List<TeamMembers>();
         //TaskHistory
         [NotMapped]
         public virtual ICollection<TaskHistory> TaskHistoryAssignees { get; set; } = new List<TaskHistory>();

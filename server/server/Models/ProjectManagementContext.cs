@@ -92,7 +92,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         });
 
         modelBuilder.Entity<TeamMembers>()
-            .HasKey(tm => new { tm.TeamId, tm.UserId });
+            .HasKey(tm => new { tm.TeamId });
 
         modelBuilder.Entity<TeamMembers>()
             .HasOne(tm => tm.Team)
@@ -101,9 +101,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
         modelBuilder.Entity<TeamMembers>()
             .HasOne(tm => tm.User)
-            .WithMany()
-            .HasForeignKey(tm => tm.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .WithMany(u => u.TeamMembers);
 
         modelBuilder.Entity<ActivityLog>(entity =>
         {

@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
+using NuGet.Versioning;
 
 namespace server.Controllers
 {
@@ -23,6 +24,7 @@ namespace server.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         public readonly ProjectManagementContext _context;
         private readonly IActivityLog _activityLogServices;
+        private readonly ITeams _teamServices;
         private readonly INotifications _notificationsService;
         private readonly IMapper _mapper;
         private readonly IHubContext<NotificationHub> _notificationHubContext;
@@ -34,6 +36,7 @@ namespace server.Controllers
             IActivityLog activityLog,
             INotifications notificationsService,
             IMapper mapper,
+            ITeams teams,
             IHubContext<NotificationHub> notificationHubContext)
         {
             _projectsServices = projectsServices;
@@ -42,6 +45,7 @@ namespace server.Controllers
             _activityLogServices = activityLog;
             _notificationsService = notificationsService;
             _mapper = mapper;
+            _teamServices = teams;
             _notificationHubContext = notificationHubContext;
         }
 
@@ -58,17 +62,6 @@ namespace server.Controllers
         {
             var projects = await _projectsServices.GetProjectBasic(projectId);
             return Ok(projects);
-        }
-
-        [Authorize(Policy = "MemberRequirement")]
-        [HttpGet("member/{projectId}")]
-        public async Task<ActionResult> GetProjectMembers(int projectId)
-        {
-            Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
-
-            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
-
-            return Ok(projectMembers);
         }
 
         [HttpPut("starred/{projectId}/{isStarred}")]
@@ -280,22 +273,48 @@ namespace server.Controllers
             var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             await NotificationHub.SendNotificationProject(_notificationHubContext, projectId, userId, notificationDto);
             return Ok(new { message = "Delete project successfull!" });
-          }
+        }
 
         [HttpPut("leader/{projectId}/{leaderId}/{newLeaderId}")]
         [Authorize(Policy = "PMRequirement")]
         public async Task<ActionResult> ChangeLeader(int projectId, string leaderId, string newLeaderId)
         {
-            ApplicationUser leader = await _userManager.FindByIdAsync(leaderId)
-                ?? throw new ErrorException(404, "Leader not found");
-            ApplicationUser newLeader = await _userManager.FindByIdAsync(newLeaderId)
-                ?? throw new ErrorException(404, "New leader not found");
+            Teams team = await _teamServices.DemoGetTeamByLeader(projectId, leaderId)
+                ?? throw new ErrorException(404, "Team not found or leader not in project");
 
-            bool isChanged = await _projectsServices.ChangeLeader(projectId, leaderId, newLeaderId);
+            var oldLeaderTM = team ?? throw new ErrorException(404, "Leader not found in team");
 
-            if (!isChanged) throw new ErrorException(400, "Change leader failed");
+            var newLeaderTM = team.Members.FirstOrDefault(m => m.UserId == newLeaderId)
+                ?? throw new ErrorException(404, "New leader not found in team");
 
-            return Ok(new { message = "Chang leader successful" });
+            var oldLeaderPM = await _context.ProjectMembers
+                .FirstOrDefaultAsync(pm => pm.UserId == leaderId && pm.ProjectId == projectId);
+
+            var newLeaderPM = await _context.ProjectMembers
+                .FirstOrDefaultAsync(pm => pm.UserId == newLeaderId && pm.ProjectId == projectId);
+
+            team.LeaderId = newLeaderId;
+            newLeaderTM.UserId = leaderId;
+
+            var tmp = oldLeaderTM.JoinedAt;
+            oldLeaderTM.JoinedAt = newLeaderTM.JoinedAt;
+            newLeaderTM.JoinedAt = tmp;
+
+            oldLeaderPM.RoleInProject = "Member";
+            newLeaderPM.RoleInProject = "Leader";
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Change leader successful" });
+        }
+
+        [Authorize(Policy = "MemberRequirement")]
+        [HttpGet("member/{projectId}")]
+        public async Task<ActionResult> GetProjectMembers(int projectId)
+        {
+            Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
+            return Ok(projectMembers);
         }
     }
 }

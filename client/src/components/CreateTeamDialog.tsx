@@ -27,14 +27,13 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        if (members) {
+        if (members && open) {
             const leaders = members.filter(m => m.role === "Leader")
             const mems = members.filter(m => m.role === "Member")
             setMockLeaders(leaders)
             setMockMembers(mems)
-            console.log(mems)
         }
-    }, [members])
+    }, [members, open])
 
     const handleAddMember = (member: Member) => {
         if (selectedMembers.some(m => m.id === member.userId)) return

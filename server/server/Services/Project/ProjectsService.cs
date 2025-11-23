@@ -35,24 +35,13 @@ namespace server.Services.Project
 
         public async Task<List<ProjectDTO.ProjectBasic>> GetProjects(string userId)
         {
-            List<server.Models.Project> projects = await _context.Projects
+            var projects = await _context.Projects
                 .Include(p => p.ProjectMembers)
-                .ThenInclude(p => p.User)
                 .Include(p => p.CreatedByNavigation)
                 .Where(p => p.ProjectMembers.Any(pm => pm.UserId == userId))
                 .ToListAsync();
 
             return _mapper.Map<List<ProjectDTO.ProjectBasic>>(projects);
-        }
-
-        public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId)
-        {
-            var projectMembers = await _context.ProjectMembers
-                .Include(pm => pm.User)
-                .Where(pm => pm.ProjectId == projectId)
-                .ToListAsync();
-
-            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
         }
 
         public async Task<server.Models.Project> FindProjectById(int projectId)
@@ -287,16 +276,17 @@ namespace server.Services.Project
             return true;
         }
 
-        public async Task<bool> ChangeLeader(int projectId, string leaderId, string newLeaderId)
+        public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId)
         {
-            ProjectMember leader = await _context.ProjectMembers.FirstOrDefaultAsync(pm => pm.UserId == leaderId && pm.ProjectId == projectId);
-            ProjectMember newLeader = await _context.ProjectMembers.FirstOrDefaultAsync(pm => pm.UserId == newLeaderId && pm.ProjectId == projectId);
+            var projectMembers = await _context.ProjectMembers
+                .Include(pm => pm.Project)
+                .Include(pm => pm.User)
+                .ThenInclude(u => u.TeamMembers)
+                .ThenInclude(tm => tm.Team)
+                .Where(pm => pm.ProjectId == projectId)
+                .ToListAsync();
 
-            leader.RoleInProject = "Member";
-            newLeader.RoleInProject = "Leader";
-
-            await _context.SaveChangesAsync();
-            return true;
+            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
         }
     }
 }

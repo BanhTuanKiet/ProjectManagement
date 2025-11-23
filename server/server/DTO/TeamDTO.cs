@@ -6,5 +6,22 @@ namespace server.DTO
         {
             List<string> MememberIds { get; set; }
         }
+
+        public class Teams
+        {
+            public string TeamId { get; set; }
+            public string LeaderId { get; set; }
+            public List<TeamMembers> Members { get; set; } = new();
+        }
+
+        public class TeamMembers
+        {
+            public string UserId { get; set; }
+            public string Email { get; set; }
+            public string Name { get; set; }
+            public string Role { get; set; }
+            public bool IsOwner { get; set; }
+            public DateTime JoinedAt { get; set; }
+        }
     }
 }
