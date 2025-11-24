@@ -189,7 +189,10 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                             variant="ghost"
                             size="sm"
                             className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative"
-                            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                            onClick={() => {
+                                setIsNotificationOpen(!isNotificationOpen)
+                                handleNotificationOpen();
+                            }}
                         >
                             <Bell className="h-5 w-5" />
                             {/* {unreadCount > 0 && (
@@ -225,7 +228,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                                                     {n.projectId && <span>Project: #{n.projectId}</span>}
                                                 </div>
                                                 {n.link && (
-                                                    <a href={n.link} target="_blank" rel="noopener noreferrer" className="text-primary text-xs hover:underline mt-2 inline-block">
+                                                    <a href={`http://localhost:3000/project/1#list?${n.link}`} rel="noopener noreferrer" className="text-primary text-xs hover:underline mt-2 inline-block">
                                                         View details →
                                                     </a>
                                                 )}

@@ -41,7 +41,7 @@ const ProfilePage2 = () => {
     const fetchData = async () => {
         try {
             const [taskRes, projectRes, userRes] = await Promise.all([
-                axios.get("/tasks/user"),
+                axios.get(`/tasks/user/${-1}`),
                 axios.get("/projects"),
                 axios.get("/users/profile"),
             ]);

@@ -64,7 +64,7 @@ namespace server.Services.Project
 
                 if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase))
                 {
-                    query = query.Where(n => n.UserId == userId);
+                    query = query.Where(n => n.UserId == userId || n.Type == type);
                 }
                 else
                 {
@@ -110,10 +110,16 @@ namespace server.Services.Project
         {
             var projectRoles = await _context.ProjectMembers
                 .Where(pm => pm.UserId == userId)
-                .Select(pm => new { pm.ProjectId, pm.RoleInProject })
                 .ToListAsync();
 
             var projectIdRole = projectRoles.ToDictionary(x => x.ProjectId, x => x.RoleInProject);
+            var projectIds = projectIdRole.Keys.ToList();
+
+            var notif = await _context.Notifications
+                .Include(n => n.User)
+                .Include(n => n.CreatedBy)
+                .Where(n => n.ProjectId.HasValue && projectIds.Contains(n.ProjectId.Value))
+                .ToListAsync();
 
             var allNotifications = new List<Models.Notification>();
 
@@ -122,32 +128,27 @@ namespace server.Services.Project
                 int projectId = kvp.Key;
                 string role = kvp.Value ?? "";
 
-                IQueryable<Models.Notification> query = _context.Notifications
-                    .Include(n => n.User)
-                    .Include(n => n.CreatedBy)
-                    .Where(n => n.ProjectId == projectId);
+                var perProject = notif.Where(n => n.ProjectId == projectId);
 
                 if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase))
                 {
-                    query = query.Where(n => n.UserId == userId);
+                    perProject = perProject.Where(n =>
+                        n.UserId == userId || n.Type == "project");
                 }
                 else
                 {
-                    query = query.Where(n => n.UserId == userId || n.UserId == null);
+                    perProject = perProject.Where(n =>
+                        n.UserId == userId || n.UserId == null);
                 }
 
-                var notifications = await query
-                    .OrderByDescending(n => n.CreatedAt)
-                    .ToListAsync();
-
-                allNotifications.AddRange(notifications);
+                allNotifications.AddRange(perProject);
             }
 
-            var orderedAll = allNotifications
+            var ordered = allNotifications
                 .OrderByDescending(n => n.CreatedAt)
                 .ToList();
 
-            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(orderedAll);
+            return _mapper.Map<List<NotificationDTO.NotificationBasic>>(ordered);
         }
     }
 }
