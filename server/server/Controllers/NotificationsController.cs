@@ -32,6 +32,8 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             List<NotificationDTO.NotificationBasic> notifications = await _notificationService.GetNotificationByType(userId, type);
+            if (notifications == null)
+                throw new ErrorException(400, "Can't load notifications");
             return Ok(notifications);
         }
 

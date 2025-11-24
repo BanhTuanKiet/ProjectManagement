@@ -88,9 +88,8 @@ export default function Assign({ activeTab }: { activeTab: string }) {
                             </div>
                             {n.link && (
                                 <a
-                                    href={n.link}
+                                    href={`http://localhost:3000/project/1#list?${n.link}`}
                                     className="inline-flex items-center gap-1 text-primary hover:underline sm:ml-auto"
-                                    target="_blank"
                                     rel="noopener noreferrer"
                                 >
                                     View details →

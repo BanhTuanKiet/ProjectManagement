@@ -238,7 +238,7 @@ namespace server.Controllers
                     Message = $"A new task {formatedTask.Title} has been assigned to you by {name}",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow,
-                    Link = $"/tasks/{formatedTask.TaskId}",
+                    Link = $"tasks={formatedTask.TaskId}",
                     CreatedId = userId,
                     Type = "task"
                 };
@@ -334,7 +334,7 @@ namespace server.Controllers
                 {
                     ProjectId = dto.ProjectId,
                     Message = $"Delete task #{taskId} was deleted by {name}",
-                    Link = $"/tasks/{taskId}",
+                    Link = $"tasks={taskId}",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow,
                     CreatedId = userId,
@@ -387,7 +387,7 @@ namespace server.Controllers
                 Message = $"Task #{taskId} {task.Title} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow,
-                Link = $"/tasks/{taskId}",
+                Link = $"tasks={taskId}",
                 CreatedId = userId,
                 Type = "task"
             };
@@ -490,7 +490,7 @@ namespace server.Controllers
                     Message = $"{changeSummary} by {name}",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow,
-                    Link = $"/tasks/{taskId}",
+                    Link = $"tasks={taskId}",
                     CreatedId = userId,
                     Type = "task"
                 };
@@ -537,7 +537,7 @@ namespace server.Controllers
                     Message = $"Restore task-{taskId} {restoredTask.Title} by {name}",
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow,
-                    Link = $"/tasks/{taskId}",
+                    Link = $"tasks={taskId}",
                     CreatedId = userId,
                     Type = "task"
                 };

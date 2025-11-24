@@ -310,7 +310,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                                 </td>
 
                                 <td className="px-6 py-4">
-                                    <div className="font-medium text-gray-900">{member.userId}</div>
+                                    <div className="font-medium text-gray-900">{member.email}</div>
                                 </td>
 
                                 <td className="px-6 py-4">
