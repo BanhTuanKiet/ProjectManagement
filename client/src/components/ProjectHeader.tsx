@@ -51,18 +51,19 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
         }
     }
 
-    // useEffect(() => {
-    //     const fetchSubscription = async () => {
-    //         try {
-    //             // const response = await axios.get(`/users/subscription`)
-    //             // setPlan(response.data)
-    //         } catch (error) {
-    //             console.log(error)
-    //         }
-    //     }
+    useEffect(() => {
+        const fetchSubscription = async () => {
+            try {
+                const response = await axios.get(`/users/subscription`)
+                console.log(response.data)
+                setPlan(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
 
-    //     fetchSubscription()
-    // }, [])
+        fetchSubscription()
+    }, [])
 
     return (
         <>

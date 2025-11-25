@@ -715,5 +715,14 @@ namespace server.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [Authorize(Policy = "MemberRequirement")]
+        [HttpGet("{projectId}/upcoming_deadline")]
+        public async Task<ActionResult> GetUpcomingDeadling(int projectId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<TaskDTO.BasicTask> basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+            return Ok(basicTasks);
+        }
     }
 }

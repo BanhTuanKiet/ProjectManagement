@@ -193,3 +193,31 @@ export const formatTaskStatus = (statusKey: string) => {
         word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join(' ')
 }
+
+export const getDeadlineStatus = (deadline: string) => {
+    const now = new Date()
+    const deadlineDate = new Date(deadline)
+    const diffTime = deadlineDate.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays < 0) {
+        return { label: "Overdue", className: "text-red-600 bg-red-50 dark:bg-red-900/20" }
+    } else if (diffDays === 0) {
+        return { label: "Today", className: "text-orange-600 bg-orange-50 dark:bg-orange-900/20" }
+    } else if (diffDays === 1) {
+        return { label: "Tomorrow", className: "text-amber-600 bg-amber-50 dark:bg-amber-900/20" }
+    } else if (diffDays <= 7) {
+        return { label: `${diffDays} days`, className: "text-blue-600 bg-blue-50 dark:bg-blue-900/20" }
+    } else {
+        return { label: `${Math.floor(diffDays / 7)} weeks`, className: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" }
+    }
+}
+
+export const getPriorityBorderColor = (priority: number): string => {
+    switch (priority) {
+        case 1: return "border-l-red-600"
+        case 2: return "border-l-orange-500"
+        case 3: return "border-l-yellow-500"
+        default: return "border-l-slate-300"
+    }
+}

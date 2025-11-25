@@ -27,23 +27,37 @@ namespace server.Services.Project
             if (projectId == -1)
             {
                 var tasks = await _context.Tasks
-                .Include(t => t.Assignee)
-                .Include(t => t.CreatedByNavigation)
-                .Where(t => t.AssigneeId == userId)
-                .ToListAsync();
+                    .Include(t => t.Assignee)
+                    .Include(t => t.CreatedByNavigation)
+                    .Where(t => t.AssigneeId == userId)
+                    .ToListAsync();
 
                 return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
             }
             else
             {
                 var tasks = await _context.Tasks
-                .Include(t => t.Assignee)
-                .Include(t => t.CreatedByNavigation)
-                .Where(t => t.AssigneeId == userId && t.ProjectId == projectId)
-                .ToListAsync();
+                    .Include(t => t.Assignee)
+                    .Include(t => t.CreatedByNavigation)
+                    .Where(t => t.AssigneeId == userId && t.ProjectId == projectId)
+                    .ToListAsync();
 
                 return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
             }
+        }
+
+        public async Task<List<TaskDTO.BasicTask>> GetUpcomingDeadline(string userId)
+        {
+            string[] status = ["Expired", "Cancel", "Done"];
+
+            var tasks = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .Where(t => t.AssigneeId == userId && !status.Contains(t.Status))
+                .OrderByDescending(t => t.Deadline)
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
 
         public async Task<List<TaskDTO.BasicTask>> GetBasicTasksByMonth(
