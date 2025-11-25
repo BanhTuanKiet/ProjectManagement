@@ -743,13 +743,7 @@ namespace server.Controllers
 
             var role = senderRole?.RoleInProject?.ToLower() ?? "member";
             string toEmail = "";
-            if (role == "member")
-            {
-                // var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.AssigneeId);
-                // toEmail = user.Email;
-                toEmail = "trandat192004@gmail.com";
-            }
-            else
+            if (role != "member")
             {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.AssigneeId);
                 toEmail = user.Email;

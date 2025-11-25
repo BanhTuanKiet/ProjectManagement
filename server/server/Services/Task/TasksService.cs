@@ -9,6 +9,7 @@ using server.Services.Backlog;
 using System.Text.Json;
 using server.Configs;
 using server.Util;
+using System.Diagnostics.Eventing.Reader;
 
 namespace server.Services.Project
 {
@@ -807,8 +808,6 @@ namespace server.Services.Project
             var projectRole = await _context.ProjectMembers
                 .FirstOrDefaultAsync(pm => pm.UserId == currentUserId && pm.ProjectId == projectId);
 
-            // var member = await _context.TeamMembers.
-
             string role = projectRole?.RoleInProject?.ToLower() ?? "member";
 
             IQueryable<Models.Task> query = _context.Tasks
@@ -821,8 +820,18 @@ namespace server.Services.Project
             }
             else
             {
-                // leader/pm => lấy tất cả task của project
-                // (nếu bạn muốn giới hạn theo team, có thể join ProjectMembers để lấy user list)
+                var team = await _context.Teams
+                    .FirstOrDefaultAsync(t => t.ProjectId == projectId && t.LeaderId == currentUserId);
+
+                if (team != null)
+                {
+                    var teamUserIds = await _context.TeamMembers
+                        .Where(tm => tm.TeamId == team.Id)
+                        .Select(tm => tm.UserId)
+                        .ToListAsync();
+
+                    query = query.Where(t => t.AssigneeId != null && teamUserIds.Contains(t.AssigneeId));
+                }
             }
 
             query = query.Where(t => t.Deadline < now || (t.Deadline >= now && t.Deadline <= threeDaysLater));
@@ -841,6 +850,7 @@ namespace server.Services.Project
             if (task == null)
                 return false;
 
+            bool success = false;
             string taskTitle = task.Title;
             string taskKey = $"TASK-{taskId}";
             string taskLink = $"http://localhost:3000//project/{projectId}#list?tasks={taskId}";
@@ -896,19 +906,19 @@ namespace server.Services.Project
 
             if (role == "member")
             {
-                var leaders = await _context.ProjectMembers
-                    .Where(pm => pm.ProjectId == projectId && pm.RoleInProject.ToLower() == "leader")
-                    .ToListAsync();
+                var leaderId = await _context.TeamMembers
+                    .Where(tm => tm.UserId == currentUserId)
+                    .Join(
+                        _context.Teams,
+                        tm => tm.TeamId,
+                        t => t.Id,
+                        (tm, t) => new { Team = t }
+                    )
+                    .Where(x => x.Team.ProjectId == projectId)
+                    .Select(x => x.Team.LeaderId)
+                    .FirstOrDefaultAsync();
 
-                // var leaderEmails = leaders
-                //     .Select(pm => pm.)
-                //     .Where(e => !string.IsNullOrEmpty(e))
-                //     .Distinct()
-                //     .ToList();
-
-                // if (!leaderEmails.Any())
-                //     leaderEmails.Add(toEmail);
-                List<string> leaderEmails = ["trandat192004@gmail.com"];
+                var emailLeader = await _context.Users.FirstOrDefaultAsync(u => u.Id == leaderId);
 
                 subject = $"[Task Support] {taskKey}: {taskTitle}";
 
@@ -926,21 +936,18 @@ namespace server.Services.Project
                     <h3 style=""color:#172b4d; margin:24px 0 12px; border-bottom:1px solid #dfe1e6; padding-bottom:8px;"">Support Details:</h3>
                     <div style=""padding:12px; background:#f4f5f7; border-radius:4px; border-left:4px solid #FF9919; margin-bottom:20px;"">
                         <p style=""margin:0;"">{encodedContent}</p>
-                    </div>
-        ";
+                    </div>";
 
                 htmlBody = BuildJiraEmailTemplate("Work Support Request", contentHtml);
 
-                foreach (var email in leaderEmails)
-                {
-                    await EmailUtils.SendEmailAsync(_configuration, email, subject, htmlBody);
-                }
+                await EmailUtils.SendEmailAsync(_configuration, emailLeader.Email, subject, htmlBody);
+                success = true;
             }
             else
             {
                 var assignee = await _context.Users.FirstOrDefaultAsync(u => u.Id == task.AssigneeId);
                 var assigneeEmail = assignee?.Email ?? toEmail;
-                string assigneeDisplay = "ABCCCCC";
+                string assigneeDisplay = task.Assignee.UserName;
                 var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
                 string projectTitle = project.Name;
 
@@ -967,9 +974,9 @@ namespace server.Services.Project
                 htmlBody = BuildJiraEmailTemplate("Task Progress Update Request", contentHtml);
 
                 await EmailUtils.SendEmailAsync(_configuration, toEmail, subject, htmlBody);
+                success = true;
             }
-
-            return true;
+            return success;
         }
     }
 }
