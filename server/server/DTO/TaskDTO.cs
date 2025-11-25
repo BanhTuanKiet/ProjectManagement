@@ -86,5 +86,11 @@ namespace server.DTO
             public DateTime? CreatedAt { get; set; }
             public DateTime? Deadline { get; set; }
         }
+        public class SupportRequestModel
+        {
+            public string Content { get; set; } = string.Empty;
+            public string AssigneeId { get; set; } = string.Empty;
+            public string Assignee { get; set; } = string.Empty;
+        }
     }
 }

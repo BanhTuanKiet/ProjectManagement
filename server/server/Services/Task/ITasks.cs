@@ -25,5 +25,7 @@ namespace server.Services.Task
         Task<List<TaskDTO.BasicTask>> GetTasksByUserList(int projectId, List<string> userIds);
         Task<bool> ToggleTaskStatus(int taskId, int projectId);
         Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId);
+        Task<List<TaskDTO.BasicTask>> GetNearDeadlineTasksAsync(int projectId, string currentUserId);
+        Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role);
     }
 }

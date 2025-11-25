@@ -8,6 +8,8 @@ using server.Services.Sprint;
 using server.Services.Backlog;
 using System.Text.Json;
 using server.Configs;
+using server.Util;
+using System.Diagnostics.Eventing.Reader;
 
 namespace server.Services.Project
 {
@@ -15,11 +17,13 @@ namespace server.Services.Project
     {
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
 
-        public TaskServices(ProjectManagementContext context, IMapper mapper)
+        public TaskServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
         {
             _context = context;
             _mapper = mapper;
+            _configuration = configuration;
         }
 
         public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId)
@@ -794,6 +798,185 @@ namespace server.Services.Project
                 .FirstOrDefaultAsync();
 
             return _mapper.Map<TaskDTO.BasicTask>(task);
+        }
+
+        public async Task<List<TaskDTO.BasicTask>> GetNearDeadlineTasksAsync(int projectId, string currentUserId)
+        {
+            var now = DateTime.UtcNow;
+            var threeDaysLater = now.AddDays(3);
+
+            var projectRole = await _context.ProjectMembers
+                .FirstOrDefaultAsync(pm => pm.UserId == currentUserId && pm.ProjectId == projectId);
+
+            string role = projectRole?.RoleInProject?.ToLower() ?? "member";
+
+            IQueryable<Models.Task> query = _context.Tasks
+                .Include(t => t.Assignee)
+                .Where(t => t.ProjectId == projectId && t.IsActive && t.Deadline != null && t.Status != "Done");
+
+            if (role == "member")
+            {
+                query = query.Where(t => t.AssigneeId == currentUserId);
+            }
+            else
+            {
+                var team = await _context.Teams
+                    .FirstOrDefaultAsync(t => t.ProjectId == projectId && t.LeaderId == currentUserId);
+
+                if (team != null)
+                {
+                    var teamUserIds = await _context.TeamMembers
+                        .Where(tm => tm.TeamId == team.Id)
+                        .Select(tm => tm.UserId)
+                        .ToListAsync();
+
+                    query = query.Where(t => t.AssigneeId != null && teamUserIds.Contains(t.AssigneeId));
+                }
+            }
+
+            query = query.Where(t => t.Deadline < now || (t.Deadline >= now && t.Deadline <= threeDaysLater));
+
+            var tasks = await query
+                .OrderBy(t => t.Deadline)
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+
+
+        public async Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role)
+        {
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+            if (task == null)
+                return false;
+
+            bool success = false;
+            string taskTitle = task.Title;
+            string taskKey = $"TASK-{taskId}";
+            string taskLink = $"http://localhost:3000//project/{projectId}#list?tasks={taskId}";
+            string encodedContent = System.Net.WebUtility.HtmlEncode(content).Replace("\n", "<br/>");
+            string senderDisplay = userName;
+            string deadlineDisplay = task.Deadline?.ToString("yyyy-MM-dd HH:mm") ?? "No deadline";
+
+            string subject = "";
+            string htmlBody = "";
+
+            Func<string, string, string> BuildJiraEmailTemplate = (emailTitle, contentHtml) => $@"
+                <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background-color:#f4f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;"">
+                <tr>
+                    <td align=""center"" style=""padding:40px 20px;"">
+                    <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);"">
+                        
+                        <tr>
+                        <td style=""background:#0052CC; padding:24px 32px; text-align:center;"">
+                            <h1 style=""color:#ffffff; margin:0; font-size:24px; font-weight:600; letter-spacing:-0.5px;"">
+                            {emailTitle}
+                            </h1>
+                        </td>
+                        </tr>
+
+                        <tr>
+                        <td style=""padding:40px 32px; color:#172b4d; font-size:16px; line-height:1.6;"">
+                            {contentHtml}
+
+                            <div style=""text-align:center; margin-top: 32px;"">
+                            <a href=""{taskLink}""
+                                style=""background:#0052cc; color:#ffffff; font-weight:600; font-size:16px; padding:14px 32px; border-radius:6px; text-decoration:none; display:inline-block; box-shadow:0 4px 8px rgba(0,82,204,0.25);"">
+                                View Task: {taskKey}
+                            </a>
+                            </div>
+
+                            <hr style=""border:none; border-top:1px solid #dfe1e6; margin:40px 0;"" />
+                            
+                            <p style=""margin:0; font-size:14px; color:#505f79;"">
+                            This is an automated notification from your Project Management system.
+                            </p>
+                        </td>
+                        </tr>
+
+                        <tr>
+                        <td style=""background:#f4f5f7; padding:20px 32px; text-align:center; color:#6b778c; font-size:12px;"">
+                            © {DateTime.Now:yyyy} Project Management Tool • Do not reply directly to this email.
+                        </td>
+                        </tr>
+                    </table>
+                    </td>
+                </tr>
+                </table>";
+
+            if (role == "member")
+            {
+                var leaderId = await _context.TeamMembers
+                    .Where(tm => tm.UserId == currentUserId)
+                    .Join(
+                        _context.Teams,
+                        tm => tm.TeamId,
+                        t => t.Id,
+                        (tm, t) => new { Team = t }
+                    )
+                    .Where(x => x.Team.ProjectId == projectId)
+                    .Select(x => x.Team.LeaderId)
+                    .FirstOrDefaultAsync();
+
+                var emailLeader = await _context.Users.FirstOrDefaultAsync(u => u.Id == leaderId);
+
+                subject = $"[Task Support] {taskKey}: {taskTitle}";
+
+                string contentHtml = $@"
+                    <p style=""margin:0 0 20px; font-size:18px;"">
+                    A support request has been raised for the task **{taskKey}** by **{senderDisplay}**.
+                    </p>
+
+                    <table cellpadding=""5"" cellspacing=""0"" style=""width:100%; border-collapse:collapse; margin-bottom:20px; border:1px solid #dfe1e6;"">
+                        <tr style=""background:#f4f5f7;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; width:150px; color:#505f79;"">Task Title:</td><td style=""border:1px solid #dfe1e6; padding:8px;"">{taskTitle}</td></tr>
+                        <tr style=""background:#ffffff;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; color:#505f79;"">Deadline:</td><td style=""border:1px solid #dfe1e6; padding:8px;"">{deadlineDisplay}</td></tr>
+                        <tr style=""background:#f4f5f7;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; color:#505f79;"">Requester:</td><td style=""border:1px solid #dfe1e6; padding:8px;"">{senderDisplay}</td></tr>
+                    </table>
+
+                    <h3 style=""color:#172b4d; margin:24px 0 12px; border-bottom:1px solid #dfe1e6; padding-bottom:8px;"">Support Details:</h3>
+                    <div style=""padding:12px; background:#f4f5f7; border-radius:4px; border-left:4px solid #FF9919; margin-bottom:20px;"">
+                        <p style=""margin:0;"">{encodedContent}</p>
+                    </div>";
+
+                htmlBody = BuildJiraEmailTemplate("Work Support Request", contentHtml);
+
+                await EmailUtils.SendEmailAsync(_configuration, emailLeader.Email, subject, htmlBody);
+                success = true;
+            }
+            else
+            {
+                var assignee = await _context.Users.FirstOrDefaultAsync(u => u.Id == task.AssigneeId);
+                var assigneeEmail = assignee?.Email ?? toEmail;
+                string assigneeDisplay = task.Assignee.UserName;
+                var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
+                string projectTitle = project.Name;
+
+
+                subject = $"[Progress Feedback] {taskKey}: {taskTitle}";
+
+                string contentHtml = $@"
+                    <p style=""margin:0 0 20px; font-size:18px;"">
+                    **{senderDisplay}** has sent a progress check regarding task **{taskKey}**.
+                    </p>
+
+                    <table cellpadding=""5"" cellspacing=""0"" style=""width:100%; border-collapse:collapse; margin-bottom:20px; border:1px solid #dfe1e6;"">
+                        <tr style=""background:#f4f5f7;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; width:150px; color:#505f79;"">Task Title:</td><td style=""border:1px solid #dfe1e6; padding:8px;"">{taskTitle}</td></tr>
+                        <tr style=""background:#ffffff;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; color:#505f79;"">Project:</td><td style=""border:1px solid #dfe1e6; padding:8px;"">{projectTitle}</td></tr>
+                        <tr style=""background:#f4f5f7;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; color:#505f79;"">Assignee:</td><td style=""border:1px solid #dfe1e6; padding:8px;"">{assigneeDisplay}</td></tr>
+                        <tr style=""background:#ffffff;""><td style=""border:1px solid #dfe1e6; padding:8px; font-weight:600; color:#505f79;"">Deadline:</td><td style=""border:1px solid #dfe1e6; padding:8px; color:#c9372c;"">{deadlineDisplay}</td></tr>
+                    </table>
+
+                    <h3 style=""color:#172b4d; margin:24px 0 12px; border-bottom:1px solid #dfe1e6; padding-bottom:8px;"">Feedback Message:</h3>
+                    <div style=""padding:12px; background:#fff3e0; border-radius:4px; border-left:4px solid #FFAB00; margin-bottom:20px;"">
+                        <p style=""margin:0;"">{encodedContent}</p>
+                    </div>";
+
+                htmlBody = BuildJiraEmailTemplate("Task Progress Update Request", contentHtml);
+
+                await EmailUtils.SendEmailAsync(_configuration, toEmail, subject, htmlBody);
+                success = true;
+            }
+            return success;
         }
     }
 }

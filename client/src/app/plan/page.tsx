@@ -12,12 +12,6 @@ import { useUser } from "../(context)/UserContext"
 
 const paymentMethods = [
     {
-        id: "vnpay",
-        name: "VNPay",
-        description: "Bank card, e-wallet",
-        logo: <img src="/vn-pay.png" alt="VNPay" className="h-10 w-auto object-contain" />,
-    },
-    {
         id: "paypal",
         name: "PayPal",
         description: "Your PayPal account",
@@ -36,7 +30,7 @@ interface Price {
 }
 
 export default function PlanPaymentPage() {
-    const [selectedMethod, setSelectedMethod] = useState<"vnpay" | "paypal">("vnpay")
+    const [selectedMethod, setSelectedMethod] = useState<"paypal">("paypal")
     const [selectedPlan, setSelectedPlan] = useState<PlanDetail | undefined>()
     const [isLoading, setIsLoading] = useState(false)
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
@@ -49,7 +43,7 @@ export default function PlanPaymentPage() {
         let price = 0
         let discountPrice = 0
 
-        if (selectedMethod === 'vnpay') {
+        if (selectedMethod === 'paypal') {
             price = Number(selectedPlan?.price) || 0
         } else {
             const vndRate = fxRates?.vndRate
@@ -136,7 +130,6 @@ export default function PlanPaymentPage() {
         }
     }
 
-    const isVnpay = selectedMethod === 'vnpay' ? true : false
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -193,7 +186,7 @@ export default function PlanPaymentPage() {
                                     return (
                                         <button
                                             key={method.id}
-                                            onClick={() => setSelectedMethod(method.id as "vnpay" | "paypal")}
+                                            onClick={() => setSelectedMethod(method.id as "paypal")}
                                             className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left group ${isSelected
                                                 ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-50 shadow-md"
                                                 : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
@@ -315,14 +308,14 @@ export default function PlanPaymentPage() {
                                             {billingPeriod === "yearly" ? "Base Price (12 months)" : "Base Price"}
                                         </span>
                                         <span className="text-slate-900 font-medium">
-                                            {formatPrice(price?.price, isVnpay)}
+                                            {formatPrice(price?.price)}
                                         </span>
                                     </div>
                                     {selectedPlan?.id !== 1 && billingPeriod === "yearly" && (
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-emerald-600 font-medium">Discount (5%)</span>
                                             <span className="text-emerald-600 font-medium">
-                                                -{formatPrice(price?.discountPrice, isVnpay)}
+                                                -{formatPrice(price?.discountPrice)}
                                             </span>
                                         </div>
                                     )}
@@ -332,7 +325,7 @@ export default function PlanPaymentPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-slate-900">Total</span>
                                         <span className="text-3xl font-bold text-blue-600">
-                                            {price && formatPrice(price?.price - price?.discountPrice, isVnpay)}
+                                            {price && formatPrice(price?.price - price?.discountPrice)}
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-600 mt-2">
