@@ -716,12 +716,19 @@ namespace server.Controllers
             }
         }
 
-        [Authorize(Policy = "MemberRequirement")]
-        [HttpGet("{projectId}/upcoming_deadline")]
-        public async Task<ActionResult> GetUpcomingDeadling(int projectId)
+        [HttpGet("upcoming/{type}")]
+        public async Task<ActionResult> GetUpcomingDeadling(string type)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            List<TaskDTO.BasicTask> basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+            List<TaskDTO.BasicTask> basicTasks = [];
+            if (type == "deadline")
+            {
+                basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+            } else if (type == "today")
+            {
+                basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+            }
+            
             return Ok(basicTasks);
         }
     }

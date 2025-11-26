@@ -216,8 +216,8 @@ export const getDeadlineStatus = (deadline: string) => {
 export const getPriorityBorderColor = (priority: number): string => {
     switch (priority) {
         case 1: return "border-l-red-600"
-        case 2: return "border-l-orange-500"
-        case 3: return "border-l-yellow-500"
+        case 2: return "border-l-yellow-500"
+        case 3: return "border-l-green-500"
         default: return "border-l-slate-300"
     }
 }

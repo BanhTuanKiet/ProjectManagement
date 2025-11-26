@@ -55,7 +55,6 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
         const fetchSubscription = async () => {
             try {
                 const response = await axios.get(`/users/subscription`)
-                console.log(response.data)
                 setPlan(response.data)
             } catch (error) {
                 console.log(error)

@@ -53,7 +53,6 @@ export default function ProjectInterface() {
     const [tasks, setTasks] = useState<BasicTask[]>([])
     const { project_name, projects, projectRole } = useProject()
     const { hash: activeTab, setHash: setActiveTab } = useHash("")
-    const { user } = useUser()
 
     useEffect(() => {
         const fetchProjects = async () => {

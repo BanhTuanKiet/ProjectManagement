@@ -84,7 +84,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         const fetchMembers = async () => {
             try {
                 const response = await axios.get(`/projects/${Number(project_name)}/member/by-role/${projectRole}`)
-                console.log("Fetched members for role:", projectRole, response.data)
                 setAvailableUsers(response.data)
             } catch (error) {
                 console.log(error)

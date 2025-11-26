@@ -49,11 +49,28 @@ namespace server.Services.Project
         public async Task<List<TaskDTO.BasicTask>> GetUpcomingDeadline(string userId)
         {
             string[] status = ["Expired", "Cancel", "Done"];
+            var now = DateTime.UtcNow;
+            var upcomingRange = now.AddDays(3);
 
             var tasks = await _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.CreatedByNavigation)
-                .Where(t => t.AssigneeId == userId && !status.Contains(t.Status))
+                .Where(t => t.AssigneeId == userId && !status.Contains(t.Status) && t.Deadline < upcomingRange)
+                .OrderByDescending(t => t.Deadline)
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
+        }
+
+        public async Task<List<TaskDTO.BasicTask>> GetTaskToday(string userId)
+        {
+            string[] status = ["Expired", "Cancel", "Done"];
+            var today = DateTime.UtcNow;
+
+            var tasks = await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.CreatedByNavigation)
+                .Where(t => t.AssigneeId == userId && !status.Contains(t.Status) && t.Deadline == today)
                 .OrderByDescending(t => t.Deadline)
                 .ToListAsync();
 
