@@ -62,13 +62,13 @@ namespace server.Services.Project
                     .Include(n => n.CreatedBy)
                     .Where(n => n.ProjectId == projectId && n.Type == type);
 
-                if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase) && type == "project")
                 {
                     query = query.Where(n => n.UserId == userId || n.Type == type);
                 }
-                else
+                else if (string.Equals(role, "member", StringComparison.OrdinalIgnoreCase) && type == "task")
                 {
-                    query = query.Where(n => n.UserId == userId || n.UserId == null);
+                    query = query.Where(n => n.UserId == userId);
                 }
 
                 var notifications = await query
@@ -135,11 +135,11 @@ namespace server.Services.Project
                     perProject = perProject.Where(n =>
                         n.UserId == userId || n.Type == "project");
                 }
-                else
-                {
-                    perProject = perProject.Where(n =>
-                        n.UserId == userId || n.UserId == null);
-                }
+                // else
+                // {
+                //     perProject = perProject.Where(n =>
+                //         n.UserId == userId || n.UserId == null);
+                // }
 
                 allNotifications.AddRange(perProject);
             }

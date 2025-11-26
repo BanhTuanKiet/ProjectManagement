@@ -12,6 +12,7 @@ using AutoMapper;
 using server.Services.ActivityLog;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace server.Controllers
 {
@@ -330,8 +331,10 @@ namespace server.Controllers
 
             foreach (var taskId in dto.Ids)
             {
+                var assignee = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
                 Notification notification = new Notification
                 {
+                    UserId = assignee.AssigneeId,
                     ProjectId = dto.ProjectId,
                     Message = $"Delete task #{taskId} was deleted by {name}",
                     Link = $"tasks={taskId}",
@@ -358,6 +361,7 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var name = User.FindFirst(ClaimTypes.Name)?.Value;
+            var assignee = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
 
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
@@ -382,7 +386,7 @@ namespace server.Controllers
 
             Notification notification = new Notification
             {
-                UserId = null,
+                UserId = assignee.AssigneeId,
                 ProjectId = projectId,
                 Message = $"Task #{taskId} {task.Title} status was updated from {oldStatus} to {updatedTask.Status} by {name}",
                 IsRead = false,
@@ -408,6 +412,7 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var name = User.FindFirst(ClaimTypes.Name)?.Value;
+            var assignee = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
 
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
@@ -485,7 +490,7 @@ namespace server.Controllers
 
                 Notification notification = new Notification
                 {
-                    UserId = null,
+                    UserId = assignee.AssigneeId,
                     ProjectId = projectId,
                     Message = $"{changeSummary} by {name}",
                     IsRead = false,
@@ -526,13 +531,14 @@ namespace server.Controllers
                 Models.Task restoredTask = await _tasksService.RestoreTaskFromHistory(taskId);
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var name = User.FindFirst(ClaimTypes.Name)?.Value;
+                var assignee = await _context.TaskHistories.FirstOrDefaultAsync(t => t.TaskId == taskId);
 
                 if (projectId <= 0) throw new Exception("Invalid projectId");
                 if (string.IsNullOrEmpty(userId)) userId = "system";
 
                 Notification notification = new Notification
                 {
-                    UserId = null,
+                    UserId = assignee.AssigneeId,
                     ProjectId = projectId,
                     Message = $"Restore task-{taskId} {restoredTask.Title} by {name}",
                     IsRead = false,
@@ -730,6 +736,45 @@ namespace server.Controllers
             }
             
             return Ok(basicTasks);
+        }
+
+        [HttpGet("near-deadline/{projectId}")]
+        public async Task<IActionResult> GetNearDeadline(int projectId)
+        {
+            // lấy userId từ claim (JWT)
+            var userId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var tasks = await _tasksService.GetNearDeadlineTasksAsync(projectId, userId);
+            return Ok(tasks);
+        }
+
+        [HttpPost("support/{projectId}/{taskId}")]
+        public async Task<IActionResult> SendSupportEmail(int projectId, int taskId, [FromBody] TaskDTO.SupportRequestModel model)
+        {
+            var userId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string userName = User?.FindFirst(ClaimTypes.Name)?.Value;
+
+            var senderRole = await _context.ProjectMembers
+                .FirstOrDefaultAsync(pm => pm.UserId == userId && pm.ProjectId == projectId);
+
+            var role = senderRole?.RoleInProject?.ToLower() ?? "member";
+            string toEmail = "";
+            if (role != "member")
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.AssigneeId);
+                toEmail = user.Email;
+            }
+
+
+            if (model == null || string.IsNullOrWhiteSpace(model.Content))
+                throw new ErrorException(400, "Content is required");
+
+            var ok = await _tasksService.SendSupportEmailAsync(projectId, taskId, userId, userName, model.Content, toEmail, role);
+
+            if (!ok)
+                throw new ErrorException(400, "Send email fail!");
+
+            return Ok(new { message = "Send email successfull!" });
         }
     }
 }
