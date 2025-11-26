@@ -231,5 +231,37 @@ namespace server.Services.User
         {
             return await _context.Subscriptions.Include(s => s.Plan).FirstOrDefaultAsync(s => s.UserId == userId);
         }
+
+        public async Task<UserDTO.UserProfile2> GetUserProfile(string userId)
+        {
+            var user = await _context.ApplicationUsers
+                .Include(u => u.Contacts)
+                    .ThenInclude(c => c.Media)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            var projects = await _context.Projects
+                .Include(p => p.ProjectMembers)
+                .Include(p => p.CreatedByNavigation)
+                .Where(p => p.ProjectMembers.Any(pm => pm.UserId == userId))
+                .ToListAsync();
+
+            var userDto = _mapper.Map<UserDTO.UserProfile2>(user);
+
+            userDto.Projects = projects.Select(project =>
+            {
+                var projectDto = _mapper.Map<ProjectDTO.ProjectBasic>(project);
+
+                var role = project.ProjectMembers
+                    .FirstOrDefault(pm => pm.UserId == userId)
+                    ?.RoleInProject;
+
+                projectDto.Role = role; 
+                projectDto.Members = null;
+
+                return projectDto;
+            }).ToList();
+
+            return userDto;
+        }
     }
 }

@@ -122,13 +122,13 @@ namespace server.Controllers
             return Ok(invitations);
         }
 
-        [HttpGet("profile")]
-        public async Task<ActionResult<ApplicationUser>> GetUserById()
-        {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userServices.GetUserById(userId);
-            return Ok(user);
-        }
+        // [HttpGet("profile")]
+        // public async Task<ActionResult<ApplicationUser>> GetUserById()
+        // {
+        //     string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //     var user = await _userServices.GetUserById(userId);
+        //     return Ok(user);
+        // }
 
         [HttpPut("editProfile")]
         public async Task<ActionResult<ApplicationUser>> UpdateUser([FromBody] UserDTO.UserProfile profile)
@@ -161,7 +161,7 @@ namespace server.Controllers
             if (uploadedFile == null)
                 throw new ErrorException(500, "File upload failed.");
 
-            return Ok(uploadedFile);
+            return Ok(new { uploadedFile = uploadedFile, message = "Upload successful" });
         }
 
         [HttpDelete("{projectId}")]
@@ -206,12 +206,20 @@ namespace server.Controllers
             return Ok(new { userIds = userIds, message = "Removed successfully" });
         }
 
-            [HttpGet("subscription")]
-            public async Task<ActionResult> GetSubscriptions()
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                Subscriptions subscription = await _userServices.GetSubscriptions(userId);
-                return Ok(subscription.Plan.Name);
-            }
+        [HttpGet("subscription")]
+        public async Task<ActionResult> GetSubscriptions()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Subscriptions subscription = await _userServices.GetSubscriptions(userId);
+            return Ok(subscription.Plan.Name);
+        }
+
+        [HttpGet("profile")]
+        public async Task<ActionResult> GetUserProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userServices.GetUserProfile(userId);
+            return Ok(user);
+        }
     }
 }

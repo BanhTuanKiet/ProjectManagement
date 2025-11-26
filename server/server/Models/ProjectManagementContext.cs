@@ -42,6 +42,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<Subscriptions> Subscriptions { get; set; }
     public virtual DbSet<Teams> Teams { get; set; }
     public virtual DbSet<TeamMembers> TeamMembers { get; set; }
+    public virtual DbSet<Media> Medias { get; set; }
+    public virtual DbSet<Contact> Contacts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -102,6 +104,39 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         modelBuilder.Entity<TeamMembers>()
             .HasOne(tm => tm.User)
             .WithMany(u => u.TeamMembers);
+
+        modelBuilder.Entity<Media>(entity =>
+        {
+            entity.ToTable("Medias");
+
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Name)
+                .IsRequired()
+                .HasMaxLength(50);
+        });
+
+        // ===== Contacts =====
+        modelBuilder.Entity<Contact>(entity =>
+        {
+            entity.ToTable("Contacts");
+
+            entity.HasKey(c => new { c.UserId, c.MediaId });
+
+            entity.Property(c => c.Url)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.Contacts)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.Media)
+                .WithMany(m => m.Contacts)
+                .HasForeignKey(c => c.MediaId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<ActivityLog>(entity =>
         {

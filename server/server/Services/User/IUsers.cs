@@ -19,5 +19,6 @@ namespace server.Models
         Task<ProjectMember> GetProjectRole(int projectId, string userId);
         Task<bool> DeleteMembers(int projectId, List<string> userIds);
         Task<Subscriptions> GetSubscriptions(string userId);
+        Task<UserDTO.UserProfile2> GetUserProfile(string userId);
     }
 }

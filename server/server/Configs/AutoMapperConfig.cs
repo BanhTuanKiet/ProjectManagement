@@ -40,8 +40,8 @@ namespace server.Configs
                 .ForMember(dest => dest.TeamId,
                     opt => opt.MapFrom(src =>
                         src.User.TeamMembers
-                            .Where(tm => tm.Team.ProjectId == 2)
-                            // .Where(tm => tm.Team.ProjectId == src.Project.ProjectId)
+                            // .Where(tm => tm.Team.ProjectId == 2)
+                            .Where(tm => tm.Team.ProjectId == src.Project.ProjectId)
                             .Select(tm => tm.TeamId)
                             .FirstOrDefault()
                     ))
@@ -52,6 +52,14 @@ namespace server.Configs
                             .Select(tm => tm.Team.LeaderId)
                             .FirstOrDefault()
                     ));
+
+            CreateMap<Contact, UserDTO.Contact>()
+                .ForMember(dest => dest.MediaId,
+                            opt => opt.MapFrom(src => src.MediaId))
+                .ForMember(dest => dest.Media,
+                            opt => opt.MapFrom(src => src.Media.Name))
+                .ForMember(dest => dest.Url,
+                            opt => opt.MapFrom(src => src.Url));
 
             CreateMap<SubTask, SubTaskDTO.BasicSubTask>()
                 .ForMember(dest => dest.Assignee,
@@ -113,6 +121,10 @@ namespace server.Configs
             CreateMap<ApplicationUser, UserDTO.AvailableMember>()
                 .ForMember(dest => dest.MemberId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.MemberName, opt => opt.MapFrom(src => src.UserName));
+
+            CreateMap<ApplicationUser, UserDTO.UserProfile2>()
+                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.AvatarUrl))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.UserName));
         }
     }
 }

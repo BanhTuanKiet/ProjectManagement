@@ -48,6 +48,8 @@ namespace server.Models
         //SubTask
         public virtual ICollection<SubTask> SubTasks { get; set; } = new List<SubTask>();
         public virtual ICollection<TeamMembers> TeamMembers { get; set; } = new List<TeamMembers>();
+        //Contact
+        public ICollection<Contact> Contacts { get; set; }
         //TaskHistory
         [NotMapped]
         public virtual ICollection<TaskHistory> TaskHistoryAssignees { get; set; } = new List<TaskHistory>();

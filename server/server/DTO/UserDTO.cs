@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using server.DTO;
 
 public class UserDTO
 {
@@ -15,6 +16,24 @@ public class UserDTO
         public string Instagram { get; set; }
         public string AvatarUrl { get; set; }
         public string ImageCoverUrl { get; set; }
+    }
+
+    public class UserProfile2
+    {
+        public string Id { get; set; }
+        public string Avatar { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Location { get; set; }
+        public List<Contact> Contacts { get; set; }
+        public List<ProjectDTO.ProjectBasic> Projects { get; set; }
+    }
+
+    public class Contact
+    {
+        public string MediaId { get; set; }
+        public string Media { get; set; }
+        public string Url { get; set; }
     }
 
     public class InvitePeopleForm

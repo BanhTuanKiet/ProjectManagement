@@ -18,6 +18,7 @@ namespace server.DTO
             public DateOnly? EndDate { get; set; }
             public string OwnerId { get; set; }
             public string Owner { get; set; }
+            public string? Role { get; set; }
             public List<ProjectMembers> Members { get; set; } = new();
         }
 
