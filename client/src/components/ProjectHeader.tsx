@@ -1,53 +1,72 @@
-"use client";
+"use client"
 
-import { Search, Plus, Bell, Settings, User, LogOut, Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect, useRef, useState } from "react";
-import { useNotification } from "@/app/(context)/Notfication";
-import { useUser } from "@/app/(context)/UserContext";
-import { useRouter } from "next/navigation";
-import ColoredAvatar from "./ColoredAvatar";
-import type { Notification } from "@/utils/INotifications";
-import axios from "@/config/axiosConfig";
+import { Plus, Bell, User, LogOut, Sun, Moon, CheckCircle2, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect, useRef, useState } from "react"
+import { useNotification } from "@/app/(context)/Notfication"
+import { useUser } from "@/app/(context)/UserContext"
+import { useRouter } from "next/navigation"
+import ColoredAvatar from "./ColoredAvatar"
+import type { Notification } from "@/utils/INotifications"
+import axios from "@/config/axiosConfig"
+import { cn } from "@/lib/utils"
 
 const planGradients = {
-    Free: "from-gray-400 to-gray-600",
-    Pro: "from-blue-400 to-blue-600",
-    Enterprise: "from-purple-400 to-purple-600",
-};
+    Free: "from-slate-400 to-slate-600",
+    Pro: "from-blue-500 via-indigo-500 to-blue-600",
+    Enterprise: "from-violet-500 via-purple-500 to-fuchsia-600",
+}
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
-    const [isUserOpen, setIsUserOpen] = useState(false);
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-    const [theme, setTheme] = useState(false);
+    const [isUserOpen, setIsUserOpen] = useState(false)
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+    const [theme, setTheme] = useState(false)
     const [plan, setPlan] = useState<keyof typeof planGradients | null>(null)
-    const { handleSignout, user } = useUser();
-    const { connection, setData, notifications } = useNotification();
-    const router = useRouter();
+    const { handleSignout, user } = useUser()
+    const { connection, setData, notifications } = useNotification()
+    const router = useRouter()
     const fetchedRef = useRef(false)
-    const taskNotifications: Notification[] = notifications.task ?? [];
+    
+    const taskNotifications: Notification[] = (notifications.task ?? []).sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
+    const notificationRef = useRef<HTMLDivElement>(null)
+    const userRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (!connection) return;
-        if (fetchedRef.current) return;
-        fetchedRef.current = true;
+        const handleClickOutside = (event: MouseEvent) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+                setIsNotificationOpen(false)
+            }
+            if (userRef.current && !userRef.current.contains(event.target as Node)) {
+                setIsUserOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
 
-        axios.get(`/notifications/task`).then(res => {
-            setData(res.data, "task");
-        });
-        axios.get(`/notifications/project`).then(res => {
-            setData(res.data, "project");
-        });
+    useEffect(() => {
+        if (!connection) return
+        if (fetchedRef.current) return
+        fetchedRef.current = true
 
-    }, [connection]);
+        axios.get(`/notifications/task`).then(res => setData(res.data, "task"))
+        axios.get(`/notifications/project`).then(res => setData(res.data, "project"))
+    }, [connection])
 
     const handleNotificationOpen = async () => {
-        try {
-            const { data } = await axios.get<Notification[]>(`/notifications/myNotifications`)
-            setData(data, "task")
-        } catch (error) {
-            console.error("Failed to load notifications:", error)
+        setIsNotificationOpen(!isNotificationOpen)
+        setIsUserOpen(false)
+        if (!isNotificationOpen) { 
+            try {
+                const { data } = await axios.get<Notification[]>(`/notifications/myNotifications`)
+                setData(data, "task")
+            } catch (error) {
+                console.error("Failed to load notifications:", error)
+            }
         }
     }
 
@@ -60,243 +79,168 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                 console.log(error)
             }
         }
-
         fetchSubscription()
     }, [])
 
+    const hasUnread = taskNotifications.length > 0
+
     return (
-        <>
-            <header className="relative flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 z-50 w-full">
-                {/* Animated background */}
-                <div className="absolute inset-0 opacity-0 hover:opacity-5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-opacity duration-300 pointer-events-none" />
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 w-full transition-all">
+            <div className="flex items-center gap-4 lg:gap-6">
+                <Button variant="ghost" size="icon" className="-ml-2 text-muted-foreground hover:text-foreground">
+                    {sidebarTrigger}
+                </Button>
 
-                {/* Left side */}
-                <div className="relative flex items-center gap-6 flex-1">
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-                        {sidebarTrigger}
-                    </Button>
-
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-md flex items-center justify-center shadow-md">
-                            <span className="text-white text-sm font-bold">J</span>
-                        </div>
-                        <span className="text-gray-900 font-semibold text-lg">Jira</span>
+                <div className="flex items-center gap-3 select-none cursor-pointer" onClick={() => router.push("/")}>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-800 shadow-sm ring-1 ring-black/5">
+                        <span className="text-white text-lg font-bold">J</span>
                     </div>
+                    <span className="hidden font-bold text-lg tracking-tight text-foreground md:inline-block">JiraClone</span>
                 </div>
+            </div>
 
-                {/* Right side */}
-                <div className="flex items-center gap-4">
-                    {/* Create button */}
-                    <Button id="create-project" className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create
-                    </Button>
+            <div className="flex items-center gap-3">
+                <Button className="hidden h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm sm:flex items-center gap-2 transition-all active:scale-95">
+                    <Plus className="h-4 w-4" />
+                    <span className="font-medium">Create</span>
+                </Button>
 
-                    {/* Plan Button with Flip/Wave Animation */}
+                <div className="relative" ref={notificationRef}>
                     <Button
-                        className={`bg-gradient-to-r ${planGradients[(plan ?? "Free") as keyof typeof planGradients]} hover:shadow-lg text-white font-medium shadow-md transition-all duration-500`}
+                        variant="ghost"
+                        size="icon"
+                        className="relative text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        onClick={handleNotificationOpen}
                     >
-                        <style>{`
-                            @keyframes flip {
-                                0% {
-                                    transform: rotateY(0deg) rotateX(0deg);
-                                    opacity: 1;
-                                }
-                                50% {
-                                    transform: rotateY(180deg) rotateX(5deg);
-                                }
-                                100% {
-                                    transform: rotateY(360deg) rotateX(0deg);
-                                    opacity: 1;
-                                }
-                            }
-
-                            @keyframes wave {
-                                0%, 100% {
-                                    transform: translateY(0);
-                                }
-                                25% {
-                                    transform: translateY(-3px);
-                                }
-                                50% {
-                                    transform: translateY(0);
-                                }
-                                75% {
-                                    transform: translateY(-3px);
-                                }
-                            }
-
-                            @keyframes waveLetters {
-                                0%, 100% {
-                                    transform: translateY(0);
-                                }
-                                50% {
-                                    transform: translateY(-4px);
-                                }
-                            }
-
-                            /* Dùng flip animation */
-                            .plan-flip {
-                                display: inline-block;
-                                animation: flip 3s ease-in-out infinite;
-                                transform-style: preserve-3d;
-                            }
-
-                            /* Dùng wave animation */
-                            .plan-wave {
-                                display: inline-block;
-                                animation: wave 2s ease-in-out infinite;
-                            }
-
-                            /* Wave letters (từng chữ lên xuống) */
-                            .plan-wave-letters {
-                                display: inline-flex;
-                                gap: 2px;
-                            }
-
-                            .plan-wave-letters span {
-                                display: inline-block;
-                                animation: waveLetters 1s ease-in-out infinite;
-                            }
-
-                            .plan-wave-letters span:nth-child(1) { animation-delay: 0s; }
-                            .plan-wave-letters span:nth-child(2) { animation-delay: 0.1s; }
-                            .plan-wave-letters span:nth-child(3) { animation-delay: 0.2s; }
-                            .plan-wave-letters span:nth-child(4) { animation-delay: 0.3s; }
-                            .plan-wave-letters span:nth-child(5) { animation-delay: 0.4s; }
-                        `}</style>
-
-                        {/* CHỌN MỘT TRONG CÁC HIỆU ỨNG SAU: */}
-
-                        {/* Option 1: Flip Animation */}
-                        <span className="plan-flip">{plan} Plan</span>
-
-                        {/* Option 2: Wave Animation */}
-                        {/* <span className="plan-wave">{plan} Plan</span> */}
-
-                        {/* Option 3: Wave Letters (từng chữ) */}
-                        {/* <span className="plan-wave-letters">
-                            {(plan + " Plan").split("").map((char, i) => (
-                                <span key={i}>{char}</span>
-                            ))}
-                        </span> */}
-                        {/* <span className="plan-flip">{plan} Plan</span> */}
+                        <Bell className="h-5 w-5" />
+                        {hasUnread && (
+                            <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background animate-pulse" />
+                        )}
                     </Button>
 
-                    {/* Notifications */}
-                    <div className="relative">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative"
-                            onClick={() => {
-                                setIsNotificationOpen(!isNotificationOpen)
-                                handleNotificationOpen();
-                            }}
-                        >
-                            <Bell className="h-5 w-5" />
-                            {/* {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )} */}
-                        </Button>
-
-                        {isNotificationOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-                                <div className="p-4 border-b border-gray-100 font-semibold text-gray-700 flex justify-between items-center">
-                                    Notifications
-                                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
-                                        Clear all
-                                    </Button>
-                                </div>
-
-                                <div className="max-h-96 overflow-y-auto p-2 space-y-3">
-                                    {taskNotifications.length === 0 ? (
-                                        <p className="text-center text-muted-foreground py-8">No notifications</p>
-                                    ) : (
-                                        taskNotifications.map((n, idx) => (
-                                            <div key={n.notificationId} className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                                    <span>#{n.notificationId}</span>
-                                                    <span>{new Date(n.createdAt).toLocaleString()}</span>
-                                                </div>
-                                                <p className="text-sm font-medium text-gray-800">{n.message}</p>
-                                                <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-3">
-                                                    <span>From: {n.createdBy}</span>
-                                                    <span>To: {n.assignee ?? "All"}</span>
-                                                    {n.projectId && <span>Project: #{n.projectId}</span>}
-                                                </div>
-                                                {n.link && (
-                                                    <a href={`http://localhost:3000/project/1#list?${n.link}`} rel="noopener noreferrer" className="text-primary text-xs hover:underline mt-2 inline-block">
-                                                        View details →
-                                                    </a>
-                                                )}
-                                                {idx < taskNotifications.length - 1 && <hr className="mt-3 border-gray-200" />}
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                    {isNotificationOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 origin-top-right rounded-xl border bg-popover text-popover-foreground shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 slide-in-from-top-2 z-50 overflow-hidden">
+                            <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                                <h4 className="font-semibold text-sm">Notifications</h4>
+                                <span className="text-xs text-muted-foreground hover:text-blue-600 cursor-pointer">Mark all read</span>
                             </div>
-                        )}
-                    </div>
 
-                    {/* User dropdown */}
-                    <div className="relative">
-                        <Avatar
-                            className="h-9 w-9 cursor-pointer ring-2 ring-transparent hover:ring-blue-400 transition-all"
-                            onClick={() => setIsUserOpen(!isUserOpen)}
-                        >
-                            <AvatarImage src="/placeholder.svg?height=36&width=36" />
-                            <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                                {user?.name?.slice(0, 2).toUpperCase() ?? "BK"}
-                            </AvatarFallback>
-                        </Avatar>
-
-                        {isUserOpen && user && (
-                            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-                                <div className="p-4 border-b border-gray-100">
-                                    <div className="flex items-center gap-3">
-                                        <ColoredAvatar id={user.id} name={user.name} size="lg" />
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                                            <p className="text-sm text-gray-600">{user.email}</p>
-                                        </div>
+                            <div className="max-h-[24rem] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200">
+                                {taskNotifications.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                        <Bell className="h-8 w-8 mb-3 opacity-20" />
+                                        <p className="text-sm">No new notifications</p>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="divide-y divide-border/50">
+                                        {taskNotifications.map((n) => (
+                                            <div key={n.notificationId} className="group relative flex gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                                                <div className="mt-1">
+                                                    <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                                                </div>
+                                                <div className="flex-1 space-y-1">
+                                                    <p className="text-sm font-medium leading-none text-foreground">
+                                                        {n.message}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                        <span>{n.createdBy}</span>
+                                                        <span>•</span>
+                                                        <span>{new Date(n.createdAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                    {n.link && (
+                                                        <a href={`http://localhost:3000/project/1#list?${n.link}`} className="mt-2 inline-flex items-center text-xs text-blue-600 font-medium hover:underline">
+                                                            View task <ArrowRight className="ml-1 h-3 w-3" />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 shrink-0" /> 
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
-                                <div className="py-2">
-                                    <button
-                                        className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
-                                        onClick={() => router.push("/profile")}
-                                    >
-                                        <User className="h-4 w-4" />
-                                        Profile
-                                    </button>
+                <div className="relative ml-1" ref={userRef}>
+                    <Avatar
+                        className={cn(
+                            "h-9 w-9 cursor-pointer transition-all ring-2 ring-transparent hover:ring-blue-400/50",
+                            isUserOpen && "ring-blue-400"
+                        )}
+                        onClick={() => {
+                            setIsUserOpen(!isUserOpen)
+                            setIsNotificationOpen(false)
+                        }}
+                    >
+                        <AvatarImage src="/placeholder.svg" />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-medium text-sm">
+                            {user?.name?.slice(0, 2).toUpperCase() ?? "ME"}
+                        </AvatarFallback>
+                    </Avatar>
 
-                                    <button
-                                        className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
-                                        onClick={() => setTheme(!theme)}
-                                    >
-                                        {theme ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                                        <span>{theme ? "Dark mode" : "Light mode"}</span>
-                                    </button>
-                                </div>
-
-                                <div className="py-2 border-t border-gray-100">
-                                    <button
-                                        className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-red-50 text-gray-700"
-                                        onClick={handleSignout}
-                                    >
-                                        <LogOut className="h-4 w-4" />
-                                        Log out
-                                    </button>
+                    {isUserOpen && user && (
+                        <div className="absolute right-0 top-full mt-2 w-72 origin-top-right rounded-xl border bg-popover text-popover-foreground shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 slide-in-from-top-2 z-50 overflow-hidden">
+                            <div className="flex items-center gap-3 p-4 border-b bg-muted/30">
+                                <ColoredAvatar id={user.id} name={user.name} size="md" />
+                                <div className="flex flex-col space-y-0.5 overflow-hidden">
+                                    <p className="text-sm font-semibold truncate">{user.name}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                                 </div>
                             </div>
-                        )}
-                    </div>
+
+                            <div className="p-2">
+                                <div className={cn(
+                                    "relative overflow-hidden rounded-lg bg-gradient-to-r p-3 text-white shadow-sm transition-all",
+                                    planGradients[(plan ?? "Free") as keyof typeof planGradients]
+                                )}>
+                                    <div className="relative z-10 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs font-medium text-white/80 uppercase tracking-wider">Current Plan</p>
+                                            <p className="font-bold text-sm">{plan ?? "Free"} Plan</p>
+                                        </div>
+                                        <Button size="sm" variant="secondary" className="h-7 text-xs bg-white/20 hover:bg-white/30 text-white border-0">
+                                            Upgrade
+                                        </Button>
+                                    </div>
+                                    <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/10 blur-xl" />
+                                    <div className="absolute -left-4 -bottom-4 h-16 w-16 rounded-full bg-black/5 blur-xl" />
+                                </div>
+                            </div>
+
+                            <div className="p-1">
+                                <button
+                                    onClick={() => router.push("/profile")}
+                                    className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    <span>Profile settings</span>
+                                </button>
+                                <button
+                                    onClick={() => setTheme(!theme)}
+                                    className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                    {theme ? <Moon className="h-4 w-4 text-muted-foreground" /> : <Sun className="h-4 w-4 text-muted-foreground" />}
+                                    <span>{theme ? "Dark mode" : "Light mode"}</span>
+                                </button>
+                            </div>
+
+                            <div className="h-px bg-border my-1" />
+
+                            <div className="p-1 pb-2">
+                                <button
+                                    onClick={handleSignout}
+                                    className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    <span>Log out</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </header>
-        </>
-    );
+            </div>
+        </header>
+    )
 }

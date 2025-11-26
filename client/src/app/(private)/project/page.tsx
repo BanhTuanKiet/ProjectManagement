@@ -18,7 +18,6 @@ import {
 interface MainTab {
     name: string
     tab: string
-    count?: number
     icon: ReactNode
 }
 
@@ -29,10 +28,10 @@ export default function Page() {
         { name: "Worked on", tab: "", icon: <UserCheck size={16} /> },
         { name: "Upcoming deadline", tab: "deadline", icon: <Clock size={16} /> },
         { name: "Task today", tab: "today", icon: <ListTodo size={16} /> },
-        { name: "Task", tab: "task", count: 2, icon: <ListTodo size={16} /> },
-        { name: "Projects", tab: "project", count: 3, icon: <FolderKanban size={16} /> },
-        { name: "Mentions", tab: "mention", count: 4, icon: <AtSign size={16} /> },
-        { name: "System", tab: "system", count: 2, icon: <Bell size={16} /> },
+        { name: "Task", tab: "task", icon: <ListTodo size={16} /> },
+        { name: "Projects", tab: "project", icon: <FolderKanban size={16} /> },
+        { name: "Mentions", tab: "mention", icon: <AtSign size={16} /> },
+        { name: "System", tab: "system", icon: <Bell size={16} /> },
     ]
 
     const renderContent = () => {
@@ -74,14 +73,9 @@ export default function Page() {
                                             : "text-muted-foreground hover:text-foreground"
                                         }`}
                                 >
-                                    <span className="flex items-center gap-2">
+                                    <span className="flex items-center gap-2 cursor-pointer">
                                         {tab.icon}
                                         {tab.name}
-                                        {tab.count && (
-                                            <span className="bg-secondary text-secondary-foreground py-0.5 px-2 rounded-full text-xs font-medium">
-                                                {tab.count}
-                                            </span>
-                                        )}
                                     </span>
 
                                     {activeTab === tab.tab && (
