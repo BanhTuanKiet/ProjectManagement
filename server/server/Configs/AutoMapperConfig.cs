@@ -88,14 +88,14 @@ namespace server.Configs
             CreateMap<SprintDTO.Update, Sprint>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-            CreateMap<Backlog, BacklogDTO.BasicBacklog>();
+            // CreateMap<Backlog, BacklogDTO.BasicBacklog>();
 
-            CreateMap<BacklogDTO.Create, Backlog>()
-                .ForMember(dest => dest.BacklogId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateOnly.FromDateTime(DateTime.UtcNow)));
+            // CreateMap<BacklogDTO.Create, Backlog>()
+            //     .ForMember(dest => dest.BacklogId, opt => opt.Ignore())
+            //     .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateOnly.FromDateTime(DateTime.UtcNow)));
 
-            CreateMap<BacklogDTO.Update, Backlog>()
-                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            // CreateMap<BacklogDTO.Update, Backlog>()
+            //     .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Plans, PlanDTO.PlanDetail>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PlanId))

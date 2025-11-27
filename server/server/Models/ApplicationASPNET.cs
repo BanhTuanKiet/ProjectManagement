@@ -13,8 +13,6 @@ namespace server.Models
         public string? Department { get; set; }
         public string? Organization { get; set; }
         public string? Location { get; set; }
-        public string? Facebook { get; set; }
-        public string? Instagram { get; set; }
         public string? AvatarUrl { get; set; }
         public string? ImageCoverUrl { get; set; }
         //Subcription

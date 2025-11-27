@@ -32,7 +32,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
     public virtual DbSet<SubTask> SubTasks { get; set; }
     public virtual DbSet<Tag> Tags { get; set; }
     public virtual DbSet<Task> Tasks { get; set; }
-    public virtual DbSet<Backlog> Backlogs { get; set; }
     public virtual DbSet<TaskHistory> TaskHistories { get; set; }
     public virtual DbSet<ProjectInvitations> ProjectInvitations { get; set; }
     public virtual DbSet<Plans> Plans { get; set; }
@@ -450,21 +449,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasConstraintName("FK_Tags_Project");
         });
 
-        modelBuilder.Entity<Backlog>(entity =>
-        {
-            entity.HasKey(e => e.BacklogId).HasName("PK_Backlogs");
-
-            entity.Property(e => e.Name).HasMaxLength(300);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-
-            entity.HasOne(e => e.Project)
-                .WithMany(p => p.Backlogs)
-                .HasForeignKey(e => e.ProjectId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Backlogs_Project");
-        });
-
         modelBuilder.Entity<Task>(entity =>
         {
             entity.HasKey(e => e.TaskId).HasName("PK__Tasks__7C6949B13B1F1EE9");
@@ -514,11 +498,6 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_Tasks_Sprint");
 
-            entity.HasOne(d => d.Backlog)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(d => d.BacklogId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Tasks_Backlog");
         });
 
         modelBuilder.Entity<TaskHistory>(entity =>

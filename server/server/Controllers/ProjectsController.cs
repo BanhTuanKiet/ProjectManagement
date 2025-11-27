@@ -64,16 +64,16 @@ namespace server.Controllers
             return Ok(projects);
         }
 
-        // [Authorize(Policy = "MemberRequirement")]
-        // [HttpGet("member/{projectId}")]
-        // public async Task<ActionResult> GetProjectMembers(int projectId)
-        // {
-        //     Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
+        [Authorize(Policy = "MemberRequirement")]
+        [HttpGet("member/{projectId}")]
+        public async Task<ActionResult> GetProjectMembers(int projectId)
+        {
+            Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
 
-        //     List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
 
-        //     return Ok(projectMembers);
-        // }
+            return Ok(projectMembers);
+        }
 
         [HttpGet("{projectId}/member/by-role")]
         public async Task<ActionResult> GetProjectMembersByRole(int projectId)
