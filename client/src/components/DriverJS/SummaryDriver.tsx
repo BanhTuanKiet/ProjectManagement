@@ -34,6 +34,24 @@ export async function startSummaryTour(): Promise<boolean> {
                     popover: {
                         title: "Task Summary",
                         description: "This section provides a summary of tasks by status.",
+                        side: "left",
+                        align: "start",
+                    },
+                },
+                {
+                    element: "#chartView",
+                    popover: {
+                        title: "Chart View",
+                        description: "This section provides details about Status Distribution, Task Creation Timeline, and Member Completion Rate.",
+                        side: "top",
+                        align: "start",
+                    },
+                },
+                {
+                    element: "#criticalTasks",
+                    popover: {
+                        title: "Critical Tasks",
+                        description: "This section provides details about Expired Tasks and Near Deadline.",
                         side: "top",
                         align: "center",
                     },

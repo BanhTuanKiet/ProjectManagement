@@ -32,20 +32,38 @@ export async function startBoardTour(): Promise<boolean> {
                         align: "start",
                     },
                 },
-                {
-                    element: "#column-In Progress",
-                    popover: {
-                        title: "In Progress Column",
-                        description: "Drag tasks here when you are working on them.",
-                        side: "top",
-                        align: "center",
-                    },
-                },
+                // {
+                //     element: "#column-In Progress",
+                //     popover: {
+                //         title: "In Progress Column",
+                //         description: "Drag tasks here when you are working on them.",
+                //         side: "top",
+                //         align: "center",
+                //     },
+                // },
                 {
                     element: "#column-Done",
                     popover: {
                         title: "Done Column",
                         description: "Tasks that are completed will be displayed here.",
+                        side: "top",
+                        align: "center",
+                    },
+                },
+                {
+                    element: "#column-Cancel",
+                    popover: {
+                        title: "Done Column",
+                        description: "Tasks that are cancelled will be displayed here.",
+                        side: "top",
+                        align: "center",
+                    },
+                },
+                {
+                    element: "#column-Expired",
+                    popover: {
+                        title: "Done Column",
+                        description: "Tasks that are expireded will be displayed here.",
                         side: "top",
                         align: "center",
                     },

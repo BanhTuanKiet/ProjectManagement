@@ -24,7 +24,7 @@ export async function startBackLogTour(): Promise<boolean> {
                     element: "#numberStatusTask",
                     popover: {
                         title: "Task Status Overview",
-                        description: "Theo dõi số lượng task ở từng trạng thái như To Do, In Progress và Done để nắm bắt tiến độ làm việc.",
+                        description: "Track the number of tasks in each status such as To Do, In Progress and Done to grasp work progress.",
                         side: "bottom",
                         align: "start",
                     }
@@ -33,7 +33,7 @@ export async function startBackLogTour(): Promise<boolean> {
                     element: "#backlogSection",
                     popover: {
                         title: "Backlog Section",
-                        description: "Danh sách tất cả các công việc chưa được gán vào sprint. Bạn có thể kéo thả task vào sprint để bắt đầu thực hiện.",
+                        description: "List of all tasks that are not assigned to a sprint. You can drag and drop tasks into a sprint to start working on them.",
                         side: "bottom",
                         align: "start",
                     }
