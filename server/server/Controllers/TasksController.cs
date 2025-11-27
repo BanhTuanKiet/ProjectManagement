@@ -722,6 +722,22 @@ namespace server.Controllers
             }
         }
 
+        [HttpGet("upcoming/{type}")]
+        public async Task<ActionResult> GetUpcomingDeadling(string type)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<TaskDTO.BasicTask> basicTasks = [];
+            if (type == "deadline")
+            {
+                basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+            } else if (type == "today")
+            {
+                basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+            }
+            
+            return Ok(basicTasks);
+        }
+
         [HttpGet("near-deadline/{projectId}")]
         public async Task<IActionResult> GetNearDeadline(int projectId)
         {
@@ -749,7 +765,6 @@ namespace server.Controllers
                 toEmail = user.Email;
             }
 
-
             if (model == null || string.IsNullOrWhiteSpace(model.Content))
                 throw new ErrorException(400, "Content is required");
 
@@ -760,6 +775,5 @@ namespace server.Controllers
 
             return Ok(new { message = "Send email successfull!" });
         }
-
     }
 }

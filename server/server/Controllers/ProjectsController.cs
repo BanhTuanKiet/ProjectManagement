@@ -64,22 +64,24 @@ namespace server.Controllers
             return Ok(projects);
         }
 
-        [Authorize(Policy = "MemberRequirement")]
-        [HttpGet("member/{projectId}")]
-        public async Task<ActionResult> GetProjectMembers(int projectId)
-        {
-            Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
+        // [Authorize(Policy = "MemberRequirement")]
+        // [HttpGet("member/{projectId}")]
+        // public async Task<ActionResult> GetProjectMembers(int projectId)
+        // {
+        //     Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
 
-            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
+        //     List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
 
-            return Ok(projectMembers);
-        }
+        //     return Ok(projectMembers);
+        // }
 
-        [HttpGet("{projectId}/member/by-role/{role}")]
-        public async Task<ActionResult> GetProjectMembersByRole(int projectId, string role)
+        [HttpGet("{projectId}/member/by-role")]
+        public async Task<ActionResult> GetProjectMembersByRole(int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembersByRole(projectId, role, userId);
+            string userRole = await _projectsServices.GetProjectRole(userId, projectId)
+                ?? throw new ErrorException(404, "Member not found");
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembersByRole(projectId, userRole, userId);
             return Ok(projectMembers);
         }
 

@@ -56,81 +56,55 @@ export default function PaymentModal({ isOpen, onClose, planName, planPrice }: P
                         </div>
                     </div>
 
-                    {/* Payment Methods */}
-                    <div className="space-y-3">
-                        {/* VNPay Option */}
-                        <button
-                            onClick={() => handlePayment("vnpay")}
-                            disabled={isLoading}
-                            className={`w-full p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-4 group ${selectedMethod === "vnpay"
-                                    ? "border-blue-500 bg-blue-50"
-                                    : "border-gray-200 hover:border-blue-400 hover:bg-blue-50/50"
-                                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                            <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                                <CreditCard className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="flex-1 text-left">
-                                <p className="font-semibold text-gray-900">VNPay</p>
-                                <p className="text-sm text-gray-600">Thẻ ngân hàng, ví điện tử</p>
-                            </div>
-                            {selectedMethod === "vnpay" && (
-                                <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                                    <div className="w-2 h-2 bg-white rounded-full" />
-                                </div>
-                            )}
-                        </button>
-
-                        {/* PayPal Option */}
-                        <button
-                            onClick={() => handlePayment("paypal")}
-                            disabled={isLoading}
-                            className={`w-full p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-4 group ${selectedMethod === "paypal"
-                                    ? "border-blue-500 bg-blue-50"
-                                    : "border-gray-200 hover:border-blue-400 hover:bg-blue-50/50"
-                                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                            <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                                <Wallet className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="flex-1 text-left">
-                                <p className="font-semibold text-gray-900">PayPal</p>
-                                <p className="text-sm text-gray-600">Tài khoản PayPal của bạn</p>
-                            </div>
-                            {selectedMethod === "paypal" && (
-                                <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                                    <div className="w-2 h-2 bg-white rounded-full" />
-                                </div>
-                            )}
-                        </button>
-                    </div>
-
-                    {/* Security Info */}
-                    <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
-                        <div className="text-lg">🔒</div>
-                        <p>Thanh toán của bạn được bảo vệ bởi mã hóa SSL</p>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+                    {/* PayPal Option */}
                     <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors"
+                        onClick={() => handlePayment("paypal")}
+                        disabled={isLoading}
+                        className={`w-full p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-4 group ${selectedMethod === "paypal"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-blue-400 hover:bg-blue-50/50"
+                            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        Hủy
-                    </button>
-                    <button
-                        onClick={() => selectedMethod && handlePayment(selectedMethod)}
-                        disabled={!selectedMethod || isLoading}
-                        className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all duration-200 ${selectedMethod && !isLoading
-                                ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            }`}
-                    >
-                        {isLoading ? "Đang xử lý..." : "Tiếp tục"}
+                        <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                            <Wallet className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                            <p className="font-semibold text-gray-900">PayPal</p>
+                            <p className="text-sm text-gray-600">Tài khoản PayPal của bạn</p>
+                        </div>
+                        {selectedMethod === "paypal" && (
+                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full" />
+                            </div>
+                        )}
                     </button>
                 </div>
+
+                {/* Security Info */}
+                <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+                    <div className="text-lg">🔒</div>
+                    <p>Thanh toán của bạn được bảo vệ bởi mã hóa SSL</p>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+                <button
+                    onClick={onClose}
+                    className="flex-1 px-4 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                    Hủy
+                </button>
+                <button
+                    onClick={() => selectedMethod && handlePayment(selectedMethod)}
+                    disabled={!selectedMethod || isLoading}
+                    className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-all duration-200 ${selectedMethod && !isLoading
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
+                >
+                    {isLoading ? "Đang xử lý..." : "Tiếp tục"}
+                </button>
             </div>
         </div>
     )

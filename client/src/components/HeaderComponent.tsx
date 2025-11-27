@@ -6,7 +6,8 @@ import React from 'react'
 export default function HeaderComponent() {
     const router = useRouter()
     const { user } = useUser()
-        
+    const { signinGG } = useUser()
+
     return (
         <header className="w-full border-b border-slate-200 bg-white">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -23,12 +24,13 @@ export default function HeaderComponent() {
                     <div className="flex items-center gap-4">
                         {!user ? (
                             <>
-                                <a
-                                    href="/login"
+                                <button
+                                    // href="/login"
+                                    onClick={signinGG}
                                     className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
                                 >
-                                    Sign In
-                                </a>
+                                    Sign In with Google
+                                </button>
 
                                 <Link
                                     href="/plan"

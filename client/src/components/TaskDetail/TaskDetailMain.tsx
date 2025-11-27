@@ -138,7 +138,7 @@ export default function TaskDetailMain({
                     TaskId: taskId,
                     Content: contentToSend,
                 };
-                const res = await axios.post(`/comment`, newCommentPayload);
+                const res = await axios.post(`/comment/task/${taskId}/project/${projectId}`, newCommentPayload);
                 setComments((prev) => [res.data, ...prev]);
 
                 if (connection && connection.state === signalR.HubConnectionState.Connected) {
