@@ -9,7 +9,7 @@ namespace server.Models
         Task<List<ProjectDTO.ProjectBasic>> GetProjects(string userId);
         Task<Project> FindProjectById(int projectId);
         Task<Models.Project> GetProjectBasic(int projectId);
-        // Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId);
+        Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId);
         Task<List<ProjectDTO.ProjectMembers>> GetProjectMembersByRole(int projectId, string role, string userId);
         Task<bool> ChangeStatusIsStarred(int projectId, bool isStarred);
         Task<bool> GetStatusIsStarred(int projectId);

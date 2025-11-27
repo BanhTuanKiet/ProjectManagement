@@ -765,7 +765,6 @@ namespace server.Controllers
                 toEmail = user.Email;
             }
 
-
             if (model == null || string.IsNullOrWhiteSpace(model.Content))
                 throw new ErrorException(400, "Content is required");
 
