@@ -8,11 +8,11 @@ import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import { useTask } from "@/app/(context)/TaskContext"
 import type { BasicTask } from "@/utils/ITask"
-import Overview from "./Summary/Overview"
-import ChartView from "./Summary/ChartView"
-import MemberList from "./MemberList"
-import SettingsPopup from "./SettingsPopup"
-import TaskSupport from "./TaskSupport"
+import Overview from "./Overview"
+import ChartView from "./ChartView"
+import MemberList from "../MemberList"
+import SettingsPopup from "../SettingsPopup"
+import TaskSupport from "../TaskSupport"
 
 export default function Summary() {
     const { projects, project_name, members } = useProject()
