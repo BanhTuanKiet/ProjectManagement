@@ -207,6 +207,7 @@ namespace server.Controllers
         }
 
         [HttpGet("subscription")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<ActionResult> GetSubscriptions()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

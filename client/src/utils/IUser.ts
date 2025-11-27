@@ -65,7 +65,7 @@ export interface UserProfile {
 }
 
 export interface Contact {
-    id: string
+    mediaId: string
     media: string
     url: string
 }

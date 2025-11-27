@@ -125,6 +125,8 @@ namespace server.Configs
             CreateMap<ApplicationUser, UserDTO.UserProfile2>()
                 .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.AvatarUrl))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.UserName));
+
+            CreateMap<Media, MediaDTO.Media>();
         }
     }
 }

@@ -17,20 +17,19 @@ import axios from '@/config/axiosConfig'
 import { formatDate } from '@/utils/dateUtils'
 import { ContactIcon, getRoleBadge } from '@/utils/statusUtils'
 import ColoredAvatar from '@/components/ColoredAvatar'
+import { Media } from '@/utils/IContact'
 
 export default function Page() {
     const [user, setUser] = useState<UserProfile>()
-
     const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'activity'>('projects')
-
     const [isEditingContacts, setIsEditingContacts] = useState(false)
     const [tempContacts, setTempContacts] = useState<Contact[]>([])
+    const [medias, setMedias] = useState<Media[]>()
 
     useEffect(() => {
         const fetchUses = async () => {
             try {
                 const response = await axios.get(`/users/profile`)
-                console.log(response.data)
                 setUser(response.data)
             } catch (error) {
                 console.log(error)
@@ -40,40 +39,86 @@ export default function Page() {
         fetchUses()
     }, [])
 
+    useEffect(() => {
+        const fetchMedias = async () => {
+            try {
+                const response = await axios.get(`/medias`)
+                setMedias(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchMedias()
+    }, [])
+
+    /** ---------------------------
+     * CONTACT EDITING
+     --------------------------------*/
+
     const startEditingContacts = () => {
         if (!user) return
-        setTempContacts([...user.contacts])
+        setTempContacts(user.contacts.map(c => ({
+            ...c,
+            mediaId: c.mediaId || crypto.randomUUID() // always unique
+        })))
         setIsEditingContacts(true)
     }
 
     const cancelEditingContacts = () => {
-        setIsEditingContacts(false)
         setTempContacts([])
-    }
-
-    const saveContacts = () => {
-        if (!user) return
-        setUser({ ...user, contacts: tempContacts })
         setIsEditingContacts(false)
-    }
-
-    const deleteContact = (id: string) => {
-        setTempContacts(prev => prev.filter(c => c.id !== id))
     }
 
     const addContact = () => {
         const newContact: Contact = {
-            id: `new-${Date.now()}`,
-            media: 'website',
+            mediaId: crypto.randomUUID(), // ⭐ unique ID
+            media: '',
             url: ''
         }
-        setTempContacts([...tempContacts, newContact])
+
+        setTempContacts(prev => [...prev, newContact])
     }
 
     const updateContact = (id: string, field: keyof Contact, value: string) => {
-        setTempContacts(prev => prev.map(c =>
-            c.id === id ? { ...c, [field]: value } : c
-        ))
+        setTempContacts(prev =>
+            prev.map(c =>
+                c.mediaId === id ? { ...c, [field]: value } : c
+            )
+        )
+    }
+
+    const deleteContact = async (id: string) => {
+        setTempContacts(prev => prev.filter(c => c.mediaId !== id))
+    }
+
+    const saveContacts = async () => {
+        if (!user || !medias) return
+
+        try {
+            const normalizedContacts = tempContacts
+                .map(item => {
+                    const mediaObj = medias.find(m => m.name === item.media)
+
+                    return {
+                        ...item,
+                        mediaId: mediaObj ? mediaObj.id : item.mediaId
+                    }
+                })
+                .filter(c => c.media.trim() !== '' && c.url.trim() !== '')
+
+            const finalContacts = normalizedContacts.map(({ media, ...rest }) => rest)
+
+            setUser(prev => ({
+                ...prev!,
+                contacts: normalizedContacts
+            }))
+            await axios.put(`/medias/contact`, finalContacts)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsEditingContacts(false)
+        }
     }
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,13 +149,13 @@ export default function Page() {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
                     <div className="lg:col-span-4 xl:col-span-3">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden sticky top-20">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden z-99 top-20 mt-20">
                             <div className="p-6 flex flex-col items-center text-center border-b border-gray-100">
                                 {user &&
                                     <div className="relative">
                                         <ColoredAvatar src={user?.avatar} id={user?.id} name={user?.name} size='xxl' />
+
                                         <div className="mt-3 text-center">
                                             <label
                                                 htmlFor="avatarUpload"
@@ -130,7 +175,7 @@ export default function Page() {
                                 }
 
                                 <h1 className="mt-4 text-xl font-bold text-gray-900">{user?.name}</h1>
-                                {/* <p className="text-gray-500 font-medium">{user.role}</p> */}
+
                                 <div className="mt-2 flex items-center text-gray-500 text-sm">
                                     <MapPin size={14} className="mr-1" />
                                     {user?.location}
@@ -140,7 +185,10 @@ export default function Page() {
                             <div className="p-6 space-y-4">
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">contact information</h3>
+                                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                            contact information
+                                        </h3>
+
                                         {!isEditingContacts ? (
                                             <button
                                                 onClick={startEditingContacts}
@@ -154,14 +202,14 @@ export default function Page() {
                                                 <button
                                                     onClick={saveContacts}
                                                     className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
-                                                    title="Lưu"
+                                                    title="Save"
                                                 >
                                                     <Save size={14} />
                                                 </button>
                                                 <button
                                                     onClick={cancelEditingContacts}
                                                     className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                    title="Hủy"
+                                                    title="Cancel"
                                                 >
                                                     <X size={14} />
                                                 </button>
@@ -173,54 +221,85 @@ export default function Page() {
                                         <ul className="space-y-3">
                                             <li className="flex items-center text-sm text-gray-600">
                                                 <Mail size={16} className="mr-3 text-gray-400" />
-                                                <a href={`mailto:${user?.email}`} className="hover:text-blue-600 truncate">{user?.email}</a>
+                                                <a href={`mailto:${user?.email}`} className="hover:text-blue-600 truncate">
+                                                    {user?.email}
+                                                </a>
                                             </li>
+
                                             {user?.contacts?.map(contact => (
-                                                <li key={contact.id} className="flex items-center text-sm text-gray-600">
+                                                <li key={contact.mediaId} className="flex items-center text-sm text-gray-600">
                                                     <div className="mr-3 text-gray-400">
                                                         <ContactIcon media={contact.media} />
                                                     </div>
-                                                    <a href={contact.url} target="_blank" rel="noreferrer" className="hover:text-blue-600 capitalize truncate w-full">
-                                                        {contact.media === 'website' ? contact.url.replace(/^https?:\/\//, '') : contact.url}
+                                                    <a
+                                                        href={contact.url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="hover:text-blue-600 capitalize truncate w-full"
+                                                    >
+                                                        {contact.media === 'website'
+                                                            ? contact.url.replace(/^https?:\/\//, '')
+                                                            : contact.url}
                                                     </a>
                                                 </li>
                                             ))}
                                         </ul>
                                     ) : (
                                         <div className="space-y-3">
+
                                             <div className="flex items-center text-sm text-gray-400 mb-2">
                                                 <Mail size={16} className="mr-3" />
                                                 <span className="truncate">{user?.email}</span>
                                                 <span className="ml-auto text-xs italic">(Read only)</span>
                                             </div>
 
-                                            {tempContacts.map(contact => (
-                                                <div key={contact.id} className="flex items-center gap-2 animate-fadeIn">
-                                                    <select
-                                                        value={contact.media}
-                                                        onChange={(e) => updateContact(contact.id, 'media', e.target.value)}
-                                                        className="text-xs border border-gray-300 rounded p-1 w-20 focus:outline-none focus:border-blue-500"
-                                                    >
-                                                        <option value="website">Web</option>
-                                                        <option value="github">Git</option>
-                                                        <option value="linkedin">In</option>
-                                                        <option value="twitter">X</option>
-                                                    </select>
-                                                    <input
-                                                        type="text"
-                                                        value={contact.url}
-                                                        onChange={(e) => updateContact(contact.id, 'url', e.target.value)}
-                                                        placeholder="https://..."
-                                                        className="text-xs border border-gray-300 rounded p-1 flex-1 focus:outline-none focus:border-blue-500"
-                                                    />
-                                                    <button
-                                                        onClick={() => deleteContact(contact.id)}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                            {medias && tempContacts.map(contact => {
+                                                const usedMedias = tempContacts
+                                                    .filter(c => c.mediaId !== contact.mediaId)
+                                                    .map(c => c.media)
+
+                                                const currentMediaObj =
+                                                    medias.find(m => m.name === contact.media) ||
+                                                    { id: contact.mediaId, name: contact.media }
+
+                                                const sortedMedias = [
+                                                    currentMediaObj,
+                                                    ...medias.filter(
+                                                        m => m.name !== contact.media && !usedMedias.includes(m.name)
+                                                    )
+                                                ]
+
+                                                return (
+                                                    <div key={contact.mediaId} className="flex items-center gap-2 animate-fadeIn">
+
+                                                        <select
+                                                            value={contact.media}
+                                                            onChange={(e) => updateContact(contact.mediaId, 'media', e.target.value)}
+                                                            className="text-xs border border-gray-300 rounded p-1 w-20"
+                                                        >
+                                                            <option value="">Select</option>
+                                                            {sortedMedias.map(m => (
+                                                                <option key={m.id} value={m.name}>{m.name}</option>
+                                                            ))}
+                                                        </select>
+
+                                                        <input
+                                                            type="text"
+                                                            value={contact.url}
+                                                            onChange={(e) => updateContact(contact.mediaId, 'url', e.target.value)}
+                                                            placeholder="https://..."
+                                                            className="text-xs border border-gray-300 rounded p-1 flex-1 min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                                        />
+
+                                                        <button
+                                                            onClick={() => deleteContact(contact.mediaId)}
+                                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                )
+                                            })}
 
                                             <button
                                                 onClick={addContact}
@@ -245,7 +324,7 @@ export default function Page() {
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
-                                    Dự án tham gia ({user?.projects?.length})
+                                    Project participation ({user?.projects?.length})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('activity')}
@@ -254,7 +333,7 @@ export default function Page() {
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
-                                    Hoạt động gần đây
+                                    Recent Activity
                                 </button>
                             </nav>
                         </div>
@@ -262,7 +341,7 @@ export default function Page() {
                         {activeTab === 'projects' && (
                             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
-                                    <h2 className="text-base font-semibold text-gray-800">Danh sách dự án</h2>
+                                    <h2 className="text-base font-semibold text-gray-800">Projects</h2>
                                     <button className="text-sm text-blue-600 hover:underline">Xem tất cả</button>
                                 </div>
                                 <div className="divide-y divide-gray-100">
@@ -290,7 +369,7 @@ export default function Page() {
                                                             <div className="flex items-center gap-1.5">
                                                                 Owner:
                                                                 <span className="p-1 rounded-full bg-indigo-100 flex items-center justify-center text-xs text-indigo-700 font-bold">
-                                                                    {project.owner}
+                                                                    {project?.ownerId === user.id ? "Me" : project.owner}
                                                                 </span>
                                                             </div>
                                                             Role in Project:
@@ -300,7 +379,11 @@ export default function Page() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <a href={`http://localhost:3000/project/${project.projectId}}`} className="mt-2 inline-flex items-center text-xs text-blue-600 font-medium hover:underline">
+                                                <a
+                                                    href={`http://localhost:3000/project/${project.projectId}`}
+
+                                                    className="mt-2 inline-flex items-center text-xs text-blue-600 font-medium hover:underline"
+                                                >
                                                     View project <ArrowRight className="ml-1 h-3 w-3" />
                                                 </a>
                                             </div>
@@ -312,12 +395,12 @@ export default function Page() {
 
                         {activeTab === 'activity' && (
                             <div className="bg-white p-12 text-center rounded-lg border border-gray-200">
-                                <p className="text-gray-400">Chưa có hoạt động nào gần đây.</p>
+                                <p className="text-gray-400">No recent activity.</p>
                             </div>
                         )}
                     </div>
                 </div>
             </main>
         </div>
-    );
+    )
 }

@@ -149,8 +149,6 @@ namespace server.Services.User
             user.Department = userDto.Department ?? user.Department;
             user.Organization = userDto.Organization ?? user.Organization;
             user.Location = userDto.Location ?? user.Location;
-            user.Facebook = userDto.Facebook ?? user.Facebook;
-            user.Instagram = userDto.Instagram ?? user.Instagram;
 
             var result = await _userManager.UpdateAsync(user);
             return _mapper.Map<UserDTO.UserProfile>(user);
