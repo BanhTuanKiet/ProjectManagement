@@ -100,7 +100,7 @@ export default function BoardView() {
         newStatus = over.id as string;
         oldStatus = prev[oldIndex].status;
 
-        const validStatuses = ["Todo", "Doing", "Done", "Cancel"];
+        const validStatuses = ["Todo", "In Progress", "Done", "Cancel", "Expired"];
         if (!validStatuses.includes(newStatus)) return prev;
 
         return prev.map((task) =>

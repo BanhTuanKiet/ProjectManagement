@@ -173,7 +173,7 @@ export default function Timeline() {
 
     return (
         <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
-            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div id="ProjectTimeline" className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Project Timeline</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -241,7 +241,7 @@ export default function Timeline() {
             </div>
 
             <Card className="border border-slate-200 dark:border-slate-800 py-0">
-                <div className="overflow-x-auto">
+                <div id="TableTimeline" className="overflow-x-auto">
                     <div className="min-w-full">
                         <div className="flex border-b border-slate-200 dark:border-slate-800">
                             <div className="w-64 px-4 py-3 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex items-center">
