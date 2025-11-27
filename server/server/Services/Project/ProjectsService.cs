@@ -44,15 +44,15 @@ namespace server.Services.Project
             return _mapper.Map<List<ProjectDTO.ProjectBasic>>(projects);
         }
 
-        public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId)
-        {
-            var projectMembers = await _context.ProjectMembers
-                .Include(pm => pm.User)
-                .Where(pm => pm.ProjectId == projectId)
-                .ToListAsync();
+        // public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembers(int projectId)
+        // {
+        //     var projectMembers = await _context.ProjectMembers
+        //         .Include(pm => pm.User)
+        //         .Where(pm => pm.ProjectId == projectId)
+        //         .ToListAsync();
 
-            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
-        }
+        //     return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+        // }
 
         public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembersByRole(int projectId, string role, string UserId)
         {

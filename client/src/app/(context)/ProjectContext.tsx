@@ -83,7 +83,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     useEffect(() => {
         const fetchMembers = async () => {
             try {
-                const response = await axios.get(`/projects/${Number(project_name)}/member/by-role/${projectRole}`)
+                const projectId = Number(project_name);
+                const response = await axios.get(`/projects/${projectId}/member/by-role`)
                 console.log("Fetched members for role:", projectRole, response.data)
                 setAvailableUsers(response.data)
             } catch (error) {

@@ -52,7 +52,7 @@ namespace server.Controllers
             var task = await _taskService.GetBasicTasksByTaskId(taskId, projectId);
             if (task == null)
                 throw new ErrorException(404, "Task not found to upload file.");
-            if(task.IsActive == false)
+            if (task.IsActive == false)
                 throw new ErrorException(400, "Cannot upload file to an inactive task.");
             var member = await _projectMemberService.GetMemberAsync(projectId, userId);
             if (member == null)
@@ -74,6 +74,19 @@ namespace server.Controllers
                     targetType: "File",
                     targetId: uploadedFile.FileId.ToString(),
                     description: description
+                );
+                if (task.Status != "InProgress")
+                {
+                    task.Status = "InProgress";
+                    await _context.SaveChangesAsync();
+                }
+                await _activityLogService.AddActivityLog(
+                    projectId: projectId,
+                    userId: userId,
+                    action: "Auto_Update_Status",
+                    targetType: "TASK",
+                    targetId: taskId.ToString(),
+                    description: $"System updated task #{taskId} status to 'InProgress' after file upload."
                 );
             }
 
