@@ -1,13 +1,13 @@
-// FULL UPDATED CODE WITH DAY-VIEW PAGINATION (21 DAYS PER PAGE)
+// Updated Timeline component with pageSize dependent on zoomLevel
 
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { addDays, differenceInDays, formatDate, formatShortDate } from "@/utils/dateUtils"
-import { BasicTask } from "@/utils/ITask"
+import type { BasicTask } from "@/utils/ITask"
 import { getStatusColor } from "@/utils/statusUtils"
-import { BasicSprint } from "@/utils/ISprint"
+import type { BasicSprint } from "@/utils/ISprint"
 import axios from "@/config/axiosConfig"
 import { useProject } from "@/app/(context)/ProjectContext"
 import { useTask } from "@/app/(context)/TaskContext"
@@ -19,16 +19,12 @@ type TimelineUnit =
     | { label: string; start?: Date; end?: Date }
     | { label: string; month?: number; year?: number }
 
-const pageSize = 22
-const basePixel = 40
-
 export default function Timeline() {
     const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day")
     const [sprints, setSprints] = useState<BasicSprint[]>()
     const { project_name } = useProject()
     const { tasks } = useTask()
     const { startDate, endDate, totalDays } = useTimelineDates(tasks)
-
 
     const [zoomLevel, setZoomLevel] = useState<number>(1)
     const widthMapRef = useRef<Record<number, number>>({})
@@ -37,9 +33,16 @@ export default function Timeline() {
     const toggleSprint = (id: string) => setCollapsedSprints((p) => ({ ...p, [id]: !p[id] }))
     const [page, setPage] = useState(0)
 
+    const pageSize = useMemo(() => {
+        if (zoomLevel === 1) return 21
+        if (zoomLevel === 1.5) return 14
+        if (zoomLevel === 2) return 10
+        return 21
+    }, [zoomLevel])
+
     useEffect(() => {
         setPage(0)
-    }, [viewMode, startDate])
+    }, [viewMode, startDate, zoomLevel])
 
     useEffect(() => {
         const fetchSprint = async () => {
@@ -70,7 +73,11 @@ export default function Timeline() {
             while (current <= endDate) {
                 const ws = new Date(current)
                 const we = addDays(ws, 6)
-                units.push({ label: `${formatShortDate(ws.toString())} - ${formatShortDate(we.toString())}`, start: ws, end: we })
+                units.push({
+                    label: `${formatShortDate(ws.toString())} - ${formatShortDate(we.toString())}`,
+                    start: ws,
+                    end: we,
+                })
                 current = addDays(current, 7)
             }
         }
@@ -86,21 +93,22 @@ export default function Timeline() {
                 current = new Date(current.getFullYear(), current.getMonth() + 1, 1)
             }
         }
+
         return units
     }
 
-    const timelineUnits = useMemo(() => getTimelineUnits(), [viewMode, startDate, endDate, totalDays, zoomLevel])
+    const timelineUnits = useMemo(() => getTimelineUnits(), [viewMode, startDate, endDate, totalDays])
 
     const totalPages = useMemo(() => {
         if (viewMode !== "day") return 1
         return Math.ceil(timelineUnits.length / pageSize)
-    }, [timelineUnits, viewMode])
+    }, [timelineUnits, viewMode, pageSize])
 
     const pagedUnits = useMemo(() => {
         if (viewMode !== "day") return timelineUnits
         const start = page * pageSize
         return timelineUnits.slice(start, start + pageSize)
-    }, [timelineUnits, page, viewMode])
+    }, [timelineUnits, page, viewMode, pageSize])
 
     const getTaskBarPosition = (task: BasicTask) => {
         const taskStart = task.createdAt ? new Date(task.createdAt) : new Date()
@@ -113,19 +121,16 @@ export default function Timeline() {
             let startOffset = differenceInDays(taskStart, startDate)
             const duration = Math.max(1, differenceInDays(taskEnd, taskStart) + 1)
 
-            // page offset
             startOffset = startOffset - page * pageSize
 
-            // hide tasks not on this page
             if (startOffset < 0 || startOffset >= pageSize) {
                 return { left: -9999, width: 0 }
             }
 
-            const pxPerDay = basePixel * zoomLevel
-            left = pxPerDay * startOffset
-            const pxWidth = pxPerDay * duration
-            widthMapRef.current[task.taskId] = pxWidth
-            width = pxWidth
+            const percentPerDay = 100 / pageSize
+            left = startOffset * percentPerDay
+            width = duration * percentPerDay
+            widthMapRef.current[task.taskId] = width
         }
 
         if (viewMode === "week") {
@@ -164,10 +169,6 @@ export default function Timeline() {
 
     const gridTemplate = () => {
         if (!pagedUnits || pagedUnits.length === 0) return ""
-        if (viewMode === "day") {
-            const px = basePixel * zoomLevel
-            return `repeat(${pagedUnits.length}, ${px}px)`
-        }
         return `repeat(${pagedUnits.length}, 1fr)`
     }
 
@@ -211,9 +212,7 @@ export default function Timeline() {
                             <button
                                 key={m}
                                 onClick={() => setViewMode(m as "day" | "week" | "month")}
-                                className={`cursor-pointer px-3 py-1 rounded text-sm font-medium ${viewMode === m
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-slate-200 dark:bg-slate-700 dark:text-white"
+                                className={`cursor-pointer px-3 py-1 rounded text-sm font-medium ${viewMode === m ? "bg-blue-600 text-white" : "bg-slate-200 dark:bg-slate-700 dark:text-white"
                                     }`}
                             >
                                 {m.toUpperCase()}
@@ -229,8 +228,6 @@ export default function Timeline() {
                                 onChange={(e) => setZoomLevel(Number(e.target.value))}
                                 className="cursor-pointer px-3 py-1 rounded bg-slate-200 dark:bg-slate-700 dark:text-white text-sm"
                             >
-                                <option value={0.5}>50%</option>
-                                <option value={0.75}>75%</option>
                                 <option value={1}>100%</option>
                                 <option value={1.5}>150%</option>
                                 <option value={2}>200%</option>
@@ -241,31 +238,42 @@ export default function Timeline() {
             </div>
 
             <Card className="border border-slate-200 dark:border-slate-800 py-0">
+                <div className="sticky top-0 z-1 flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+                    <div className="flex bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                        <div className="w-63 px-4 py-2 border-r border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">
+                                {tasks.length} Task(s)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 grid" style={{ gridTemplateColumns: gridTemplate() }}>
+                        {pagedUnits.map((u, i) => (
+                            <div
+                                key={i}
+                                className="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400"
+                            >
+                                {viewMode === "day" ? (
+                                    <div className="flex flex-col leading-tight">
+                                        <span>{u.label?.split(" ")[0]}</span>
+                                        <span>{u.label?.split(" ")[1]}</span>
+                                    </div>
+                                ) : (
+                                    <span>{u.label}</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="overflow-x-auto">
                     <div className="min-w-full">
-                        <div className="flex border-b border-slate-200 dark:border-slate-800">
-                            <div className="w-64 px-4 py-3 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex items-center">
-                                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">{tasks.length} Task(s)</p>
-                            </div>
-
-                            <div
-                                className="flex-1 grid"
-                                style={{ gridTemplateColumns: gridTemplate() }}
-                            >
-                                {pagedUnits.map((u, i) => (
-                                    <div key={i} className="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-                                        {u.label}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
                         {Object.entries(tasksBySprint).map(([sid, sprintTasks]) => (
                             <div key={sid}>
                                 <div className="flex bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                                     <div className="w-63 px-4 py-2 border-r border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                            {sid === 'unscheduled' ? "Unscheduled" : `Sprint - ${sid}`} {sprints?.find((s) => s.sprintId === parseInt(sid))?.name}
+                                            {sid === "unscheduled" ? "Unscheduled" : `Sprint - ${sid}`} {sprints?.find((s) => s.sprintId === Number.parseInt(sid))?.name}
                                             <br />
                                             {sprintTasks.length} Task(s)
                                         </p>
@@ -301,11 +309,7 @@ export default function Timeline() {
                                                         <div className="absolute left-0 right-0 top-5 h-[2px] bg-slate-100 dark:bg-slate-800" />
                                                         <div
                                                             className={`cursor-pointer absolute top-1.5 h-8 rounded ${getStatusColor(task.status)} flex items-center`}
-                                                            style={
-                                                                viewMode === "day"
-                                                                    ? { left: `${left}px`, width: `${width}px`, paddingLeft: 8, paddingRight: 8 }
-                                                                    : { left: `${left}%`, width: `${width}%`, paddingLeft: 8, paddingRight: 8 }
-                                                            }
+                                                            style={{ left: `${left}%`, width: `${width}%` }}
                                                         >
                                                             <span className="text-xs dark:text-white truncate">{task.description || task.title}</span>
                                                         </div>

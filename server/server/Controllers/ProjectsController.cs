@@ -329,13 +329,13 @@ namespace server.Controllers
             return Ok(new { message = "Change leader successful" });
         }
 
-        [Authorize(Policy = "MemberRequirement")]
-        [HttpGet("member/{projectId}")]
-        public async Task<ActionResult> GetProjectMembers(int projectId)
-        {
-            Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
-            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
-            return Ok(projectMembers);
-        }
+        // [Authorize(Policy = "MemberRequirement")]
+        // [HttpGet("member/{projectId}")]
+        // public async Task<ActionResult> GetProjectMembers(int projectId)
+        // {
+        //     Project project = await _projectsServices.FindProjectById(projectId) ?? throw new ErrorException(500, "Project not found");
+        //     List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembers(projectId);
+        //     return Ok(projectMembers);
+        // }
     }
 }

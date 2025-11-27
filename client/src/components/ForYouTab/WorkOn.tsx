@@ -18,7 +18,6 @@ export default function WorkOn() {
                 )
 
                 const responses = await Promise.all(requests)
-                console.log(responses)
                 const membersMap: Record<number, Member[]> = {}
                 responses.forEach((res, index) => {
                     const projId = projects[index].projectId

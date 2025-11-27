@@ -41,7 +41,7 @@ const ProfilePage2 = () => {
     const fetchData = async () => {
         try {
             const [taskRes, projectRes, userRes] = await Promise.all([
-                axios.get("/tasks/user"),
+                axios.get(`/tasks/user/${-1}`),
                 axios.get("/projects"),
                 axios.get("/users/profile"),
             ]);
@@ -242,15 +242,31 @@ const ProfilePage2 = () => {
                         <h2 className="text-xl font-semibold text-gray-900 mb-4">Worked on</h2>
                         <div className="space-y-3">
                             {tasks.map((task) => (
-                                <div key={task.taskId} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md">
-                                    <input type="checkbox" checked readOnly className="w-4 h-4 text-blue-600 rounded border-gray-300" />
+                                <a
+                                    key={task.taskId}
+                                    href={`http://localhost:3000/project/1#list?tasks=${task.taskId}`}
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-md cursor-pointer"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked
+                                        readOnly
+                                        className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                                    />
+
                                     <div>
-                                        <div className="font-medium text-gray-900">{task.title}</div>
-                                        <div className="text-sm text-gray-600">Task • {task.status}</div>
+                                        <div className="font-medium text-gray-900">
+                                            {task.title}
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            Task • {task.status}
+                                        </div>
                                     </div>
-                                </div>
+                                </a>
                             ))}
                         </div>
+
                     </div>
 
                     <div>
@@ -274,7 +290,7 @@ const ProfilePage2 = () => {
                                         </div>
                                     </div>
                                     <button className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors">
-                                        <ExternalLink size={18} />
+                                        <a href={`http://localhost:3000/project/${p.projectId}`}> <ExternalLink size={18} /></a>
                                     </button>
                                 </div>
                             ))}

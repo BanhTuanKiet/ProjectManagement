@@ -7,6 +7,8 @@ namespace server.Services.Task
     {
         Task<Models.Task> GetTaskById(int taskId);
         Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId);
+        Task<List<TaskDTO.BasicTask>> GetUpcomingDeadline(string userId);
+        Task<List<TaskDTO.BasicTask>> GetTaskToday(string userId);
         Task<List<TaskDTO.BasicTask>> GetBasicTasksByMonth(int projectId, int? month, int? year, FilterDTO.FilterCalendarView? filterCalendarView);
         Task<List<TaskDTO.BasicTask>> GetBasicTasksById(int projectId);
         Task<List<TaskDTO.BasicTask>> GetAllBasicTasks();
@@ -25,5 +27,7 @@ namespace server.Services.Task
         Task<List<TaskDTO.BasicTask>> GetTasksByUserList(int projectId, List<string> userIds);
         Task<bool> ToggleTaskStatus(int taskId, int projectId);
         Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId);
+        Task<List<TaskDTO.BasicTask>> GetNearDeadlineTasksAsync(int projectId, string currentUserId);
+        Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role);
     }
 }

@@ -62,6 +62,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { project_name, projectRole, availableUsers, setAvailableUsers } = useProject();
+  const [openFromUrl, setOpenFromUrl] = useState<number | null>(null);
 
   useEffect(() => {
     const rawHash = decodeURIComponent(window.location.hash.replace("#", ""));
@@ -71,6 +72,9 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
 
     const params = new URLSearchParams(queryString);
     const status = params.get("status");
+    const taskId = params.get("tasks")
+
+    if (taskId) setOpenFromUrl(Number(taskId));
 
     if (status) {
       setFilters((prev) => ({ ...prev, Status: status }));
@@ -114,6 +118,13 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden mx-auto w-full">
+      {openFromUrl && (
+        <TaskDetailModal
+          taskId={openFromUrl}
+          onClose={() => setOpenFromUrl(null)}
+        />
+      )}
+
       {/* Header */}
       <div id="toolsList" className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
         <div className="flex items-center gap-4">
