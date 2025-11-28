@@ -49,6 +49,7 @@ namespace server.Configs
             services.AddScoped<IActivityLog, ActivityLogServices>();
             services.AddScoped<IProjectMember, ProjectMemberServices>();
             services.AddScoped<ITeams, TeamServices>();
+            services.AddScoped<IMedia, MediaService>();
         }
     }
 }

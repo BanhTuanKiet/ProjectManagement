@@ -3,26 +3,17 @@
 import { usePresence } from "@/app/(context)/OnlineMembers"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-// Tạo màu từ string bằng cách hash vào mảng màu
 const stringToColor = (str: string) => {
     const colors = [
-        "#E57373",
-        "#64B5F6",
-        "#81C784",
-        "#FFD54F",
-        "#BA68C8",
-        "#4DB6AC",
-        "#FF8A65",
-        "#9575CD",
-        "#F06292",
-        "#7986CB",
+        "#E57373", "#64B5F6", "#81C784", "#FFD54F",
+        "#BA68C8", "#4DB6AC", "#FF8A65", "#9575CD",
+        "#F06292", "#7986CB",
     ]
     let hash = 0
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash)
     }
-    const index = Math.abs(hash) % colors.length
-    return colors[index]
+    return colors[Math.abs(hash) % colors.length]
 }
 
 export default function ColoredAvatar({
@@ -37,7 +28,7 @@ export default function ColoredAvatar({
     name?: string
     src?: string
     initials?: string
-    size?: "sm" | "md" | "lg"
+    size?: "sm" | "md" | "lg" | "xl" | "xxl"
     showOnlineStatus?: boolean
 }) {
     const { onlineUsers } = usePresence()
@@ -46,26 +37,59 @@ export default function ColoredAvatar({
     const fallbackInitials =
         initials ||
         (name
-            ? name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
+            ? name.split(" ").map((n) => n[0]).join("").toUpperCase()
             : "?")
 
     const bgColor = stringToColor(name || "?")
-    const sizeClasses = size === "sm" ? "h-6 w-6 text-xs" : size === "md" ? "h-8 w-8 text-sm" : "h-12 w-12 text-base"
-    const indicatorSize = size === "sm" ? "h-2.5 w-2.5" : size === "md" ? "h-3.75 w-3.75" : "h-5 w-5"
-    const indicatorPosition = size === "sm" ? "-top-0.5 -right-0.5" : size === "md" ? "-top-0.5 -right-0.5" : "-top-1 -right-1"
+
+    const sizeClasses =
+        size === "sm" ? "h-6 w-6 text-xs" :
+            size === "md" ? "h-8 w-8 text-sm" :
+                size === "lg" ? "h-12 w-12 text-base" :
+                    size === "xl" ? "h-16 w-16 text-lg" :
+                        "h-24 w-24 text-xl" // xxl
+
+    const indicatorSize =
+        size === "sm" ? "h-2.5 w-2.5" :
+            size === "md" ? "h-3.5 w-3.5" :
+                size === "lg" ? "h-5 w-5" :
+                    size === "xl" ? "h-6 w-6" :
+                        "h-8 w-8" // xxl
+
+    const indicatorPosition =
+        size === "sm" ? "-top-0.5 -right-0.5" :
+            size === "md" ? "-top-0.5 -right-0.5" :
+                size === "lg" ? "-top-1 -right-1" :
+                    size === "xl" ? "-top-1.5 -right-1.5" :
+                        "-top-2.5 -right-2.5" // xxl
 
     return (
-        <div className="relative inline-block" title={`${name} is ${isOnline ? "online" : "offline"}`}>
-            <Avatar className={sizeClasses}>
-                {src && <AvatarImage src={src || "/placeholder.svg"} alt={name} />}
-                <AvatarFallback style={{ backgroundColor: bgColor, color: "white" }}>{fallbackInitials}</AvatarFallback>
+        <div
+            className="relative inline-block shrink-0"
+            title={`${name} is ${isOnline ? "online" : "offline"}`}
+        >
+            <Avatar className={`${sizeClasses} aspect-square`}>
+                {src && (
+                    <AvatarImage
+                        src={src || "/placeholder.svg"}
+                        alt={name}
+                        // Thay đổi từ object-cover sang object-contain
+                        // để ảnh không bị cắt và giữ nguyên tỉ lệ
+                        // Background của AvatarFallback sẽ lấp đầy phần trống
+                        className="h-full w-full object-cover"
+                    />
+                )}
+                {/* Đặt AvatarFallback luôn hiển thị làm nền để lấp đầy khoảng trống khi object-contain */}
+                <AvatarFallback
+                    // Dùng màu nền để lấp đầy khoảng trống
+                    style={{ backgroundColor: bgColor, color: "white" }}
+                    className="absolute inset-0 flex items-center justify-center"
+                >
+                    {fallbackInitials}
+                </AvatarFallback>
             </Avatar>
 
-            {showOnlineStatus && isOnline && (
+            {showOnlineStatus && isOnline && size !== "xxl" && (
                 <div
                     className={`absolute ${indicatorPosition} ${indicatorSize} bg-green-500 border-2 border-white rounded-full`}
                 />

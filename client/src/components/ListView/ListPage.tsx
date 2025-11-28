@@ -256,7 +256,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center gap-2 w-full">
-                        <ColoredAvatar id={member.userId} name={member.name} />
+                        <ColoredAvatar id={member.userId} name={member.name} size="sm" src={availableUsers.avatarUrl ?? ""}  />
 
                         <span className="truncate max-w-[160px]" title={member.name}>
                           {capitalizeFirstLetter(member.name)}
@@ -269,6 +269,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                         )}
                       </div>
                     </SelectItem>
+
                   ))
                 ) : (
                   <div className="p-2 text-sm text-muted-foreground text-center">

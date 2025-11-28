@@ -1,13 +1,15 @@
+import { ProjectBasic } from "./IProject"
+
 export interface Member {
-  userId: string
-  name: string
-  email: string
-  role: string
-  isOwner: boolean
-  joinedAt: string
-  teamId: string
-  leaderId: string
-  avatarUrl: string
+    userId: string
+    name: string
+    email: string
+    role: string
+    isOwner: boolean
+    joinedAt: string
+    teamId: string
+    leaderId: string
+    avatarUrl: string
 }
 
 export interface Teams {
@@ -17,10 +19,10 @@ export interface Teams {
 }
 
 export interface UserMini {
-  id?: string;
-  name: string;
-  avatar: string;
-  initials: string;
+    id?: string;
+    name: string;
+    avatar: string;
+    initials: string;
 }
 
 export interface ActiveUser {
@@ -36,21 +38,37 @@ export interface User {
     email: string
     planId: string
     planName: string
-    roles: string[] 
+    roles: string[]
 }
 
+// export interface UserProfile {
+//     userName: string
+//     email: string
+//     phoneNumber: string
+//     jobTitle: string
+//     department: string
+//     organization: string
+//     location: string
+//     facebook: string
+//     instagram: string
+//     imageCoverUrl: string
+//     avatarUrl: string
+// }
+
 export interface UserProfile {
-    userName: string
+    id: string
+    avatar: string
+    name: string
     email: string
-    phoneNumber: string
-    jobTitle: string
-    department: string
-    organization: string
     location: string
-    facebook: string
-    instagram: string
-    imageCoverUrl: string
-    avatarUrl: string
+    contacts: Contact[]
+    projects: ProjectBasic[]
+}
+
+export interface Contact {
+    mediaId: string
+    media: string
+    url: string
 }
 
 export interface AvailableMember {
@@ -66,5 +84,5 @@ export interface InviteUser {
 export interface TaskAssignee {
     userId: string;
     name: string;
-    avatar?: string | null;
+    avatarUrl: string | null;
 }

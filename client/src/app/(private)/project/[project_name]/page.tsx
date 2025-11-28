@@ -47,16 +47,33 @@ const ALL_TABS: NavigationTab[] = [
     { id: 'trash', label: 'Trash', icon: <Trash className="w-4 h-4" /> },
 ]
 
-const DEFAULT_TABS = ['', 'list', 'board', 'calendar']
+const DEFAULT_TABS = ['', 'timeline', 'backlog', 'list', 'calendar']
 
 export default function ProjectInterface() {
     const [tasks, setTasks] = useState<BasicTask[]>([])
     const { project_name, projects, projectRole } = useProject()
     const { hash: activeTab, setHash: setActiveTab } = useHash("")
-
-    const [visibleTabIds, setVisibleTabIds] = useState<string[]>(DEFAULT_TABS)
     const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
+    const [visibleTabIds, setVisibleTabIds] = useState<string[]>(() => {
+        try {
+            const savedTabs = localStorage.getItem('default_tabs')
+
+            if (savedTabs !== null) {
+                return JSON.parse(savedTabs)
+            }
+        } catch (error) {
+            return []
+        }
+
+        return DEFAULT_TABS
+    })
+
+    useEffect(() => {
+        if (visibleTabIds !== undefined) {
+            localStorage.setItem('default_tabs', JSON.stringify(visibleTabIds))
+        }
+    }, [visibleTabIds]);
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -86,10 +103,11 @@ export default function ProjectInterface() {
         return true
     })
 
-    const visibleTabs = availableTabs.filter(tab => visibleTabIds.includes(tab.id))
-    const hiddenTabs = availableTabs.filter(tab => !visibleTabIds.includes(tab.id))
+    const visibleTabs = visibleTabIds && availableTabs.filter(tab => visibleTabIds.includes(tab.id))
+    const hiddenTabs = visibleTabIds && availableTabs.filter(tab => !visibleTabIds.includes(tab.id))
 
     const handleAddTab = (id: string) => {
+        if (!visibleTabIds) return
         if (!visibleTabIds.includes(id)) {
             setVisibleTabIds([...visibleTabIds, id])
         }
@@ -99,7 +117,7 @@ export default function ProjectInterface() {
 
     const handleHideTab = (e: React.MouseEvent, id: string) => {
         e.stopPropagation()
-        if (id === '') return
+        if (id === '' || !visibleTabIds) return
 
         const newIds = visibleTabIds.filter(t => t !== id)
         setVisibleTabIds(newIds)
@@ -148,7 +166,7 @@ export default function ProjectInterface() {
                 <div className="px-6 bg-white border-t border-gray-200">
                     <nav className="flex items-center border-b border-gray-200">
                         <div className="flex space-x-1 overflow-x-auto no-scrollbar">
-                            {visibleTabs.map((tab) => (
+                            {visibleTabs?.map((tab) => (
                                 <div
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id === "" ? "" : tab.id)}
@@ -193,12 +211,12 @@ export default function ProjectInterface() {
                                     </div>
 
                                     <div className="py-1 max-h-60 overflow-y-auto">
-                                        {hiddenTabs.length === 0 ? (
+                                        {hiddenTabs?.length === 0 ? (
                                             <div className="px-4 py-3 text-sm text-gray-400 text-center italic">
                                                 All views are visible
                                             </div>
                                         ) : (
-                                            hiddenTabs.map((tab) => (
+                                            hiddenTabs?.map((tab) => (
                                                 <button
                                                     key={tab.id}
                                                     onClick={() => handleAddTab(tab.id)}
@@ -211,7 +229,7 @@ export default function ProjectInterface() {
                                         )}
                                     </div>
 
-                                    {visibleTabs.length > 1 && (
+                                    {visibleTabs && visibleTabs.length > 1 && (
                                         <>
                                             <div className="border-t border-gray-100 my-1"></div>
                                             <div className="px-3 py-1.5 text-xs text-gray-400">Visible</div>
