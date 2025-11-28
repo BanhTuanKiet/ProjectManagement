@@ -1,4 +1,4 @@
-import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag } from "lucide-react"
+import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag, Github, Linkedin, Facebook, LinkIcon } from "lucide-react"
 
 export const taskStatus = [
     { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
@@ -221,3 +221,13 @@ export const getPriorityBorderColor = (priority: number): string => {
         default: return "border-l-slate-300"
     }
 }
+
+export const ContactIcon = ({ media }: { media: string }) => {
+    switch (media.toLowerCase()) {
+        case 'github': return <Github size={18} />
+        case 'linkedin': return <Linkedin size={18} />
+        case 'facebook': return <Facebook size={18} />
+        default: return <LinkIcon size={18} />
+    }
+}
+

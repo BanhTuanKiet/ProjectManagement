@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import axios from "../../config/axiosConfig"
 import { useSearchParams, useRouter } from "next/navigation"
 import { SuccessNotify, WarningNotify } from "@/utils/toastUtils"
-import type { User } from "@/utils/IUser"
+import { User } from "@/utils/IUser"
 
 type UserContextType = {
     user: User | null

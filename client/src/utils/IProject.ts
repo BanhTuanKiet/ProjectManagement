@@ -6,6 +6,8 @@ export interface ProjectBasic {
     endDate: string
     ownerId: string
     owner: string
+    status?: string
+    role?: string
 }
 
 export interface UpdateProject {

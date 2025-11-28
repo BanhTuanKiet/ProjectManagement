@@ -18,6 +18,7 @@ namespace server.DTO
             public DateOnly? EndDate { get; set; }
             public string OwnerId { get; set; }
             public string Owner { get; set; }
+            public string? Role { get; set; }
             public List<ProjectMembers> Members { get; set; } = new();
         }
 
@@ -31,6 +32,7 @@ namespace server.DTO
             public DateTime joinedAt { get; set; }
             public string TeamId { get; set; }
             public string LeaderId { get; set; }
+            public string AvatarUrl { get; set; }
         }
 
         public class CreateProject

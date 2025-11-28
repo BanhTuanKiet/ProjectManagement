@@ -14,6 +14,7 @@ using Microsoft.Build.Framework;
 using server.Services.Task;
 using Microsoft.EntityFrameworkCore;
 using server.Services.User;
+using System.Formats.Asn1;
 
 namespace server.Controllers
 {
@@ -122,13 +123,13 @@ namespace server.Controllers
             return Ok(invitations);
         }
 
-        [HttpGet("profile")]
-        public async Task<ActionResult<ApplicationUser>> GetUserById()
-        {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userServices.GetUserById(userId);
-            return Ok(user);
-        }
+        // [HttpGet("profile")]
+        // public async Task<ActionResult<ApplicationUser>> GetUserById()
+        // {
+        //     string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //     var user = await _userServices.GetUserById(userId);
+        //     return Ok(user);
+        // }
 
         [HttpPut("editProfile")]
         public async Task<ActionResult<ApplicationUser>> UpdateUser([FromBody] UserDTO.UserProfile profile)
@@ -156,12 +157,10 @@ namespace server.Controllers
             if (type != "avatar" && type != "imagecover")
                 throw new ErrorException(400, "Invalid image type. Must be 'avatar' or 'imagecover'.");
 
-            var uploadedFile = await _userServices.UpdateUserImage(file, userId, type);
+            var uploadedFile = await _userServices.UpdateUserImage(file, userId, type)
+                ?? throw new ErrorException(500, "File upload failed.");
 
-            if (uploadedFile == null)
-                throw new ErrorException(500, "File upload failed.");
-
-            return Ok(uploadedFile);
+            return Ok(new { uploadedFile = uploadedFile, message = "Upload successful" });
         }
 
         [HttpDelete("{projectId}")]
@@ -206,12 +205,36 @@ namespace server.Controllers
             return Ok(new { userIds = userIds, message = "Removed successfully" });
         }
 
-            [HttpGet("subscription")]
-            public async Task<ActionResult> GetSubscriptions()
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                Subscriptions subscription = await _userServices.GetSubscriptions(userId);
-                return Ok(subscription.Plan.Name);
-            }
+        [HttpGet("subscription")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult> GetSubscriptions()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Subscriptions subscription = await _userServices.GetSubscriptions(userId);
+            return Ok(subscription.Plan.Name);
+        }
+
+        [HttpGet("profile")]
+        public async Task<ActionResult> GetUserProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userServices.GetUserProfile(userId);
+            return Ok(user);
+        }
+
+        [HttpPut("profile")]
+        public async Task<ActionResult> PutInfoProfile([FromBody] UserDTO.InfoProfile infoProfile)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ApplicationUser user = await _userManager.FindByIdAsync(userId)
+                ?? throw new ErrorException(404, "user not found");
+
+            ApplicationUser applicationUser = await _userServices.PutInfoProfile(user, infoProfile);
+
+            if (applicationUser.UserName != infoProfile.Name || applicationUser.Location != infoProfile.Location)
+                throw new ErrorException(400, "Update failed");
+
+            return Ok(new { message = "Update successful" });
+        }
     }
 }
