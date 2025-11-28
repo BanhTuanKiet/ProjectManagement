@@ -38,7 +38,9 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
     useEffect(() => {
         if (project_name) {
-            localStorage.setItem("projectId", JSON.stringify(project_name))
+            if (project_name && !isNaN(Number(project_name))) {
+                localStorage.setItem("projectId", JSON.stringify(project_name))
+            }
         }
     }, [project_name])
 
@@ -57,18 +59,26 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }, [project_name])
 
     useEffect(() => {
+        if (!project_name || isNaN(Number(project_name))) {
+            setProjectRole("");
+        }
         const fetchProjects = async () => {
             try {
                 const response = await axios.get(`/projects`)
                 setProjects(response.data)
             } catch (error) {
                 console.log(error)
+                setProjectRole("");
             }
         }
         fetchProjects()
     }, [])
 
     useEffect(() => {
+        if (!project_name || isNaN(Number(project_name))) {
+            setMembers([]);
+            return;
+        }
         const fetchMembers = async () => {
             try {
                 const response = await axios.get(`/projects/member/${project_name}`)
@@ -81,6 +91,10 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }, [project_name])
 
     useEffect(() => {
+        if (!project_name || isNaN(Number(project_name)) || !projectRole) {
+            setAvailableUsers([]);
+            return;
+        }
         const fetchMembers = async () => {
             try {
                 const projectId = Number(project_name);
