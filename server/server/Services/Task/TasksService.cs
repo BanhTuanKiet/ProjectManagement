@@ -820,15 +820,15 @@ namespace server.Services.Project
             return task.IsActive;
         }
 
-        public async Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId)
+        public async Task<TaskDTO.BasicTask?> GetBasicTasksByTaskId(int projectId, int taskId)
         {
-            Models.Task task = await _context.Tasks
+            Models.Task? task = await _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.CreatedByNavigation)
                 .Where(t => t.ProjectId == projectId && t.TaskId == taskId)
                 .FirstOrDefaultAsync();
 
-            return _mapper.Map<TaskDTO.BasicTask>(task);
+            return _mapper.Map<TaskDTO.BasicTask?>(task);
         }
 
         public async Task<List<TaskDTO.BasicTask>> GetNearDeadlineTasksAsync(int projectId, string currentUserId)

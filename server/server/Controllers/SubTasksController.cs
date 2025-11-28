@@ -76,7 +76,7 @@ namespace server.Controllers
             return Ok(subtasks);
         }
 
-        [HttpPut("{subTaskId}/update")]
+        [HttpPut("{subTaskId}/update/project/{projectId}")]
         public async Task<IActionResult> UpdateSubTask(int subTaskId, int projectId, [FromBody] SubTaskDTO.UpdateSubTask dto)
         {
             if (dto == null)

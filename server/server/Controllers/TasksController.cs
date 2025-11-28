@@ -315,7 +315,7 @@ namespace server.Controllers
             return Ok(new { message = "Update successful", task = result });
         }
 
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("bulk-delete/{projectId}")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
@@ -327,25 +327,32 @@ namespace server.Controllers
                 return BadRequest(new { message = "No IDs provided." });
             }
 
+            var tasksToDelete = await _context.Tasks
+                .Where(t => dto.Ids.Contains(t.TaskId) && t.ProjectId == dto.ProjectId)
+                .Select(t => new { t.TaskId, t.AssigneeId })
+                .ToListAsync();
+
             var deletedCount = await _tasksService.BulkDeleteTasksAsync(dto.ProjectId, dto.Ids);
 
-            foreach (var taskId in dto.Ids)
+            foreach (var task in tasksToDelete)
             {
-                var assignee = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
-                Notification notification = new Notification
+                if (!string.IsNullOrEmpty(task.AssigneeId) && task.AssigneeId != userId)
                 {
-                    UserId = assignee.AssigneeId,
-                    ProjectId = dto.ProjectId,
-                    Message = $"Delete task #{taskId} was deleted by {name}",
-                    Link = $"tasks={taskId}",
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedId = userId,
-                    Type = "task"
-                };
-                await _notificationsService.SaveNotification(notification);
-                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
+                    Notification notification = new Notification
+                    {
+                        UserId = task.AssigneeId, // Lấy từ biến đã lưu
+                        ProjectId = dto.ProjectId,
+                        Message = $"Delete task #{task.TaskId} was deleted by {name}",
+                        Link = $"tasks={task.TaskId}",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedId = userId,
+                        Type = "task"
+                    };
+                    await _notificationsService.SaveNotification(notification);
+                    var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                    await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
+                }
             }
 
             return Ok(new
@@ -727,14 +734,16 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             List<TaskDTO.BasicTask> basicTasks = [];
+
             if (type == "deadline")
             {
                 basicTasks = await _tasksService.GetUpcomingDeadline(userId);
-            } else if (type == "today")
+            }
+            else if (type == "today")
             {
                 basicTasks = await _tasksService.GetUpcomingDeadline(userId);
             }
-            
+
             return Ok(basicTasks);
         }
 
@@ -759,6 +768,7 @@ namespace server.Controllers
 
             var role = senderRole?.RoleInProject?.ToLower() ?? "member";
             string toEmail = "";
+
             if (role != "member")
             {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.AssigneeId);

@@ -36,7 +36,7 @@ interface TableWrapperProps {
     handleColumnDragOver: (e: React.DragEvent) => void
     handleColumnDrop: (e: React.DragEvent, targetColumnIndex: number) => void
     setEditingCell: React.Dispatch<React.SetStateAction<{ taskId: number; field: string } | null>>
-    availableUsers?: TaskAssignee[]
+    availableUsers?: Member[]
     copySelectedTasks: () => void
     deleteSelectedTasks: () => void
     onTaskClick: (task: Task) => void

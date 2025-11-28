@@ -9,6 +9,7 @@ using server.Configs;
 using server.Services.ActivityLog;
 using server.Services.Task;
 using Microsoft.Build.Framework;
+using Microsoft.EntityFrameworkCore;
 
 namespace server.Controllers
 {
@@ -49,10 +50,9 @@ namespace server.Controllers
 
             if (taskId <= 0)
                 throw new ErrorException(400, "Invalid task ID.");
-            var task = await _taskService.GetBasicTasksByTaskId(taskId, projectId);
-            if (task == null)
+            var taskEntity = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);            if (taskEntity == null)
                 throw new ErrorException(404, "Task not found to upload file.");
-            if (task.IsActive == false)
+            if (taskEntity.IsActive == false)
                 throw new ErrorException(400, "Cannot upload file to an inactive task.");
             var member = await _projectMemberService.GetMemberAsync(projectId, userId);
             if (member == null)
@@ -75,9 +75,9 @@ namespace server.Controllers
                     targetId: uploadedFile.FileId.ToString(),
                     description: description
                 );
-                if (task.Status != "InProgress")
+                if (taskEntity.Status != "In Progress")
                 {
-                    task.Status = "InProgress";
+                    taskEntity.Status = "In Progress";
                     await _context.SaveChangesAsync();
                 }
                 await _activityLogService.AddActivityLog(

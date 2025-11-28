@@ -17,7 +17,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 type UpdatePayload = {
     [key: string]: string | number | null | undefined;
 };
-type EditValue = string | number | UserMini | null;
+type EditValue = string | number | Member | UserMini | null;
 
 export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -127,8 +127,8 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
                 const payload: Record<string, string | number | null | undefined> = {};
 
                 if (field === "assignee") {
-                    if (value && typeof value === "object" && "id" in value) {
-                        payload["assigneeId"] = (value as UserMini).id;
+                    if (value && typeof value === "object" && "userId" in value) {
+                        payload["assigneeId"] = (value as Member).userId;
                     } else {
                         payload["assigneeId"] = null;
                     }

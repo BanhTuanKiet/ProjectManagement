@@ -8,7 +8,8 @@ namespace server.DTO
             public int TaskId { get; set; }
             public string Title { get; set; } = string.Empty;
             public string? Status { get; set; }
-            public string? Assignee { get; set; }  // map từ Assignee.UserName
+            public string? Assignee { get; set; }
+            public string? AssigneeId { get; set; }
             public DateTime? CreatedAt { get; set; }
         }
         public class CreateSubTask
@@ -25,7 +26,7 @@ namespace server.DTO
             public int TaskId { get; set; }
             public string? Summary { get; set; }
             public string? Status { get; set; }
-            public int? AssigneeId { get; set; }
+            public string? AssigneeId { get; set; }
         }
     }
 }

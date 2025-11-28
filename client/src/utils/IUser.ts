@@ -7,6 +7,7 @@ export interface Member {
   joinedAt: string
   teamId: string
   leaderId: string
+  avatarUrl: string
 }
 
 export interface Teams {

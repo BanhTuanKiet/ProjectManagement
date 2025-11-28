@@ -22,8 +22,10 @@ import axios from "@/config/axiosConfig";
 import { mapApiTaskToTask } from "@/utils/mapperUtil";
 import ColoredAvatar from "../ColoredAvatar";
 import { useProject } from "@/app/(context)/ProjectContext";
-import { getTaskStatusBadge, getPriorityBadge, taskStatus } from "@/utils/statusUtils";
+import { getTaskStatusBadge, getPriorityBadge, taskStatus, getRoleBadge } from "@/utils/statusUtils";
 import type { TaskAssignee } from "@/utils/IUser"
+import { capitalizeFirstLetter } from "@/utils/stringUitls";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface ListPageProps {
   tasksNormal: BasicTask[];
@@ -221,56 +223,64 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
 
           {/* --- Bộ lọc Assignee (Chỉ hiện cho PM và Leader) --- */}
           {projectRole !== "Member" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 bg-transparent">
-                  {filters.AssigneeId ? (
-                    <>
-                      {filters.AssigneeId === "me" ? (
-                        "Assigned to me"
-                      ) : filters.AssigneeId === "null" ? (
-                        "Unassigned"
-                      ) : (
-                        // Tìm tên trong danh sách members thay vì availableUsers
-                        dropdownUsers.find((u) => u.userId === filters.AssigneeId)?.name || "Assignee"
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-muted-foreground font-normal">Assignee</span>
-                  )}
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-44 max-h-80 overflow-y-auto">
-                <DropdownMenuLabel>Assignee</DropdownMenuLabel>
-                <DropdownMenuSeparator />
+            <Select
+              value={filters.AssigneeId || "all"}
+              onValueChange={(val) => {
+                setFilters((prev) => {
+                  if (val === "all") {
+                    const { AssigneeId, ...rest } = prev;
+                    return rest;
+                  }
+                  return { ...prev, AssigneeId: val };
+                });
+              }}
+            >
+              <SelectTrigger className="w-48 bg-transparent">
+                <SelectValue placeholder="Assignee" />
+              </SelectTrigger>
 
-                <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: "me" }))}>
+              <SelectContent className="max-h-[300px] overflow-y-auto min-w-[16rem]" align="start">
+                <SelectItem value="all" className="cursor-pointer font-medium">
+                  All Assignees
+                </SelectItem>
+
+                <SelectItem value="me" className="cursor-pointer">
                   Assigned to me
-                </DropdownMenuItem>
+                </SelectItem>
 
-                {/* Sử dụng dropdownUsers (lấy từ Context) thay vì users từ table */}
                 {dropdownUsers.length > 0 ? (
-                  dropdownUsers.map((availableUsers) => (
-                    <DropdownMenuItem
-                      key={availableUsers.userId}
-                      onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: availableUsers.userId }))}
+                  dropdownUsers.map((member) => (
+                    <SelectItem
+                      key={member.userId}
+                      value={member.userId}
+                      className="cursor-pointer"
                     >
-                      <ColoredAvatar id={availableUsers.userId} name={availableUsers.name} size="sm" />
-                      <span className="text-sm ml-2">{availableUsers.name}</span>
-                    </DropdownMenuItem>
+                      <div className="flex items-center gap-2 w-full">
+                        <ColoredAvatar id={member.userId} name={member.name} />
+
+                        <span className="truncate max-w-[160px]" title={member.name}>
+                          {capitalizeFirstLetter(member.name)}
+                        </span>
+
+                        {member.role && (
+                          <span className={`${getRoleBadge(member.role)} ml-auto shrink-0 text-[10px] px-2 py-0.5 whitespace-nowrap`}>
+                            {member.role}
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
                   ))
                 ) : (
-                  <DropdownMenuItem disabled>No available users</DropdownMenuItem>
+                  <div className="p-2 text-sm text-muted-foreground text-center">
+                    No members found
+                  </div>
                 )}
 
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: "null" }))}>
+                <SelectItem value="null" className="cursor-pointer">
                   Unassigned
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           )}
 
           {/* --- Nút clear filter --- */}
