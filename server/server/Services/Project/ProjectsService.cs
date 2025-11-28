@@ -118,7 +118,7 @@ namespace server.Services.Project
         public async Task<string> GetProjectRole(string userId, int projectId)
         {
             var projectMember = await _context.ProjectMembers.FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == projectId);
-            return projectMember.RoleInProject;
+            return projectMember?.RoleInProject;
         }
 
         public async Task<bool> ChangeStatusIsStarred(int projectId, bool isStarred)
