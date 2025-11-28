@@ -8,7 +8,7 @@ import TaskDetailModal from '../TaskDetailModal'
 import BacklogContent from './BacklogSections'
 import { useProject } from '@/app/(context)/ProjectContext'
 import SprintCard from '../SprintCard'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { useTask } from '@/app/(context)/TaskContext'
 import { Console } from 'console'
 import { Toaster } from 'react-hot-toast'
@@ -387,7 +387,28 @@ export default function BacklogView() {
         }
     };
 
+    const handleDeleteSelectedTasks = async () => {
+        if (selectedTasks.size === 0) return;
+        if (!confirm(`Delete ${selectedTasks.size} selected task(s)?`)) return;
 
+        const toDelete = Array.from(selectedTasks);
+
+        try {
+            await axios.delete(`/tasks/${ProjectId}/bulk`, {
+                data: toDelete
+            });
+
+            setSprints(prev => prev.map(s => ({
+                ...s,
+                workItems: s.workItems.filter(t => !selectedTasks.has(t.id))
+            })));
+            setBacklogItems(prev => prev.filter(t => !selectedTasks.has(t.id)));
+            setSelectedTasks(new Set());
+
+        } catch (err) {
+            console.error("❌ Failed to delete tasks:", err);
+        }
+    };
 
     return (
         <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm overflow-hidden">
@@ -420,17 +441,42 @@ export default function BacklogView() {
                     }}
                 />
             </div>
+            {(selectedSprints.size > 0 || selectedTasks.size > 0) && (
+                <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-white shadow-lg border border-gray-200 rounded-full px-6 py-3 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-200">
 
-            {selectedSprints.size > 0 && (
-                <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-white shadow-lg border rounded-lg px-6 py-3 flex items-center gap-4 z-50">
-                    <span className="text-sm text-gray-700">
-                        {selectedSprints.size} sprint{selectedSprints.size > 1 ? "s" : ""} selected
-                    </span>
+                    {selectedSprints.size > 0 && (
+                        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-white shadow-lg border rounded-lg px-6 py-3 flex items-center gap-4 z-50">
+                            <span className="text-sm text-gray-700">
+                                {selectedSprints.size} sprint{selectedSprints.size > 1 ? "s" : ""} selected
+                            </span>
+                            <button
+                                onClick={handleDeleteSelectedSprints}
+                                className="px-4 py-1.5 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    )}
+
+                    {selectedTasks.size > 0 && (
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-700">
+                                {selectedTasks.size} task(s)
+                            </span>
+                            <button
+                                onClick={handleDeleteSelectedTasks}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors text-sm font-medium"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Task
+                            </button>
+                        </div>
+                    )}
                     <button
-                        onClick={handleDeleteSelectedSprints}
-                        className="px-4 py-1.5 bg-red-600 text-white rounded hover:bg-red-700"
+                        onClick={() => { setSelectedSprints(new Set()); setSelectedTasks(new Set()); }}
+                        className="text-xs text-gray-400 hover:text-gray-600 underline"
                     >
-                        Delete
+                        Clear selection
                     </button>
                 </div>
             )}

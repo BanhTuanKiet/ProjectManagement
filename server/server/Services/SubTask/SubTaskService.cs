@@ -1,5 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using server.Configs;
 using server.DTO;
 using server.Models;
 using System.Collections.Generic;
@@ -41,13 +43,18 @@ namespace server.Services.SubTask
         public async Task<Models.SubTask> UpdateSubTaskAsync(SubTaskDTO.UpdateSubTask dto)
         {
             var subTask = await _context.SubTasks
+                .Include(t => t.Assignee)
                 .FirstOrDefaultAsync(st => st.SubTaskId == dto.SubTaskId && st.TaskId == dto.TaskId);
 
             if (subTask == null)
-                throw new KeyNotFoundException("Subtask not found.");
+                throw new ErrorException(404, "Subtask not found.");
 
             _mapper.Map(dto, subTask);
             await _context.SaveChangesAsync();
+            if (dto.AssigneeId != null)
+            {
+                await _context.Entry(subTask).Reference(st => st.Assignee).LoadAsync();
+            }
             return subTask;
         }
     }

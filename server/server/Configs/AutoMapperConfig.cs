@@ -72,13 +72,18 @@ namespace server.Configs
 
             CreateMap<SubTaskDTO.UpdateSubTask, SubTask>()
                 .ForMember(dest => dest.Title,
-                            opt => opt.Condition(src => src.Summary != null))
+                            opt => {
+                                opt.Condition(src => src.Summary != null);
+                                opt.MapFrom(src => src.Summary);
+                            })
                 .ForMember(dest => dest.Status,
                             opt => opt.Condition(src => src.Status != null))
                 .ForMember(dest => dest.AssigneeId,
                             opt => opt.Condition(src => src.AssigneeId != null))
                 .ForMember(dest => dest.Assignee, opt => opt.Ignore())
-                .ForMember(dest => dest.Task, opt => opt.Ignore());
+                .ForMember(dest => dest.Task, opt => opt.Ignore())
+                .ForMember(dest => dest.SubTaskId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
             CreateMap<Notification, NotificationDTO.NotificationBasic>()
                 .ForMember(dest => dest.AssigneeId,

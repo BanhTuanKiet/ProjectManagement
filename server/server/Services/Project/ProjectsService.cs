@@ -57,8 +57,10 @@ namespace server.Services.Project
         public async Task<List<ProjectDTO.ProjectMembers>> GetProjectMembersByRole(int projectId, string role, string UserId)
         {
             var query = _context.ProjectMembers
-                .Include(pm => pm.User)
                 .Include(pm => pm.Project)
+                .Include(pm => pm.User)
+                .ThenInclude(u => u.TeamMembers)
+                .ThenInclude(tm => tm.Team)
                 .Where(pm => pm.ProjectId == projectId)
                 .AsQueryable();
 
@@ -87,6 +89,12 @@ namespace server.Services.Project
                     query = query.Where(pm => pm.UserId == UserId);
                     break;
             }
+
+            query = query.OrderBy(pm =>
+                pm.RoleInProject == "Project Manager" ? 1 :
+                pm.RoleInProject == "Leader" ? 2 :
+                3 // Các role còn lại (Member)
+            );
 
             var projectMembers = await query.ToListAsync();
 

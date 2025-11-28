@@ -27,7 +27,7 @@ interface SubtaskListProps {
     onCreateSubtask: (parentId: number, summary: string) => Promise<void>
     onCancelCreate: () => void
     isAdding: boolean
-    availableUsers?: TaskAssignee[]
+    availableUsers?: Member[]
 }
 
 export default function SubtaskList({
@@ -64,10 +64,9 @@ export default function SubtaskList({
                 )
                 console.log("Updating subtask:", { subtaskId, taskId, field, value })
                 // Gửi API với đầy đủ subtaskId, taskId và field update
-                const res = await axios.put(`/SubTasks/${subtaskId}/update`, {
+                const res = await axios.put(`/SubTasks/${subtaskId}/update/project/${projectId}`, {
                     subtaskId,
                     taskId,
-                    projectId,
                     [field]: value,
                 })
                 console.log("Subtask updated:", res.data)
@@ -234,7 +233,7 @@ export default function SubtaskList({
                                                 </div>
                                             </DropdownMenuItem>
                                             {availableUsers.map((u) => (
-                                                <DropdownMenuItem key={u.name} onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "assignee", u)}>
+                                                <DropdownMenuItem key={u.name} onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "AssigneeId", u.userId)}>
                                                     <div className="flex items-center gap-2">
                                                         <ColoredAvatar
                                                             id={subtask.raw.assigneeId ?? ""}

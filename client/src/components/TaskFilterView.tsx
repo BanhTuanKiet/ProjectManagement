@@ -43,7 +43,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
         status: "all",
         priority: "0"
     })
-    const { members, projectRole } = useProject()
+    const { members, projectRole, availableUsers } = useProject()
 
     useEffect(() => {
         if (!tasks) {
@@ -112,33 +112,56 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                 />
             </div>
 
+            {/* --- Bộ lọc Assignee (Chỉ hiện cho PM và Leader) --- */}
             {projectRole !== "Member" && (
                 <Select
                     value={filters.assignee}
                     onValueChange={(val) => handleFilter("assignee", val)}
                 >
-                    <SelectTrigger className="w-40 text-muted-foreground cursor-pointer">
+                    {/* Trigger: Thêm bg-transparent và width responsive */}
+                    <SelectTrigger className="w-40 md:w-48 bg-white text-muted-foreground cursor-pointer">
                         <SelectValue placeholder="Assignee" />
                     </SelectTrigger>
 
-                    <SelectContent>
-                        <SelectItem className="cursor-pointer" value="all">
+                    {/* Content: Thêm max-height, overflow, min-width và align start */}
+                    <SelectContent className="max-h-[300px] overflow-y-auto min-w-[16rem]" align="start">
+                        <SelectItem value="all" className="cursor-pointer font-medium">
                             All Assignees
                         </SelectItem>
 
-                        {members?.map(member => (
-                            <SelectItem key={member.userId} value={member.userId} className="cursor-pointer">
-                                <div className="flex items-center gap-2">
-                                    <ColoredAvatar id={member.userId} name={member.name} src={member.avatarUrl} />
-                                    <span>{capitalizeFirstLetter(member.name)}</span>
-                                    {member.role && (
-                                        <span className={getRoleBadge(member.role)}>
-                                            {member.role}
+                        <DropdownMenuSeparator />
+
+                        {availableUsers?.length > 0 ? (
+                            availableUsers.map((member) => (
+                                <SelectItem
+                                    key={member.userId}
+                                    value={member.userId}
+                                    className="cursor-pointer"
+                                >
+                                    <div className="flex items-center gap-2 w-full">
+                                        <ColoredAvatar
+                                            id={member.userId}
+                                            name={member.name}
+                                            src={member.avatarUrl}
+                                        />
+
+                                        <span className="truncate max-w-[120px]" title={member.name}>
+                                            {capitalizeFirstLetter(member.name)}
                                         </span>
-                                    )}
-                                </div>
-                            </SelectItem>
-                        ))}
+
+                                        {member.role && (
+                                            <span className={`ml-auto shrink-0 text-[10px] px-2 py-0.5 whitespace-nowrap ${getRoleBadge(member.role)}`}>
+                                                {member.role}
+                                            </span>
+                                        )}
+                                    </div>
+                                </SelectItem>
+                            ))
+                        ) : (
+                            <div className="p-2 text-xs text-muted-foreground text-center">
+                                No members found
+                            </div>
+                        )}
                     </SelectContent>
                 </Select>
             )}

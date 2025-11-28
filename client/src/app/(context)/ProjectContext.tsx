@@ -14,8 +14,8 @@ type ProjectContextType = {
     setProjects: React.Dispatch<React.SetStateAction<ProjectBasic[]>>
     members: Member[] | undefined
     setMembers: React.Dispatch<React.SetStateAction<Member[] | undefined>>
-    availableUsers: TaskAssignee[]
-    setAvailableUsers: React.Dispatch<React.SetStateAction<TaskAssignee[]>>
+    availableUsers: Member[]
+    setAvailableUsers: React.Dispatch<React.SetStateAction<Member[]>>
 }
 
 const ProjectContext = createContext<ProjectContextType>({
@@ -34,7 +34,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     const [members, setMembers] = useState<Member[]>()
     const [projectRole, setProjectRole] = useState<string>("")
     const { project_name } = useParams<{ project_name: string }>()
-    const [availableUsers, setAvailableUsers] = useState<TaskAssignee[]>([])
+    const [availableUsers, setAvailableUsers] = useState<Member[]>([])
 
     useEffect(() => {
         if (project_name) {
@@ -100,6 +100,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
                 const projectId = Number(project_name);
                 const response = await axios.get(`/projects/${projectId}/member/by-role`)
                 setAvailableUsers(response.data)
+                console.log("Available users:", response.data);
             } catch (error) {
                 console.log(error)
             }
