@@ -261,5 +261,13 @@ namespace server.Services.User
 
             return userDto;
         }
+
+        public async Task<ApplicationUser> PutInfoProfile(ApplicationUser user, UserDTO.InfoProfile infoProfile)
+        {
+            user.UserName = infoProfile.Name;
+            user.Location = infoProfile.Location;
+            await _context.SaveChangesAsync();
+            return user;
+        }
     }
 }

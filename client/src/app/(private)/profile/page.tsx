@@ -25,12 +25,18 @@ export default function Page() {
     const [isEditingContacts, setIsEditingContacts] = useState(false)
     const [tempContacts, setTempContacts] = useState<Contact[]>([])
     const [medias, setMedias] = useState<Media[]>()
+    const [isEditingInfo, setIsEditingInfo] = useState(false)
+    const [tempInfo, setTempInfo] = useState({ name: "", location: "" })
 
     useEffect(() => {
         const fetchUses = async () => {
             try {
                 const response = await axios.get(`/users/profile`)
                 setUser(response.data)
+                setTempInfo({
+                    name: response.data.name,
+                    location: response.data.location
+                })
             } catch (error) {
                 console.log(error)
             }
@@ -52,15 +58,11 @@ export default function Page() {
         fetchMedias()
     }, [])
 
-    /** ---------------------------
-     * CONTACT EDITING
-     --------------------------------*/
-
     const startEditingContacts = () => {
         if (!user) return
         setTempContacts(user.contacts.map(c => ({
             ...c,
-            mediaId: c.mediaId || crypto.randomUUID() // always unique
+            mediaId: c.mediaId || crypto.randomUUID()
         })))
         setIsEditingContacts(true)
     }
@@ -72,7 +74,7 @@ export default function Page() {
 
     const addContact = () => {
         const newContact: Contact = {
-            mediaId: crypto.randomUUID(), // ⭐ unique ID
+            mediaId: crypto.randomUUID(),
             media: '',
             url: ''
         }
@@ -143,6 +145,26 @@ export default function Page() {
         }
     }
 
+    const updateInfo = (field: "name" | "location", value: string) => {
+        setTempInfo(prev => ({ ...prev, [field]: value }))
+    }
+
+    const handleInfoChange = async () => {
+        try {
+            await axios.put("/users/profile", tempInfo)
+
+            setUser(prev => ({
+                ...prev!,
+                name: tempInfo.name,
+                location: tempInfo.location
+            }))
+
+            setIsEditingInfo(false)
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 text-slate-900 font-sans">
             <div className="h-24 bg-gradient-to-r from-blue-900 to-blue-700 relative" />
@@ -174,11 +196,65 @@ export default function Page() {
                                     </div>
                                 }
 
-                                <h1 className="mt-4 text-xl font-bold text-gray-900">{user?.name}</h1>
+                                <div className="w-full mt-4 text-center">
 
-                                <div className="mt-2 flex items-center text-gray-500 text-sm">
-                                    <MapPin size={14} className="mr-1" />
-                                    {user?.location}
+                                    {!isEditingInfo ? (
+                                        <>
+                                            <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
+
+                                            <div className="mt-2 flex items-center justify-center text-gray-500 text-sm">
+                                                <MapPin size={14} className="mr-1" />
+                                                {user?.location}
+                                            </div>
+
+                                            <button
+                                                onClick={() => setIsEditingInfo(true)}
+                                                className="mt-2 text-xs text-blue-600 hover:underline"
+                                            >
+                                                Edit info
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                value={tempInfo.name}
+                                                onChange={(e) => updateInfo("name", e.target.value)}
+                                                className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                                                placeholder="Enter name"
+                                            />
+
+                                            <input
+                                                type="text"
+                                                value={tempInfo.location}
+                                                onChange={(e) => updateInfo("location", e.target.value)}
+                                                className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                                                placeholder="Enter location"
+                                            />
+
+                                            <div className="flex gap-2 justify-center">
+                                                <button
+                                                    onClick={handleInfoChange}
+                                                    className="px-2 py-1 text-xs bg-green-600 text-white rounded"
+                                                >
+                                                    Save
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        setTempInfo({
+                                                            name: user?.name || "",
+                                                            location: user?.location || ""
+                                                        })
+                                                        setIsEditingInfo(false)
+                                                    }}
+                                                    className="px-2 py-1 text-xs bg-gray-300 rounded"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
