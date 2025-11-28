@@ -9,6 +9,7 @@ export interface Member {
     joinedAt: string
     teamId: string
     leaderId: string
+    avatarUrl: string
 }
 
 export interface Teams {
@@ -83,5 +84,5 @@ export interface InviteUser {
 export interface TaskAssignee {
     userId: string;
     name: string;
-    avatar?: string | null;
+    avatarUrl: string | null;
 }

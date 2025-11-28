@@ -256,7 +256,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                       key={availableUsers.userId}
                       onClick={() => setFilters((prev) => ({ ...prev, AssigneeId: availableUsers.userId }))}
                     >
-                      <ColoredAvatar id={availableUsers.userId} name={availableUsers.name} size="sm" />
+                      <ColoredAvatar id={availableUsers.userId} name={availableUsers.name} size="sm" src={availableUsers.avatarUrl ?? ""} />
                       <span className="text-sm ml-2">{availableUsers.name}</span>
                     </DropdownMenuItem>
                   ))

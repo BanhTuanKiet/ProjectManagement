@@ -33,6 +33,8 @@ namespace server.Configs
                             opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.email,
                             opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.AvatarUrl,
+                            opt => opt.MapFrom(src => src.User.AvatarUrl))
                 .ForMember(dest => dest.role,
                             opt => opt.MapFrom(src => src.RoleInProject))
                 .ForMember(dest => dest.isOwner,

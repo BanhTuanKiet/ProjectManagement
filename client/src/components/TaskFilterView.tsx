@@ -129,7 +129,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                         {members?.map(member => (
                             <SelectItem key={member.userId} value={member.userId} className="cursor-pointer">
                                 <div className="flex items-center gap-2">
-                                    <ColoredAvatar id={member.userId} name={member.name} />
+                                    <ColoredAvatar id={member.userId} name={member.name} src={member.avatarUrl} />
                                     <span>{capitalizeFirstLetter(member.name)}</span>
                                     {member.role && (
                                         <span className={getRoleBadge(member.role)}>

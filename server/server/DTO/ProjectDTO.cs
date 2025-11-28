@@ -32,6 +32,7 @@ namespace server.DTO
             public DateTime joinedAt { get; set; }
             public string TeamId { get; set; }
             public string LeaderId { get; set; }
+            public string AvatarUrl { get; set; }
         }
 
         public class CreateProject
