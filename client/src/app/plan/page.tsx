@@ -36,7 +36,7 @@ export default function PlanPaymentPage() {
     const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
     const [fxRates, setFxRates] = useState<FxRate | null>(null)
     const [price, setPrice] = useState<Price | null>(null)
-    const { user } = useUser()
+    const { user, signinGG } = useUser()
     const router = useRouter()
 
     useEffect(() => {
@@ -95,7 +95,12 @@ export default function PlanPaymentPage() {
                 return router.push("/project")
             }
 
-            return router.push("/login")
+            try {
+                await signinGG()
+            } catch (error) {
+                console.error("Google sign-in error", error)
+            }
+            return
         }
         setIsLoading(true)
 

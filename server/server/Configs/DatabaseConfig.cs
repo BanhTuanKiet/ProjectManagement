@@ -7,7 +7,7 @@ using server.Services.Task;
 using server.Services.SubTask;
 using server.Services.Comment;
 using server.Services.Sprint;
-using server.Services.Backlog;
+// using server.Services.Backlog;
 using server.Services.ActivityLog;
 using server.Services;
 using server.Services.File;
@@ -40,7 +40,7 @@ namespace server.Configs
             services.AddScoped<ISubTasks, SubTaskServices>();
             services.AddScoped<IComment, CommentServices>();
             services.AddScoped<ISprints, SprintServices>();
-            services.AddScoped<IBacklogs, BacklogServices>();
+            // services.AddScoped<IBacklogs, BacklogServices>();
             services.AddScoped<IFiles, FileServices>();
             services.AddScoped<IPlans, PlanServices>();
             services.AddScoped<IPayments, PaymentServices>();

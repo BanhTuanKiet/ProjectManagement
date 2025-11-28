@@ -5,6 +5,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using server.Configs;
+using Microsoft.Build.Framework;
+using server.Services.Task;
 
 namespace server.Controllers
 {
@@ -13,10 +15,12 @@ namespace server.Controllers
     public class CommentController : ControllerBase
     {
         private readonly IComment _commentService;
+        private readonly ITasks _taskService;
 
-        public CommentController(IComment commentService)
+        public CommentController(IComment commentService, ITasks taskService)
         {
             _commentService = commentService;
+            _taskService = taskService;
         }
 
         [HttpGet("task/{taskId}")]
@@ -48,13 +52,20 @@ namespace server.Controllers
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateCommentDTO dto)
+        [HttpPost("task/{taskId}/project/{projectId}")]
+        public async Task<IActionResult> Create([FromBody] CreateCommentDTO dto, int taskId, int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
                 throw new ErrorException(401, "Unauthorized: Missing user ID.");
+            if (taskId <= 0)
+                throw new ErrorException(400, "Invalid task ID.");
+            var task = await _taskService.GetBasicTasksByTaskId(projectId, taskId);
+            if (task == null)
+                throw new ErrorException(404, "Task not found to upload file.");
+            if (task.IsActive == false)
+                throw new ErrorException(400, "Cannot upload comment to an inactive task.");
 
             if (dto == null)
                 throw new ErrorException(400, "Invalid comment data.");

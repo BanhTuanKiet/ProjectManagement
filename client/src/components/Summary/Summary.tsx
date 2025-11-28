@@ -8,11 +8,11 @@ import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
 import { useTask } from "@/app/(context)/TaskContext"
 import type { BasicTask } from "@/utils/ITask"
-import Overview from "./Summary/Overview"
-import ChartView from "./Summary/ChartView"
-import MemberList from "./MemberList"
-import SettingsPopup from "./SettingsPopup"
-import TaskSupport from "./TaskSupport"
+import Overview from "./Overview"
+import ChartView from "./ChartView"
+import MemberList from "../MemberList"
+import SettingsPopup from "../SettingsPopup"
+import TaskSupport from "../TaskSupport"
 
 export default function Summary() {
     const { projects, project_name, members } = useProject()
@@ -140,19 +140,17 @@ export default function Summary() {
                     </div>
                 </div>
 
-                {/* --- 3. Phần Overview và ChartView --- */}
-                <div className="border-b border-gray-200 bg-white rounded-t-lg">
+                <div id="overView" className="border-b border-gray-200 bg-white rounded-t-lg">
                     <Overview mockTasks={mockTasks} />
                 </div>
                 {project_name && (
-                    <div className="border-b border-gray-200 bg-white rounded-b-lg">
+                    <div id="chartView" className="border-b border-gray-200 bg-white rounded-b-lg">
                         <ChartView projectId={project_name} />
                     </div>
                 )}
 
-                {/* --- 2. Phần Task Cần Lưu Ý (Hiển thị các task đã lọc) --- */}
                 {(isLoadingCritical || expiredTasks.length > 0 || nearDeadlineTasks.length > 0) && (
-                    <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+                    <div id="criticalTasks" className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
 
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                             <AlertTriangle size={20} className="text-red-500" />

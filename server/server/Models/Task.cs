@@ -13,18 +13,18 @@ public partial class Task
     public byte? Priority { get; set; }
     public string? AssigneeId { get; set; }
     public string CreatedBy { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? Deadline { get; set; }
     public decimal? EstimateHours { get; set; }
 
- // === New properties for Sprint & Backlog ===
+    // === New properties for Sprint & Backlog ===
     public int? SprintId { get; set; }
     public int? BacklogId { get; set; }
     public bool IsActive { get; set; } = true;
 
     // === Navigation properties ===
     public virtual Sprint? Sprint { get; set; }
-    public virtual Backlog? Backlog { get; set; }
+    // public virtual Backlog? Backlog { get; set; }
     public virtual ApplicationUser? Assignee { get; set; }
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public virtual ApplicationUser CreatedByNavigation { get; set; } = null!;

@@ -75,11 +75,13 @@ namespace server.Controllers
             return Ok(projectMembers);
         }
 
-        [HttpGet("{projectId}/member/by-role/{role}")]
-        public async Task<ActionResult> GetProjectMembersByRole(int projectId, string role)
+        [HttpGet("{projectId}/member/by-role")]
+        public async Task<ActionResult> GetProjectMembersByRole(int projectId)
         {
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembersByRole(projectId, role, userId);
+            string userRole = await _projectsServices.GetProjectRole(userId, projectId)
+                ?? throw new ErrorException(404, "Member not found");
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectsServices.GetProjectMembersByRole(projectId, userRole, userId);
             return Ok(projectMembers);
         }
 

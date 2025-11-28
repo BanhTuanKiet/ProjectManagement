@@ -20,15 +20,15 @@ export async function startMainMenuTour(): Promise<boolean> {
                         align: "start"
                     }
                 },
-                {
-                    element: "#plans",
-                    popover: {
-                        title: "Plans",
-                        description: "Here you can manage your project plans and timelines.",
-                        side: "top",
-                        align: "start"
-                    }
-                },
+                // {
+                //     element: "#plans",
+                //     popover: {
+                //         title: "Plans",
+                //         description: "Here you can manage your project plans and timelines.",
+                //         side: "top",
+                //         align: "start"
+                //     }
+                // },
                 {
                     element: "#project",
                     popover: {
@@ -38,15 +38,15 @@ export async function startMainMenuTour(): Promise<boolean> {
                         align: "center"
                     }
                 },
-                {
-                    element: "#teams",
-                    popover: {
-                        title: "Teams",
-                        description: "Manage your project teams and their permissions.",
-                        side: "right",
-                        align: "center"
-                    }
-                },
+                // {
+                //     element: "#teams",
+                //     popover: {
+                //         title: "Teams",
+                //         description: "Manage your project teams and their permissions.",
+                //         side: "right",
+                //         align: "center"
+                //     }
+                // },
                 {
                     element: "#create-project",
                     popover: {

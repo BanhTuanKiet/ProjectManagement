@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { startMainMenuTour } from "@/components/DriverJS/MainMenuDriver";
 import { startBoardTour } from "@/components/DriverJS/BoardDriver";
@@ -8,24 +8,55 @@ import { startSummaryTour } from "@/components/DriverJS/SummaryDriver";
 import { startCalendarTour } from "@/components/DriverJS/CalendarDriver";
 import { startListTour } from "@/components/DriverJS/ListDriver";
 import { startBackLogTour } from "@/components/DriverJS/BackLogDriver";
+import { startMemberTour } from "./MemberDriver";
+import { startTimeLineTour } from "./TimeLineDriver";
+import { startTrashTour } from "./TrashDriver";
+import { useProject } from "@/app/(context)/ProjectContext";
 
 export default function DriverManager() {
     const router = useRouter();
+    const { projectRole, projects } = useProject()
+
 
     useEffect(() => {
+
+        if (!projects || projects.length === 0) {
+            console.log("Projects not ready yet...");
+            return;
+        }
+        const projectId = projects[0]?.projectId;
+        console.log("/ProjectID: ", projectId)
+
+        if (!projectId) {
+            console.log("Project NULL");
+            return;
+        }
+
         const runToursSequentially = async () => {
             const tours = [
                 {
                     key: "hasSeenMainMenu",
                     fn: startMainMenuTour,
-                    hash: "/1",
-                    time: 500
+                    hash: "",
+                    time: 1000
                 },
                 {
                     key: "hasSeenSummaryTour",
                     fn: startSummaryTour,
                     hash: "",
                     time: 1500
+                },
+                {
+                    key: "hasSeenMemberTour",
+                    fn: startMemberTour,
+                    hash: "#member",
+                    time: 1000
+                },
+                {
+                    key: "hasSeenTimeLineTour",
+                    fn: startTimeLineTour,
+                    hash: "#timeline",
+                    time: 1000
                 },
                 {
                     key: "hasSeenBackLogTour",
@@ -37,7 +68,7 @@ export default function DriverManager() {
                     key: "hasSeenBoardTour",
                     fn: startBoardTour,
                     hash: "#board",
-                    time: 500
+                    time: 1000
                 },
                 {
                     key: "hasSeenCalendarTour",
@@ -49,19 +80,23 @@ export default function DriverManager() {
                     key: "hasSeenListTour",
                     fn: startListTour,
                     hash: "#list",
-                    time: 11000
+                    time: 1500
+                },
+                {
+                    key: "hasSeenTrashTour",
+                    fn: startTrashTour,
+                    hash: "#trash",
+                    time: 1000
                 }
             ];
-            router.push("http://localhost:3000/project/1");
+            router.push(`http://localhost:3000/project/${projects[0]?.projectId}`);
 
             for (const tour of tours) {
+                if (Number.isNaN(projectId)) break
                 if (localStorage.getItem(tour.key)) continue;
+                if (projectRole?.trim().toLowerCase() === "member" && tour.key == "hasSeenMemberTour")
+                    continue
 
-                // Điều hướng đến route
-                // router.push(tour.route);
-
-                // Đợi một chút để trang render xong
-                // await new Promise(resolve => setTimeout(resolve, 500));
                 if (tour.hash) {
                     window.location.hash = tour.hash;
                     await new Promise(resolve => setTimeout(resolve, tour.time));
@@ -75,7 +110,7 @@ export default function DriverManager() {
         };
 
         runToursSequentially();
-    }, [router]);
+    }, [router, projects]);
 
     return null;
 }

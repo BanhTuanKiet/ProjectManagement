@@ -136,7 +136,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
+            <div id="featureMember" className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-900">Members</h2>
                     {selectedMembers.size > 0 && (
@@ -257,7 +257,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div id="tableMember" className="overflow-x-auto">
                 <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
