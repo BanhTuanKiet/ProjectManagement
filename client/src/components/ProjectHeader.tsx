@@ -203,7 +203,8 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                                             <p className="text-xs font-medium text-white/80 uppercase tracking-wider">Current Plan</p>
                                             <p className="font-bold text-sm">{plan ?? "Free"} Plan</p>
                                         </div>
-                                        <Button size="sm" variant="secondary" className="h-7 text-xs bg-white/20 hover:bg-white/30 text-white border-0">
+                                        <Button size="sm" variant="secondary" className="h-7 text-xs bg-white/20 hover:bg-white/30 text-white border-0"
+                                            onClick={() => router.push("/plan")}>
                                             Upgrade
                                         </Button>
                                     </div>

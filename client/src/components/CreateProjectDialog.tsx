@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import axios from "@/config/axiosConfig";
 import { motion, AnimatePresence } from "framer-motion";
+import { useProject } from "@/app/(context)/ProjectContext";
 
 interface CreateProjectDialogProps {
     open: boolean;
@@ -25,6 +26,28 @@ export default function CreateProjectDialog({
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const { projects, setProjects } = useProject()
+
+    const getTodayDate = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    };
+
+    const getTodayDatePlus = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate() + 1).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    };
+
+    const minStart = getTodayDate();
+    const minDue = getTodayDatePlus()
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -37,9 +60,10 @@ export default function CreateProjectDialog({
         setLoading(true);
 
         try {
-            await axios.post("projects/createProject", formData);
+            const response = await axios.post("projects/createProject", formData);
             onSuccess?.();
             onClose();
+            setProjects(response.data.data)
         } catch (error) {
             console.error("Error creating project:", error);
         } finally {
@@ -52,7 +76,7 @@ export default function CreateProjectDialog({
         <AnimatePresence>
             {open && (
                 <motion.div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -108,6 +132,7 @@ export default function CreateProjectDialog({
                                         name="startDate"
                                         value={formData.startDate}
                                         onChange={handleChange}
+                                        min={minStart}
                                         className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
                                     />
                                 </div>
@@ -120,6 +145,7 @@ export default function CreateProjectDialog({
                                         name="endDate"
                                         value={formData.endDate}
                                         onChange={handleChange}
+                                        min={minDue}
                                         className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
                                     />
                                 </div>

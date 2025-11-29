@@ -50,7 +50,7 @@ namespace server.Controllers
 
             if (taskId <= 0)
                 throw new ErrorException(400, "Invalid task ID.");
-            var taskEntity = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);            if (taskEntity == null)
+            var taskEntity = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId); if (taskEntity == null)
                 throw new ErrorException(404, "Task not found to upload file.");
             if (taskEntity.IsActive == false)
                 throw new ErrorException(400, "Cannot upload file to an inactive task.");
@@ -77,6 +77,8 @@ namespace server.Controllers
                 );
                 if (taskEntity.Status != "In Progress")
                 {
+                    if (taskEntity.Status == "Expried")
+                        throw new ErrorException(400, "Task is expried!");
                     taskEntity.Status = "In Progress";
                     await _context.SaveChangesAsync();
                 }

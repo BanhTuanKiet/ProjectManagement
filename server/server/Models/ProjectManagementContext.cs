@@ -263,6 +263,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
             entity.HasOne(d => d.Project).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.ProjectId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_Notifications_Project");
 
