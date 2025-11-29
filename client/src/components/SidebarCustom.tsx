@@ -143,7 +143,6 @@ export function SidebarCustom({ className }: { className?: string }) {
                                                 <CreateProjectDialog
                                                     open={open}
                                                     onClose={() => setOpen(false)}
-                                                    onSuccess={() => alert("Project created successfully!")}
                                                 />
                                                 <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isProjectsOpen ? 'rotate-90' : ''}`} />
                                             </div>

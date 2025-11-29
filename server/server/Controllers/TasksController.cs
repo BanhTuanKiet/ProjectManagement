@@ -74,7 +74,7 @@ namespace server.Controllers
             var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
             if (projectMember == null)
-                return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+                return Unauthorized(new { message = "You are not a member of this project" });
 
             string role = projectMember.RoleInProject;
 
@@ -271,7 +271,7 @@ namespace server.Controllers
             var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
             if (projectMember == null)
-                return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+                return Unauthorized(new { message = "You are not a member of this project" });
 
             string role = projectMember.RoleInProject;
 
@@ -362,7 +362,7 @@ namespace server.Controllers
             });
         }
         //sao co toi 2 ham update status
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -373,6 +373,8 @@ namespace server.Controllers
             Models.Task task = await _tasksService.GetTaskById(taskId)
                 ?? throw new ErrorException(404, "Task not found");
 
+            if (task.Status == "Expried")
+                throw new ErrorException(400, "Task is expried!");
             string oldStatus = task.Status;
             string newStatus = updates["status"]?.ToString() ?? task.Status;
 
@@ -439,7 +441,7 @@ namespace server.Controllers
             {
                 string oldDescription = task.Description;
                 task.Description = updates.Description;
-                changeSummary += $"Description changed; ";
+                changeSummary += $"Description changed from '{oldDescription}' to '{updates.Description}'; ";
                 hasChanges = true;
             }
 
@@ -484,38 +486,40 @@ namespace server.Controllers
 
             if (task.Deadline < task.CreatedAt)
             {
-                throw new ErrorException(400, "Ngày kết thúc không được sớm hơn ngày bắt đầu");
+                throw new ErrorException(400, "Start date cannot be greater than End date");
             }
 
-            Models.Task updatedTask = await _tasksService.UpdateTask(taskId, updates);
 
-            if (updatedTask == null)
-                throw new ErrorException(400, "Update task failed!");
-            else
+
+
+            changeSummary = changeSummary.TrimEnd(' ', ';');
+            Console.WriteLine("Message: ", changeSummary);
+
+            Notification notification = new Notification
             {
-                changeSummary = changeSummary.TrimEnd(' ', ';');
+                UserId = assignee.AssigneeId,
+                ProjectId = projectId,
+                Message = $"{changeSummary} by {name}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                Link = $"tasks={taskId}",
+                CreatedId = userId,
+                Type = "task"
+            };
 
-                Notification notification = new Notification
-                {
-                    UserId = assignee.AssigneeId,
-                    ProjectId = projectId,
-                    Message = $"{changeSummary} by {name}",
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow,
-                    Link = $"tasks={taskId}",
-                    CreatedId = userId,
-                    Type = "task"
-                };
 
-                TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
 
-                await _notificationsService.SaveNotification(notification);
-                var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
-                await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
-                await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+            var notificationResult = await _notificationsService.SaveNotification(notification);
+            // if (notificationResult == null)
+            //     throw new ErrorException(400, "Notification can not create");
+            var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+            Models.Task updatedTask = await _tasksService.UpdateTask(taskId, updates);
+            TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
 
-                return Ok(new { message = "Update task successfull!" });
-            }
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+
+            return Ok(new { message = "Update task successfull!" });
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -579,7 +583,7 @@ namespace server.Controllers
             var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
             if (projectMember == null)
-                return Unauthorized(new { message = "Bạn không phải thành viên của dự án này" });
+                return Unauthorized(new { message = "You are not a member of this project" });
 
             string role = projectMember.RoleInProject;
 
@@ -741,7 +745,7 @@ namespace server.Controllers
             }
             else if (type == "today")
             {
-                basicTasks = await _tasksService.GetUpcomingDeadline(userId);
+                basicTasks = await _tasksService.GetTaskToday(userId);
             }
 
             return Ok(basicTasks);

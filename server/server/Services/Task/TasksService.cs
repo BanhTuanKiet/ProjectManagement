@@ -206,7 +206,7 @@ namespace server.Services.Project
                 {
                     if (!isManager)
                     {
-                        throw new ErrorException(403, $"Thành viên không được phép sửa trường '{key}'.");
+                        throw new ErrorException(403, $"Only PM or Leader can update '{key}'.");
                     }
                 }
 
@@ -216,7 +216,7 @@ namespace server.Services.Project
                     // Member không được phép assign task
                     if (!isManager)
                     {
-                        throw new ErrorException(403, "Bạn không có quyền giao task (Assign).");
+                        throw new ErrorException(403, "Only PM or Leader can assign task.");
                     }
 
                     string? targetUserId = kvp.Value?.ToString();
@@ -248,7 +248,7 @@ namespace server.Services.Project
 
                             if (!isInTeam && targetUserId != userId)
                             {
-                                throw new ErrorException(403, "Leader chỉ được giao task cho thành viên trong Team mình.");
+                                throw new ErrorException(403, "Leaders can only assign tasks to members in their team.");
                             }
                         }
                     }

@@ -151,7 +151,7 @@ namespace server.Controllers
             return Ok(new { results });
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("updateProject/{projectId}")]
         public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectDTO.UpdateProject updatedData)
         {
@@ -181,8 +181,9 @@ namespace server.Controllers
 
             if (!string.IsNullOrWhiteSpace(updatedData.Description) && updatedData.Description != project.Description)
             {
+                string oldDescription = project.Description;
                 project.Description = updatedData.Description.Trim();
-                changeSummary += $"Description changed; ";
+                changeSummary += $"Description changed from '{oldDescription}' to '{updatedData.Description}'; ";
                 hasChanges = true;
             }
 
@@ -262,27 +263,25 @@ namespace server.Controllers
             projectDTO.CreatedBy = userId;
 
             Project createdProject = await _projectsServices.CreateProject(projectDTO);
-
+            List<ProjectDTO.ProjectBasic> projectBasics = await _projectsServices.GetProjects(userId);
             return Ok(new
             {
+                data = projectBasics,
                 message = "Create project successful!"
             });
         }
 
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("{projectId}")]
         public async Task<IActionResult> DeleteProject(int projectId)
         {
             var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
             var name = User.FindFirst(ClaimTypes.Name)?.Value;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            bool status = await _projectsServices.DeleteProject(projectId);
-            if (!status)
-                throw new ErrorException("Delete project fail!");
-
             var notification = new Notification
             {
                 UserId = null,
-                ProjectId = projectId,
+                ProjectId = null,
                 Message = $"{project.Name} was deleted by {name}",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow,
@@ -291,9 +290,14 @@ namespace server.Controllers
                 Type = "project"
             };
             await _notificationsService.SaveNotification(notification);
+            bool status = await _projectsServices.DeleteProject(projectId);
+            if (!status)
+                throw new ErrorException("Delete project fail!");
+
+            var projects = await _projectsServices.GetProjects(userId);
             var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             await NotificationHub.SendNotificationProject(_notificationHubContext, projectId, userId, notificationDto);
-            return Ok(new { message = "Delete project successfull!" });
+            return Ok(new { data = projects, message = "Delete project successfull!" });
         }
 
         [HttpPut("leader/{projectId}/{leaderId}/{newLeaderId}")]

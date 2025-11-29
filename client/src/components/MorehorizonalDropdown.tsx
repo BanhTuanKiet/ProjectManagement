@@ -16,6 +16,7 @@ import { useParams, useRouter } from "next/navigation"
 import InvitePeopleDialog from "@/components/InvitePeopleDialog"
 import EditProjectDialog from "@/components/EditProjectDialog"
 import axios from "@/config/axiosConfig"
+import { useProject } from "@/app/(context)/ProjectContext"
 
 export default function ProjectMenu() {
     const { project_name } = useParams()
@@ -26,13 +27,15 @@ export default function ProjectMenu() {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const route = useRouter()
+    const { projects, setProjects } = useProject()
 
     const handleDeleteProject = async () => {
         try {
             setIsDeleting(true)
-            await axios.delete(`/projects/${projectId}`)
+            const response = await axios.delete(`/projects/${projectId}`)
             setIsDeleting(false)
             setDeleteConfirmOpen(false)
+            setProjects(response.data.data)
             route.push("http://localhost:3000/project")
         } catch (error) {
             setIsDeleting(false)

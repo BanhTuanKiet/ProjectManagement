@@ -27,11 +27,11 @@ export default function Page() {
     const tabs: MainTab[] = [
         { name: "Worked on", tab: "", icon: <UserCheck size={16} /> },
         { name: "Upcoming deadline", tab: "deadline", icon: <Clock size={16} /> },
-        { name: "Task today", tab: "today", icon: <ListTodo size={16} /> },
-        { name: "Task", tab: "task", icon: <ListTodo size={16} /> },
-        { name: "Projects", tab: "project", icon: <FolderKanban size={16} /> },
-        { name: "Mentions", tab: "mention", icon: <AtSign size={16} /> },
-        { name: "System", tab: "system", icon: <Bell size={16} /> },
+        // { name: "Task today", tab: "today", icon: <ListTodo size={16} /> },
+        // { name: "Task", tab: "task", icon: <ListTodo size={16} /> },
+        // { name: "Projects", tab: "project", icon: <FolderKanban size={16} /> },
+        // { name: "Mentions", tab: "mention", icon: <AtSign size={16} /> },
+        // { name: "System", tab: "system", icon: <Bell size={16} /> },
     ]
 
     const renderContent = () => {
