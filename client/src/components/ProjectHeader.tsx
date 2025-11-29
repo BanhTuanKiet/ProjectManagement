@@ -27,8 +27,8 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const { connection, setData, notifications } = useNotification()
     const router = useRouter()
     const fetchedRef = useRef(false)
-    
-    const taskNotifications: Notification[] = (notifications.task ?? []).sort((a, b) => 
+
+    const taskNotifications: Notification[] = (notifications.task ?? []).sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
@@ -60,7 +60,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const handleNotificationOpen = async () => {
         setIsNotificationOpen(!isNotificationOpen)
         setIsUserOpen(false)
-        if (!isNotificationOpen) { 
+        if (!isNotificationOpen) {
             try {
                 const { data } = await axios.get<Notification[]>(`/notifications/myNotifications`)
                 setData(data, "task")
@@ -74,7 +74,10 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
         const fetchSubscription = async () => {
             try {
                 const response = await axios.get(`/users/subscription`)
-                setPlan(response.data)
+                console.log(response.data)
+                if (response.data === "") setPlan("Free")
+                else
+                    setPlan(response.data)
             } catch (error) {
                 console.log(error)
             }
@@ -153,7 +156,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                                                         </a>
                                                     )}
                                                 </div>
-                                                <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 shrink-0" /> 
+                                                <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 shrink-0" />
                                             </div>
                                         ))}
                                     </div>

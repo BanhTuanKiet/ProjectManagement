@@ -211,6 +211,11 @@ namespace server.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Subscriptions subscription = await _userServices.GetSubscriptions(userId);
+            if (subscription == null)
+                return Ok();
+
+
+
             return Ok(subscription.Plan.Name);
         }
 

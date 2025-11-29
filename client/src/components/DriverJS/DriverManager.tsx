@@ -89,10 +89,12 @@ export default function DriverManager() {
                     time: 1000
                 }
             ];
-            router.push(`http://localhost:3000/project/${projects[0]?.projectId}`);
+            // router.push(`http://localhost:3000/project/${projects[0]?.projectId}`);
 
             for (const tour of tours) {
                 if (Number.isNaN(projectId)) break
+                // if (tour.key == "hasSeenMainMenu")
+                // router.push(`http://localhost:3000/project/${projects[0]?.projectId}`)
                 if (localStorage.getItem(tour.key)) continue;
                 if (projectRole?.trim().toLowerCase() === "member" && tour.key == "hasSeenMemberTour")
                     continue
