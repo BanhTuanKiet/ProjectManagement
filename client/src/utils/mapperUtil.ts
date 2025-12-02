@@ -45,7 +45,6 @@ export const mapPriorityToApi = (priority?: "Low" | "Medium" | "High" | number):
   return 1; // default Low
 };
 
-
 export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
   const assigneeName = apiTask.assignee || null
   const reporterName = apiTask.createdName|| null

@@ -53,6 +53,14 @@ interface Comment {
     userName?: string;
 }
 
+interface FileDetail {
+    fileId: number;
+    fileName: string;
+    filePath: string;
+    fileType?: string;
+    uploadedAt?: string | null;
+}
+
 export default function TaskDetailModal({
     taskId,
     onClose,
@@ -72,8 +80,8 @@ export default function TaskDetailModal({
     const { user } = useUser();
     const { project_name } = useProject();
     const projectId = Number(project_name)
-    const [files, setFiles] = useState<any[]>([]);
-    const [previewFile, setPreviewFile] = useState<any | null>(null);
+    const [files, setFiles] = useState<FileDetail[]>([]);
+    const [previewFile, setPreviewFile] = useState<FileDetail | null>(null);
     const [formUpdate, setForm] = useState<UpdateTask>({
         Title: null,
         Description: null,

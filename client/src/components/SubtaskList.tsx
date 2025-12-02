@@ -15,7 +15,6 @@ import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon } from "@/utils/statusUtils"
 import { Member, UserMini, TaskAssignee } from "@/utils/IUser"
 
-
 interface SubtaskListProps {
     parentTaskId: number
     projectId: number
@@ -56,7 +55,7 @@ export default function SubtaskList({
 
     // --- Hàm edit riêng cho subtasks ---
     const handleSubtaskEdit = useCallback(
-        async (subtaskId: number, taskId: number, field: string, value: any) => {
+        async (subtaskId: number, taskId: number, field: string, value: string | undefined) => {
             try {
                 // Cập nhật UI trước (optimistic update)
                 setLocalSubtasks((prev) =>
@@ -336,7 +335,7 @@ export default function SubtaskList({
                                     >
                                         {isEditing ? (
                                             <Input
-                                                defaultValue={(subtask as any)[col.key] || ""}
+                                                defaultValue={(subtask as Task)[col.key] || ""}
                                                 onBlur={(e) => handleSubtaskEdit(subtask.id, parentTaskId, col.key, e.target.value)}
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Enter")
@@ -351,7 +350,7 @@ export default function SubtaskList({
                                                 onClick={() => setEditingCell({ taskId: subtask.id, field: col.key })}
                                                 className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded text-gray-600"
                                             >
-                                                {(subtask as any)[col.key] || "-"}
+                                                {(subtask as Task)[col.key] || "-"}
                                             </span>
                                         )}
                                     </div>
