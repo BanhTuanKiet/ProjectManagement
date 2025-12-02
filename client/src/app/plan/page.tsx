@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, Lock, ArrowRight, AlertCircle } from "lucide-react"
+import { Check, Lock, ArrowRight, AlertCircle, RefreshCcw, ArrowLeft } from "lucide-react"
 import PricingTable from "@/components/pricing-table"
 import type { PlanDetail } from "@/utils/IPlan"
 import { useRouter } from "next/navigation"
-import { formatPrice } from "@/utils/stringUitls"
 import axiosConfig from "@/config/axiosConfig"
-import axios from "axios"
 import { useUser } from "../(context)/UserContext"
+import axios from "axios"
 
 const paymentMethods = [
     {
@@ -20,73 +19,80 @@ const paymentMethods = [
 ]
 
 interface FxRate {
-    vndRate: number;
-    usdRate: number;
+    vndRate: number
+    usdRate: number
 }
 
 interface Price {
-    price: number
-    discountPrice: number
+    displayPrice: number
+    originalPrice: number // Giá gốc USD để thanh toán
 }
 
 export default function PlanPaymentPage() {
     const [selectedMethod, setSelectedMethod] = useState<"paypal">("paypal")
     const [selectedPlan, setSelectedPlan] = useState<PlanDetail | undefined>()
     const [isLoading, setIsLoading] = useState(false)
-    const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
-    const [fxRates, setFxRates] = useState<FxRate | null>(null)
     const [price, setPrice] = useState<Price | null>(null)
+    const [fxRates, setFxRates] = useState<FxRate | null>(null)
+    const [currency, setCurrency] = useState<"USD" | "VND">("USD") // State quản lý đơn vị tiền tệ
     const { user, signinGG } = useUser()
     const router = useRouter()
 
-    useEffect(() => {
-        let price = 0
-        let discountPrice = 0
-
-        if (selectedMethod === 'paypal') {
-            price = Number(selectedPlan?.price) || 0
+    // Hàm format tiền tệ linh hoạt
+    const formatCurrency = (amount: number, currencyType: "USD" | "VND") => {
+        if (currencyType === "USD") {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2
+            }).format(amount)
         } else {
-            const vndRate = fxRates?.vndRate
-            const planPrice = Number(selectedPlan?.price) || 0
-            price = vndRate ? planPrice / vndRate : 0
+            // Làm tròn số tiền VND cho đẹp (ví dụ: 253450 -> 253.450)
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+                maximumFractionDigits: 0
+            }).format(amount)
         }
+    }
 
-        if (billingPeriod === 'monthly') {
-            discountPrice = 0
-        } else {
-            const totalPrice = price * 12
-            price = totalPrice * 0.95
-            discountPrice = totalPrice - price
-        }
-
-        setPrice({
-            price: price,
-            discountPrice: discountPrice
-        })
-    }, [selectedMethod, billingPeriod, fxRates, selectedPlan?.price])
-
+    // Effect lấy tỷ giá
     useEffect(() => {
-        if (selectedMethod !== 'paypal') return
-
         const fetchLatestFxRates = async () => {
             try {
                 const response = await axios.get("https://api.fxratesapi.com/latest")
-                const fxRates = response.data.rates
-                const vndRate = fxRates['VND']
-                const usdRate = fxRates['USD']
+                const rates = response.data.rates
+                // Lấy tỷ giá VND và USD từ API (Base có thể là EUR hoặc USD tùy API, nên lấy tỉ lệ an toàn)
+                const vndRate = rates['VND']
+                const usdRate = rates['USD']
                 setFxRates({
                     vndRate,
                     usdRate,
                 })
             } catch (error) {
-                console.log(error)
+                console.log("Error fetching rates:", error)
             }
         }
 
         fetchLatestFxRates()
-    }, [selectedMethod])
+    }, [])
 
-    const usdPrice = (fxRates && selectedPlan) ? (Number(selectedPlan.price) / fxRates.vndRate) : null
+    // Effect tính toán giá hiển thị khi Plan, Currency hoặc Tỷ giá thay đổi
+    useEffect(() => {
+        const originalUsdPrice = Number(selectedPlan?.price) || 0
+        let displayAmount = originalUsdPrice
+
+        if (currency === "VND" && fxRates) {
+            // Tính tỷ giá quy đổi: 1 USD = (VND_Rate / USD_Rate)
+            const conversionRate = fxRates.vndRate / fxRates.usdRate
+            displayAmount = originalUsdPrice * conversionRate
+        }
+
+        setPrice({
+            displayPrice: displayAmount,
+            originalPrice: originalUsdPrice
+        })
+    }, [selectedMethod, selectedPlan?.price, currency, fxRates])
 
     const handlePayment = async () => {
         if (!selectedPlan) return
@@ -104,29 +110,24 @@ export default function PlanPaymentPage() {
         }
         setIsLoading(true)
 
+        // Lưu ý: Luôn gửi giá USD (originalPrice) đi thanh toán
         const order = {
             planId: selectedPlan.id,
-            amount: selectedPlan.price,
+            amount: selectedPlan?.price, // Giá gốc từ plan (USD)
             name: selectedPlan.name,
             currency: "USD",
-            billingPeriod: billingPeriod,
+            billingPeriod: "monthly",
             returnUrl: "",
             cancelUrl: "",
         }
 
         try {
-            // const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
-            // const links = response.data.links ?? []
-            // window.open(links[1].href)
             if (selectedMethod === "paypal") {
                 const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
                 const links = response.data.links ?? []
-                window.open(links[1].href)
-            }
-            else if (selectedMethod === "vnpay") {
-                const response = await axiosConfig.post(`/payments/create-vnpay`, order)
-                const payUrl = response.data?.paymentUrl
-                if (payUrl) window.location.href = payUrl
+                if (links[1]?.href) {
+                    window.open(links[1].href)
+                }
             }
         } catch (error) {
             console.log(error)
@@ -135,6 +136,11 @@ export default function PlanPaymentPage() {
         }
     }
 
+    const showBackButton =
+        !isLoading &&
+        (
+            (!selectedPlan || !user) || (selectedPlan && user && selectedPlan.id > Number(user.planId))
+        )
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -227,11 +233,11 @@ export default function PlanPaymentPage() {
                                             <p className="font-semibold text-amber-900 text-sm">Payment in USD</p>
                                             <p className="text-xs text-amber-700 mt-1">
                                                 PayPal transactions will be processed in US Dollars (USD).
+                                                {currency === 'VND' && " The VND price shown is for reference only."}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-
                             )}
 
                             <div className="bg-gradient-to-br from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-4">
@@ -246,63 +252,86 @@ export default function PlanPaymentPage() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handlePayment}
-                                disabled={isLoading}
-                                className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        {selectedPlan && user ? (
-                                            selectedPlan.id <= Number(user.planId)
-                                                ? "Go to your Projects"
-                                                : "Upgrade to this plan"
-                                        ) : (
-                                            "Continue to Payment"
-                                        )}
-                                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                    </>
+                            <div className="flex flex-col md:flex-row md:gap-4 gap-3">
+                                <button
+                                    onClick={handlePayment}
+                                    disabled={isLoading}
+                                    className={`
+            w-full md:flex-1
+            cursor-pointer bg-blue-600 hover:from-blue-700 hover:to-blue-700
+            text-white font-semibold py-3 px-4 rounded-xl
+            transition-all duration-200 shadow-lg hover:shadow-xl
+            disabled:opacity-50 disabled:cursor-not-allowed
+            flex items-center justify-center gap-2 group
+        `}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            {selectedPlan && user ? (
+                                                selectedPlan.id <= Number(user.planId)
+                                                    ? "Go to your Projects"
+                                                    : "Upgrade"
+                                            ) : (
+                                                "Continue to Payment"
+                                            )}
+                                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                        </>
+                                    )}
+                                </button>
+
+                                {showBackButton && (
+                                    <button
+                                        onClick={() => router.push('/')}
+                                        className="
+                                            w-full md:flex-1
+                                            cursor-pointer bg-green-600 hover:from-blue-700 hover:to-blue-700
+                                            text-white font-semibold py-3 px-4 rounded-xl
+                                            transition-all duration-200 shadow-lg hover:shadow-xl
+                                            disabled:opacity-50 disabled:cursor-not-allowed
+                                            flex items-center justify-center gap-2 group
+                                        "
+                                    >
+                                        Back to Home
+                                        <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                                    </button>
                                 )}
-                            </button>
+                            </div>
 
                         </div>
                     </div>
 
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                                 <h3 className="text-2xl font-bold text-slate-900">Order Summary</h3>
 
-                                <div className="flex gap-2 bg-slate-100 p-1 rounded-lg w-fit">
-                                    <button
-                                        onClick={() => setBillingPeriod("monthly")}
-                                        className={`cursor-pointer px-4 py-2 rounded-md font-medium transition-all ${billingPeriod === "monthly"
-                                            ? "bg-white text-blue-600 shadow-sm"
-                                            : "text-slate-600 hover:text-slate-900"
-                                            }`}
-                                    >
-                                        Monthly
-                                    </button>
-
-                                    <button
-                                        onClick={() => setBillingPeriod("yearly")}
-                                        className={`cursor-pointer px-4 py-2 rounded-md font-medium transition-all relative ${billingPeriod === "yearly"
-                                            ? "bg-white text-blue-600 shadow-sm"
-                                            : "text-slate-600 hover:text-slate-900"
-                                            }`}
-                                    >
-                                        Yearly
-                                        {billingPeriod === "yearly" && (
-                                            <span className="absolute -top-2 -right-5 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                                -5%
-                                            </span>
-                                        )}
-                                    </button>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm text-slate-500 font-medium">Currency:</span>
+                                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                                        <button
+                                            onClick={() => setCurrency("USD")}
+                                            className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${currency === "USD"
+                                                ? "bg-white text-blue-600 shadow-sm"
+                                                : "text-slate-500 hover:text-slate-700"
+                                                }`}
+                                        >
+                                            USD
+                                        </button>
+                                        <button
+                                            onClick={() => setCurrency("VND")}
+                                            className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${currency === "VND"
+                                                ? "bg-white text-blue-600 shadow-sm"
+                                                : "text-slate-500 hover:text-slate-700"
+                                                }`}
+                                        >
+                                            VND
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -310,32 +339,36 @@ export default function PlanPaymentPage() {
                                 <div className="space-y-4 mb-4">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-slate-600">
-                                            {billingPeriod === "yearly" ? "Base Price (12 months)" : "Base Price"}
+                                            Plan Price
                                         </span>
                                         <span className="text-slate-900 font-medium">
-                                            {formatPrice(price?.price)}
+                                            {price && formatCurrency(price.displayPrice, currency)} / Monthly
                                         </span>
                                     </div>
-                                    {selectedPlan?.id !== 1 && billingPeriod === "yearly" && (
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-emerald-600 font-medium">Discount (5%)</span>
-                                            <span className="text-emerald-600 font-medium">
-                                                -{formatPrice(price?.discountPrice)}
-                                            </span>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl mb-4 p-4 border border-blue-200">
                                     <div className="flex items-center justify-between">
-                                        <span className="font-semibold text-slate-900">Total</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-slate-900">Total</span>
+                                            {currency === 'VND' && (
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">Approx.</span>
+                                            )}
+                                        </div>
                                         <span className="text-3xl font-bold text-blue-600">
-                                            {price && formatPrice(price?.price - price?.discountPrice)}
+                                            {price && formatCurrency(price.displayPrice, currency)}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-600 mt-2">
+                                    {currency === "VND" && fxRates && (
+                                        <div className="flex items-center gap-1 mt-2 text-xs text-slate-500">
+                                            <RefreshCcw className="w-3 h-3" />
+                                            <span>
+                                                Exchange rate: 1 USD ≈ {formatCurrency(fxRates.vndRate / fxRates.usdRate, "VND")}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-slate-600 mt-1">
                                         You will be charged on December 15
-                                        {billingPeriod === "yearly" && " for 12 months"}
                                     </p>
                                 </div>
 
