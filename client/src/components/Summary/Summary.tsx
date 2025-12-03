@@ -20,11 +20,9 @@ export default function Summary() {
     const { tasks } = useTask()
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
 
-    // States để lưu trữ các task gần/đã hết hạn (lấy từ API)
     const [nearTasks, setNearTasks] = useState<BasicTask[]>([])
     const [isLoadingCritical, setIsLoadingCritical] = useState(false)
 
-    // States cho TaskSupport Dialog
     const [isSupportOpen, setIsSupportOpen] = useState(false)
     const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null)
 
@@ -45,8 +43,7 @@ export default function Summary() {
         setIsLoadingCritical(true)
         try {
             const response = await axios.get(`/tasks/near-deadline/${projectId}`)
-            console.log("DATA: ", response)
-            setNearTasks(response.data) // Lưu dữ liệu tổng hợp
+            setNearTasks(response.data)
         } catch (error) {
             console.error("Lỗi khi tải task gần hết hạn:", error)
             setNearTasks([])
@@ -64,24 +61,17 @@ export default function Summary() {
         }
     }, [project_name])
 
-
-    // --- 4. Tính toán Metrics và Phân loại Task ---
-
     const totalTasks = mockTasks.length ?? 0
     const doneTasks = mockTasks.filter((t) => t.status.toLocaleLowerCase() === "done").length
     const overallProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0
 
-    // Phân loại task Gần/Đã hết hạn từ dữ liệu API đã lọc (nearTasks)
     const { expiredTasks, nearDeadlineTasks } = useMemo(() => {
         const now = new Date().getTime()
 
-        // Chỉ xử lý các task có Deadline hợp lệ
         const deadlineTasks = nearTasks.filter(t => t.deadline)
 
-        // 1. Task Đã Quá Hạn (Deadline < Thời điểm hiện tại)
         const expired = deadlineTasks.filter(t => new Date(t.deadline).getTime() < now)
 
-        // 2. Task Gần Hết Hạn (Deadline >= Thời điểm hiện tại)
         const near = deadlineTasks.filter(t => new Date(t.deadline).getTime() >= now)
 
         return { expiredTasks: expired, nearDeadlineTasks: near }
@@ -97,7 +87,6 @@ export default function Summary() {
         <div className="min-h-screen bg-gray-50 p-0">
             <div className="max-w-7xl mx-auto space-y-6">
 
-                {/* --- 1. Phần Header & Tổng quan Dự án --- */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -177,7 +166,6 @@ export default function Summary() {
                                     }`}
                             >
 
-                                {/* ===== EXPIRED TASKS ===== */}
                                 {expiredTasks.length > 0 && (
                                     <div className="border border-red-300 bg-red-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-semibold text-red-700 mb-3 flex items-center gap-2">
@@ -215,7 +203,6 @@ export default function Summary() {
                                     </div>
                                 )}
 
-                                {/* ===== NEAR DEADLINE TASKS ===== */}
                                 {nearDeadlineTasks.length > 0 && (
                                     <div className="border border-yellow-300 bg-yellow-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
@@ -263,7 +250,6 @@ export default function Summary() {
                 )}
             </div>
 
-            {/* TaskSupport Dialog */}
             <TaskSupport
                 open={isSupportOpen}
                 onClose={() => setIsSupportOpen(false)}

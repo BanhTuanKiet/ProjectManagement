@@ -256,7 +256,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center gap-2 w-full">
-                        <ColoredAvatar id={member.userId} name={member.name} size="sm" src={member.avatarUrl ?? ""}  />
+                        <ColoredAvatar src={member.avatarUrl} id={member.userId} name={member.name} size="sm" />
 
                         <span className="truncate max-w-[160px]" title={member.name}>
                           {capitalizeFirstLetter(member.name)}

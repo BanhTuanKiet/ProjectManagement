@@ -69,7 +69,7 @@ export default function BoardView() {
 
   const deleteTask = async (taskId: number) => {
     try {
-      await axios.delete(`/tasks/bulk-delete/`, {
+      await axios.delete(`/tasks/bulk-delete/${projectId}`, {
         data: {
           ProjectId: projectId,
           Ids: [taskId],
@@ -233,7 +233,7 @@ export default function BoardView() {
                   <button
                     id={`create-${status.name}`}
                     onClick={() => setOpenDialog(true)}
-                    className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm cursor-grab"
                   >
                     <Plus className="w-4 h-4" /> Create
                   </button>

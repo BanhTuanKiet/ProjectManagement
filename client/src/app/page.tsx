@@ -16,49 +16,75 @@ import {
 import Link from "next/link"
 import HeaderComponent from "@/components/HeaderComponent"
 import { useRouter } from "next/navigation"
+import BoardView from "@/app/Image/Board_View.png"
+import BoardView2 from "@/app/Image/Board_View2.png"
+import User from "@/app/Image/User1.png"
+import UploadFile from "@/app/Image/UploadFile1.png"
+import Chart from "@/app/Image/Chart1.png"
+import Sprint from "@/app/Image/Sprint1.png"
+import Member from "@/app/Image/Member1.png"
+import Notification from "@/app/Image/Notification1.png"
+import Timeline from "@/app/Image/TimeLine1.png"
+import Image from "next/image";
 
 const features = [
     {
         icon: Zap,
         title: "Project Management",
         desc: "Organize work efficiently with Kanban boards, timelines, and detailed permission controls",
+        image: BoardView2,
+        bg: "bg-blue-100",
+        text: "text-blue-600",
     },
     {
         icon: Users,
         title: "Team Collaboration",
         desc: "Work together in real-time with chat, mentions, and comments directly on tasks",
+        image: Member,
+        bg: "bg-emerald-100",
+        text: "text-emerald-600",
     },
     {
         icon: CheckCircle2,
         title: "Progress Tracking",
         desc: "Monitor project progress, sprints, and milestones with Gantt charts or dashboards",
+        image: Sprint,
+        bg: "bg-amber-100",
+        text: "text-amber-600",
     },
     {
         icon: Shield,
         title: "Users & Permissions",
         desc: "Sign up, login with JWT + OAuth, flexible roles: Admin, Manager, Member, Client",
-    },
-    {
-        icon: Wallet,
-        title: "Payments & Plans",
-        desc: "Track transactions, manage Free / Premium plans and different usage benefits",
+        image: User,
+        bg: "bg-purple-100",
+        text: "text-purple-600",
     },
     {
         icon: FileText,
         title: "Documents & Files",
         desc: "Upload, manage documents, images, PDFs and attach directly to tasks",
+        image: UploadFile,
+        bg: "bg-sky-100",
+        text: "text-sky-600",
     },
     {
         icon: MessageSquare,
         title: "Notifications & Communication",
         desc: "Get real-time notifications, email digests and track member online/offline status",
+        image: Notification,
+        bg: "bg-rose-100",
+        text: "text-rose-600",
     },
     {
         icon: BarChart3,
         title: "Reports & Dashboard",
         desc: "Analyze workload, team performance and detailed statistics by project",
+        image: Chart,
+        bg: "bg-indigo-100",
+        text: "text-indigo-600",
     },
-]
+];
 
 const stats = [
     { value: "50", label: "Active Users", unit: "K+" },
@@ -100,18 +126,36 @@ export default function Page() {
                         faster.
                     </p>
 
+                    <Image
+                        src={BoardView}
+                        alt="App preview"
+                        className="rounded-xl shadow-lg w-full "
+                    />
+
                     <div className="flex items-center justify-center gap-4 pt-4">
                         <Link
                             href="/plan?plan=free"
                             className="rounded-full bg-blue-600 px-8 py-3 text-white font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
                         >
-                            Get Started 
+                            Get Started
                             <ArrowRight className="h-4 w-4" />
                         </Link>
                         <button className="rounded-full border border-slate-300 px-8 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">
                             Watch Demo
                         </button>
                     </div>
+
+                    <div className="pt-8 flex justify-center">
+                        <video
+                            src="/demo.mp4"
+                            className="rounded-xl shadow-lg w-full max-w-3xl"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                        />
+                    </div>
+
 
                     <p className="text-sm text-slate-500 pt-4">No credit card required • Start free in 1 minutes</p>
                 </div>
@@ -140,24 +184,51 @@ export default function Page() {
 
             <section className="mx-auto max-w-6xl px-6 lg:px-8 py-20">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Powerful Features</h2>
-                    <p className="text-lg text-slate-600">Everything you need to manage projects successfully</p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                        Powerful Features
+                    </h2>
+                    <p className="text-lg text-slate-600">
+                        Everything you need to manage projects successfully
+                    </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                <div className="space-y-20">
                     {features.map((feature, idx) => {
-                        const Icon = feature.icon
+                        const Icon = feature.icon;
+
                         return (
-                            <div key={idx} className="rounded-xl border border-slate-200 bg-white p-8 hover:shadow-lg transition">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 mb-4">
-                                    <Icon className="h-6 w-6 text-blue-600" />
+                            <div
+                                key={idx}
+                                className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
+                            >
+                                <div>
+                                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${feature.bg} mb-4`}>
+                                        <Icon className={`h-6 w-6 ${feature.text}`} />
+                                    </div>
+
+
+                                    <h3 className="text-2xl font-semibold text-slate-900 mb-4">
+                                        {feature.title}
+                                    </h3>
+
+                                    <p className="text-slate-600 text-lg leading-relaxed">
+                                        {feature.desc}
+                                    </p>
                                 </div>
-                                <h3 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                                <p className="text-slate-600">{feature.desc}</p>
+
+                                <div className="w-full h-64 rounded-xl overflow-hidden shadow-md bg-slate-100">
+                                    <Image
+                                        src={feature.image ?? ""}
+                                        alt={feature.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
                             </div>
-                        )
+                        );
                     })}
                 </div>
             </section>
+
 
             <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
                 <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-16">
