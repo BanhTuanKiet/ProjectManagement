@@ -233,6 +233,8 @@ namespace server.Services.User
         public async Task<UserDTO.UserProfile2> GetUserProfile(string userId)
         {
             var user = await _context.ApplicationUsers
+                .Include(u => u.Subscription)
+                    .ThenInclude(s => s.Plan)
                 .Include(u => u.Contacts)
                     .ThenInclude(c => c.Media)
                 .FirstOrDefaultAsync(u => u.Id == userId);

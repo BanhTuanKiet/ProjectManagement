@@ -25,6 +25,15 @@ public class UserDTO
         public string Location { get; set; }
         public List<Contact> Contacts { get; set; }
         public List<ProjectDTO.ProjectBasic> Projects { get; set; }
+        public Subcription Subcription { get; set; }
+    }
+
+    public class Subcription
+    {
+        public string PlanId { get; set; }
+        public string PlanName { get; set; }
+        public DateTime StartedAt { get; set; }
+        public DateTime ExpiredAt { get; set; } 
     }
 
     public class Contact

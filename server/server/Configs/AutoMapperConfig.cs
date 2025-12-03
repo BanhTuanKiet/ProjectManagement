@@ -72,7 +72,8 @@ namespace server.Configs
 
             CreateMap<SubTaskDTO.UpdateSubTask, SubTask>()
                 .ForMember(dest => dest.Title,
-                            opt => {
+                            opt =>
+                            {
                                 opt.Condition(src => src.Summary != null);
                                 opt.MapFrom(src => src.Summary);
                             })
@@ -131,7 +132,14 @@ namespace server.Configs
 
             CreateMap<ApplicationUser, UserDTO.UserProfile2>()
                 .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.AvatarUrl))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.UserName));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.UserName))
+                .ForMember(dest => dest.Subcription, opt => opt.MapFrom(src => src.Subscription));
+
+            CreateMap<Subscriptions, UserDTO.Subcription>()
+                .ForMember(dest => dest.PlanId, opt => opt.MapFrom(src => src.Plan.PlanId))
+                .ForMember(dest => dest.PlanName, opt => opt.MapFrom(src => src.Plan.Name))
+                .ForMember(dest => dest.StartedAt, opt => opt.MapFrom(src => src.StartedAt))
+                .ForMember(dest => dest.ExpiredAt, opt => opt.MapFrom(src => src.ExpiredAt));
 
             CreateMap<Media, MediaDTO.Media>();
         }

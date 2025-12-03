@@ -6,17 +6,16 @@ import {
     Calendar,
     MapPin,
     Pencil,
-    Trash2,
     Plus,
     Save,
     X,
-    ArrowRight,
     Globe,
     Briefcase,
     Camera,
     Settings,
-    ArrowUpRight,
     ChevronDown,
+    SquareArrowOutUpRight,
+    ArrowRight,
 } from 'lucide-react'
 
 import { Contact, UserProfile } from '@/utils/IUser'
@@ -25,29 +24,24 @@ import { formatDate } from '@/utils/dateUtils'
 import { ContactIcon, getRoleBadge } from '@/utils/statusUtils'
 import ColoredAvatar from '@/components/ColoredAvatar'
 import { Media } from '@/utils/IContact'
-
-const SUBSCRIPTION = {
-    planId: 'pro_monthly_123',
-    planName: 'Pro Monthly',
-    status: 'Active',
-    renewalDate: '2026-01-01',
-}
+import { useRouter } from 'next/navigation'
+import { useHash } from '@/hooks/useHash'
 
 export default function Page() {
     const [user, setUser] = useState<UserProfile>()
-    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'activity'>('projects')
     const [isEditingContacts, setIsEditingContacts] = useState(false)
     const [tempContacts, setTempContacts] = useState<Contact[]>([])
     const [medias, setMedias] = useState<Media[]>()
     const [isEditingInfo, setIsEditingInfo] = useState(false)
     const [tempInfo, setTempInfo] = useState({ name: "", location: "" })
+    const { hash, setHash } = useHash()
+    const router = useRouter()
 
     useEffect(() => {
         const fetchUses = async () => {
             try {
                 const response = await axios.get(`/users/profile`)
                 setUser(response.data)
-                console.log(response.data)
                 setTempInfo({
                     name: response.data.name,
                     location: response.data.location
@@ -73,7 +67,7 @@ export default function Page() {
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (!file) return;
+        if (!file) return
         const formData = new FormData()
         formData.append("file", file)
 
@@ -107,11 +101,11 @@ export default function Page() {
 
     const startEditingContacts = () => {
         if (!user) return
-        setTempContacts(user.contacts.map(c => ({
+        setTempContacts(user.contacts?.map(c => ({
             ...c,
             mediaId: c.mediaId || crypto.randomUUID(),
             media: c.media || medias?.find(m => m.id === c.mediaId)?.name || '',
-        })))
+        })) ?? [])
         setIsEditingContacts(true)
     }
 
@@ -151,83 +145,165 @@ export default function Page() {
             setIsEditingContacts(false)
         }
     }
-console.log(user)
-    return (
-        <div className="min-h-screen bg-gray-50/50 font-sans pb-20">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
-                <div className="h-32 bg-gradient-to-r from-blue-50 to-indigo-50 w-full"></div>
 
+    return (
+        <div className="min-h-screen bg-gray-50 font-sans pb-24 transition-colors duration-200">
+            <div className="bg-white shadow-md border border-gray-100 mb-8 overflow-hidden group/profile transition-transform hover:-translate-y-0.5">
                 <div className="max-w-7xl mx-auto px-6 pb-6">
-                    <div className="relative flex flex-col md:flex-row items-start md:items-end -mt-12 md:gap-6">
-                        <div className="relative flex-shrink-0 group mx-auto md:mx-0">
-                            <div className="rounded-full p-1 bg-white shadow-md">
-                                <ColoredAvatar src={user?.avatar} id={user?.id ?? ""} name={user?.name} size='xxl'/>
+                    <div className="relative flex flex-col md:flex-row items-start md:items-end gap-6">
+                        <div className="relative flex-shrink-0 mx-auto md:mx-0 z-20">
+                            <div className="rounded-full p-1 bg-white shadow-lg ring-1 ring-white">
+                                <ColoredAvatar src={user?.avatar} id={user?.id ?? ""} name={user?.name} size='xxl' />
                             </div>
 
                             <label
                                 htmlFor="avatarUpload"
-                                className="absolute bottom-2 right-2 p-2 bg-white text-gray-600 rounded-full shadow-lg cursor-pointer hover:text-blue-600 hover:bg-blue-50 transition-all border border-gray-100"
-                                title="Change Avatar"
+                                className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 p-2 bg-white text-gray-600 rounded-full shadow-md cursor-pointer hover:text-blue-600 hover:scale-105 transition-transform"
+                                title="Change avatar"
                             >
-                                <div className="w-4 h-4 flex items-center justify-center">
-                                    <Camera size={16} />
-                                </div>
+                                <Camera size={14} />
                                 <input id="avatarUpload" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                             </label>
                         </div>
 
-                        <div className="flex-1 w-full mt-4 md:mt-0 text-center md:text-left md:pb-1">
-                            {!isEditingInfo ? (
-                                <div className="flex flex-col gap-1">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <div>
-                                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-                                                {user?.name}
+                        <div className="flex-1 w-full mt-3 md:mt-0">
+                            <div className="grid grid-cols-1 md:grid-cols-5 md:gap-x-6">
+                                <div className="md:col-span-2 text-center md:text-left min-h-[70px] flex flex-col justify-end">
+                                    {!isEditingInfo ? (
+                                        <div className="relative pr-8">
+                                            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                                                {user?.name || '—'}
                                             </h1>
-                                            <div className="flex items-center justify-center md:justify-start text-gray-500 mt-1 text-sm font-medium">
-                                                <MapPin size={14} className="mr-1 text-gray-400" />
-                                                {user?.location || "Location not updated"}
+                                            <div className="flex items-center justify-center md:justify-start text-gray-400 mt-2 text-sm">
+                                                <MapPin size={14} className="mr-2 text-gray-300" />
+                                                <span className="text-sm">{user?.location || "Add location"}</span>
+                                            </div>
+                                            <div className="absolute top-0 right-0 md:left-full md:ml-4 md:static md:opacity-0 md:group-hover/profile:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => setIsEditingInfo(true)}
+                                                    className="p-2 text-gray-400 hover:text-blue-600 rounded-full"
+                                                    title="Edit profile info"
+                                                >
+                                                    <Pencil size={15} />
+                                                </button>
                                             </div>
                                         </div>
-
-                                        <button
-                                            onClick={() => setIsEditingInfo(true)}
-                                            className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-all shadow-sm"
-                                        >
-                                            <Pencil size={14} /> Edit Profile
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="w-full bg-gray-50 rounded-lg p-4 border border-gray-200 animate-fadeIn mt-2 md:mt-0">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-gray-500 uppercase">Display Name</label>
+                                    ) : (
+                                        <div className="flex flex-col w-full animate-fadeIn">
                                             <input
                                                 type="text"
                                                 value={tempInfo.name}
                                                 onChange={(e) => updateInfo("name", e.target.value)}
-                                                className="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                className="text-3xl md:text-4xl font-extrabold text-gray-900 bg-transparent border-b-2 border-blue-200 focus:border-blue-500 focus:outline-none px-0 py-1 leading-tight w-full md:w-auto placeholder-gray-300"
                                                 placeholder="Your Name"
+                                                autoFocus
                                             />
+                                            <div className="flex flex-col md:flex-row items-center gap-3 mt-3">
+                                                <div className="relative flex items-center w-full md:w-auto">
+                                                    <MapPin size={14} className="absolute left-0 text-blue-500" />
+                                                    <input
+                                                        type="text"
+                                                        value={tempInfo.location}
+                                                        onChange={(e) => updateInfo("location", e.target.value)}
+                                                        className="pl-5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md focus:border-blue-500 focus:outline-none py-1 w-full md:min-w-[240px]"
+                                                        placeholder="City, Country"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-2 md:mt-0">
+                                                    <button onClick={handleInfoChange} className="px-3 py-1 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 shadow-sm transition-all">
+                                                        Save
+                                                    </button>
+                                                    <button onClick={() => { setIsEditingInfo(false); setTempInfo({ name: user?.name ?? "", location: user?.location ?? "" }) }} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md">
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-gray-500 uppercase">Location</label>
-                                            <input
-                                                type="text"
-                                                value={tempInfo.location}
-                                                onChange={(e) => updateInfo("location", e.target.value)}
-                                                className="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                placeholder="City, Country"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-3 mt-4 justify-end">
-                                        <button onClick={() => setIsEditingInfo(false)} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded-md transition-colors">Cancel</button>
-                                        <button onClick={handleInfoChange} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm transition-colors">Save Profile</button>
-                                    </div>
+                                    )}
                                 </div>
-                            )}
+
+                                <div className="md:col-span-3 mt-5 md:mt-0 pt-4 md:pt-0 border-t border-gray-100 md:border-t-0 md:border-l md:pl-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social & Links</span>
+                                            <span className="text-xs text-gray-400">— connect your profiles</span>
+                                        </div>
+
+                                        {!isEditingContacts && (
+                                            <button onClick={startEditingContacts} className="text-gray-400 hover:text-blue-600 p-2 rounded-md transition-colors" title="Edit contacts">
+                                                <Settings size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {!isEditingContacts ? (
+                                        <div className="flex flex-wrap gap-2 md:justify-start justify-center">
+                                            <a href={`mailto:${user?.email}`} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 hover:border-blue-200 hover:text-blue-600 transition-all text-sm font-medium shadow-sm">
+                                                <Mail size={14} /> <span className="truncate max-w-[180px]">{user?.email}</span>
+                                            </a>
+
+                                            {user?.contacts?.map(contact => (
+                                                <a
+                                                    key={contact.mediaId}
+                                                    href={contact.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 border border-transparent hover:border-blue-300 hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-all text-sm font-medium shadow-sm group"
+                                                >
+                                                    <ContactIcon media={contact.media} />
+                                                    <span className="capitalize truncate">{contact.media}</span>
+                                                    <SquareArrowOutUpRight size={12} className="opacity-0 group-hover:opacity-100 -ml-1 group-hover:ml-0 transition-all text-blue-400" />
+                                                </a>
+                                            ))}
+                                            {(!user?.contacts?.length) && <span className="text-xs text-gray-400 italic">No links added.</span>}
+                                        </div>
+                                    ) : (
+                                        <div className="animate-fadeIn w-full">
+                                            <div className="grid grid-cols-1 gap-y-3">
+                                                {tempContacts.map(contact => (
+                                                    <div key={contact.mediaId} className="group flex items-center gap-3 py-2 px-3 border border-gray-100 rounded-lg hover:shadow-sm transition-all">
+                                                        <div className="relative min-w-[120px]">
+                                                            <select
+                                                                value={contact.media}
+                                                                onChange={(e) => updateContact(contact.mediaId, 'media', e.target.value)}
+                                                                className="w-full appearance-none bg-transparent py-2 pr-8 text-sm font-semibold uppercase text-gray-600 focus:text-blue-600 focus:outline-none cursor-pointer"
+                                                            >
+                                                                <option value="">Select type</option>
+                                                                {medias?.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                                                            </select>
+                                                            <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
+                                                        </div>
+
+                                                        <input
+                                                            value={contact.url}
+                                                            onChange={(e) => updateContact(contact.mediaId, 'url', e.target.value)}
+                                                            placeholder="https://example.com/username"
+                                                            className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder-gray-400 border-none focus:ring-0 px-0 py-2"
+                                                        />
+
+                                                        <button onClick={() => deleteContact(contact.mediaId)} className="text-gray-300 hover:text-red-500 p-2 transition-colors">
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                                <button onClick={addContact} className="flex items-center gap-2 py-2 px-3 text-sm font-semibold text-blue-600 hover:text-blue-700 rounded-md transition-colors w-fit">
+                                                    <Plus size={16} /> Add Link
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-dashed border-gray-100">
+                                                <button onClick={saveContacts} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm transition-all">
+                                                    <Save size={14} /> Save
+                                                </button>
+                                                <button onClick={cancelEditingContacts} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="w-full md:hidden mt-4 flex justify-center">
@@ -239,111 +315,25 @@ console.log(user)
                             </button>
                         </div>
                     </div>
-
-                    <div className="mt-6 md:ml-[168px] pt-4 border-t md:border-t-0 border-gray-100">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Connect</span>
-                            {!isEditingContacts && (
-                                <button onClick={startEditingContacts} className="text-gray-400 hover:text-blue-600 p-1 rounded-full hover:bg-blue-50 transition-all" title="Edit Contacts">
-                                    <Settings size={14} />
-                                </button>
-                            )}
-                        </div>
-
-                        {!isEditingContacts ? (
-                            <div className="flex flex-wrap gap-2 md:justify-start justify-center">
-                                <a href={`mailto:${user?.email}`} className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm">
-                                    <Mail size={14} className="text-gray-400 group-hover:text-blue-500" />
-                                    <span className="truncate max-w-[200px]">{user?.email}</span>
-                                </a>
-
-                                {user?.contacts?.map(contact => (
-                                    <a
-                                        key={contact.mediaId}
-                                        href={contact.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-blue-300 hover:shadow-sm transition-all text-sm"
-                                    >
-                                        <ContactIcon media={contact.media} />
-                                        <span className="capitalize font-medium">{contact.media}</span>
-                                        <ArrowUpRight size={12} className="text-gray-300 group-hover:text-blue-500" />
-                                    </a>
-                                ))}
-
-                                {(!user?.contacts?.length) && <span className="text-sm text-gray-400 italic px-2">No social links added.</span>}
-                            </div>
-                        ) : (
-                            <div className="bg-gray-50 rounded-xl p-4 border border-blue-100 shadow-inner animate-fadeIn">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {tempContacts.map(contact => {
-                                        const usedMedias = tempContacts.filter(c => c.mediaId !== contact.mediaId).map(c => c.media);
-                                        const sortedMedias = [
-                                            medias?.find(m => m.name === contact.media) || { id: contact.mediaId, name: contact.media },
-                                            ...medias?.filter(m => m.name !== contact.media && !usedMedias.includes(m.name)) ?? []
-                                        ]
-
-                                        return (
-                                            <div key={contact.mediaId} className="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-                                                <div className="relative">
-                                                    <select
-                                                        value={contact.media}
-                                                        onChange={(e) => updateContact(contact.mediaId, 'media', e.target.value)}
-                                                        className="appearance-none bg-transparent pl-2 pr-6 py-1 text-xs font-bold uppercase text-gray-600 focus:outline-none cursor-pointer w-20"
-                                                    >
-                                                        <option value="">Type</option>
-                                                        {sortedMedias.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
-                                                    </select>
-                                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-500">
-                                                        <ChevronDown size={10} />
-                                                    </div>
-                                                </div>
-                                                <div className="w-px h-4 bg-gray-300"></div>
-                                                <input
-                                                    value={contact.url}
-                                                    onChange={(e) => updateContact(contact.mediaId, 'url', e.target.value)}
-                                                    placeholder="Paste URL..."
-                                                    className="flex-1 text-xs border-none focus:ring-0 p-0 text-gray-700 placeholder-gray-400"
-                                                />
-                                                <button onClick={() => deleteContact(contact.mediaId)} className="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-red-50 transition-colors">
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        )
-                                    })}
-
-                                    <button onClick={addContact} className="flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50 transition-all text-xs font-medium h-[42px]">
-                                        <Plus size={14} /> Add New Link
-                                    </button>
-                                </div>
-
-                                <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-gray-200/60">
-                                    <button onClick={cancelEditingContacts} className="px-4 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50">Cancel</button>
-                                    <button onClick={saveContacts} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm">
-                                        <Save size={12} /> Save Changes
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex border-b border-gray-200 mb-6">
                     <button
-                        onClick={() => setActiveTab('projects')}
-                        className={`pb-4 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'projects' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+                        onClick={() => setHash('')}
+                        className={`cursor-pointer pb-4 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-all ${hash === '' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
                     >
                         <Briefcase size={18} />
                         Projects
-                        <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'projects' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
-                            {user?.projects?.length || 0}
+                        <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${hash === '' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                            {user?.projects?.length ?? 0}
                         </span>
                     </button>
+
                     <button
-                        onClick={() => setActiveTab('activity')}
-                        className={`pb-4 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'activity' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+                        onClick={() => setHash('activity')}
+                        className={`cursor-pointer pb-4 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-all ${hash === 'activity' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
                     >
                         <Globe size={18} />
                         Activity
@@ -351,10 +341,10 @@ console.log(user)
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {activeTab === 'projects' && (
+                    {hash === '' && (
                         <>
                             {user?.projects.map((project) => (
-                                <div key={project.projectId} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all group flex flex-col h-full">
+                                <div key={project.projectId} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-500 transition-all group flex flex-col h-full">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
                                             {project.name.charAt(0)}
@@ -377,11 +367,11 @@ console.log(user)
                                                 <Calendar size={12} className="mr-1.5" />
                                                 {formatDate(project.startDate)}
                                             </div>
-                                            {project.ownerId === user.id && <span className="text-indigo-500 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded">Owner</span>}
+                                            <div className='cursor-pointer flex hover:text-blue-500 hover:font-bold transition-all' onClick={() => router.push(`http://localhost:3000/project/${project.projectId}`)}>
+                                                <span className='me-1'>View project</span>
+                                                <ArrowRight className='my-auto' size={14} />
+                                            </div>
                                         </div>
-                                        <a href={`http://localhost:3000/project/${project.projectId}`} className="w-full block text-center py-2 bg-gray-50 text-gray-600 text-sm font-medium rounded hover:bg-blue-600 hover:text-white transition-all">
-                                            View Project
-                                        </a>
                                     </div>
                                 </div>
                             ))}
@@ -395,13 +385,13 @@ console.log(user)
                         </>
                     )}
 
-                    {activeTab === 'activity' && (
+                    {hash === 'activity' && (
                         <div className="col-span-1 md:col-span-3 bg-white rounded-xl p-12 text-center border border-gray-100 shadow-sm">
                             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Globe className="text-gray-400" size={32} />
                             </div>
                             <h3 className="text-gray-900 font-medium text-lg">No recent activity</h3>
-                            <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto">Activities such as task updates, comments, and project changes will appear here.</p>
+                            <p className="text-gray-500 text-sm mt-2 max-w-lg mx-auto">Activities such as task updates, comments, and project changes will appear here once available.</p>
                         </div>
                     )}
                 </div>

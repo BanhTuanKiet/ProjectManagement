@@ -63,6 +63,14 @@ export interface UserProfile {
     location: string
     contacts: Contact[]
     projects: ProjectBasic[]
+    subcription: Subcription
+}
+
+export interface Subcription {
+    planId: string
+    planName: string
+    startedAt: string
+    expiredAt: string
 }
 
 export interface Contact {
