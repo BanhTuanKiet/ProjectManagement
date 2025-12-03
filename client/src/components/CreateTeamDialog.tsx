@@ -17,7 +17,6 @@ import ColoredAvatar from "./ColoredAvatar"
 import axios from "@/config/axiosConfig"
 import { DialogProps, MembersSelection } from "@/utils/IDialogProps"
 
-
 export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
     const { members, project_name } = useProject()
     const [mockMembers, setMockMembers] = useState<Member[]>()

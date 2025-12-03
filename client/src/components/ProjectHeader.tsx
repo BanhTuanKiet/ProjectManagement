@@ -98,15 +98,15 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-800 shadow-sm ring-1 ring-black/5">
                         <span className="text-white text-lg font-bold">J</span>
                     </div>
-                    <span className="hidden font-bold text-lg tracking-tight text-foreground md:inline-block">JiraClone</span>
+                    <span className="hidden font-bold text-lg tracking-tight text-foreground md:inline-block">Our Website</span>
                 </div>
             </div>
 
             <div className="flex items-center gap-3">
-                <Button className="hidden h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm sm:flex items-center gap-2 transition-all active:scale-95">
+                {/* <Button className="hidden h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm sm:flex items-center gap-2 transition-all active:scale-95">
                     <Plus className="h-4 w-4" />
                     <span className="font-medium">Create</span>
-                </Button>
+                </Button> */}
 
                 <div className="relative" ref={notificationRef}>
                     <Button

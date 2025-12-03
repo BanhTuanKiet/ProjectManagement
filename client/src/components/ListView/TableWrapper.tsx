@@ -17,6 +17,7 @@ import DueDateCell from "../DueDateCell"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import SubtaskList from "../SubtaskList"
 import { getPriorityIcon } from "@/utils/statusUtils"
+import { BasicTask } from "@/utils/ITask"
 
 interface TableWrapperProps {
     tasks: Task[]
@@ -28,7 +29,7 @@ interface TableWrapperProps {
     handleMouseDown: (e: React.MouseEvent, columnIndex: number) => void
     toggleAllTasks: () => void
     toggleTaskSelection: (taskId: number) => void
-    handleCellEdit: (taskId: number, field: string, value: any) => void
+    handleCellEdit: (taskId: number, field: string, value: EditValue) => void
     handleDragStart: (e: React.DragEvent, taskId: number) => void
     handleDragOver: (e: React.DragEvent) => void
     handleDrop: (e: React.DragEvent, targetTaskId: number) => void
@@ -49,6 +50,7 @@ export const taskStatus = [
     { id: 4, name: 'Cancel', color: '#F97316' },     // orange
     { id: 5, name: 'Expired', color: '#EF4444' },    // red
 ]
+type EditValue = string | number | Member | UserMini | null;
 
 export default function TableWrapper({
     tasks,
@@ -133,7 +135,7 @@ export default function TableWrapper({
         try {
             const res = await axios.get(`/subtasks/byTask/${taskId}`)
             console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
-            const mapped = res.data.map((sub: any) => mapApiTaskToTask(sub))
+            const mapped = res.data.map((sub: BasicTask) => mapApiTaskToTask(sub))
             setSubTask(mapped)
             return mapped
         } catch (err) {

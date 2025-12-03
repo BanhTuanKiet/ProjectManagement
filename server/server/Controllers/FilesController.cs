@@ -92,7 +92,7 @@ namespace server.Controllers
                 );
             }
 
-            return Ok(uploadedFile);
+            return Ok(new { message = "upload file successful!", uploadedFile });
         }
 
         [HttpDelete("{fileId}")]

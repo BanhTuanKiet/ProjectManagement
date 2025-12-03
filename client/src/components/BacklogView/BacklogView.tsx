@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import axios from '@/config/axiosConfig'
 import { useParams } from 'next/navigation'
 import type { ParamValue } from 'next/dist/server/request/params'
-import TaskDetailModal from '../TaskDetailModal'
+// import TaskDetailModal from '../TaskDetailModal'
 import BacklogContent from './BacklogSections'
 import { useProject } from '@/app/(context)/ProjectContext'
 import SprintCard from '../SprintCard'
@@ -12,10 +12,11 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useTask } from '@/app/(context)/TaskContext'
 import { Console } from 'console'
 import { Toaster } from 'react-hot-toast'
+import { Task } from '@/utils/mapperUtil'
 
 
 interface WorkItem { id: number; key: string; title: string; status: 'TO DO' | 'IN PROGRESS' | 'DONE'; assignee?: string; assigneeColor?: string; sprintId?: number | null, deadline?: string; }
-interface Sprint { sprintId: number; name: string; projectId: number; status?: 'active' | 'planned' | 'completed'; workItems: WorkItem[], startDate: string; endDate: string }
+interface Sprint { sprintId: number; name: string; projectId: number; status: string; workItems: WorkItem[], startDate: string; endDate: string }
 
 export default function BacklogView() {
     const [sprints, setSprints] = useState<Sprint[]>([])
@@ -57,17 +58,26 @@ export default function BacklogView() {
             return 'TO DO';
         };
 
-        const allTasks: WorkItem[] = tasks.map((t: any) => ({
+        const allTasks: WorkItem[] = tasks.map(t => ({
             id: t.taskId,
-            key: t.key || `TASK-${t.taskId}`,
+            key: `TASK-${t.taskId}`,
             title: t.title,
             status: normalizeStatus(t.status),
             sprintId: t.sprintId,
             deadline: t.deadline
         }));
 
+        interface SprintResponse {
+            sprintId: number;
+            name: string;
+            projectId: number;
+            startDate: string;
+            endDate: string;
+            status: string;
+        }
 
-        const sprintData: Sprint[] = sprintRes.data.map((s: any) => ({
+
+        const sprintData: Sprint[] = (sprintRes.data as SprintResponse[]).map((s) => ({
             ...s,
             workItems: allTasks.filter(t => t.sprintId === s.sprintId && t.sprintId !== -1)
         }))
