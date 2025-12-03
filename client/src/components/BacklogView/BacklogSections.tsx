@@ -20,7 +20,7 @@ interface Sprint {
     projectId: number
     startDate?: string
     endDate?: string
-    status?: 'active' | 'planned' | 'completed'
+    status: string;
     workItems: WorkItem[]
 }
 

@@ -59,7 +59,7 @@ export default function TaskDetailMain({
     }, [task.title, task.description]);
 
     // --- CORE FUNCTION: UPDATE FIELD ---
-    const updateTaskField = async (key: string, value: any) => {
+    const updateTaskField = async (key: string, value: string) => {
         try {
             // Validate cơ bản
             if (key === "title" && !value.trim()) {

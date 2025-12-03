@@ -6,6 +6,10 @@ import {
     DndContext,
     closestCorners,
     useDroppable,
+    DragEndEvent,
+    useSensor,
+    useSensors,
+    PointerSensor,
 } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -17,7 +21,7 @@ import SortableTaskCard from "@/components/SortableTaskCard";
 import { useParams } from "next/navigation";
 import { BasicTask } from "@/utils/ITask";
 import { taskStatus } from "@/utils/statusUtils";
-import TaskDetailDrawer from "@/components/TaskDetailModal";
+import TaskDetailModal from "../TaskDetail/TaskDetailModal";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Input } from "@/components/ui/input";
 import { useTask } from "@/app/(context)/TaskContext"
@@ -81,11 +85,21 @@ export default function BoardView() {
         }
     };
 
-    const handleDragEnd = async (event: any) => {
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // Phải kéo di chuyển 8px thì mới tính là Drag. Dưới 8px sẽ là Click.
+            },
+        })
+    );
+
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) return;
 
         const activeTaskId = Number(active.id);
+        const overId = String(over.id);
+
         let newStatus = "";
         let oldStatus = "";
 
@@ -93,11 +107,13 @@ export default function BoardView() {
 
         setFeatures((prev) => {
             const oldIndex = prev.findIndex((t) => t.taskId === activeTaskId);
-            const overTask = prev.find((t) => t.taskId.toString() === over.id);
+            if (oldIndex === -1) return prev;
+
+            const overTask = prev.find((t) => t.taskId.toString() === overId);
 
             if (!overTask) {
                 // Kéo sang cột trống (chỉ đổi status)
-                newStatus = over.id as string;
+                newStatus = overId;
                 oldStatus = prev[oldIndex].status;
 
                 const validStatuses = ["Todo", "In Progress", "Done", "Cancel", "Expired"];
@@ -108,7 +124,7 @@ export default function BoardView() {
                 );
             } else {
                 // Kéo trong cùng cột hoặc sang cột khác
-                const newIndex = prev.findIndex((t) => t.taskId.toString() === over.id);
+                const newIndex = prev.findIndex((t) => t.taskId.toString() === overId);
                 if (prev[oldIndex].status === overTask.status) {
                     return arrayMove(prev, oldIndex, newIndex);
                 } else {
@@ -151,7 +167,7 @@ export default function BoardView() {
                 />
             </div>
 
-            <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
                 <div id="boardArea" className="grid grid-cols-5 gap-4">
                     {taskStatus.map((status) => {
                         const columnTasks = filteredTasks.filter(
@@ -247,7 +263,7 @@ export default function BoardView() {
             </DndContext>
 
             {selectedTask && (
-                <TaskDetailDrawer
+                <TaskDetailModal
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />

@@ -2,10 +2,10 @@ import axios from "@/config/axiosConfig";
 import { useEffect, useState } from "react";
 import { Paperclip, Trash, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TaskFile } from "@/utils/Ifile";
 
-function FilePreviewModal({ previewFile, setPreviewFile }: any) {
+function FilePreviewModal({ previewFile, setPreviewFile }: { previewFile: TaskFile | null, setPreviewFile: React.Dispatch<React.SetStateAction<TaskFile | null>> }) {
     if (!previewFile) return null;
-
     return (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] relative">
@@ -54,8 +54,8 @@ export default function TaskAttachments({
     taskId,
     projectId,
 }: TaskAttachmentsProps) {
-    const [files, setFiles] = useState<any[]>([]);
-    const [previewFile, setPreviewFile] = useState<any | null>(null);
+    const [files, setFiles] = useState<TaskFile[]>([]);
+    const [previewFile, setPreviewFile] = useState<TaskFile | null>(null);
 
     // 1. Tự fetch files
     useEffect(() => {
@@ -82,8 +82,7 @@ export default function TaskAttachments({
 
         try {
             const res = await axios.post(`/files/upload/${projectId}`, formData);
-            alert("Upload thành công!");
-            setFiles((prev) => [res.data, ...prev]);
+            setFiles((prev) => [...prev, res.data]);
         } catch (err) {
             console.error("Upload error:", err);
         }

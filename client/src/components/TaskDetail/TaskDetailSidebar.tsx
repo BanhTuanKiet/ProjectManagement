@@ -74,7 +74,7 @@ export default function TaskDetailSidebar({
         setPriority(task.priority);
     }, [task.createdAt, task.deadline, task.priority]);
 
-    const updateTaskField = async (key: string, value: any) => {
+    const updateTaskField = async (key: string, value: number | string) => {
         try {
             await axios.put(`/tasks/${projectId}/tasks/${taskId}/update`, {
                 [key]: value

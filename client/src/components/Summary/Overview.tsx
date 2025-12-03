@@ -2,10 +2,60 @@ import { BasicTask, TaskStats } from '@/utils/ITask'
 import { formatTaskStatus, getPriorityBadge, getPriorityLabel, getTaskStatusBadge } from '@/utils/statusUtils'
 import { AlertCircle, BarChart3, CalendarX, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import React, { useEffect } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Area, AreaChart } from "recharts"
+import { TooltipProps } from "recharts"
 import { driver } from 'driver.js'
 import axios from "@/config/axiosConfig";
 import { useProject } from "@/app/(context)/ProjectContext"
+
+// PieChart payload type
+interface PieDataItem {
+    name: string
+    value: number
+}
+
+// LineChart payload type
+interface LineDataItem {
+    name: string
+    value: number
+    color?: string
+    payload: {
+        date: string
+    }
+}
+
+// Pie Tooltip Props
+interface CustomPieTooltipProps extends TooltipProps<number, string> {
+    active?: boolean
+    payload?: PieDataItem[]
+}
+
+// Line Tooltip Props
+interface CustomLineTooltipProps extends TooltipProps<number, string> {
+    active?: boolean
+    payload?: LineDataItem[]
+}
+
+// User statistics shape used in tasksByUser
+interface UserStats {
+    user: string
+    total: number
+    todo: number
+    inProgress: number
+    done: number
+    cancel: number
+    expired: number
+}
+
+type TaskStatusKey = '' | 'todo' | 'inProgress' | 'done' | 'cancel' | 'expired';
+
+interface TaskByDate {
+    date: string;
+    todo: number;
+    inProgress: number;
+    done: number;
+    cancel: number;
+    expired: number;
+}
 
 const taskStatuses = [
     { key: 'total', color: 'from-purple-500 to-purple-600', Icon: BarChart3, textClass: 'text-purple-100', iconClass: 'text-purple-200' },
@@ -16,7 +66,7 @@ const taskStatuses = [
     { key: 'expired', color: 'from-orange-400 to-orange-500', Icon: CalendarX, textClass: 'text-orange-100', iconClass: 'text-orange-200', isSmall: true, bgColor: "bg-red-400" },
 ]
 
-const CustomPieTooltip = ({ active, payload }: any) => {
+const CustomPieTooltip = ({ active, payload }: CustomPieTooltipProps) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         return (
@@ -29,12 +79,12 @@ const CustomPieTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-const CustomLineTooltip = ({ active, payload }: any) => {
+const CustomLineTooltip = ({ active, payload }: CustomLineTooltipProps) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-lg border border-gray-700">
                 <p className="text-xs text-gray-300 mb-1">{payload[0].payload.date}</p>
-                {payload.map((entry: any, index: number) => (
+                {payload.map((entry: LineDataItem, index: number) => (
                     <p key={index} className="text-xs font-semibold" style={{ color: entry.color }}>
                         {entry.name}: {entry.value}
                     </p>
@@ -52,6 +102,8 @@ export default function Overview({
 }) {
 
     const handleNavigateWithStatus = (statusKey: string) => {
+        if (statusKey === "total")
+            statusKey = ""
         if (statusKey === "inProgress")
             statusKey = "In Progress"
         if (statusKey === "todo")
@@ -112,7 +164,7 @@ export default function Overview({
         else if (st === "expired") acc[task.assignee].expired++
 
         return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, UserStats>)
 
     const tasksByUserByDate = mockTasks.reduce((acc, task) => {
         const date = new Date(task.createdAt).toISOString().split("T")[0];
@@ -130,11 +182,19 @@ export default function Overview({
             };
         }
 
-        const st = task.status.toLowerCase();
-        acc[user][date][st === "in progress" ? "inProgress" : st]++;
+        const statusMap: Record<string, TaskStatusKey> = {
+            todo: 'todo',
+            'in progress': 'inProgress',
+            done: 'done',
+            cancel: 'cancel',
+            expired: 'expired',
+        };
+
+        const key = statusMap[task.status.toLowerCase()];
+        if (key) acc[user][date][key]++;
 
         return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, Record<string, TaskByDate>>);
 
     const userStats = Object.values(tasksByUser)
     const { project_name, members } = useProject()

@@ -73,7 +73,7 @@ export default function SubtaskList({
                 console.log("Mapped updated subtask:", updatedSubtask)
                 setLocalSubtasks(prev =>
                     prev.map(s => (s.id === subtaskId ? updatedSubtask : s))
-                )
+                );
             } catch (err) {
                 console.error("Subtask update failed:", err)
             } finally {

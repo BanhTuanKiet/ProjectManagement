@@ -8,7 +8,7 @@ export interface Task {
   status: "To Do" | "Done" | "In Progress"
   assignee?: UserMini
   dueDate?: string
-  type: "Task"
+  type?: "Task" | "Bug" | "Feature" | string
   created?: string
   reporter?: UserMini
   description?: string
