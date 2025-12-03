@@ -549,6 +549,16 @@ namespace server.Services.Project
             }
         }
 
+        public async Task<int> DeleteTaskForeverAsync(int taskId)
+        {
+            var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM TaskHistory WHERE TaskId = {0}", taskId);
+
+            if (rowsAffected == 0)
+                throw new ErrorException(500, $"Permanent delete failed for TaskId {taskId}.");
+            return rowsAffected;
+        }
+
         public async Task<IEnumerable<object>> FilterDeletedTasks(int projectId, Dictionary<string, string> filters, string? keyword)
         {
             // 1️⃣ Tạo query cơ bản (dùng join thay cho Include)
@@ -874,10 +884,10 @@ namespace server.Services.Project
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
 
-
         public async Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role)
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+
             if (task == null)
                 return false;
 
@@ -981,7 +991,6 @@ namespace server.Services.Project
                 string assigneeDisplay = task.Assignee.UserName;
                 var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
                 string projectTitle = project.Name;
-
 
                 subject = $"[Progress Feedback] {taskKey}: {taskTitle}";
 

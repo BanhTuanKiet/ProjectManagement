@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace server.Models;
 
-public partial class ProjectManagementContext : IdentityDbContext<ApplicationUser, ApplicationRole, string,
-                                                                  ApplicationUserClaim, ApplicationUserRole,
-                                                                ApplicationUserLogin, ApplicationRoleClaim, ApplicationUserToken>
+public partial class ProjectManagementContext : IdentityDbContext<ApplicationUser, ApplicationRole, string, ApplicationUserClaim, ApplicationUserRole, ApplicationUserLogin, ApplicationRoleClaim, ApplicationUserToken>
 {
     public ProjectManagementContext()
     {
@@ -468,8 +466,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
             entity.HasOne(d => d.Task).WithMany(p => p.SubTasks)
                 .HasForeignKey(d => d.TaskId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_SubTasks_Task");
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_SubTasks_Task_NoAction");
         });
 
         modelBuilder.Entity<Tag>(entity =>
@@ -521,7 +519,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                         .HasConstraintName("FK_TaskTags_Tag"),
                     l => l.HasOne<Task>().WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK_TaskTags_Task"),
                     j =>
                     {
