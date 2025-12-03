@@ -71,12 +71,12 @@ export default function BoardView() {
         }
     };
 
-    const deleteTask = async (taskId: number) => {
-        try {
-            await axios.delete(`/tasks/bulk-delete/`, {
-                data: {
-                    ProjectId: projectId,
-                    Ids: [taskId],
+  const deleteTask = async (taskId: number) => {
+    try {
+      await axios.delete(`/tasks/bulk-delete/${projectId}`, {
+        data: {
+          ProjectId: projectId,
+          Ids: [taskId],
                 }
             });
             setFeatures((prev) => prev.filter((t) => t.taskId !== taskId));
