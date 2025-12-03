@@ -93,7 +93,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         });
 
         modelBuilder.Entity<TeamMembers>()
-            .HasKey(tm => new { tm.TeamId });
+            .HasKey(tm => new { tm.TeamId, tm.UserId });
 
         modelBuilder.Entity<TeamMembers>()
             .HasOne(tm => tm.Team)

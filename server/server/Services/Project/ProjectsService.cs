@@ -338,12 +338,33 @@ namespace server.Services.Project
             var projectMembers = await _context.ProjectMembers
                 .Include(pm => pm.Project)
                 .Include(pm => pm.User)
-                .ThenInclude(u => u.TeamMembers)
-                .ThenInclude(tm => tm.Team)
                 .Where(pm => pm.ProjectId == projectId)
                 .ToListAsync();
 
-            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+            var membersDTO = _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+
+            foreach (var pm in membersDTO)
+            {
+                var team = await _context.Teams
+                    .Include(t => t.Members)
+                    .Where(t => t.ProjectId == projectId)
+                    .Where(t => t.Members.Any(m => m.UserId == pm.userId))
+                    .Select(t => new
+                    {
+                        TeamId = t.Id,
+                        LeaderId = t.LeaderId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (team != null)
+                {
+                    pm.TeamId = team.TeamId.ToString();
+                    pm.LeaderId = team.LeaderId;
+                }
+            }
+
+
+            return membersDTO;
         }
     }
 }
