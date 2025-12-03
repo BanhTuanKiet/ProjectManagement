@@ -113,3 +113,18 @@ export interface UpdateTask {
   CreatedAt?: string | null
   Deadline?: string | null 
 }
+
+export interface TaskResponse {
+    taskId: number
+    key?: string
+    title: string
+    status?: string
+    sprintId?: number | null
+    assigneeName?: string
+}
+
+export interface TaskBody {
+    title: string
+    status: string
+    sprintId? : number
+}

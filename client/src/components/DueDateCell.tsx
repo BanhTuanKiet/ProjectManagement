@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { getDeadlineStyle } from "@/utils/dateUtils";
 import { format } from "date-fns"
+import type { Task } from "@/utils/mapperUtil"
 
-
-function DueDateCell({ task, handleCellEdit }: { task: any; handleCellEdit: Function }) {
+function DueDateCell({ task, handleCellEdit }: { task: Task; handleCellEdit: Function }) {
     const style = getDeadlineStyle(task)
     const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
         task.dueDate ? new Date(task.dueDate) : undefined

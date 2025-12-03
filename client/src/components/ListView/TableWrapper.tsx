@@ -17,6 +17,8 @@ import DueDateCell from "../DueDateCell"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import SubtaskList from "../SubtaskList"
 import { getPriorityIcon } from "@/utils/statusUtils"
+import { BasicTask } from "@/utils/ITask"
+import DeleteConfirmPopover from "../DeleteConfirmPopover"
 
 interface TableWrapperProps {
     tasks: Task[]
@@ -28,7 +30,7 @@ interface TableWrapperProps {
     handleMouseDown: (e: React.MouseEvent, columnIndex: number) => void
     toggleAllTasks: () => void
     toggleTaskSelection: (taskId: number) => void
-    handleCellEdit: (taskId: number, field: string, value: any) => void
+    handleCellEdit: (taskId: number, field: string, value: EditValue) => void
     handleDragStart: (e: React.DragEvent, taskId: number) => void
     handleDragOver: (e: React.DragEvent) => void
     handleDrop: (e: React.DragEvent, targetTaskId: number) => void
@@ -49,6 +51,7 @@ export const taskStatus = [
     { id: 4, name: 'Cancel', color: '#F97316' },     // orange
     { id: 5, name: 'Expired', color: '#EF4444' },    // red
 ]
+type EditValue = string | number | Member | UserMini | null;
 
 export default function TableWrapper({
     tasks,
@@ -79,6 +82,9 @@ export default function TableWrapper({
     const [newSubSummary, setNewSubSummary] = useState("")
     const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set())
     const [subTask, setSubTask] = useState<Task[] | null>(null)
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [subtasksForDelete, setSubtasksForDelete] = useState<Record<number, Task[]>>({});
+
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -133,13 +139,34 @@ export default function TableWrapper({
         try {
             const res = await axios.get(`/subtasks/byTask/${taskId}`)
             console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
-            const mapped = res.data.map((sub: any) => mapApiTaskToTask(sub))
+            const mapped = res.data.map((sub: BasicTask) => mapApiTaskToTask(sub))
             setSubTask(mapped)
             return mapped
         } catch (err) {
             console.error("Error fetching subtasks", err)
             return []
         }
+    }
+
+    const handleDeleteClick = async () => {
+        const selectedArray = Array.from(selectedTasks);
+        const result: Record<number, Task[]> = {};
+
+        await Promise.all(
+            selectedArray.map(async (taskId) => {
+                const res = await axios.get(`/subtasks/byTask/${taskId}`);
+                console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
+                result[taskId] = res.data.map((sub: BasicTask) => mapApiTaskToTask(sub));
+                console.log("Mapped subtasks for TaskId " + taskId + ": ", result[taskId])
+            })
+        );
+        setSubtasksForDelete(result);
+        setIsDeleteDialogOpen(true)
+    }
+
+    const onConfirmDelete = () => {
+        deleteSelectedTasks() // Gọi hàm xóa từ props
+        setIsDeleteDialogOpen(false)
     }
 
     // ----- Render Header -----
@@ -534,15 +561,30 @@ export default function TableWrapper({
                 </React.Fragment>
             ))}
             {selectedTasks.size > 0 && (
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 flex items-center gap-4 z-50">
-                    <span>{selectedTasks.size} work items selected</span>
-                    <Button variant="outline" onClick={copySelectedTasks}>
-                        Copy
-                    </Button>
-                    <Button variant="destructive" onClick={deleteSelectedTasks}>
-                        Delete
-                    </Button>
-                </div>
+                <>
+                    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white shadow-lg rounded-md px-4 py-2 flex items-center gap-4 z-50">
+                        <span>{selectedTasks.size} work items selected</span>
+                        <Button variant="outline" onClick={copySelectedTasks}>
+                            Copy
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteClick()}
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                    {isDeleteDialogOpen && (
+                        <DeleteConfirmPopover
+                            taskCount={selectedTasks.size}
+                            subtaskCount={Object.values(subtasksForDelete).reduce((acc, arr) => acc + arr.length, 0)}
+                            onConfirmDelete={deleteSelectedTasks}
+                            open={isDeleteDialogOpen}
+                            setOpen={setIsDeleteDialogOpen}
+                        />
+                    )}
+                </>
             )}
         </div>
     )
