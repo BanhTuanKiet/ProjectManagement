@@ -110,10 +110,9 @@ export default function PlanPaymentPage() {
         }
         setIsLoading(true)
 
-        // Lưu ý: Luôn gửi giá USD (originalPrice) đi thanh toán
         const order = {
             planId: selectedPlan.id,
-            amount: selectedPlan?.price, // Giá gốc từ plan (USD)
+            amount: selectedPlan?.price,
             name: selectedPlan.name,
             currency: "USD",
             billingPeriod: "monthly",
@@ -122,13 +121,14 @@ export default function PlanPaymentPage() {
         }
 
         try {
-            if (selectedMethod === "paypal") {
+            console.log(order)
+            // if (selectedMethod === "paypal") {
                 const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
                 const links = response.data.links ?? []
                 if (links[1]?.href) {
                     window.open(links[1].href)
                 }
-            }
+            // }
         } catch (error) {
             console.log(error)
         } finally {
@@ -257,13 +257,13 @@ export default function PlanPaymentPage() {
                                     onClick={handlePayment}
                                     disabled={isLoading}
                                     className={`
-            w-full md:flex-1
-            cursor-pointer bg-blue-600 hover:from-blue-700 hover:to-blue-700
-            text-white font-semibold py-3 px-4 rounded-xl
-            transition-all duration-200 shadow-lg hover:shadow-xl
-            disabled:opacity-50 disabled:cursor-not-allowed
-            flex items-center justify-center gap-2 group
-        `}
+                                        w-full md:flex-1
+                                        cursor-pointer bg-blue-600 hover:from-blue-700 hover:to-blue-700
+                                        text-white font-semibold py-3 px-4 rounded-xl
+                                        transition-all duration-200 shadow-lg hover:shadow-xl
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        flex items-center justify-center gap-2 group
+                                    `}
                                 >
                                     {isLoading ? (
                                         <>
