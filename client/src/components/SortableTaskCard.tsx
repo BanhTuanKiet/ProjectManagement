@@ -35,7 +35,7 @@ export default function SortableTaskCard({ task, onClick }: SortableTaskCardProp
       onClick={onClick}
       className={`bg-white rounded-lg p-3 shadow ${getBorderColor(task.status)}`}
     >
-      <p className="font-medium pb-1">{task.title}</p>
+      <p className="font-medium pb-1" style={{ fontSize: "14px" }}>{task.title}</p>
       <div className="text-xs text-gray-500 flex flex-col mt-1">
         <span className="flex gap-2 pb-2">
           <ClockAlert className={`${isOverdue ? "text-red-600" : "text-blue-600"} size-5 pl-0.5`} />
@@ -49,7 +49,7 @@ export default function SortableTaskCard({ task, onClick }: SortableTaskCardProp
             name={task.assignee}
             size="sm"
           />
-          <p className="font-normal pt-1">{task.assignee || "Unassigned"} </p>
+          <p className="font-normal pt-1 ms-1">{task.assignee || "Unassigned"} </p>
         </span>
       </div>
     </div>

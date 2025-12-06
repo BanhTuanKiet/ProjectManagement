@@ -163,7 +163,7 @@ export default function ProjectInterface() {
                     </div>
                 </div>
 
-                <div className="px-6 bg-white border-t border-gray-200">
+                <div className="px-1 bg-white border-t border-gray-200">
                     <nav className="flex items-center border-b border-gray-200">
                         <div className="flex space-x-1 overflow-x-auto no-scrollbar">
                             {visibleTabs?.map((tab) => (
