@@ -99,7 +99,7 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
                                         className="flex items-center gap-1 p-1 bg-white rounded border hover:bg-gray-100 w-[48%]"
                                         onClick={() => handleAddMember(m)}
                                     >
-                                        <ColoredAvatar id={m.userId} name={m.name} size="sm" />
+                                        <ColoredAvatar src={m.avatarUrl} id={m.userId} name={m.name} size="sm" />
                                         <span className="truncate">{m.name}</span>
                                     </button>
                                 ))}

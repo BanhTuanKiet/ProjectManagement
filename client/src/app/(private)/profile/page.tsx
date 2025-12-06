@@ -12,37 +12,70 @@ import {
     X,
     ArrowRight,
 } from 'lucide-react'
-import { Contact, UserProfile } from '@/utils/IUser'
+import { Contact, TeamMembers, UserProfile } from '@/utils/IUser'
 import axios from '@/config/axiosConfig'
 import { formatDate } from '@/utils/dateUtils'
 import { ContactIcon, getRoleBadge } from '@/utils/statusUtils'
 import ColoredAvatar from '@/components/ColoredAvatar'
 import { Media } from '@/utils/IContact'
+import TeamMemberDisplay from '@/components/TeamMemberDisplay'
 
 export default function Page() {
     const [user, setUser] = useState<UserProfile>()
-    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'activity'>('projects')
+    const [activeTab, setActiveTab] = useState<'projects' | 'team'>('projects')
     const [isEditingContacts, setIsEditingContacts] = useState(false)
     const [tempContacts, setTempContacts] = useState<Contact[]>([])
     const [medias, setMedias] = useState<Media[]>()
     const [isEditingInfo, setIsEditingInfo] = useState(false)
     const [tempInfo, setTempInfo] = useState({ name: "", location: "" })
 
+    const [allMember, setAllMember] = useState<TeamMembers[]>([])
+    const [searchTeam, setSearchTeam] = useState("")
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get("email");
+
     useEffect(() => {
         const fetchUses = async () => {
             try {
-                const response = await axios.get(`/users/profile`)
-                setUser(response.data)
-                setTempInfo({
-                    name: response.data.name,
-                    location: response.data.location
-                })
+                if (email) {
+                    const response = await axios.get(`/users/profile/${email}`)
+                    setUser(response.data)
+                    setTempInfo({
+                        name: response.data.name,
+                        location: response.data.location
+                    })
+                }
+                else {
+                    const response = await axios.get(`/users/profile/${"not-email"}`)
+                    setUser(response.data)
+                    setTempInfo({
+                        name: response.data.name,
+                        location: response.data.location
+                    })
+                }
+
             } catch (error) {
                 console.log(error)
             }
         }
 
         fetchUses()
+    }, [])
+
+    useEffect(() => {
+        const fetchMember = async () => {
+            try {
+                if (!email) {
+                    const response = await axios.get(`/teams/all-members`)
+                    console.log(response.data)
+                    setAllMember(response.data)
+                }
+            } catch (error) {
+                console.log(error)
+                setAllMember([])
+            }
+        }
+        fetchMember()
     }, [])
 
     useEffect(() => {
@@ -104,18 +137,20 @@ export default function Page() {
 
                     return {
                         ...item,
-                        mediaId: mediaObj ? mediaObj.id : item.mediaId
+                        mediaId: mediaObj ? mediaObj.id : item.mediaId,
+                        media: item.media,
                     }
                 })
                 .filter(c => c.media.trim() !== '' && c.url.trim() !== '')
 
-            const finalContacts = normalizedContacts.map(({ media, ...rest }) => rest)
+            const finalContactsForApi = normalizedContacts.map(({ media, ...rest }) => rest)
+
+            await axios.put(`/medias/contact`, finalContactsForApi)
 
             setUser(prev => ({
                 ...prev!,
                 contacts: normalizedContacts
             }))
-            await axios.put(`/medias/contact`, finalContacts)
         } catch (error) {
             console.log(error)
         } finally {
@@ -125,7 +160,7 @@ export default function Page() {
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (!file) return;
+        if (!file) return
 
         const formData = new FormData()
         formData.append("file", file)
@@ -171,28 +206,30 @@ export default function Page() {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
                     <div className="lg:col-span-4 xl:col-span-3">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden z-99 top-20 mt-20">
+                        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-10 top-20 sticky">
                             <div className="p-6 flex flex-col items-center text-center border-b border-gray-100">
                                 {user &&
                                     <div className="relative">
                                         <ColoredAvatar src={user?.avatar} id={user?.id} name={user?.name} size='xxl' />
-
-                                        <div className="mt-3 text-center">
-                                            <label
-                                                htmlFor="avatarUpload"
-                                                className="cursor-pointer text-sm text-blue-600 hover:underline"
-                                            >
-                                                Change avatar
-                                            </label>
-                                            <input
-                                                id="avatarUpload"
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={handleAvatarChange}
-                                            />
-                                        </div>
+                                        {!email && (
+                                            <div className="mt-3 text-center">
+                                                <label
+                                                    htmlFor="avatarUpload"
+                                                    className="cursor-pointer text-sm text-blue-600 hover:underline"
+                                                >
+                                                    Change avatar
+                                                </label>
+                                                <input
+                                                    id="avatarUpload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={handleAvatarChange}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 }
 
@@ -207,12 +244,14 @@ export default function Page() {
                                                 {user?.location}
                                             </div>
 
-                                            <button
-                                                onClick={() => setIsEditingInfo(true)}
-                                                className="mt-2 text-xs text-blue-600 hover:underline"
-                                            >
-                                                Edit info
-                                            </button>
+                                            {!email && (
+                                                <button
+                                                    onClick={() => setIsEditingInfo(true)}
+                                                    className="mt-2 text-xs text-blue-600 hover:underline"
+                                                >
+                                                    Edit info
+                                                </button>
+                                            )}
                                         </>
                                     ) : (
                                         <div className="space-y-2">
@@ -220,7 +259,7 @@ export default function Page() {
                                                 type="text"
                                                 value={tempInfo.name}
                                                 onChange={(e) => updateInfo("name", e.target.value)}
-                                                className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                                                className="border border-gray-300 rounded px-2 py-1 w-full text-sm focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Enter name"
                                             />
 
@@ -228,16 +267,16 @@ export default function Page() {
                                                 type="text"
                                                 value={tempInfo.location}
                                                 onChange={(e) => updateInfo("location", e.target.value)}
-                                                className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                                                className="border border-gray-300 rounded px-2 py-1 w-full text-sm focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Enter location"
                                             />
 
-                                            <div className="flex gap-2 justify-center">
+                                            <div className="flex gap-2 justify-center pt-1">
                                                 <button
                                                     onClick={handleInfoChange}
-                                                    className="px-2 py-1 text-xs bg-green-600 text-white rounded"
+                                                    className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition"
                                                 >
-                                                    Save
+                                                    <Save size={12} className='inline mr-1' /> Save
                                                 </button>
 
                                                 <button
@@ -248,9 +287,9 @@ export default function Page() {
                                                         })
                                                         setIsEditingInfo(false)
                                                     }}
-                                                    className="px-2 py-1 text-xs bg-gray-300 rounded"
+                                                    className="px-3 py-1 text-xs bg-gray-300 rounded hover:bg-gray-400 transition"
                                                 >
-                                                    Cancel
+                                                    <X size={12} className='inline mr-1' /> Cancel
                                                 </button>
                                             </div>
                                         </div>
@@ -338,12 +377,9 @@ export default function Page() {
                                                     medias.find(m => m.name === contact.media) ||
                                                     { id: contact.mediaId, name: contact.media }
 
-                                                const sortedMedias = [
-                                                    currentMediaObj,
-                                                    ...medias.filter(
-                                                        m => m.name !== contact.media && !usedMedias.includes(m.name)
-                                                    )
-                                                ]
+                                                const availableMedias = medias.filter(
+                                                    m => m.name === contact.media || !usedMedias.includes(m.name)
+                                                )
 
                                                 return (
                                                     <div key={contact.mediaId} className="flex items-center gap-2 animate-fadeIn">
@@ -351,10 +387,10 @@ export default function Page() {
                                                         <select
                                                             value={contact.media}
                                                             onChange={(e) => updateContact(contact.mediaId, 'media', e.target.value)}
-                                                            className="text-xs border border-gray-300 rounded p-1 w-20"
+                                                            className="text-xs border border-gray-300 rounded p-1 w-24 focus:ring-blue-500 focus:border-blue-500 capitalize"
                                                         >
                                                             <option value="">Select</option>
-                                                            {sortedMedias.map(m => (
+                                                            {availableMedias.map(m => (
                                                                 <option key={m.id} value={m.name}>{m.name}</option>
                                                             ))}
                                                         </select>
@@ -364,12 +400,13 @@ export default function Page() {
                                                             value={contact.url}
                                                             onChange={(e) => updateContact(contact.mediaId, 'url', e.target.value)}
                                                             placeholder="https://..."
-                                                            className="text-xs border border-gray-300 rounded p-1 flex-1 min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                                                            className="text-xs border border-gray-300 rounded p-1 flex-1 min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap focus:ring-blue-500 focus:border-blue-500"
                                                         />
 
                                                         <button
                                                             onClick={() => deleteContact(contact.mediaId)}
-                                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                            title="Delete"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -391,34 +428,35 @@ export default function Page() {
                     </div>
 
                     <div className="lg:col-span-8 xl:col-span-9 mt-6 lg:mt-20">
-                        <div className="border-b border-gray-200 my-6">
+
+                        <div className="border-b border-gray-200 mb-6 bg-white rounded-lg shadow-sm px-4">
                             <nav className="-mb-px flex space-x-8">
                                 <button
                                     onClick={() => setActiveTab('projects')}
-                                    className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'projects'
+                                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'projects'
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
-                                    Project participation ({user?.projects?.length})
+                                    Project participation ({user?.projects?.length || 0})
                                 </button>
                                 <button
-                                    onClick={() => setActiveTab('activity')}
-                                    className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'activity'
+                                    onClick={() => setActiveTab('team')}
+                                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'team'
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
-                                    Recent Activity
+                                    Team ({allMember.length})
                                 </button>
                             </nav>
                         </div>
 
                         {activeTab === 'projects' && (
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
-                                    <h2 className="text-base font-semibold text-gray-800">Projects</h2>
-                                    <button className="text-sm text-blue-600 hover:underline">Xem tất cả</button>
+                            <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+                                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                                    <h2 className="text-lg font-semibold text-gray-800">Projects You are Involved In</h2>
+                                    <button className="text-sm text-blue-600 hover:underline">View all</button>
                                 </div>
                                 <div className="divide-y divide-gray-100">
                                     {user?.projects.map((project) => (
@@ -426,7 +464,7 @@ export default function Page() {
                                             <div className="flex items-start justify-between">
                                                 <div className="flex gap-4">
                                                     <div className="mt-1">
-                                                        <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                                                        <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
                                                             {project.name.charAt(0)}
                                                         </div>
                                                     </div>
@@ -437,42 +475,53 @@ export default function Page() {
                                                         <p className="mt-1 text-sm text-gray-500 max-w-2xl">
                                                             {project.description}
                                                         </p>
-                                                        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
                                                             <div className="flex items-center gap-1.5">
-                                                                <Calendar size={14} />
-                                                                <span>{formatDate(project.startDate)} - {formatDate(project.endDate)}</span>
+                                                                <Calendar size={14} className='text-blue-400' />
+                                                                <span className='font-medium'>{formatDate(project.startDate)} - {formatDate(project.endDate)}</span>
                                                             </div>
                                                             <div className="flex items-center gap-1.5">
-                                                                Owner:
-                                                                <span className="p-1 rounded-full bg-indigo-100 flex items-center justify-center text-xs text-indigo-700 font-bold">
+                                                                <span className='font-medium'>Owner:</span>
+                                                                <span className="text-xs bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
                                                                     {project?.ownerId === user.id ? "Me" : project.owner}
                                                                 </span>
                                                             </div>
-                                                            Role in Project:
-                                                            <span className={`${getRoleBadge(project?.role ?? "member")} font-bold`}>
-                                                                {project.role ?? "Member"}
-                                                            </span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className='font-medium'>Role:</span>
+                                                                <span className={`${getRoleBadge(project?.role ?? "member")} font-bold text-xs px-2 py-0.5 rounded-full`}>
+                                                                    {project.role ?? "Member"}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <a
-                                                    href={`http://localhost:3000/project/${project.projectId}`}
-
-                                                    className="mt-2 inline-flex items-center text-xs text-blue-600 font-medium hover:underline"
-                                                >
-                                                    View project <ArrowRight className="ml-1 h-3 w-3" />
-                                                </a>
+                                                {!email && (
+                                                    <a
+                                                        href={`http://localhost:3000/project/${project.projectId}`}
+                                                        className="mt-2 inline-flex items-center text-xs text-blue-600 font-medium hover:underline hover:text-blue-700"
+                                                    >
+                                                        View project <ArrowRight className="ml-1 h-3 w-3" />
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
+
+                                    {!user?.projects?.length && (
+                                        <div className="p-6 text-center text-gray-500">
+                                            You are not currently participating in any projects.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {activeTab === 'activity' && (
-                            <div className="bg-white p-12 text-center rounded-lg border border-gray-200">
-                                <p className="text-gray-400">No recent activity.</p>
-                            </div>
+                        {activeTab === 'team' && (
+                            <TeamMemberDisplay
+                                allMember={allMember}
+                                searchTeam={searchTeam}
+                                setSearchTeam={setSearchTeam}
+                            />
                         )}
                     </div>
                 </div>

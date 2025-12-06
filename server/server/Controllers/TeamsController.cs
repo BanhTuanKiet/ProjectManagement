@@ -62,5 +62,13 @@ namespace server.Controllers
             List<UserDTO.AvailableMember> availableMembers = await _teamServices.FindAvilableMembers(projectId, leaderId);
             return Ok(availableMembers);
         }
+
+        [HttpGet("all-members")]
+        public async Task<ActionResult> FindAllMembers()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            List<TeamDTO.TeamMembers> allMembers = await _teamServices.GetMemberByUserId(userId);
+            return Ok(allMembers);
+        }
     }
 }

@@ -15,7 +15,6 @@ interface SortableTaskCardProps {
 export default function SortableTaskCard({ task, onClick }: SortableTaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.taskId.toString() });
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -45,6 +44,7 @@ export default function SortableTaskCard({ task, onClick }: SortableTaskCardProp
         {/* <span>🔖 PROJ-{task.projectId}</span> */}
         <span className="flex gap-1">
           <ColoredAvatar
+            src={task.avatarUrl}
             id={task.assigneeId || ""}
             name={task.assignee}
             size="sm"

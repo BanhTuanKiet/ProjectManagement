@@ -45,7 +45,7 @@ namespace server.Controllers
         }
 
         [HttpGet("signin-google")]
-        public IActionResult SignGoogle(string? email = null, string returnUrl = "http://localhost:3000/project")
+        public IActionResult SignGoogle(string? email = null, int? projectId = null, string returnUrl = "http://localhost:3000/project")
         {
             if (string.IsNullOrEmpty(returnUrl))
             {
@@ -56,7 +56,10 @@ namespace server.Controllers
             var properties = new AuthenticationProperties
             {
                 RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl }),
-                Items = { { "email", email ?? "" } }
+                Items = {
+                    { "email", email ?? "" },
+                    { "projectId", projectId?.ToString() ?? "" }
+                }
             };
 
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
@@ -219,12 +222,19 @@ namespace server.Controllers
             return Ok(subscription.Plan.Name);
         }
 
-        [HttpGet("profile")]
-        public async Task<ActionResult> GetUserProfile()
+        [HttpGet("profile/{email}")]
+        public async Task<ActionResult> GetUserProfile(string email)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userServices.GetUserProfile(userId);
-            return Ok(user);
+            var userId = "";
+            if (email == null || email == "not-email")
+                userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            else
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                userId = user.Id;
+            }
+            var userProfile = await _userServices.GetUserProfile(userId);
+            return Ok(userProfile);
         }
 
         [HttpPut("profile")]

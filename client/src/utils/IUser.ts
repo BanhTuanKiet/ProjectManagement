@@ -86,3 +86,15 @@ export interface TaskAssignee {
     name: string;
     avatarUrl: string | null;
 }
+
+export interface TeamMembers 
+{
+    teamName : string
+    userId : string
+    email : string
+    name : string
+    role : string
+    isOwner : boolean | null
+    joinedAt : string | null
+    avatar: string | null
+}

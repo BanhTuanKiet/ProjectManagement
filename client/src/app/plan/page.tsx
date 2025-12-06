@@ -123,11 +123,6 @@ export default function PlanPaymentPage() {
                 const links = response.data.links ?? []
                 window.open(links[1].href)
             }
-            else if (selectedMethod === "vnpay") {
-                const response = await axiosConfig.post(`/payments/create-vnpay`, order)
-                const payUrl = response.data?.paymentUrl
-                if (payUrl) window.location.href = payUrl
-            }
         } catch (error) {
             console.log(error)
         } finally {
