@@ -421,7 +421,7 @@ export default function BacklogView() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm overflow-hidden">
+        <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm overflow-hidden bg-dynamic">
             <div className="border-b bg-gray-50 px-4 py-3 flex justify-between items-center">
                 <h1 className="font-semibold text-gray-700">Sprints</h1>
                 <button

@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/dist/client/components/navigation"
 import { createContext, useContext, useEffect, useState } from "react"
 
 interface ThemeContextType {
@@ -12,32 +11,19 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff")
-  const router = useRouter()
 
-  // Load từ localStorage khi app mở lại
   useEffect(() => {
     const saved = localStorage.getItem("projectBackground")
-    if (saved) {
-      setBackgroundColor(saved)
-      // document.body.style.backgroundColor = saved
-      document.documentElement.style.setProperty(
-      "--app-background",
-      saved,
-      "important" // <- thêm !important
-    )
-    }
+    const color = saved || "#ffffff"
+
+    setBackgroundColor(color)
+    document.documentElement.style.setProperty("--app-background", color)
   }, [])
 
   const changeBackgroundColor = (color: string) => {
     setBackgroundColor(color)
-    // document.body.style.backgroundColor = color
-    document.documentElement.style.setProperty(
-    "--app-background",
-    color,
-    "!important"
-  )
+    document.documentElement.style.setProperty("--app-background", color)
     localStorage.setItem("projectBackground", color)
-    router.refresh()
   }
 
   return (
@@ -48,7 +34,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext)
-  if (!context) throw new Error("useTheme must be used within ThemeProvider")
-  return context
+  const ctx = useContext(ThemeContext)
+  if (!ctx) throw new Error("useTheme must be used within ThemeProvider")
+  return ctx
 }
