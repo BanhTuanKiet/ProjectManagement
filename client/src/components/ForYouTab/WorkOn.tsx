@@ -86,8 +86,8 @@ export default function WorkOn() {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="rounded-md border bg-white shadow-sm">
+        <div className="space-y-">
+            <div className="bg-white shadow-sm">
                 <div className="w-full overflow-auto">
                     <table className="w-full caption-bottom text-sm text-left">
                         <thead className="[&_tr]:border-b">
