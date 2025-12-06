@@ -116,7 +116,7 @@ export default function BoardView() {
                 newStatus = overId;
                 oldStatus = prev[oldIndex].status;
 
-                const validStatuses = ["Todo", "In Progress", "Done", "Cancel", "Expired"];
+                const validStatuses = ["Todo", "In Progress", "Done", "Cancel", "Expired", "Bug"];
                 if (!validStatuses.includes(newStatus)) return prev;
 
                 return prev.map((task) =>
@@ -168,7 +168,7 @@ export default function BoardView() {
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-                <div id="boardArea" className="grid grid-cols-5 gap-4">
+                <div id="boardArea" className="grid grid-cols-6 gap-4">
                     {taskStatus.map((status) => {
                         const columnTasks = filteredTasks.filter(
                             (t) => t.status === status.name

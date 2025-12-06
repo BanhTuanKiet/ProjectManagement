@@ -791,9 +791,7 @@ namespace server.Services.Project
             var tasks = await _context.Tasks
                 .FromSqlRaw("EXEC sp_SearchTasks @ProjectId = {0}, @Keyword = {1}", projectId, keyword)
                 .ToListAsync();
-            Console.WriteLine("Tasks found BBBBBBBBBBBBBBBBB: " + tasks);
             List<TaskDTO.BasicTask> Taskavailable = _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
-            Console.WriteLine("Tasks found AAAAAAAAAAAAAAA: " + Taskavailable);
             return Taskavailable;
         }
 
@@ -843,7 +841,7 @@ namespace server.Services.Project
 
             IQueryable<Models.Task> query = _context.Tasks
                 .Include(t => t.Assignee)
-                .Where(t => t.ProjectId == projectId && t.IsActive && t.Deadline != null && t.Status != "Done");
+                .Where(t => t.ProjectId == projectId && t.IsActive && t.Deadline != null && (t.Status == "Todo" || t.Status == "In Progress" || t.Status == "Bug"));
 
             if (role == "member")
             {

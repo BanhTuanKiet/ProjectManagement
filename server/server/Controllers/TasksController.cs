@@ -756,8 +756,12 @@ namespace server.Controllers
         {
             // lấy userId từ claim (JWT)
             var userId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                throw new ErrorException(404, "Fetch task failed!");
 
             var tasks = await _tasksService.GetNearDeadlineTasksAsync(projectId, userId);
+            if (tasks == null)
+                throw new ErrorException(404, "No tasks found!");
             return Ok(tasks);
         }
 
