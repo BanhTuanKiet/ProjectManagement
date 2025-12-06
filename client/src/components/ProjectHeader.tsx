@@ -11,6 +11,7 @@ import ColoredAvatar from "./ColoredAvatar"
 import type { Notification } from "@/utils/INotifications"
 import axios from "@/config/axiosConfig"
 import { cn } from "@/lib/utils"
+import { UserProfile } from "@/utils/IUser"
 
 const planGradients = {
     Free: "from-slate-400 to-slate-600",
@@ -27,13 +28,29 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
     const { connection, setData, notifications } = useNotification()
     const router = useRouter()
     const fetchedRef = useRef(false)
+    const [visibleCount, setVisibleCount] = useState(10)
+    const [userProfile, setUserProfile] = useState<UserProfile>()
 
     const taskNotifications: Notification[] = (notifications.task ?? []).sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
+    const visibleNotifications = taskNotifications.slice(0, visibleCount)
+
     const notificationRef = useRef<HTMLDivElement>(null)
     const userRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const fetchUses = async () => {
+            try {
+                const response = await axios.get(`/users/profile`)
+                setUserProfile(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchUses()
+    }, [])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -66,6 +83,15 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                 setData(data, "task")
             } catch (error) {
                 console.error("Failed to load notifications:", error)
+            }
+        }
+    }
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+        if (scrollTop + clientHeight >= scrollHeight - 5) {
+            if (visibleCount < taskNotifications.length) {
+                setVisibleCount(prev => prev + 10)
             }
         }
     }
@@ -122,44 +148,51 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                     </Button>
 
                     {isNotificationOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 origin-top-right rounded-xl border bg-popover text-popover-foreground shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 slide-in-from-top-2 z-50 overflow-hidden">
-                            <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 rounded-xl border bg-popover shadow-lg ring-1 ring-black/5 z-50 overflow-hidden">
+                            <div className="flex justify-between px-4 py-3 border-b">
                                 <h4 className="font-semibold text-sm">Notifications</h4>
-                                <span className="text-xs text-muted-foreground hover:text-blue-600 cursor-pointer">Mark all read</span>
+                                <span className="text-xs text-blue-600 cursor-pointer">Mark all read</span>
                             </div>
 
-                            <div className="max-h-[24rem] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200">
-                                {taskNotifications.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                            <div className="max-h-[24rem] overflow-y-auto scrollbar-thin" onScroll={handleScroll}>
+                                {visibleNotifications.length === 0 ? (
+                                    <div className="flex flex-col items-center py-12 text-muted-foreground">
                                         <Bell className="h-8 w-8 mb-3 opacity-20" />
                                         <p className="text-sm">No new notifications</p>
                                     </div>
                                 ) : (
-                                    <div className="divide-y divide-border/50">
-                                        {taskNotifications.map((n) => (
-                                            <div key={n.notificationId} className="group relative flex gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-                                                <div className="mt-1">
-                                                    <CheckCircle2 className="h-5 w-5 text-blue-500" />
-                                                </div>
-                                                <div className="flex-1 space-y-1">
-                                                    <p className="text-sm font-medium leading-none text-foreground">
-                                                        {n.message}
-                                                    </p>
-                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                        <span>{n.createdBy}</span>
-                                                        <span>•</span>
-                                                        <span>{new Date(n.createdAt).toLocaleDateString()}</span>
+                                    <>
+                                        <div className="divide-y">
+                                            {visibleNotifications.map((n) => (
+                                                <div key={n.notificationId} className="flex gap-3 p-4 hover:bg-muted/50 cursor-pointer">
+                                                    <CheckCircle2 className="h-5 w-5 text-blue-500 mt-1" />
+                                                    <div className="flex-1 text-sm">
+                                                        <p className="font-medium">{n.message}</p>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {n.createdBy} • {new Date(n.createdAt).toLocaleDateString()}
+                                                        </span>
+
+                                                        {n.link && (
+                                                            <a href={`http://localhost:3000/project/1#list?${n.link}`} className="block text-xs text-blue-600 mt-1">
+                                                                View task →
+                                                            </a>
+                                                        )}
                                                     </div>
-                                                    {n.link && (
-                                                        <a href={`http://localhost:3000/project/1#list?${n.link}`} className="mt-2 inline-flex items-center text-xs text-blue-600 font-medium hover:underline">
-                                                            View task <ArrowRight className="ml-1 h-3 w-3" />
-                                                        </a>
-                                                    )}
                                                 </div>
-                                                <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 shrink-0" />
+                                            ))}
+                                        </div>
+
+                                        {visibleCount < taskNotifications.length && (
+                                            <div className="text-center py-3">
+                                                <button
+                                                    onClick={() => setVisibleCount(prev => prev + 10)}
+                                                    className="text-xs text-blue-600 font-medium hover:underline"
+                                                >
+                                                    View more
+                                                </button>
                                             </div>
-                                        ))}
-                                    </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -177,7 +210,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                             setIsNotificationOpen(false)
                         }}
                     >
-                        <AvatarImage src="/placeholder.svg" />
+                        <AvatarImage src={userProfile?.avatar} />
                         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-medium text-sm">
                             {user?.name?.slice(0, 2).toUpperCase() ?? "ME"}
                         </AvatarFallback>

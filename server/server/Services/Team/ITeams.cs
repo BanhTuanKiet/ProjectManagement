@@ -12,5 +12,6 @@ namespace server.Models
         Task<Teams> GetTeamByLeader(string leaderId, int projectId);
         Task<Teams> GetTeamById(Guid teamId);
         Task<Teams> DemoGetTeamByLeader(int projectId, string leaderId);
+        Task<List<TeamDTO.TeamMembers>> GetMemberByUserId(string userId);
     }
 }

@@ -56,10 +56,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const signinGG = async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const email = urlParams.get("email");
+        const projectId = urlParams.get("projectId")
 
         let apiUrl = "http://localhost:5144/users/signin-google";
         if (email) {
-            apiUrl += `?email=${email}`;
+            apiUrl += `?email=${email}&projectId=${projectId}`;
         }
 
         window.location.href = apiUrl;
