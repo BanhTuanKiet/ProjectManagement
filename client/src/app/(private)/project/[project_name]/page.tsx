@@ -146,7 +146,7 @@ export default function ProjectInterface() {
     }
 
     return (
-        <div className="h-screen flex flex-col p-[30px] py-0 bg-gray-50">
+        <div className="h-screen flex flex-col py-0 bg-gray-50">
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
