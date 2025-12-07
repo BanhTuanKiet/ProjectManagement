@@ -200,7 +200,7 @@ const TaskView = () => {
                     <div className="">Status</div>
                     <div>Assignee</div>
                     <div className="text-center">Deadline</div>
-                    <div className="text-center">Last Updated</div>
+                    <div className="text-center">Created At</div>
                     <div className="text-center">Action</div>
                 </div>
 
@@ -231,7 +231,7 @@ const TaskView = () => {
                                     id={t.assigneeId || "N/A"}
                                     name={t.assignee}
                                     size="sm"
-                                    src={""}
+                                    src={t.avatarUrl}
                                 />
                                 <p className="pl-2">{t.assignee || "N/A"}</p>
                             </div>

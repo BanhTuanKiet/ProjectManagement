@@ -1,7 +1,7 @@
 "use client"
 import Footer from "@/components/FooterComponent"
 import { motion, useMotionValue, useTransform, animate } from "framer-motion"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import {
     BarChart3,
     CheckCircle2,
@@ -93,6 +93,8 @@ const stats = [
 ]
 
 export default function Page() {
+    const [showDemo, setShowDemo] = useState(false);
+    console.log("Show Demo: ", showDemo)
     const router = useRouter()
     const CountUpNumber = ({ value, duration }: { value: string, duration: number }) => {
         const count = useMotionValue(0)
@@ -120,17 +122,17 @@ export default function Page() {
             <HeaderComponent />
 
             <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
-                <motion.div 
-                    initial="hidden" 
-                    animate="visible" 
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
                     variants={{
                         hidden: { opacity: 0 },
-                        visible: { 
-                            opacity: 1, 
-                            transition: { 
+                        visible: {
+                            opacity: 1,
+                            transition: {
                                 staggerChildren: 0.2, // Hiệu ứng hiện dần cho các phần tử con
                                 duration: 0.8
-                            } 
+                            }
                         }
                     }}
                     className="space-y-6"
@@ -154,7 +156,7 @@ export default function Page() {
                     </motion.div>
 
 
-                    <motion.div 
+                    <motion.div
                         variants={{
                             hidden: { opacity: 0, y: 20 },
                             visible: { opacity: 1, y: 0, transition: { delay: 0.8, duration: 0.5 } }
@@ -168,27 +170,32 @@ export default function Page() {
                             Get Started
                             <ArrowRight className="h-4 w-4" />
                         </Link>
-                        <button className="rounded-full border border-slate-300 px-8 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">
+                        <button
+                            onClick={() => setShowDemo(true)}
+                            className="rounded-full border border-slate-300 px-8 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">
                             Watch Demo
                         </button>
                     </motion.div>
+                    {showDemo && (
+                        <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                                hidden: { opacity: 0, scale: 0.9 },
+                                visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
+                            }}
+                            className="pt-8 flex justify-center"
+                        >
+                            <video
+                                src="/videos/WatchDemo.mp4"
+                                className="rounded-xl shadow-lg w-full max-w-3xl"
+                                autoPlay
+                                loop
+                                playsInline
+                            />
+                        </motion.div>
+                    )}
 
-                    <motion.div 
-                        variants={{
-                            hidden: { opacity: 0, scale: 0.9 },
-                            visible: { opacity: 1, scale: 1, transition: { delay: 1, duration: 0.5 } }
-                        }}
-                        className="pt-8 flex justify-center"
-                    >
-                        <video
-                            src="/demo.mp4"
-                            className="rounded-xl shadow-lg w-full max-w-3xl"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                        />
-                    </motion.div>
 
 
                     <motion.p variants={heroVariants} className="text-sm text-slate-500 pt-4">No credit card required • Start free in 1 minutes</motion.p>
@@ -240,7 +247,7 @@ export default function Page() {
                                 viewport={{ once: true, amount: 0.4 }}
                                 transition={{ duration: 0.8, delay: 0.2 }}
                             >
-                                <div className={idx % 2 !== 0 ? "md:order-2" : "md:order-1"}> 
+                                <div className={idx % 2 !== 0 ? "md:order-2" : "md:order-1"}>
                                     <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${feature.bg} mb-4`}>
                                         <Icon className={`h-6 w-6 ${feature.text}`} />
                                     </div>
@@ -272,7 +279,7 @@ export default function Page() {
 
 
             <section className="mx-auto max-w-4xl px-6 lg:px-8 py-20 text-center">
-                <motion.div 
+                <motion.div
                     className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-16"
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
