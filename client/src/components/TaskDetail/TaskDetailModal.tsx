@@ -113,6 +113,8 @@ export default function TaskDetailModal({
                 <div className="relative bg-white w-[1000px] h-[90vh] rounded-lg shadow-xl flex flex-col">
                     <TaskDetailHeader
                         taskId={taskId}
+                        taskStatus={task.status}
+                        taskTag={task.tag ?? null}
                         projectId={projectId}
                         isActive={task.isActive}
                         onToggleActive={(newStatus) => setTask((prev) => prev ? { ...prev, isActive: newStatus } : prev)}

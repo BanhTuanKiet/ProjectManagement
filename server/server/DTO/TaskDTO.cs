@@ -63,6 +63,7 @@ namespace server.DTO
             public int? SprintId { get; set; }
             public int? BacklogId { get; set; }
             public bool IsActive { get; set; }
+            public string? Tag { get; set; } 
             public string? AvatarUrl { get; set; }
         }
 

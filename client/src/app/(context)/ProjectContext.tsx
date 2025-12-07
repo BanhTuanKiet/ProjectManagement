@@ -82,6 +82,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         const fetchMembers = async () => {
             try {
                 const response = await axios.get(`/projects/member/${project_name}`)
+                console.log(response.data)
                 setMembers(response.data)
             } catch (error) {
                 console.log(error)

@@ -69,7 +69,6 @@ export default function ChangeLeaderDialog({ open, onOpenChange }: DialogProps) 
     const handleChangeLeader = async () => {
         setLoading(true)
         try {
-            console.log(leaderId, project_name)
             await axios.put(`/projects/leader/${Number(project_name)}/${leaderId}/${memberId}`)
             const updatedProjects = projects.map(p => {
                 if (p.projectId === Number(project_name)) {

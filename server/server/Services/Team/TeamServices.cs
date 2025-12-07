@@ -9,6 +9,7 @@ using server.Configs;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography.X509Certificates;
+using AutoMapper.Execution;
 
 namespace server.Services.Project
 {
@@ -41,10 +42,21 @@ namespace server.Services.Project
             return team;
         }
 
-        public async Task<List<String>> AddMembers(string leaderId, List<string> memberIds, int projectId)
+        public async Task<List<TeamMembers>> FindMembers(string leaderId)
+        {
+            var members = await _context.TeamMembers
+                .Include(tm => tm.User)
+                .Where(tm => tm.Team.LeaderId == leaderId)
+                .ToListAsync();
+
+            return members;
+        }
+
+        public async Task<List<UserDTO.ExistingMember>> AddMembers(string leaderId, List<string> memberIds, int projectId)
         {
             var team = await _context.Teams
                 .Include(t => t.Members)
+                .ThenInclude(m => m.User)
                 .FirstOrDefaultAsync(t => t.LeaderId == leaderId && t.ProjectId == projectId);
 
             if (team == null)
@@ -60,24 +72,40 @@ namespace server.Services.Project
                 await _context.SaveChangesAsync();
             }
 
-            var existingMemberIds = team.Members
-            .Where(m => m.TeamId == team.Id)
-            .Select(m => m.UserId).ToList();
+            var existingMember = team.Members
+                .Where(m => m.TeamId == team.Id)
+                .Select(m => new UserDTO.ExistingMember
+                {
+                    Id = m.UserId,
+                    Name = m.User.UserName
+                })
+                .ToList();
+
+            List<UserDTO.ExistingMember> addedMembers = [];
 
             foreach (var memberId in memberIds)
             {
-                Console.WriteLine("Vào được foreach ");
-                Console.WriteLine("AAAAAAAAAAA" + memberId);
-                if (!existingMemberIds.Contains(memberId))
+                if (!existingMember.Any(m => memberIds.Contains(m.Id)))
                 {
-                    Console.WriteLine("AAAAAAAAAAA" + memberId);
-                    team.Members.Add(new TeamMembers
+                    var user = await _userManager.FindByIdAsync(memberId);
+                    if (user == null) continue; // user không tồn tại
+
+                    // Tạo member mới cho mảng trả về
+                    UserDTO.ExistingMember member1 = new UserDTO.ExistingMember
+                    {
+                        Id = memberId,
+                        Name = user.UserName // lấy name từ database
+                    };
+
+                    // Thêm vào team
+                    TeamMembers member2 = new TeamMembers
                     {
                         TeamId = team.Id,
                         UserId = memberId
-                    });
+                    };
 
-                    var user = await _userManager.FindByIdAsync(memberId);
+                    team.Members.Add(member2);
+                    addedMembers.Add(member1);
 
                     var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
 
@@ -151,7 +179,7 @@ namespace server.Services.Project
             }
 
             await _context.SaveChangesAsync();
-            return existingMemberIds;
+            return addedMembers;
         }
 
         public async Task<List<string>> GetTeamMembers(string leaderId, int projectId)

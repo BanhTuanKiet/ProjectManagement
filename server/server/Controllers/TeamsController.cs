@@ -29,17 +29,46 @@ namespace server.Controllers
             _mapper = mapper;
         }
 
-        [HttpPost("members/{projectId}/{learderId}")]
-        // [Authorize("PMRequirement")]
-        public async Task<ActionResult> AddMembers([FromBody] List<string> memberIds, int projectId, string learderId)
+        [HttpPost("members/{projectId}/{leaderId}")]
+        public async Task<ActionResult> AddMembers([FromBody] List<string> memberIds, int projectId, string leaderId)
         {
-            List<String> existingMemberIds = await _teamServices.AddMembers(learderId, memberIds, projectId);
+            if (memberIds == null || memberIds.Count == 0)
+                throw new ErrorException(400, "No members provided");
+
+            var teamMembers = await _teamServices.FindMembers(leaderId)
+                ?? throw new ErrorException(404, "Team not found");
+
+            var existingMembers = teamMembers
+                .Where(m => memberIds.Contains(m.UserId))
+                .Select(m => new
+                {
+                    Id = m.UserId,
+                    Name = m.User.UserName
+                })
+                .ToList();
+
+            var idsToAdd = memberIds
+                .Where(id => !existingMembers.Any(m => m.Id == id))
+                .ToList();
+
+            var failedMembers = existingMembers;
+
+            if (idsToAdd.Count <= 0)
+            {
+
+                return Ok(new
+                {
+                    failedMembers,
+                });
+            }
+
+            var addedMembers = await _teamServices.AddMembers(leaderId, idsToAdd, projectId);
+
             return Ok(new
             {
-                message = "Add team successfully!",
-                existingMemberIds
+                failedMembers,
+                addedMembers
             });
-
         }
 
         [HttpGet("members/{projectId}/{leaderId}")]

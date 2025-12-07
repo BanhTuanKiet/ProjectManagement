@@ -29,6 +29,7 @@ import Summary from '@/components/Summary/Summary'
 import { useHash } from '@/hooks/useHash'
 import Timeline from '@/components/Timeline'
 import MemberList from '@/components/Summary/MemberList'
+import TaskView from '@/components/TaskView/TaskView'
 
 interface NavigationTab {
     id: string
@@ -45,6 +46,7 @@ const ALL_TABS: NavigationTab[] = [
     { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
     { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
     { id: 'trash', label: 'Trash', icon: <Trash className="w-4 h-4" /> },
+    { id: 'task', label: 'Task', icon: <FileText className="w-4 h-4" /> },
 ]
 
 const DEFAULT_TABS = ['', 'timeline', 'backlog', 'list', 'calendar']
@@ -134,6 +136,7 @@ export default function ProjectInterface() {
             case "board": return <BoardView />
             case "list": return <ListPage tasksNormal={tasks} projectId={Number(project_name)} />
             case "trash": return <TrashView projectId={Number(project_name)} />
+            case "task": return <TaskView projectId={Number(project_name)} />
             case "member":
                 if (project && projectRole === "Project Manager") return <MemberList project={project} />
                 break
@@ -143,7 +146,7 @@ export default function ProjectInterface() {
     }
 
     return (
-        <div className="h-screen flex flex-col p-[30px] py-0 bg-gray-50">
+        <div className="h-screen flex flex-col py-0 bg-gray-50">
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, Bell, User, LogOut, Sun, Moon, CheckCircle2, ArrowRight } from "lucide-react"
+import { Bell, User, LogOut, Sun, Moon, CheckCircle2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useRef, useState } from "react"
@@ -16,7 +16,7 @@ import { UserProfile } from "@/utils/IUser"
 const planGradients = {
     Free: "from-slate-400 to-slate-600",
     Pro: "from-blue-500 via-indigo-500 to-blue-600",
-    Enterprise: "from-violet-500 via-purple-500 to-fuchsia-600",
+    Premium: "from-violet-500 via-purple-500 to-fuchsia-600",
 }
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
@@ -102,8 +102,7 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                 const response = await axios.get(`/users/subscription`)
                 console.log(response.data)
                 if (response.data === "") setPlan("Free")
-                else
-                    setPlan(response.data)
+                else setPlan(response.data)
             } catch (error) {
                 console.log(error)
             }
@@ -129,11 +128,6 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
             </div>
 
             <div className="flex items-center gap-3">
-                {/* <Button className="hidden h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm sm:flex items-center gap-2 transition-all active:scale-95">
-                    <Plus className="h-4 w-4" />
-                    <span className="font-medium">Create</span>
-                </Button> */}
-
                 <div className="relative" ref={notificationRef}>
                     <Button
                         variant="ghost"
@@ -141,9 +135,13 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                         className="relative text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                         onClick={handleNotificationOpen}
                     >
-                        <Bell className="h-5 w-5" />
+                        <Bell className="h-8 w-8" />
+
                         {hasUnread && (
-                            <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background animate-pulse" />
+                            <span className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                            </span>
                         )}
                     </Button>
 
