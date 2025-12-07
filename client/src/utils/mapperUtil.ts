@@ -18,6 +18,7 @@ export interface Task {
   raw: BasicTask // giữ lại data gốc để sau dễ dùng
   // Thêm các trường khác nếu cần
   subtasks?: Task[]
+  tag?: string | null
   [key: string]: any
 }
 
@@ -77,6 +78,7 @@ export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
     isActive: apiTask.isActive,
     raw: apiTask, // giữ lại data gốc để sau dễ dùng
     subtasks: [],
+    tag: apiTask.tag
   }
 }
 

@@ -1007,5 +1007,12 @@ namespace server.Services.Project
             }
             return success;
         }
+
+        public async Task<string> UpdateTag(Models.Task task, string newTag)
+        {
+            task.Tag = newTag;
+            await _context.SaveChangesAsync();
+            return task.Tag;
+        }
     }
 }

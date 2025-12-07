@@ -16,6 +16,9 @@ public static class AuthRoleConfig
         builder.AddPolicy("PMRequirement", policy =>
             policy.Requirements.Add(new OnlyPMRequirement()));
 
+        builder.AddPolicy("TesterRequirement", policy =>
+            policy.Requirements.Add(new OnlyTesterRequirement()));
+
         builder.AddPolicy("ProjectLimitRequirement", policy =>
             policy.Requirements.Add(new ProjectLimitRequirement()));
 
@@ -28,6 +31,7 @@ public static class AuthRoleConfig
         builder.Services.AddScoped<IAuthorizationHandler, MemberHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, AssigneeHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, PMorLeaderHandler>();
+        builder.Services.AddScoped<IAuthorizationHandler, TesterHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, ProjectManagerHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, ProjectLimitHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, MemberLimitHandler>();

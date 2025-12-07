@@ -13,6 +13,7 @@ using server.Services.ActivityLog;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security;
 
 namespace server.Controllers
 {
@@ -262,7 +263,7 @@ namespace server.Controllers
             return Ok(tasks);
         }
         //sao co toi 2 ham update status
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -271,11 +272,11 @@ namespace server.Controllers
             var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
             if (projectMember == null)
-                return Unauthorized(new { message = "You are not a member of this project" });
+                 throw new ErrorException(400, "You are not a member of this project");
 
             string role = projectMember.RoleInProject;
 
-            if (updates == null || !updates.Any())
+            if (updates == null)
                 throw new ErrorException(400, "Update failed");
 
             var result = await _tasksService.PatchTaskField(projectId, taskId, updates, userId, role)
@@ -315,7 +316,7 @@ namespace server.Controllers
             return Ok(new { message = "Update successful", task = result });
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpDelete("bulk-delete/{projectId}")]
         public async Task<IActionResult> BulkDelete([FromBody] TaskDTO.BulkDeleteTasksDto dto)
         {
@@ -382,6 +383,7 @@ namespace server.Controllers
 
             if (updatedTask.Status != newStatus || updatedTask == null)
                 throw new ErrorException(400, "Update task failed!");
+
             await _activityLogServices.AddActivityLog(
                 projectId: projectId,
                 userId: userId,
@@ -792,6 +794,20 @@ namespace server.Controllers
                 throw new ErrorException(400, "Send email fail!");
 
             return Ok(new { message = "Send email successfull!" });
+        }
+
+        [HttpPatch("{projectId}/{taskId}/tag/{newTag}")]
+        [Authorize(Policy = "TesterRequirement")]
+        public async Task<ActionResult> UpdateTag(int projectId, int taskId, string newTag)
+        {
+            Models.Task task = await _tasksService.GetTaskById(taskId)
+                ?? throw new ErrorException(404, "Task not found");
+
+            string taskTagUpdated = await _tasksService.UpdateTag(task, newTag);
+
+            if (taskTagUpdated != newTag) throw new ErrorException(400, "Update tag task failed");
+
+            return Ok(new { message = "Update task successful" });
         }
     }
 }

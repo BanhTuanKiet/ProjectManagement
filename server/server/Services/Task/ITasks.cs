@@ -29,5 +29,6 @@ namespace server.Services.Task
         Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId);
         Task<List<TaskDTO.BasicTask>> GetNearDeadlineTasksAsync(int projectId, string currentUserId);
         Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role);
+        Task<string> UpdateTag(Models.Task task, string newTag);
     }
 }

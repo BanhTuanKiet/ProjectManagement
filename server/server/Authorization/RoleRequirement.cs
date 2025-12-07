@@ -46,6 +46,12 @@ public class OnlyPMRequirement : RoleRequirement
         : base(new[] { "Project Manager", }, new[] { "POST", "PUT", "PATCH", "DELETE" }) { }
 }
 
+public class OnlyTesterRequirement : RoleRequirement
+{
+    public OnlyTesterRequirement()
+        : base(new[] { "Tester", }, new[] { "POST", "PUT", "PATCH", "DELETE", "PATCH" }) { }
+}
+
 public class ProjectLimitRequirement : SubscriptionRequirement
 {
     public ProjectLimitRequirement() : base("Project Limit") { }
