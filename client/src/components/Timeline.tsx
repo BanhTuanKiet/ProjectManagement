@@ -300,7 +300,7 @@ export default function Timeline() {
                                                         TASK {task.taskId} - {task.title}
                                                     </p>
                                                     <div className="flex items-center gap-2">
-                                                        <ColoredAvatar id={task.assigneeId || ""} name={task.assignee} size="sm" />
+                                                        <ColoredAvatar src={task.avatarUrl} id={task.assigneeId || ""} name={task.assignee} size="sm" />
                                                         <span className="text-xs text-muted-foreground font-medium truncate">{task.assignee}</span>
                                                     </div>
                                                 </div>

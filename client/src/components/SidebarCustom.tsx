@@ -80,6 +80,7 @@ export function SidebarCustom({ className }: { className?: string }) {
             </SidebarHeader> */}
 
             <SidebarContent className="px-2">
+            <SidebarContent className="h-[calc(100vh-180px)] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                 <SidebarGroup>
                     <SidebarGroupLabel>Platform</SidebarGroupLabel>
                     <SidebarGroupContent>

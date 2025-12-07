@@ -214,7 +214,7 @@ namespace server.Services.Project
                         </p>
 
                         <div style=""text-align:center;"">
-                        <a href=""http://localhost:3000/login?email={Uri.EscapeDataString(invitation.Email)}""
+                        <a href=""http://localhost:3000?email={email}&projectId={projectId}""
                             style=""background:#0052cc; color:#ffffff; font-weight:600; font-size:16px; padding:14px 32px; border-radius:6px; text-decoration:none; display:inline-block; box-shadow:0 4px 8px rgba(0,82,204,0.25);"">
                             Accept Invitation
                         </a>

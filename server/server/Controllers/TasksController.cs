@@ -376,6 +376,7 @@ namespace server.Controllers
 
             if (task.Status == "Expried")
                 throw new ErrorException(400, "Task is expried!");
+
             string oldStatus = task.Status;
             string newStatus = updates["status"]?.ToString() ?? task.Status;
 
@@ -491,9 +492,6 @@ namespace server.Controllers
                 throw new ErrorException(400, "Start date cannot be greater than End date");
             }
 
-
-
-
             changeSummary = changeSummary.TrimEnd(' ', ';');
             Console.WriteLine("Message: ", changeSummary);
 
@@ -508,8 +506,6 @@ namespace server.Controllers
                 CreatedId = userId,
                 Type = "task"
             };
-
-
 
             var notificationResult = await _notificationsService.SaveNotification(notification);
             // if (notificationResult == null)
@@ -570,6 +566,63 @@ namespace server.Controllers
                 await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
                 return Ok(new { message = "Restore successful", task = restoredTask });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize(Policy = "PMOrLeaderRequirement")]
+        [HttpDelete("permanent/{projectId}/{taskId}")]
+        public async Task<IActionResult> DeleteTaskForever(int projectId, int taskId)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var name = User.FindFirst(ClaimTypes.Name)?.Value;
+
+                if (projectId <= 0) throw new Exception("Invalid projectId");
+                if (string.IsNullOrEmpty(userId)) userId = "system";
+
+                var historyTaskForDelete = await _context.TaskHistories
+                                        .OrderByDescending(t => t.ChangedAt)
+                                        .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+                if (historyTaskForDelete == null)
+                {
+                    throw new ErrorException(404, "Task history not found for the specified taskId");
+                }
+
+                var rowsAffected = await _tasksService.DeleteTaskForeverAsync(taskId);
+
+                var historyTask = await _context.TaskHistories
+                                        .OrderByDescending(t => t.ChangedAt)
+                                        .ToListAsync();
+
+                if (!string.IsNullOrEmpty(historyTaskForDelete.AssigneeId) && historyTaskForDelete.AssigneeId != userId)
+                {
+                    Notification notification = new Notification
+                    {
+                        UserId = historyTaskForDelete.AssigneeId,
+                        ProjectId = projectId,
+                        Message = $"Task '{historyTaskForDelete.Title}' (#{taskId}) was permanently deleted by {name}",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow,
+                        // Link trỏ về Project dashboard vì Task đã mất vĩnh viễn
+                        Link = $"projects={projectId}",
+                        CreatedId = userId,
+                        Type = "task_deleted"
+                    };
+
+                    await _notificationsService.SaveNotification(notification);
+
+                    var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+
+                    // Gửi realtime thông báo
+                    await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+                }
+                return Ok(new { message = "Permanently deleted successfully", task = historyTask, rowsAffected } );
             }
             catch (Exception ex)
             {

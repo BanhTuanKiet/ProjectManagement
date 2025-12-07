@@ -64,6 +64,7 @@ namespace server.DTO
             public int? BacklogId { get; set; }
             public bool IsActive { get; set; }
             public string? Tag { get; set; } 
+            public string? AvatarUrl { get; set; }
         }
 
         public class NewTaskListView

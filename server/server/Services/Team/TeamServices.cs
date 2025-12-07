@@ -248,5 +248,48 @@ namespace server.Services.Project
 
             return team;
         }
+
+        public async Task<List<TeamDTO.TeamMembers>> GetMemberByUserId(string userId)
+        {
+            var leaderTeamIds = await _context.Teams
+                .Where(t => t.LeaderId == userId)
+                .Select(t => t.Id)
+                .ToListAsync();
+
+            var memberTeamIds = await _context.TeamMembers
+                .Where(tm => tm.UserId == userId)
+                .Select(tm => tm.TeamId)
+                .ToListAsync();
+
+            var allTeamIds = leaderTeamIds
+                .Concat(memberTeamIds)
+                .Distinct()
+                .ToList();
+
+            if (!allTeamIds.Any())
+                return new List<TeamDTO.TeamMembers>();
+
+            var members = await (from tm in _context.TeamMembers
+                                 join t in _context.Teams on tm.TeamId equals t.Id
+                                 join u in _context.Users on tm.UserId equals u.Id
+                                 join pm in _context.ProjectMembers on u.Id equals pm.UserId
+                                 where allTeamIds.Contains(tm.TeamId)
+                                 select new TeamDTO.TeamMembers
+                                 {
+                                     TeamName = t.Name,
+                                     Avatar = u.AvatarUrl,
+                                     UserId = u.Id,
+                                     Email = u.Email,
+                                     Name = u.UserName,
+                                     Role = pm.RoleInProject
+                                 })
+                                .ToListAsync();
+
+            members = members
+                .DistinctBy(x => x.UserId)
+                .ToList();
+            return members;
+        }
+
     }
 }

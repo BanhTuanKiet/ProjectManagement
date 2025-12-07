@@ -16,7 +16,10 @@ namespace server.Configs
                     opt => opt.MapFrom(src => src.CreatedBy)) // Lấy ID
 
                 .ForMember(dest => dest.CreatedName,
-                    opt => opt.MapFrom(src => src.CreatedByNavigation != null ? src.CreatedByNavigation.UserName : null));
+                    opt => opt.MapFrom(src => src.CreatedByNavigation != null ? src.CreatedByNavigation.UserName : null))
+
+                .ForMember(dest => dest.AvatarUrl,
+                     opt => opt.MapFrom(src => src.Assignee.AvatarUrl));
 
             CreateMap<Project, ProjectDTO.ProjectTitile>();
 
@@ -57,7 +60,8 @@ namespace server.Configs
 
             CreateMap<SubTaskDTO.UpdateSubTask, SubTask>()
                 .ForMember(dest => dest.Title,
-                            opt => {
+                            opt =>
+                            {
                                 opt.Condition(src => src.Summary != null);
                                 opt.MapFrom(src => src.Summary);
                             })

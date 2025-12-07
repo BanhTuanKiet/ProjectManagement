@@ -253,7 +253,7 @@ namespace server.Services.User
                     .FirstOrDefault(pm => pm.UserId == userId)
                     ?.RoleInProject;
 
-                projectDto.Role = role; 
+                projectDto.Role = role;
                 projectDto.Members = null;
 
                 return projectDto;
