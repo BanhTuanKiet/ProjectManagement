@@ -135,7 +135,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
     }
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden bg-dynamic">
             <div id="featureMember" className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-900">Members</h2>
@@ -304,7 +304,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
 
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <ColoredAvatar id={member.userId} name={member.name} size="md" />
+                                        <ColoredAvatar src={member.avatarUrl} id={member.userId} name={member.name} size="md" />
                                         <div className="font-medium text-gray-900">{member.name}</div>
                                     </div>
                                 </td>

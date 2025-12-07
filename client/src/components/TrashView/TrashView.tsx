@@ -24,6 +24,7 @@ import {
 import TrashTable from "./TrashTable"; // Component bảng sẽ tạo ở bước 2
 import { toast } from "react-toastify";
 import { useProject } from "@/app/(context)/ProjectContext";
+import DeleteConfirmPopover from "../DeleteConfirmPopover";
 
 // Định nghĩa kiểu dữ liệu cho task đã xóa dựa trên response từ backend
 interface DeletedTask {
@@ -53,6 +54,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
     const [isLoading, setIsLoading] = useState(true);
     const { project_name } = useProject();
 
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [debouncedSearchQuery] = useDebounce(searchQuery, 500); // Debounce để tránh gọi API liên tục
 
     // Hàm gọi API để lấy danh sách task đã xóa
@@ -93,19 +95,36 @@ export default function TrashView({ projectId }: TrashViewProps) {
 
         const tasksToRestore = Array.from(selectedTasks);
         try {
-            // Gọi API restore cho từng task
             await Promise.all(
                 tasksToRestore.map((taskId) => axios.post(`/tasks/restore/${Number(project_name)}/${taskId}`))
             );
 
             toast.success(`${tasksToRestore.length} task(s) restored successfully!`);
 
-            // Xóa các task đã chọn và fetch lại danh sách
             setSelectedTasks(new Set());
             fetchDeletedTasks();
         } catch (error) {
             console.error("Failed to restore tasks:", error);
             toast.error("An error occurred while restoring tasks.");
+        }
+    };
+
+    // --- XÓA VĨNH VIỄN ---
+    const handlePermanentDelete = async () => {
+        if (selectedTasks.size === 0) return;
+
+        const tasksToDelete = Array.from(selectedTasks);
+        try {
+            await Promise.all(
+                tasksToDelete.map((taskId) => axios.delete(`/tasks/permanent/${Number(project_name)}/${taskId}`))
+            );
+
+            toast.success(`Deleted ${tasksToDelete.length} tasks permanently.`);
+            setSelectedTasks(new Set());
+            fetchDeletedTasks();
+        } catch (error) {
+            console.error("Failed to delete tasks permanently:", error);
+            toast.error("Failed to delete tasks. Please try again.");
         }
     };
 
@@ -132,7 +151,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
     return (
         <div className="flex flex-col h-full overflow-hidden mx-auto w-full">
             {/* Header */}
-            <div id="featureTrash" className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
+            <div id="featureTrash" className="flex items-center justify-between p-4 border-b shrink-0 bg-white bg-dynamic">
                 <div className="flex items-center gap-4">
                     {/* Ô tìm kiếm */}
                     <div className="relative">
@@ -232,8 +251,28 @@ export default function TrashView({ projectId }: TrashViewProps) {
                     </Button>
                 </div>
 
+                {/* <div className="flex items-center gap-2">
+                    <Button
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        disabled={selectedTasks.size === 0}
+                        className="bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                        <Undo2 className="h-4 w-4" />
+                        Delete Forever ({selectedTasks.size})
+                    </Button>
+                </div> */}
+
                 {/* Nút Restore */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-5">
+                    <Button
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        disabled={selectedTasks.size === 0}
+                        className="bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                        <Undo2 className="h-4 w-4" />
+                        Delete Forever ({selectedTasks.size})
+                    </Button>
+
                     <Button
                         onClick={handleRestoreSelectedTasks}
                         disabled={selectedTasks.size === 0}
@@ -258,6 +297,14 @@ export default function TrashView({ projectId }: TrashViewProps) {
                     />
                 )}
             </div>
+            <DeleteConfirmPopover
+                open={isDeleteDialogOpen}
+                setOpen={setIsDeleteDialogOpen}
+                taskCount={selectedTasks.size}
+                subtaskCount={0} // TrashView không tính subtask
+                onConfirmDelete={handlePermanentDelete} // Gọi hàm xóa vĩnh viễn
+                isPermanent={true} // Bật chế độ xóa vĩnh viễn (để hiện cảnh báo màu đỏ)
+            />
         </div>
     );
 }

@@ -185,7 +185,7 @@ export default function Timeline() {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-slate-950 p-6">
+        <div className="min-h-screen bg-white dark:bg-slate-950 p-6 bg-dynamic">
             <div id="ProjectTimeline" className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Project Timeline</h1>
@@ -311,7 +311,7 @@ export default function Timeline() {
                                                         TASK {task.taskId} - {task.title}
                                                     </p>
                                                     <div className="flex items-center gap-2">
-                                                        <ColoredAvatar id={task.assigneeId || ""} name={task.assignee} size="sm" />
+                                                        <ColoredAvatar src={task.avatarUrl} id={task.assigneeId || ""} name={task.assignee} size="sm" />
                                                         <span className="text-xs text-muted-foreground font-medium truncate">{task.assignee}</span>
                                                     </div>
                                                 </div>

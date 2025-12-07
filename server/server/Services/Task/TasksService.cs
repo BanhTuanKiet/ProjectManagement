@@ -549,6 +549,16 @@ namespace server.Services.Project
             }
         }
 
+        public async Task<int> DeleteTaskForeverAsync(int taskId)
+        {
+            var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM TaskHistory WHERE TaskId = {0}", taskId);
+
+            if (rowsAffected == 0)
+                throw new ErrorException(500, $"Permanent delete failed for TaskId {taskId}.");
+            return rowsAffected;
+        }
+
         public async Task<IEnumerable<object>> FilterDeletedTasks(int projectId, Dictionary<string, string> filters, string? keyword)
         {
             // 1️⃣ Tạo query cơ bản (dùng join thay cho Include)
@@ -791,9 +801,7 @@ namespace server.Services.Project
             var tasks = await _context.Tasks
                 .FromSqlRaw("EXEC sp_SearchTasks @ProjectId = {0}, @Keyword = {1}", projectId, keyword)
                 .ToListAsync();
-            Console.WriteLine("Tasks found BBBBBBBBBBBBBBBBB: " + tasks);
             List<TaskDTO.BasicTask> Taskavailable = _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
-            Console.WriteLine("Tasks found AAAAAAAAAAAAAAA: " + Taskavailable);
             return Taskavailable;
         }
 
@@ -843,7 +851,7 @@ namespace server.Services.Project
 
             IQueryable<Models.Task> query = _context.Tasks
                 .Include(t => t.Assignee)
-                .Where(t => t.ProjectId == projectId && t.IsActive && t.Deadline != null && t.Status != "Done");
+                .Where(t => t.ProjectId == projectId && t.IsActive && t.Deadline != null && (t.Status == "Todo" || t.Status == "In Progress" || t.Status == "Bug"));
 
             if (role == "member")
             {
@@ -874,10 +882,10 @@ namespace server.Services.Project
             return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         }
 
-
         public async Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role)
         {
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+
             if (task == null)
                 return false;
 
@@ -982,7 +990,6 @@ namespace server.Services.Project
                 var project = await _context.Projects.FirstOrDefaultAsync(p => p.ProjectId == projectId);
                 string projectTitle = project.Name;
 
-
                 subject = $"[Progress Feedback] {taskKey}: {taskTitle}";
 
                 string contentHtml = $@"
@@ -1008,6 +1015,13 @@ namespace server.Services.Project
                 success = true;
             }
             return success;
+        }
+
+        public async Task<string> UpdateTag(Models.Task task, string newTag)
+        {
+            task.Tag = newTag;
+            await _context.SaveChangesAsync();
+            return task.Tag;
         }
     }
 }

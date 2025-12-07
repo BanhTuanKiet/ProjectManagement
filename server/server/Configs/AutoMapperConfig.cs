@@ -16,7 +16,10 @@ namespace server.Configs
                     opt => opt.MapFrom(src => src.CreatedBy)) // Lấy ID
 
                 .ForMember(dest => dest.CreatedName,
-                    opt => opt.MapFrom(src => src.CreatedByNavigation != null ? src.CreatedByNavigation.UserName : null));
+                    opt => opt.MapFrom(src => src.CreatedByNavigation != null ? src.CreatedByNavigation.UserName : null))
+
+                .ForMember(dest => dest.AvatarUrl,
+                     opt => opt.MapFrom(src => src.Assignee.AvatarUrl));
 
             CreateMap<Project, ProjectDTO.ProjectTitile>();
 
@@ -38,22 +41,7 @@ namespace server.Configs
                 .ForMember(dest => dest.role,
                             opt => opt.MapFrom(src => src.RoleInProject))
                 .ForMember(dest => dest.isOwner,
-                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"))
-                .ForMember(dest => dest.TeamId,
-                    opt => opt.MapFrom(src =>
-                        src.User.TeamMembers
-                            // .Where(tm => tm.Team.ProjectId == 2)
-                            .Where(tm => tm.Team.ProjectId == src.Project.ProjectId)
-                            .Select(tm => tm.TeamId)
-                            .FirstOrDefault()
-                    ))
-                .ForMember(dest => dest.LeaderId,
-                    opt => opt.MapFrom(src =>
-                        src.User.TeamMembers
-                            .Where(tm => !string.IsNullOrEmpty(tm.Team.LeaderId))
-                            .Select(tm => tm.Team.LeaderId)
-                            .FirstOrDefault()
-                    ));
+                            opt => opt.MapFrom(src => src.RoleInProject == "Project Manager"));
 
             CreateMap<Contact, UserDTO.Contact>()
                 .ForMember(dest => dest.MediaId,

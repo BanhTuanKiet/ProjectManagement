@@ -214,7 +214,7 @@ namespace server.Services.Project
                         </p>
 
                         <div style=""text-align:center;"">
-                        <a href=""http://localhost:3000/login?email={Uri.EscapeDataString(invitation.Email)}""
+                        <a href=""http://localhost:3000?email={email}&projectId={projectId}""
                             style=""background:#0052cc; color:#ffffff; font-weight:600; font-size:16px; padding:14px 32px; border-radius:6px; text-decoration:none; display:inline-block; box-shadow:0 4px 8px rgba(0,82,204,0.25);"">
                             Accept Invitation
                         </a>
@@ -338,12 +338,33 @@ namespace server.Services.Project
             var projectMembers = await _context.ProjectMembers
                 .Include(pm => pm.Project)
                 .Include(pm => pm.User)
-                .ThenInclude(u => u.TeamMembers)
-                .ThenInclude(tm => tm.Team)
                 .Where(pm => pm.ProjectId == projectId)
                 .ToListAsync();
 
-            return _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+            var membersDTO = _mapper.Map<List<ProjectDTO.ProjectMembers>>(projectMembers);
+
+            foreach (var pm in membersDTO)
+            {
+                var team = await _context.Teams
+                    .Include(t => t.Members)
+                    .Where(t => t.ProjectId == projectId)
+                    .Where(t => t.Members.Any(m => m.UserId == pm.userId))
+                    .Select(t => new
+                    {
+                        TeamId = t.Id,
+                        LeaderId = t.LeaderId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (team != null)
+                {
+                    pm.TeamId = team.TeamId.ToString();
+                    pm.LeaderId = team.LeaderId;
+                }
+            }
+
+
+            return membersDTO;
         }
     }
 }

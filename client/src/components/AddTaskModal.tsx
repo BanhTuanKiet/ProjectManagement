@@ -135,7 +135,7 @@ export default function AddTaskViewModal({
                                             {availableUsers?.map((member) => (
                                                 <SelectItem key={member.userId} value={member.userId}>
                                                     <div className="flex items-center gap-2">
-                                                        <ColoredAvatar id={member.userId} name={member.name} size="sm" />
+                                                        <ColoredAvatar src={member?.avatarUrl || ""} id={member.userId} name={member.name} size="sm" />
                                                         <span>{member.name}</span>
                                                     </div>
                                                 </SelectItem>

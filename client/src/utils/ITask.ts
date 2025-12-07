@@ -96,6 +96,8 @@ export interface BasicTask {
   id?: number
   sprintId?: number
   isActive: boolean
+  tag?: string | null
+  avatarUrl: string
 }
 
 export interface NewTaskView {
@@ -112,4 +114,19 @@ export interface UpdateTask {
   Priority?: number | null
   CreatedAt?: string | null
   Deadline?: string | null 
+}
+
+export interface TaskResponse {
+    taskId: number
+    key?: string
+    title: string
+    status?: string
+    sprintId?: number | null
+    assigneeName?: string
+}
+
+export interface TaskBody {
+    title: string
+    status: string
+    sprintId? : number
 }

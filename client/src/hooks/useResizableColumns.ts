@@ -185,7 +185,7 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
                     prev.map((t) => (t.id === taskId ? updatedFromServer : t))
                 );
 
-            } catch (error: any) {
+            } catch (error) {
                 console.error("Update failed:", error);
                 setTasks((prev) =>
                     prev.map((t) => (t.id === taskId ? currentTask : t))

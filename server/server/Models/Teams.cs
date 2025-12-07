@@ -30,8 +30,12 @@ namespace server.Models
 
     public class TeamMembers
     {
+        [Key]
+        [Column(Order = 1)]
         public Guid TeamId { get; set; }
         public virtual Teams Team { get; set; } = null!;
+        [Key]
+        [Column(Order = 2)]
         public string UserId { get; set; } = null!;
         public virtual ApplicationUser User { get; set; } = null!;
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;

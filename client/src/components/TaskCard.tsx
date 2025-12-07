@@ -34,6 +34,7 @@ export default function TaskCard({
                 {task.assignee && (
                     <div className="flex items-center gap-2">
                         <ColoredAvatar
+                            src={task.avatarUrl}
                             id={task.assigneeId || ""}
                             name={task.assignee}
                             size="sm"

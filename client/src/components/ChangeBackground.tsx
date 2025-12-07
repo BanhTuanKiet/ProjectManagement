@@ -1,101 +1,73 @@
-// components/ChangeBackground.tsx
 "use client"
 
+import { useState } from "react"
 import { useTheme } from "@/app/(context)/ThemeContext"
+import { Button } from "@/components/ui/button"
 
-interface BackgroundOption {
-  color: string
-  name: string
-}
-
-const backgroundOptions: BackgroundOption[] = [
-  { color: '#ffffff', name: 'Trắng' },
-  { color: '#f4f5f7', name: 'Xám nhạt' },
-  { color: '#fffae5', name: 'Vàng nhạt' },
-  { color: '#e3fcef', name: 'Xanh lá nhạt' },
-  { color: '#e8f4fd', name: 'Xanh dương nhạt' },
-  { color: '#fce8ff', name: 'Tím nhạt' },
-  { color: '#ffebe6', name: 'Đỏ nhạt' },
+const colors49 = [
+  // Gray
+  "#ffffff", "#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b",
+  // Red
+  "#fff5f5", "#ffe3e3", "#ffc9c9", "#ffa8a8", "#ff8787", "#ff6b6b", "#fa5252",
+  // Orange
+  "#fff4e6", "#ffe8cc", "#ffd8a8", "#ffc078", "#ffa94d", "#ff922b", "#fd7e14",
+  // Yellow
+  "#fff9db", "#fff3bf", "#ffec99", "#ffe066", "#ffd43b", "#fcc419", "#fab005",
+  // Green
+  "#ebfbee", "#d3f9d8", "#b2f2bb", "#8ce99a", "#69db7c", "#51cf66", "#40c057",
+  // Blue
+  "#e7f5ff", "#d0ebff", "#a5d8ff", "#74c0fc", "#4dabf7", "#339af0", "#228be6",
+  // Purple
+  "#f3f0ff", "#e5dbff", "#d0bfff", "#b197fc", "#9775fa", "#845ef7", "#7950f2",
 ]
 
-export default function BackgroundPicker() {
+export default function BackgroundPicker({ setOpen }: { setOpen: (open: boolean) => void }) {
   const { backgroundColor, changeBackgroundColor } = useTheme()
 
-  const handleColorChange = (color: string) => {
-    changeBackgroundColor(color)
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    // Basic hex color validation
-    if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value)) {
-      changeBackgroundColor(value)
-    }
-  }
+  // user chọn tạm
+  const [selectedColor, setSelectedColor] = useState(backgroundColor)
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-3">
-        {backgroundOptions.map((option: BackgroundOption) => (
+    <div className="space-y-6 p-4">
+      <h2 className="text-lg font-semibold">Choose background color (49 colors)</h2>
+
+      {/* Grid 7 x 7 */}
+      <div className="grid grid-cols-7 gap-2">
+        {colors49.map((color) => (
           <button
-            key={option.color}
+            key={color}
             className={`
-              relative h-16 rounded-md border-2 transition-all hover:scale-105
-              ${backgroundColor === option.color 
-                ? 'border-blue-500 ring-2 ring-blue-200' 
-                : 'border-gray-200'
+              h-10 w-10 rounded-full border transition-all hover:scale-110
+              ${selectedColor === color
+                ? "border-blue-600 ring-2 ring-blue-300"
+                : "border-gray-300"
               }
             `}
-            style={{ backgroundColor: option.color }}
-            onClick={() => handleColorChange(option.color)}
-            title={option.name}
+            style={{ backgroundColor: color }}
+            onClick={() => setSelectedColor(color)}
             type="button"
-          >
-            {backgroundColor === option.color && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-            )}
-          </button>
+          />
         ))}
       </div>
-      
-      {/* Tùy chọn màu tùy chỉnh */}
-      <div className="pt-4 border-t">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Màu tùy chỉnh
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="color"
-            value={backgroundColor}
-            onChange={(e) => handleColorChange(e.target.value)}
-            className="w-12 h-12 cursor-pointer rounded border border-gray-300"
-          />
-          <div className="flex-1">
-            <input
-              type="text"
-              value={backgroundColor}
-              onChange={handleInputChange}
-              placeholder="#ffffff"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Preview */}
       <div className="pt-4 border-t">
         <p className="text-sm font-medium text-gray-700 mb-2">Preview</p>
-        <div 
-          className="h-20 rounded-md border border-gray-300 transition-colors duration-300"
-          style={{ backgroundColor }}
+        <div
+          className="h-20 rounded-md border transition-colors"
+          style={{ backgroundColor: selectedColor }}
         />
       </div>
+
+      <Button
+        className="w-full rounded-lg mt-4"
+        onClick={() => {
+          changeBackgroundColor(selectedColor)
+          setOpen(false)
+        }}
+      >
+        Accept
+      </Button>
     </div>
   )
 }
+

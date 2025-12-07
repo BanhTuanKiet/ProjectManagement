@@ -14,7 +14,9 @@ import {
     YAxis,
     Legend,
     BarChart,
-    Bar
+    TooltipProps,
+    Bar,
+    BarProps,
 } from "recharts"
 import axios from "@/config/axiosConfig" // Đảm bảo đường dẫn đúng
 import { useProject } from "@/app/(context)/ProjectContext"
@@ -48,6 +50,15 @@ interface ChartViewProps {
     projectId: string;
 }
 
+interface CustomPieTooltipProps extends TooltipProps<number, string> {
+    active?: boolean
+    payload?: PieDataItem[]
+}
+interface PieDataItem {
+    name: string
+    value: number
+}
+
 // --- 2. Config & Helpers ---
 const COLORS = ["#4ade80", "#60a5fa", "#facc15", "#fb923c", "#f87171"]
 const STATUS_COLORS: Record<string, string> = {
@@ -75,7 +86,7 @@ const PRIORITY_CONFIG = [
 const normalizeStatus = (status: string) => status ? status.toLowerCase().trim() : "unknown"
 
 // Tooltip Custom cho PieChart
-const CustomPieTooltip = ({ active, payload }: any) => {
+const CustomPieTooltip = ({ active, payload }: CustomPieTooltipProps) => {
     if (active && payload && payload.length) {
         const d = payload[0]
         return (
@@ -159,14 +170,7 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
                 }
                 // Reset filter member khi đổi team để tránh conflict
                 setSelectedMemberId("ALL")
-            } catch (error: any) {
-                console.error("Error fetching team tasks:", error)
-
-                // Log chi tiết lỗi để debug
-                if (error.response) {
-                    console.log("Status:", error.response.status);
-                    console.log("Data:", error.response.data);
-                }
+            } catch (error) {
                 setTasks([])
             } finally {
                 setLoading(false)
@@ -268,7 +272,7 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
 
     // Area Chart Data (Timeline)
     const timelineData = useMemo(() => {
-        const timelineMap: Record<string, any> = {}
+        const timelineMap: Record<string, { date: string, todo: number, inProgress: number, done: number, cancel: number, expired: number }> = {}
         const sortedTasks = [...filteredTasks].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
         sortedTasks.forEach(t => {
@@ -341,17 +345,13 @@ function ChartViewComponent({ projectId }: ChartViewProps) {
     }
 
     // Xử lý khi click vào Bar Chart (Member)
-    const handleNavigateMember = (data: any) => {
-        if (data && data.payload && data.payload.id) {
-            window.location.hash = `list?assignee=${encodeURIComponent(data.payload.id)}`;
-            return;
-        }
+    const handleNavigateMember: BarProps['onClick'] = (data, index) => {
+        if (!data) return;
 
-        if (data && data.activePayload && data.activePayload.length > 0) {
-            const memberId = data.activePayload[0].payload.id;
-            if (memberId) {
-                window.location.hash = `list?assignee=${encodeURIComponent(memberId)}`;
-            }
+        // BarChart click payload
+        const payload = "payload" in data ? data.payload : data;
+        if (payload && "id" in payload) {
+            window.location.hash = `list?assignee=${encodeURIComponent(payload.id)}`;
         }
     }
 

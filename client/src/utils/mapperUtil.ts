@@ -8,7 +8,7 @@ export interface Task {
   status: "To Do" | "Done" | "In Progress"
   assignee?: UserMini
   dueDate?: string
-  type: "Task"
+  type?: "Task" | "Bug" | "Feature" | string
   created?: string
   reporter?: UserMini
   description?: string
@@ -18,6 +18,7 @@ export interface Task {
   raw: BasicTask // giữ lại data gốc để sau dễ dùng
   // Thêm các trường khác nếu cần
   subtasks?: Task[]
+  tag?: string | null
   [key: string]: any
 }
 
@@ -44,7 +45,6 @@ export const mapPriorityToApi = (priority?: "Low" | "Medium" | "High" | number):
   if (typeof priority === "string") return priorityMapFEtoBE[priority as "Low" | "Medium" | "High"];
   return 1; // default Low
 };
-
 
 export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
   const assigneeName = apiTask.assignee || null
@@ -78,6 +78,7 @@ export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
     isActive: apiTask.isActive,
     raw: apiTask, // giữ lại data gốc để sau dễ dùng
     subtasks: [],
+    tag: apiTask.tag
   }
 }
 

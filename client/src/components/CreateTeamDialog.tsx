@@ -17,7 +17,6 @@ import ColoredAvatar from "./ColoredAvatar"
 import axios from "@/config/axiosConfig"
 import { DialogProps, MembersSelection } from "@/utils/IDialogProps"
 
-
 export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
     const { members, project_name } = useProject()
     const [mockMembers, setMockMembers] = useState<Member[]>()
@@ -25,11 +24,13 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
     const [selectedMembers, setSelectedMembers] = useState<MembersSelection[]>([])
     const [leaderId, setLeaderId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
+    const [addedList, setAddedList] = useState<MembersSelection[]>()
+    const [failedMembers, setFailedMembers] = useState<MembersSelection[]>([])
 
     useEffect(() => {
         if (members && open) {
             const leaders = members.filter(m => m.role === "Leader")
-            const mems = members.filter(m => m.role === "Member")
+            const mems = members.filter(m => m.role === "Member" || m.role === "Tester")
             setMockLeaders(leaders)
             setMockMembers(mems)
         }
@@ -47,16 +48,21 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
     const handleCreateTeam = async () => {
         if (!leaderId) return
         setLoading(true)
+
         try {
             const memberIds = selectedMembers.map(m => m.id)
-            const response = await axios.post(`/teams/members/${project_name}/${leaderId}`, memberIds)
-            console.log(response.data)
-            setSelectedMembers([])
-            setLeaderId(null)
+
+            const res = await axios.post(`/teams/members/${project_name}/${leaderId}`, memberIds)
+            const { failedMembers, addedMembers } = res.data
+            console.log(res.data)
+            setAddedList(addedMembers)
+            setFailedMembers(failedMembers)
         } catch (err) {
             console.error(err)
         } finally {
             setLoading(false)
+            setLeaderId(null)
+            setSelectedMembers([])
         }
     }
 
@@ -80,14 +86,16 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
                             <SelectContent>
                                 {mockLeaders?.map(l => (
                                     <SelectItem key={l.userId} value={l.userId}>
-                                        <ColoredAvatar id={l.userId} name={l.name} /> {l.name || l.userId}
+                                        <div className="flex items-center gap-2">
+                                            <ColoredAvatar id={l.userId} name={l.name} />
+                                            {l.name || l.userId}
+                                        </div>
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
 
-                    {/* Add Members */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700">Select Members</label>
                         <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto bg-gray-50 p-2 rounded">
@@ -100,15 +108,14 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
                                         className="flex items-center gap-1 p-1 bg-white rounded border hover:bg-gray-100 w-[48%]"
                                         onClick={() => handleAddMember(m)}
                                     >
-                                        <ColoredAvatar id={m.userId} name={m.name} size="sm" />
+                                        <ColoredAvatar src={m.avatarUrl} id={m.userId} name={m.name} size="sm" />
                                         <span className="truncate">{m.name}</span>
                                     </button>
                                 ))}
                         </div>
                     </div>
 
-                    {/* Selected Members */}
-                    {selectedMembers.length > 0 && (
+                    {selectedMembers?.length > 0 && (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Selected Members</label>
                             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
@@ -129,9 +136,30 @@ export default function CreateTeamDialog({ open, onOpenChange }: DialogProps) {
                             </div>
                         </div>
                     )}
+
+                    {addedList && addedList?.length > 0 && (
+                        <div className="bg-green-50 text-green-700 border border-green-200 p-3 rounded mb-3 text-sm">
+                            <p className="font-semibold mb-1">These members have been successfully added to the team:</p>
+                            <ul className="list-disc ml-4">
+                                {addedList.map(r => (
+                                    <li key={r.id}>{r.name}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {failedMembers?.length > 0 && (
+                        <div className="bg-red-50 text-red-700 border border-red-200 p-3 rounded mb-3 text-sm">
+                            <p className="font-semibold mb-1">These members are on another team:</p>
+                            <ul className="list-disc ml-4">
+                                {failedMembers.map(r => (
+                                    <li key={r.id}>{r.name}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex justify-end gap-2 pt-4">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
                     <Button onClick={handleCreateTeam} disabled={!leaderId || loading}>
