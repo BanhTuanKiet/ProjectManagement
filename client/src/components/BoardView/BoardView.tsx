@@ -192,7 +192,8 @@ export default function BoardView() {
                             <div
                                 id={`column-${status.name}`}
                                 key={status.id}
-                                className="bg-gray-50 rounded-xl p-3 shadow-md flex flex-col"
+                                className={`bg-gray-50 rounded-xl p-3 shadow-md flex flex-col`}
+                            // style={{ backgroundColor: status.color }}
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <h2 className="font-semibold" style={{ color: status.color }}>

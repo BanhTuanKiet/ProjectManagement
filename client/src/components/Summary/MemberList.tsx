@@ -135,7 +135,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
     }
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden bg-dynamic">
             <div id="featureMember" className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-gray-900">Members</h2>

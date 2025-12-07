@@ -11,8 +11,8 @@ import type { BasicTask } from "@/utils/ITask"
 import Overview from "./Overview"
 import ChartView from "./ChartView"
 import MemberList from "../MemberList"
-import SettingsPopup from "../SettingsPopup"
 import TaskSupport from "../TaskSupport"
+import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown'
 
 export default function Summary() {
     const { projects, project_name, members } = useProject()
@@ -84,7 +84,7 @@ export default function Summary() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-0">
+        <div className="min-h-screen bg-gray-50 p-0 bg-dynamic">
             <div className="max-w-7xl mx-auto space-y-6">
 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -92,7 +92,7 @@ export default function Summary() {
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="text-2xl font-bold text-gray-900">{project?.name}</h1>
-                                <SettingsPopup />
+                                <MoreHorizontalDropdown />
                             </div>
                             <p className="text-gray-600 leading-relaxed mb-4">{project?.description}</p>
                             <div className="flex items-center gap-6 text-sm text-gray-500">

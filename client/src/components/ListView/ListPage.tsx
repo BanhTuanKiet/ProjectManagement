@@ -128,7 +128,7 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
       )}
 
       {/* Header */}
-      <div id="toolsList" className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
+      <div id="toolsList" className="flex items-center justify-between p-4 border-b shrink-0 bg-white bg-dynamic">
         <div className="flex items-center gap-4">
           {/* Ô tìm kiếm */}
           <div className="relative">
@@ -257,7 +257,6 @@ export default function ListPage({ tasksNormal, projectId }: ListPageProps) {
                     >
                       <div className="flex items-center gap-2 w-full">
                         <ColoredAvatar src={member.avatarUrl} id={member.userId} name={member.name} size="sm" />
-
                         <span className="truncate max-w-[160px]" title={member.name}>
                           {capitalizeFirstLetter(member.name)}
                         </span>

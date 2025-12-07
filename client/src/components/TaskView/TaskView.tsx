@@ -19,7 +19,7 @@ import {
 
 const PAGE_SIZE = 10;
 
-const TaskView = () => {
+const TaskView = ({ projectId }: { projectId: number }) => {
     const { project_name } = useProject();
     const [tasks, setTasks] = useState<BasicTask[]>([]);
     const [loading, setLoading] = useState(false);
@@ -122,7 +122,7 @@ const TaskView = () => {
 
     return (
         <div className=" max-w-7xl mx-auto">
-            <div className="bg-white p-4 shadow flex">
+            <div className="bg-white p-4 shadow flex bg-dynamic">
 
                 <div className="flex items-center gap-2 border rounded-lg mr-4">
                     <Search size={13} className="text-gray-500" />

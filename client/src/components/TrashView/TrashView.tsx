@@ -151,7 +151,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
     return (
         <div className="flex flex-col h-full overflow-hidden mx-auto w-full">
             {/* Header */}
-            <div id="featureTrash" className="flex items-center justify-between p-4 border-b shrink-0 bg-white">
+            <div id="featureTrash" className="flex items-center justify-between p-4 border-b shrink-0 bg-white bg-dynamic">
                 <div className="flex items-center gap-4">
                     {/* Ô tìm kiếm */}
                     <div className="relative">
