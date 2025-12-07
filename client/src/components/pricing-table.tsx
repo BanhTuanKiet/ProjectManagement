@@ -5,8 +5,6 @@ import axios from "@/config/axiosConfig"
 import { PlanDetail } from "@/utils/IPlan"
 import { formatPrice } from "@/utils/stringUitls"
 import { useUser } from "@/app/(context)/UserContext"
-import { useRouter } from "next/router"
-import { pl } from "date-fns/locale"
 
 export default function PricingTable({
     selectedPlan,

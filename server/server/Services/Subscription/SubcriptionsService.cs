@@ -30,6 +30,19 @@ namespace server.Services.Project
             return entry.Entity;
         }
 
+        public async Task<Subscriptions> UpdateSubscription(Subscriptions subscription)
+        {
+            var sub = await _context.Subscriptions.FirstOrDefaultAsync(s => s.Id == subscription.Id);
+            
+            sub.PlanId = subscription.PlanId;
+            sub.StartedAt = subscription.StartedAt;
+            sub.ExpiredAt = subscription.ExpiredAt;
+            sub.PaymentId = subscription.PaymentId;
+
+            await _context.SaveChangesAsync();
+            return subscription;
+        }
+
         public async Task<Subscriptions> FindSubcriptionByUserId(string userId)
         {
             return await _context.Subscriptions.FirstOrDefaultAsync(sub => sub.UserId == userId);

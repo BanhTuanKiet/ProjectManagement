@@ -18,6 +18,8 @@ import { formatDate } from '@/utils/dateUtils'
 import { ContactIcon, getRoleBadge } from '@/utils/statusUtils'
 import ColoredAvatar from '@/components/ColoredAvatar'
 import { Media } from '@/utils/IContact'
+import HeaderComponent from '@/components/HeaderComponent'
+import { useRouter } from 'next/navigation'
 import TeamMemberDisplay from '@/components/TeamMemberDisplay'
 
 export default function Page() {
@@ -28,6 +30,7 @@ export default function Page() {
     const [medias, setMedias] = useState<Media[]>()
     const [isEditingInfo, setIsEditingInfo] = useState(false)
     const [tempInfo, setTempInfo] = useState({ name: "", location: "" })
+    const router = useRouter()
 
     const [allMember, setAllMember] = useState<TeamMembers[]>([])
     const [searchTeam, setSearchTeam] = useState("")
@@ -202,12 +205,60 @@ export default function Page() {
 
     return (
         <div className="min-h-screen bg-gray-50 text-slate-900 font-sans">
-            <div className="h-24 bg-gradient-to-r from-blue-900 to-blue-700 relative" />
-
+            <HeaderComponent />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
                     <div className="lg:col-span-4 xl:col-span-3">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden z-99 top-20 mt-20">
+                            <div className="p-4 flex flex-col items-center text-center border-b border-gray-100">
+                                {user && (
+                                    <div className="relative group w-fit mx-auto">
+                                        <ColoredAvatar
+                                            src={user?.avatar}
+                                            id={user?.id}
+                                            name={user?.name}
+                                            size="xxl"
+                                        />
+
+                                        <label
+                                            htmlFor="avatarUpload"
+                                            className="
+                                                absolute bottom-0 right-0 
+                                                w-9 h-9 
+                                                bg-white shadow-md 
+                                                rounded-full 
+                                                flex items-center justify-center 
+                                                cursor-pointer 
+                                                border border-gray-200
+                                                transition-all
+                                                hover:bg-blue-600 hover:text-white
+                                            "
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-5 w-5 text-gray-600 group-hover:text-white transition-all"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M3 7h4l2-3h6l2 3h4v13H3V7z"
+                                                />
+                                                <circle cx="12" cy="13" r="3" />
+                                            </svg>
+                                        </label>
+
+                                        <input
+                                            id="avatarUpload"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleAvatarChange}
+                                        />
                         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-10 top-20 sticky">
                             <div className="p-6 flex flex-col items-center text-center border-b border-gray-100">
                                 {user &&
@@ -231,10 +282,9 @@ export default function Page() {
                                             </div>
                                         )}
                                     </div>
-                                }
+                                )}
 
                                 <div className="w-full mt-4 text-center">
-
                                     {!isEditingInfo ? (
                                         <>
                                             <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
@@ -297,77 +347,163 @@ export default function Page() {
                                 </div>
                             </div>
 
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                            contact information
-                                        </h3>
+                            <div className="space-y-3">
+                                <div className="lg:col-span-4 xl:col-span-3">
+                                    <div className="bg-white overflow-hidden sticky top-6">
+                                        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                Contact Information
+                                            </h3>
 
-                                        {!isEditingContacts ? (
-                                            <button
-                                                onClick={startEditingContacts}
-                                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                                title="Change contact"
-                                            >
-                                                <Pencil size={14} />
-                                            </button>
-                                        ) : (
-                                            <div className="flex items-center gap-1">
+                                            {!isEditingContacts ? (
                                                 <button
-                                                    onClick={saveContacts}
-                                                    className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
-                                                    title="Save"
+                                                    onClick={startEditingContacts}
+                                                    className="text-gray-400 hover:text-blue-600 transition-colors"
+                                                    title="Edit contacts"
                                                 >
-                                                    <Save size={14} />
+                                                    <Pencil size={14} />
                                                 </button>
-                                                <button
-                                                    onClick={cancelEditingContacts}
-                                                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                    title="Cancel"
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                            ) : (
+                                                <div className="flex gap-1">
+                                                    <button onClick={saveContacts} className="text-green-600 hover:bg-green-50 p-1 rounded">
+                                                        <Save size={16} />
+                                                    </button>
+                                                    <button onClick={cancelEditingContacts} className="text-red-600 hover:bg-red-50 p-1 rounded">
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    {!isEditingContacts ? (
-                                        <ul className="space-y-3">
-                                            <li className="flex items-center text-sm text-gray-600">
-                                                <Mail size={16} className="mr-3 text-gray-400" />
-                                                <a href={`mailto:${user?.email}`} className="hover:text-blue-600 truncate">
-                                                    {user?.email}
-                                                </a>
-                                            </li>
+                                        <div className="px-4 pt-3 py-0">
+                                            {!isEditingContacts ? (
+                                                <ul className="space-y-3">
+                                                    <li className="flex items-center text-sm text-gray-600">
+                                                        <Mail size={16} className="mr-3 text-gray-400" />
+                                                        <a href={`mailto:${user?.email}`} className="hover:text-blue-600 truncate">
+                                                            {user?.email}
+                                                        </a>
+                                                    </li>
 
-                                            {user?.contacts?.map(contact => (
-                                                <li key={contact.mediaId} className="flex items-center text-sm text-gray-600">
-                                                    <div className="mr-3 text-gray-400">
-                                                        <ContactIcon media={contact.media} />
+                                                    {user?.contacts?.length === 0 && (
+                                                        <li className="text-sm text-gray-400 italic">No additional contacts</li>
+                                                    )}
+                                                    {user?.contacts?.map(contact => (
+                                                        <li key={contact.mediaId} className="flex items-center text-sm text-gray-600 group">
+                                                            <div className="w-8 flex-shrink-0 text-gray-400 group-hover:text-blue-500 transition-colors">
+                                                                <ContactIcon media={contact.media} />
+                                                            </div>
+                                                            <a
+                                                                href={contact.url}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="hover:text-blue-600 truncate flex-1 block"
+                                                                title={contact.url}
+                                                            >
+                                                                {contact.media === 'website'
+                                                                    ? contact.url.replace(/^https?:\/\//, '')
+                                                                    : contact.media === 'phone'
+                                                                        ? contact.url
+                                                                        : contact.url.split('/').pop()}
+                                                            </a>
+                                                            <div className="opacity-0 group-hover:opacity-100 text-gray-300 text-xs">
+                                                                <ArrowRight size={12} />
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center text-sm text-gray-400 mb-2">
+                                                        <Mail size={16} className="mr-3" />
+                                                        <span className="truncate">{user?.email}</span>
+                                                        <span className="ml-auto text-xs italic">(Read only)</span>
                                                     </div>
-                                                    <a
-                                                        href={contact.url}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="hover:text-blue-600 capitalize truncate w-full"
+
+                                                    {medias && tempContacts.map(contact => {
+                                                        const usedMedias = tempContacts
+                                                            .filter(c => c.mediaId !== contact.mediaId)
+                                                            .map(c => c.media)
+                                                        const currentMediaObj = medias.find(m => m.name === contact.media) || { id: contact.mediaId, name: contact.media }
+                                                        const sortedMedias = [
+                                                            currentMediaObj,
+                                                            ...medias.filter(m => m.name !== contact.media && !usedMedias.includes(m.name))
+                                                        ]
+
+                                                        return (
+                                                            <div key={contact.mediaId} className="flex items-center gap-2 animate-fadeIn bg-gray-50 p-2 rounded border border-gray-200">
+                                                                <div className="flex-1 space-y-1.5 min-w-0">
+                                                                    <select
+                                                                        value={contact.media}
+                                                                        onChange={(e) => updateContact(contact.mediaId, 'media', e.target.value)}
+                                                                        className="block w-full text-xs border border-gray-300 rounded px-1.5 py-1"
+                                                                    >
+                                                                        <option value="">Select Platform</option>
+                                                                        {sortedMedias.map(m => (
+                                                                            <option key={m.id} value={m.name}>{m.name}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={contact.url}
+                                                                        onChange={(e) => updateContact(contact.mediaId, 'url', e.target.value)}
+                                                                        placeholder="URL / Phone..."
+                                                                        className="block w-full text-xs border border-gray-300 rounded px-1.5 py-1"
+                                                                    />
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => deleteContact(contact.mediaId)}
+                                                                    className="text-gray-400 hover:text-red-500 p-1"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                    <button
+                                                        onClick={addContact}
+                                                        className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded text-xs text-gray-500 hover:border-blue-500 hover:text-blue-600 flex items-center justify-center gap-1 transition-all"
                                                     >
-                                                        {contact.media === 'website'
-                                                            ? contact.url.replace(/^https?:\/\//, '')
-                                                            : contact.url}
-                                                    </a>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <div className="space-y-3">
+                                                        <Plus size={14} /> Add new contact
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
-                                            <div className="flex items-center text-sm text-gray-400 mb-2">
-                                                <Mail size={16} className="mr-3" />
-                                                <span className="truncate">{user?.email}</span>
-                                                <span className="ml-auto text-xs italic">(Read only)</span>
-                                            </div>
+                                <div className="pb-3">
+                                    <h3 className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                                        subscription
+                                    </h3>
 
+                                    {user?.subcription ? (() => {
+                                        const end = new Date(user.subcription.expiredAt).getTime()
+                                        const now = Date.now()
+                                        const isExpired = now > end
+
+                                        return (
+                                            <div className="p-4">
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center text-white shadow">
+                                                            ⭐
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-gray-800">
+                                                            {user.subcription.planName}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div
+                                                            className={`px-3 py-1 text-xs font-semibold rounded-full ${isExpired ? "bg-red-600" : "bg-blue-600"
+                                                                } text-white`}
+                                                        >
+                                                            {isExpired ? "Expired" : "Active"}
+                                                        </div>
+
+                                                        <button
+                                                            className="cursor-pointer px-3 py-1 text-xs rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => router.push("/plan")}
                                             {medias && tempContacts.map(contact => {
                                                 const usedMedias = tempContacts
                                                     .filter(c => c.mediaId !== contact.mediaId)
@@ -408,17 +544,26 @@ export default function Page() {
                                                             className="text-gray-400 hover:text-red-500 transition-colors p-1"
                                                             title="Delete"
                                                         >
-                                                            <Trash2 size={14} />
+                                                            Upgrade
                                                         </button>
                                                     </div>
-                                                )
-                                            })}
+                                                </div>
+
+                                                <div className="mt-3 text-xs text-gray-600">
+                                                    <p>Start date: {formatDate(user.subcription.startedAt)}</p>
+                                                    <p>Expired date: {formatDate(user.subcription.expiredAt)}</p>
+                                                </div>
+                                            </div>
+                                        )
+                                    })() : (
+                                        <div className="p-4 border border-gray-200 rounded-lg text-center text-sm text-gray-500">
+                                            No subscription
 
                                             <button
-                                                onClick={addContact}
-                                                className="w-full mt-2 py-1.5 border border-dashed border-gray-300 rounded text-xs text-gray-500 hover:border-blue-500 hover:text-blue-600 flex items-center justify-center gap-1 transition-all"
+                                                className="cursor-pointer block w-full mt-3 px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                                onClick={() => router.push("/plan")}
                                             >
-                                                <Plus size={12} /> Add contact
+                                                Get a plan
                                             </button>
                                         </div>
                                     )}

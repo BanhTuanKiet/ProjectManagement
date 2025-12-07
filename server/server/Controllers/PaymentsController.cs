@@ -7,9 +7,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Security.Claims;
 using System.Globalization;
-using server.Util;
-using Microsoft.EntityFrameworkCore;
-using server.Configs;
 
 namespace server.Controllers
 {
@@ -52,13 +49,7 @@ namespace server.Controllers
             order.ReturnUrl = returnUrl;
             order.CancelUrl = cancelUrl;
 
-            decimal vndRate = await _paymentsService.GetLatestFxRates(_httpClient, "VND");
-            decimal usdRate = await _paymentsService.GetLatestFxRates(_httpClient, "USD");
-            decimal finalVndRate = vndRate * usdRate;
-
-            decimal finalPrice = order.BillingPeriod == "monthly" ? order.Amount : order.Amount * 12 * 0.95m;
-            string finalPriceString = (finalPrice / finalVndRate).ToString("F2", CultureInfo.InvariantCulture);
-            order.Amount = decimal.Parse(finalPriceString, CultureInfo.InvariantCulture);
+            string priceString = order.Amount.ToString("F2", CultureInfo.InvariantCulture);
 
             var jsonOrder = JsonSerializer.Serialize(order);
             var encodedOrder = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(jsonOrder));
@@ -70,9 +61,8 @@ namespace server.Controllers
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
 
             var tokenResponse = await _httpClient.PostAsync($"{baseUrl}/v1/oauth2/token",
-                new FormUrlEncodedContent(new Dictionary<string, string>
-                {
-                    { "grant_type", "client_credentials" }
+                new FormUrlEncodedContent(new Dictionary<string, string> {
+            { "grant_type", "client_credentials" }
                 }));
 
             var tokenJson = await tokenResponse.Content.ReadAsStringAsync();
@@ -88,8 +78,8 @@ namespace server.Controllers
                 {
                     new {
                         amount = new {
-                            currency_code = order.Currency ?? "USD",
-                            value = finalPriceString
+                            currency_code = "USD",
+                            value = priceString
                         }
                     }
                 },
@@ -146,17 +136,35 @@ namespace server.Controllers
                 Status = "Paid",
             };
 
-            Payments payments = await _paymentsService.SavePaypalPayment(paypal);
+            Payments payment = await _paymentsService.SavePaypalPayment(paypal);
+            var subscription = await _subscriptionsService.FindSubcriptionByUserId(userId);
+            DateTime now = DateTime.UtcNow;
 
-            Subscriptions subscriptions = new Subscriptions
+            if (subscription == null)
             {
-                UserId = userId,
-                PlanId = request.PlanId,
-                PaymentId = payments.Id,
-                ExpiredAt = request.BillingPeriod == "monthly" ? expiredAt.AddMonths(1) : expiredAt.AddYears(1)
-            };
+                subscription = new Subscriptions
+                {
+                    UserId = userId,
+                    PlanId = request.PlanId,
+                    PaymentId = payment.Id,
+                    ExpiredAt = now.AddMonths(1)
+                };
 
-            await _subscriptionsService.AddSubscription(subscriptions);
+                await _subscriptionsService.AddSubscription(subscription);
+            }
+            else
+            {
+                // Gia hạn subscription → cộng thêm 1 tháng
+                // Nếu còn hạn, cộng từ thời điểm hết hạn
+                // Nếu đã hết hạn, cộng từ hôm nay
+                DateTime baseTime = subscription.ExpiredAt > now ? subscription.ExpiredAt : now;
+
+                subscription.PlanId = request.PlanId;
+                subscription.PaymentId = payment.Id;
+                subscription.ExpiredAt = baseTime.AddMonths(1);
+
+                await _subscriptionsService.UpdateSubscription(subscription);
+            }
 
             return Ok();
         }

@@ -12,16 +12,13 @@ export function capitalizeFirstLetter(text: string): string {
 }
 
 export function formatPrice(
-    price: number | undefined | string,
-    isVnd: boolean = true
+    price: number | undefined | string
 ) {
     if (!price) return "Free"
 
     const parsed = Number(price)
 
     if (isNaN(parsed)) return "Invalid price"
-
-    if (isVnd) return parsed.toLocaleString("vi-VN") + " VND"
 
     return parsed.toLocaleString("en-US", {
         style: "currency",

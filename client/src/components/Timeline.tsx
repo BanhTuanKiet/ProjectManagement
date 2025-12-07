@@ -116,46 +116,58 @@ export default function Timeline() {
 
         let left = 0
         let width = 0
+        let startOffset = 0
 
         if (viewMode === "day") {
-            let startOffset = differenceInDays(taskStart, startDate)
+            const total = pageSize
+            startOffset = differenceInDays(taskStart, startDate) - page * pageSize
             const duration = Math.max(1, differenceInDays(taskEnd, taskStart) + 1)
 
-            startOffset = startOffset - page * pageSize
-
-            if (startOffset < 0 || startOffset >= pageSize) {
+            if (startOffset + duration <= 0 || startOffset >= total) {
                 return { left: -9999, width: 0 }
             }
+            const visibleStart = Math.max(0, startOffset)
+            const visibleEnd = Math.min(total, startOffset + duration)
 
-            const percentPerDay = 100 / pageSize
-            left = startOffset * percentPerDay
-            width = duration * percentPerDay
-            widthMapRef.current[task.taskId] = width
+            const percentPerDay = 100 / total
+            left = visibleStart * percentPerDay
+            width = (visibleEnd - visibleStart) * percentPerDay
         }
 
         if (viewMode === "week") {
-            const startOffset = differenceInDays(taskStart, startDate)
+            const total = Math.max(1, timelineUnits.length)
+            startOffset = differenceInDays(taskStart, startDate)
             const startWeek = Math.floor(startOffset / 7)
             const durationDays = Math.max(1, differenceInDays(taskEnd, taskStart) + 1)
             const taskWeeks = Math.max(1, Math.ceil(durationDays / 7))
-            const total = Math.max(1, timelineUnits.length)
-            left = (startWeek / total) * 100
-            width = (taskWeeks / total) * 100
+
+            const visibleStart = Math.max(0, startWeek)
+            const visibleEnd = Math.min(total, startWeek + taskWeeks)
+
+            left = (visibleStart / total) * 100
+            width = ((visibleEnd - visibleStart) / total) * 100
         }
 
         if (viewMode === "month") {
             const total = Math.max(1, timelineUnits.length)
             const sIdx = timelineUnits.findIndex((m) => "month" in m && m.month === taskStart.getMonth())
             const eIdx = timelineUnits.findIndex((m) => "month" in m && m.month === taskEnd.getMonth())
+
             const si = sIdx === -1 ? 0 : sIdx
             const ei = eIdx === -1 ? si : eIdx
-            const months = Math.max(1, ei - si + 1)
-            left = (si / total) * 100
-            width = (months / total) * 100
+
+            const visibleStart = Math.max(0, si)
+            const visibleEnd = Math.min(total, ei + 1)
+
+            left = (visibleStart / total) * 100
+            width = ((visibleEnd - visibleStart) / total) * 100
         }
+
+        widthMapRef.current[task.taskId] = width
 
         return { left, width }
     }
+
 
     const tasksBySprint = useMemo(() => {
         const grouped: Record<string, BasicTask[]> = {}
@@ -238,7 +250,6 @@ export default function Timeline() {
             </div>
 
             <Card className="border border-slate-200 dark:border-slate-800 py-0">
-                {/* <div  className="overflow-x-auto"> */}
                 <div id="TableTimeline" className="sticky top-0 z-1 flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
                     <div className="flex bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                         <div className="w-63 px-4 py-2 border-r border-slate-200 dark:border-slate-800 flex items-center justify-between">
