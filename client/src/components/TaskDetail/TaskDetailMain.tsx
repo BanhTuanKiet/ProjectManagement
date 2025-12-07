@@ -92,7 +92,6 @@ export default function TaskDetailMain({
         }
     };
 
-    // --- COMMENT LOGIC (Giữ nguyên logic cũ vì nó riêng biệt) ---
     useEffect(() => {
         const fetchComments = async () => {
             try {
@@ -170,20 +169,6 @@ export default function TaskDetailMain({
     return (
         <div className="flex-1 overflow-auto">
             <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Badge
-                            className={`${getTaskStatusBadge(task.status)} border`}
-                        >
-                            {task.status}
-                            <ChevronDown className="h-3 w-3 ml-1" />
-                        </Badge>
-                        <Button variant="ghost" size="sm">
-                            <Activity className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-
                 {/* Component 4: Attachments (Tự quản lý files) */}
                 <TaskAttachments
                     taskId={taskId}

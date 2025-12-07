@@ -37,7 +37,7 @@ function DroppableColumn({
     return (
         <div
             ref={setNodeRef}
-            className={`space-y-2 flex-1 overflow-y-auto min-h-[100px] rounded-md p-1 transition ${isOver ? "bg-blue-100" : ""
+            className={`space-y-2 flex-1 overflow-y-auto min-h-[100px] rounded-md transition ${isOver ? "bg-blue-100" : ""
                 }`}
         >
             {children}
@@ -73,7 +73,7 @@ export default function BoardView() {
 
     const deleteTask = async (taskId: number) => {
         try {
-            await axios.delete(`/tasks/bulk-delete/`, {
+            await axios.delete(`/tasks/bulk-delete/${projectId}`, {
                 data: {
                     ProjectId: projectId,
                     Ids: [taskId],
@@ -157,14 +157,23 @@ export default function BoardView() {
 
     return (
         <div className="p-4 bg-dynamic">
-            <div id="searchTask" className="flex items-center mb-4 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                    placeholder="Search task..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64"
-                />
+            <div id="searchTask" className="flex items-center justify-between mb-4">
+                <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                        placeholder="Search task..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+
+                <button
+                    onClick={() => setOpenDialog(true)}
+                    className="flex items-center gap-1 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors text-sm cursor-grab"
+                >
+                    <Plus className="w-4 h-4" /> Create
+                </button>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
@@ -200,7 +209,7 @@ export default function BoardView() {
                                     items={visibleTasks.map((t) => t.taskId.toString())}
                                     strategy={verticalListSortingStrategy}
                                 >
-                                    <DroppableColumn id={status.name}>
+                                    <DroppableColumn id={status.name} >
                                         {visibleTasks.length > 0 ? (
                                             visibleTasks.map((task) => (
                                                 <div key={task.taskId} className="relative group">
@@ -210,7 +219,7 @@ export default function BoardView() {
                                                     />
                                                     <button
                                                         onClick={() => deleteTask(task.taskId)}
-                                                        className="absolute top-2 right-2 p-1 opacity-0 group-hover:opacity-100 transition bg-white rounded-full shadow-sm"
+                                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition bg-white rounded-full shadow-sm"
                                                     >
                                                         <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600" />
                                                     </button>
@@ -245,18 +254,6 @@ export default function BoardView() {
                                         )}
                                     </div>
                                 )}
-
-                                <div className="mt-2 flex justify-between">
-                                    {(![4, 5].includes(status.id)) &&
-                                        <button
-                                            id={`create-${status.name}`}
-                                            onClick={() => setOpenDialog(true)}
-                                            className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
-                                        >
-                                            <Plus className="w-4 h-4" /> Create
-                                        </button>
-                                    }
-                                </div>
                             </div>
                         );
                     })}

@@ -20,7 +20,7 @@ namespace server.Services.Task
         Task<Models.Task> UpdateTask(int taskId, TaskDTO.UpdateTask updateTask);
         Task<List<TaskDTO.BasicTask>> GetTasksBySprintOrBacklog(int projectId, int? sprintId, int? backlogId);
         Task<Models.Task> RestoreTaskFromHistory(int taskId);
-        Task<IEnumerable<object>> GetAllDeletedTasksAsync(int projectId);
+Task<int> DeleteTaskForeverAsync(int taskId);        Task<IEnumerable<object>> GetAllDeletedTasksAsync(int projectId);
         Task<IEnumerable<object>> FilterDeletedTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> FilterTasks(int projectId, Dictionary<string, string> filters, string? keyword);
         Task<List<TaskDTO.BasicTask>> SearchTasks(int projectId, string keyword);
@@ -29,5 +29,6 @@ namespace server.Services.Task
         Task<TaskDTO.BasicTask> GetBasicTasksByTaskId(int projectId, int taskId);
         Task<List<TaskDTO.BasicTask>> GetNearDeadlineTasksAsync(int projectId, string currentUserId);
         Task<bool> SendSupportEmailAsync(int projectId, int taskId, string currentUserId, string userName, string content, string toEmail, string role);
+        Task<string> UpdateTag(Models.Task task, string newTag);
     }
 }

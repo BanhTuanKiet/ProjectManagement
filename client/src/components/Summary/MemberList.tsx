@@ -304,7 +304,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
 
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <ColoredAvatar id={member.userId} name={member.name} size="md" />
+                                        <ColoredAvatar src={member.avatarUrl} id={member.userId} name={member.name} size="md" />
                                         <div className="font-medium text-gray-900">{member.name}</div>
                                     </div>
                                 </td>

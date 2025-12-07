@@ -13,6 +13,7 @@ public partial class Task
     public byte? Priority { get; set; }
     public string? AssigneeId { get; set; }
     public string CreatedBy { get; set; } = null!;
+    public string? Tag { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? Deadline { get; set; }
     public decimal? EstimateHours { get; set; }

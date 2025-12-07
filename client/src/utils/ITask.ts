@@ -96,6 +96,8 @@ export interface BasicTask {
   id?: number
   sprintId?: number
   isActive: boolean
+  tag?: string | null
+  avatarUrl: string
 }
 
 export interface NewTaskView {

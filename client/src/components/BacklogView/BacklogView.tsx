@@ -13,7 +13,7 @@ import { useTask } from '@/app/(context)/TaskContext'
 import { Console } from 'console'
 import { Toaster } from 'react-hot-toast'
 import { Task } from '@/utils/mapperUtil'
-
+import DeleteSprintPopover from '@/components/DeleteSprintPopover'
 
 interface WorkItem { id: number; key: string; title: string; status: 'TO DO' | 'IN PROGRESS' | 'DONE'; assignee?: string; assigneeColor?: string; sprintId?: number | null, deadline?: string; }
 interface Sprint { sprintId: number; name: string; projectId: number; status: string; workItems: WorkItem[], startDate: string; endDate: string }
@@ -37,6 +37,7 @@ export default function BacklogView() {
     const ProjectId = Number(project_name);
     const { tasks, connection } = useTask()
     const [selectedSprints, setSelectedSprints] = useState<Set<number>>(new Set());
+    const [isDeleteSprintOpen, setIsDeleteSprintOpen] = useState(false);
 
     console.log("task in backlog view:", tasks);
     useEffect(() => {
@@ -344,10 +345,10 @@ export default function BacklogView() {
 
             setSprints((prev) => prev.filter((s) => !selectedSprints.has(s.sprintId)));
             setSelectedSprints(new Set());
-            alert("✅ Deleted successfully");
+            // alert("✅ Deleted successfully");
         } catch (err) {
             console.error("❌ Bulk delete failed:", err);
-            alert("❌ Failed to delete selected sprints");
+            // alert("❌ Failed to delete selected sprints");
         }
     };
 
@@ -420,6 +421,34 @@ export default function BacklogView() {
         }
     };
 
+    const handleDeleteClick = () => {
+        if (selectedSprints.size === 0) return;
+        setIsDeleteSprintOpen(true);
+    };
+
+    const confirmDeleteSprints = async () => {
+        try {
+            await axios.delete(`sprints/${ProjectId}/bulk`, {
+                data: Array.from(selectedSprints),
+            });
+
+            // Cập nhật UI: Loại bỏ sprint đã xóa, chuyển task về backlog
+            const deletedSprintIds = Array.from(selectedSprints);
+
+            // Tìm các task thuộc sprint bị xóa để chuyển về backlog (UI update)
+            const tasksFromDeletedSprints = sprints
+                .filter(s => deletedSprintIds.includes(s.sprintId))
+                .flatMap(s => s.workItems)
+                .map(t => ({ ...t, sprintId: null })); // Reset sprintId
+
+            setBacklogItems(prev => [...prev, ...tasksFromDeletedSprints]);
+            setSprints((prev) => prev.filter((s) => !selectedSprints.has(s.sprintId)));
+            setSelectedSprints(new Set());
+        } catch (err) {
+            console.error("❌ Bulk delete failed:", err);
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-white border rounded-lg shadow-sm overflow-hidden bg-dynamic">
             <div className="border-b bg-gray-50 px-4 py-3 flex justify-between items-center">
@@ -455,15 +484,15 @@ export default function BacklogView() {
                 <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-white shadow-lg border border-gray-200 rounded-full px-6 py-3 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-200">
 
                     {selectedSprints.size > 0 && (
-                        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-white shadow-lg border rounded-lg px-6 py-3 flex items-center gap-4 z-50">
-                            <span className="text-sm text-gray-700">
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-700">
                                 {selectedSprints.size} sprint{selectedSprints.size > 1 ? "s" : ""} selected
                             </span>
                             <button
-                                onClick={handleDeleteSelectedSprints}
-                                className="px-4 py-1.5 bg-red-600 text-white rounded hover:bg-red-700"
+                                onClick={handleDeleteClick} // Gọi hàm mở popup thay vì xóa ngay
+                                className="px-4 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium flex items-center gap-2"
                             >
-                                Delete
+                                <Trash2 className="w-4 h-4" /> Delete
                             </button>
                         </div>
                     )}
@@ -501,6 +530,13 @@ export default function BacklogView() {
                     Create Task
                 </button>
             </div>
+
+            <DeleteSprintPopover
+                open={isDeleteSprintOpen}
+                setOpen={setIsDeleteSprintOpen}
+                sprintCount={selectedSprints.size}
+                onConfirmDelete={confirmDeleteSprints}
+            />
 
             {/* {selectedTaskId && (
                 <TaskDetailModal

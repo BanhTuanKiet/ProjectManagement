@@ -48,10 +48,16 @@ namespace server.Configs
 
                     // Kiểm tra invitation (nếu có)
                     context.Properties.Items.TryGetValue("email", out var token);
+                    context.Properties.Items.TryGetValue("projectId", out var projectIdStr);
+                    int.TryParse(projectIdStr, out int projectId);
+
                     if (!string.IsNullOrEmpty(token))
                     {
                         var invitation = await db.ProjectInvitations
-                            .FirstOrDefaultAsync(i => i.Email == token && i.IsAccepted == false);
+                            .FirstOrDefaultAsync(i => i.Email == token && i.IsAccepted == false && i.ProjectId == projectId);
+
+                        if (invitation == null)
+                            throw new ErrorException(400, "Invitation not find");
 
                         if (invitation != null && invitation.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
                         {
