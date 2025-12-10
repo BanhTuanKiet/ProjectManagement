@@ -351,6 +351,7 @@ namespace server.Controllers
                         Type = "task"
                     };
                     await _notificationsService.SaveNotification(notification);
+                    await TaskHubConfig.DeletedTasks(_taskHubContext, dto.Ids);
                     var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
                     await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
                 }
@@ -850,7 +851,7 @@ namespace server.Controllers
         }
 
         [HttpPatch("{projectId}/{taskId}/tag/{newTag}")]
-        [Authorize(Policy = "TesterRequirement")]
+        // [Authorize(Policy = "TesterRequirement")]
         public async Task<ActionResult> UpdateTag(int projectId, int taskId, string newTag)
         {
             Models.Task task = await _tasksService.GetTaskById(taskId)
@@ -858,7 +859,7 @@ namespace server.Controllers
 
             string taskTagUpdated = await _tasksService.UpdateTag(task, newTag);
 
-            if (taskTagUpdated != newTag) throw new ErrorException(400, "Update tag task failed");
+            if (taskTagUpdated != newTag) throw new ErrorException(400, $"Task status has been updated to {newTag}");
 
             return Ok(new { message = "Update task successful" });
         }

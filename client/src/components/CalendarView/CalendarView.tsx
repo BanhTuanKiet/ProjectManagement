@@ -12,12 +12,16 @@ import TaskCard from "../TaskCard"
 import { useTask } from "@/app/(context)/TaskContext"
 import { useProject } from "@/app/(context)/ProjectContext"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Grid3X3 } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-export default function CalendarView() {
+export default function CalendarView({
+    setActiveTab
+}: {
+    setActiveTab: (tab: string) => void;
+}) {
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
     const { tasks, currentDate, setCurrentDate } = useTask()
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -29,7 +33,6 @@ export default function CalendarView() {
 
     useEffect(() => {
         setDays(getDaysInMonth(currentDate))
-        console.log("Length: ", tasks.length)
         if (Array.isArray(tasks)) {
             setMockTasks([...tasks])
         } else {
@@ -187,6 +190,7 @@ export default function CalendarView() {
             {selectedTask && (
                 <TaskDetailModal
                     // projectId={project_name ? Number(project_name) : 0}
+                    setActiveTab={setActiveTab}
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />

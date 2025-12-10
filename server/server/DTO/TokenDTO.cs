@@ -10,6 +10,7 @@
             public string Email { get; set; }
             public string PlanId { get; set; }
             public string PlanName {get; set; }
+            public string AvatarUrl { get; set; }
         }
     }
 }

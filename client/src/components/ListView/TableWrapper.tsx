@@ -16,7 +16,7 @@ import axios from "@/config/axiosConfig"
 import DueDateCell from "../DueDateCell"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import SubtaskList from "../SubtaskList"
-import { getPriorityIcon } from "@/utils/statusUtils"
+import { getPriorityIcon, taskStatus } from "@/utils/statusUtils"
 import { BasicTask } from "@/utils/ITask"
 import DeleteConfirmPopover from "../DeleteConfirmPopover"
 
@@ -44,13 +44,6 @@ interface TableWrapperProps {
     onTaskClick: (task: Task) => void
 }
 
-export const taskStatus = [
-    { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
-    { id: 2, name: 'In Progress', color: '#FACC15' }, // yellow
-    { id: 3, name: 'Done', color: '#10B981' },       // green
-    { id: 4, name: 'Cancel', color: '#F97316' },     // orange
-    { id: 5, name: 'Expired', color: '#EF4444' },    // red
-]
 type EditValue = string | number | Member | UserMini | null;
 
 export default function TableWrapper({
@@ -155,9 +148,7 @@ export default function TableWrapper({
         await Promise.all(
             selectedArray.map(async (taskId) => {
                 const res = await axios.get(`/subtasks/byTask/${taskId}`);
-                console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
                 result[taskId] = res.data.map((sub: BasicTask) => mapApiTaskToTask(sub));
-                console.log("Mapped subtasks for TaskId " + taskId + ": ", result[taskId])
             })
         );
         setSubtasksForDelete(result);

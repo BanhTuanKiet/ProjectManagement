@@ -230,30 +230,6 @@ export default function TaskDetailMain({
                     )}
                 </div>
 
-                {/* Subtasks */}
-                {/* <div>
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-medium text-gray-900">
-                            Subtasks
-                        </h3>
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <button className="text-sm text-gray-500 hover:text-gray-700">
-                        Add subtask
-                    </button>
-                </div> */}
-
-                {/* Linked work items */}
-                {/* <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">
-                        Linked work items
-                    </h3>
-                    <button className="text-sm text-gray-500 hover:text-gray-700">
-                        Add linked work item
-                    </button>
-                </div> */}
-
-                {/* Activity (Tự quản lý) */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-medium text-gray-900">

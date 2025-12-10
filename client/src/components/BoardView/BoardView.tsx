@@ -45,7 +45,11 @@ function DroppableColumn({
     );
 }
 
-export default function BoardView() {
+export default function BoardView({
+    setActiveTab
+}: {
+    setActiveTab: (tab: string) => void;
+}) {
     const [features, setFeatures] = useState<BasicTask[]>([]);
     const [selectedTask, setSelectedTask] = useState<number | null>(null);
     const [seeMore, setSeeMore] = useState<Record<string, boolean>>({});
@@ -262,6 +266,7 @@ export default function BoardView() {
 
             {selectedTask && (
                 <TaskDetailModal
+                    setActiveTab={setActiveTab}
                     taskId={selectedTask}
                     onClose={() => setSelectedTask(null)}
                 />

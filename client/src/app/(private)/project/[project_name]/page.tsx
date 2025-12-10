@@ -36,6 +36,7 @@ interface NavigationTab {
 
 const ALL_TABS: NavigationTab[] = [
     { id: '', label: 'Summary', icon: <Globe className="w-4 h-4" /> },
+    { id: 'task', label: 'Task', icon: <FileText className="w-4 h-4" /> },
     { id: 'member', label: 'Member', icon: <User2 className='w-4 h-3' /> },
     { id: 'timeline', label: 'Timeline', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'backlog', label: 'Backlog', icon: <Square className="w-4 h-4" /> },
@@ -43,10 +44,9 @@ const ALL_TABS: NavigationTab[] = [
     { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
     { id: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
     { id: 'trash', label: 'Trash', icon: <Trash className="w-4 h-4" /> },
-    { id: 'task', label: 'Task', icon: <FileText className="w-4 h-4" /> },
 ]
 
-const DEFAULT_TABS = ['', 'timeline', 'backlog', 'list', 'calendar']
+const DEFAULT_TABS = ['', 'task', 'backlog', 'list', 'calendar']
 
 export default function ProjectInterface() {
     const [tasks, setTasks] = useState<BasicTask[]>([])
@@ -62,6 +62,7 @@ export default function ProjectInterface() {
                 return JSON.parse(savedTabs)
             }
         } catch (error) {
+            console.log(error)
             return []
         }
 
@@ -129,9 +130,9 @@ export default function ProjectInterface() {
             case "": return <Summary />
             case "timeline": return <Timeline />
             case "backlog": return <BacklogView />
-            case "calendar": return <CalendarView />
-            case "board": return <BoardView />
-            case "list": return <ListPage tasksNormal={tasks} projectId={Number(project_name)} />
+            case "calendar": return <CalendarView setActiveTab={setActiveTab} />
+            case "board": return <BoardView setActiveTab={setActiveTab} />
+            case "list": return <ListPage tasksNormal={tasks} projectId={Number(project_name)} setActiveTab={setActiveTab} />
             case "trash": return <TrashView projectId={Number(project_name)} />
             case "task": return <TaskView projectId={Number(project_name)} />
             case "member":

@@ -29,6 +29,7 @@ export interface ActiveUser {
     id: string
     name: string
     taskId: number
+    avatarUrl?: string
 }
 
 export interface User {
