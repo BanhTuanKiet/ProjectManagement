@@ -1017,11 +1017,11 @@ namespace server.Services.Project
             return success;
         }
 
-        public async Task<string> UpdateTag(Models.Task task, string newTag)
+        public async Task<string> UpdateTag(Models.Task task, string bug)
         {
-            task.Tag = newTag;
+            task.Status = bug;
             await _context.SaveChangesAsync();
-            return task.Tag;
+            return task.Status;
         }
     }
 }

@@ -27,8 +27,8 @@ interface TrashTableProps {
 }
 
 const columns = [
-    { key: "select", title: "", width: 50 },
-    { key: "taskId", title: "ID", width: 70 },
+    { key: "select", title: "", width: 40 },
+    { key: "taskId", title: "ID", width: 85 },
     { key: "title", title: "Title", width: 250 },
     { key: "description", title: "Description", width: 300 },
     { key: "status", title: "Status", width: 120 },

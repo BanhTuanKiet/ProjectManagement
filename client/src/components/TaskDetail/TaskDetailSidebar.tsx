@@ -2,8 +2,10 @@ import axios from "@/config/axiosConfig";
 import { useEffect, useState } from "react";
 import {
     ChevronDown,
-    User,
-    Calendar,
+    Calendar as CalendarIcon,
+    Clock,
+    Flag,
+    User as UserIcon,
 } from "lucide-react";
 import {
     Accordion,
@@ -18,7 +20,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button"; // Giả sử bạn có component Button
 import { Task } from "@/utils/mapperUtil";
+import ColoredAvatar from "../ColoredAvatar";
+import { cn } from "@/lib/utils"; // Giả sử bạn có cn utility từ shadcn
 
 interface TaskDetailSidebarProps {
     task: Task;
@@ -40,19 +45,18 @@ export default function TaskDetailSidebar({
 
     type PriorityLevel = "Low" | "Medium" | "High";
 
+    // Cập nhật màu sắc tinh tế hơn (Soft pastel colors)
     const priorityColorMap: Record<PriorityLevel, string> = {
-        Low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:bg-green-200",
-        Medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 hover:bg-yellow-200",
-        High: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 hover:bg-red-200",
+        Low: "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200",
+        Medium: "bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200",
+        High: "bg-red-100 text-red-700 hover:bg-red-200 border-red-200",
     };
 
-    // Helper logic
     const getPriorityLabel = (p: number | string | undefined): PriorityLevel => {
         if (p === undefined || p === null) return "Low";
         if (typeof p === "number") {
             if (p === 1) return "High";
             if (p === 2) return "Medium";
-            if (p === 3) return "Low";
             return "Low";
         }
         const strP = String(p);
@@ -62,10 +66,20 @@ export default function TaskDetailSidebar({
 
     const currentPriorityLabel = getPriorityLabel(priority);
 
-    // Format date
     const formatForInput = (dateStr: string) => {
         if (!dateStr) return "";
         try { return new Date(dateStr).toISOString().slice(0, 16); } catch (e) { return ""; }
+    };
+
+    // Hàm format hiển thị ngày đẹp hơn
+    const formatDisplayDate = (dateStr: string) => {
+        if (!dateStr) return "Not set";
+        return new Date(dateStr).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric"
+        });
     };
 
     useEffect(() => {
@@ -79,7 +93,6 @@ export default function TaskDetailSidebar({
             await axios.put(`/tasks/${projectId}/tasks/${taskId}/update`, {
                 [key]: value
             });
-
             switch (key) {
                 case 'priority': setPriority(value); break;
                 case 'deadline': setDueDate(value); break;
@@ -89,185 +102,145 @@ export default function TaskDetailSidebar({
             console.error(`Failed to update ${key}:`, error);
         }
     };
+
     return (
-        <div className="w-80 border-l bg-gray-50 overflow-auto">
-            <div className="p-4">
+        <div className="w-80 h-full border-l bg-white flex flex-col shadow-sm">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <Accordion type="single" collapsible className="w-full" defaultValue="details">
-                    <AccordionItem value="details">
-                        <AccordionTrigger className="text-sm font-medium">
+                    <AccordionItem value="details" className="border-b-0">
+                        <AccordionTrigger className="px-4 py-2 cursor-pointer hover:bg-gray-50 text-sm font-semibold text-gray-800 hover:no-underline border-b">
                             Details
                         </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="space-y-4 mt-2">
-
-                                {/* Assignee (Chỉ hiển thị) */}
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        {task.assignee ? "Assignee" : "Unassigned"}
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-gray-400" />
-                                        <span className="text-sm text-gray-600">
+                        <AccordionContent className="p-0">
+                            <div className="p-4 space-y-6">
+                                
+                                {/* --- ASSIGNEE --- */}
+                                <div className="group">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                                            <UserIcon className="w-3.5 h-3.5" />
+                                            <span>Assignee</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 p-1.5 -ml-1.5 rounded-md hover:bg-gray-100 transition-colors cursor-pointer">
+                                        <ColoredAvatar
+                                            id={task.assignee?.id ?? ""}
+                                            name={task.assignee?.name}
+                                            size="sm"
+                                            src={task.assignee?.avatar}
+                                        />
+                                        <span className="text-sm text-gray-700 font-medium truncate">
                                             {typeof task.assignee === "string"
                                                 ? task.assignee
                                                 : task.assignee?.name || "Unassigned"}
                                         </span>
                                     </div>
-                                    <button className="text-xs text-blue-600 hover:text-blue-800 mt-1">
-                                        Assign to me
-                                    </button>
                                 </div>
 
-                                {/* 2. PRIORITY (Sử dụng updateTaskField) */}
+                                {/* --- PRIORITY --- */}
                                 <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">Priority</label>
+                                    <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mb-2">
+                                        <Flag className="w-3.5 h-3.5" />
+                                        <span>Priority</span>
+                                    </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <div className="flex items-center gap-2 cursor-pointer bg-white border border-gray-200 p-2 rounded-md hover:bg-gray-100 transition w-fit">
-                                                <Badge className={`${priorityColorMap[currentPriorityLabel]} border-none`}>
+                                            <Button 
+                                                variant="ghost" 
+                                                className="h-8 px-2 -ml-2 w-full justify-start font-normal hover:bg-gray-100"
+                                            >
+                                                <Badge variant="outline" className={`${priorityColorMap[currentPriorityLabel]} mr-2 px-2 py-0.5 rounded-md border`}>
                                                     {currentPriorityLabel}
                                                 </Badge>
-                                                <ChevronDown className="h-3 w-3 text-gray-400" />
-                                            </div>
+                                                <ChevronDown className="h-3 w-3 text-gray-400 ml-auto opacity-50" />
+                                            </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="start">
+                                        <DropdownMenuContent align="start" className="w-48">
                                             {(["High", "Medium", "Low"] as const).map((p) => (
                                                 <DropdownMenuItem
                                                     key={p}
-                                                    className="cursor-pointer"
                                                     onClick={() => {
                                                         const mapVal = { "High": 1, "Medium": 2, "Low": 3 };
                                                         updateTaskField("priority", mapVal[p]);
                                                     }}
+                                                    className="cursor-pointer"
                                                 >
-                                                    <div className="flex items-center gap-2 w-full">
-                                                        <Badge className={`${priorityColorMap[p]} border-none`}>{p}</Badge>
-                                                    </div>
+                                                    <Badge className={`${priorityColorMap[p]} border-none mr-2`}>
+                                                        {p}
+                                                    </Badge>
                                                 </DropdownMenuItem>
                                             ))}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
 
-                                {/* Parent */}
-                                {/* <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Parent
-                                    </label>
-                                    <button className="text-sm text-gray-500 hover:text-gray-700">
-                                        Add parent
-                                    </button>
-                                </div> */}
+                                {/* --- DATES SECTION --- */}
+                                <div className="space-y-4 pt-2 border-t border-gray-100">
+                                    
+                                    {/* Start Date */}
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mb-1.5">
+                                            <Clock className="w-3.5 h-3.5" />
+                                            <span>Start date</span>
+                                        </div>
+                                        {!editStartDate ? (
+                                            <div
+                                                className="group flex items-center justify-between p-1.5 -ml-1.5 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+                                                onClick={() => setEditStartDate(true)}
+                                            >
+                                                <span className={cn("text-sm", !startDate ? "text-gray-400 italic" : "text-gray-700")}>
+                                                    {formatDisplayDate(startDate)}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="datetime-local"
+                                                autoFocus
+                                                value={formatForInput(startDate)}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                onBlur={(e) => {
+                                                    setEditStartDate(false);
+                                                    updateTaskField("createdAt", e.target.value);
+                                                }}
+                                                className="w-full text-sm p-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                                            />
+                                        )}
+                                    </div>
 
-                                {/* 4. DUE DATE (Sử dụng updateTaskField) */}
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">Due date</label>
-                                    {!editDueDate ? (
-                                        <button
-                                            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
-                                            onClick={() => setEditDueDate(true)}
-                                        >
-                                            <Calendar className="h-4 w-4" />
-                                            {task.raw.deadline ? new Date(task.raw.deadline).toLocaleString() : "Add due date"}
-                                        </button>
-                                    ) : (
-                                        <input
-                                            type="datetime-local"
-                                            autoFocus
-                                            value={formatForInput(dueDate)}
-                                            onChange={(e) => setDueDate(e.target.value)}
-                                            onBlur={(e) => {
-                                                setEditDueDate(false);
-                                                updateTaskField("deadline", e.target.value);
-                                            }}
-                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 w-full focus:outline-none focus:ring focus:ring-blue-200"
-                                        />
-                                    )}
+                                    {/* Due Date */}
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mb-1.5">
+                                            <CalendarIcon className="w-3.5 h-3.5" />
+                                            <span>Due date</span>
+                                        </div>
+                                        {!editDueDate ? (
+                                            <div
+                                                className="group flex items-center justify-between p-1.5 -ml-1.5 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+                                                onClick={() => setEditDueDate(true)}
+                                            >
+                                                <span className={cn("text-sm", !dueDate ? "text-gray-400 italic" : "text-gray-700")}>
+                                                    {formatDisplayDate(dueDate)}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="datetime-local"
+                                                autoFocus
+                                                value={formatForInput(dueDate)}
+                                                onChange={(e) => setDueDate(e.target.value)}
+                                                onBlur={(e) => {
+                                                    setEditDueDate(false);
+                                                    updateTaskField("deadline", e.target.value);
+                                                }}
+                                                className="w-full text-sm p-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
-
-                                {/* 5. START DATE (Sử dụng updateTaskField) */}
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">Start date</label>
-                                    {!editStartDate ? (
-                                        <button
-                                            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2"
-                                            onClick={() => setEditStartDate(true)}
-                                        >
-                                            <Calendar className="h-4 w-4" />
-                                            {task.raw.createdAt ? new Date(task.raw.createdAt).toLocaleString() : "Add start date"}
-                                        </button>
-                                    ) : (
-                                        <input
-                                            type="datetime-local"
-                                            autoFocus
-                                            value={formatForInput(startDate)}
-                                            onChange={(e) => setStartDate(e.target.value)}
-                                            onBlur={(e) => {
-                                                setEditStartDate(false);
-                                                // Key là 'createdAt' để khớp logic backend cũ của bạn
-                                                updateTaskField("createdAt", e.target.value);
-                                            }}
-                                            className="text-sm text-gray-700 border border-gray-300 rounded p-2 w-full focus:outline-none focus:ring focus:ring-blue-200"
-                                        />
-                                    )}
-                                </div>
-
-                                {/* Labels */}
-                                {/* <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Labels
-                                    </label>
-                                    <button className="text-sm text-gray-500 hover:text-gray-700">
-                                        Add labels
-                                    </button>
-                                </div> */}
-
-                                {/* Sprint */}
-                                {/* <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-2">
-                                        Sprint
-                                    </label>
-                                    <button className="text-sm text-gray-500 hover:text-gray-700">
-                                        Add to sprint
-                                    </button>
-                                </div> */}
+                                
                             </div>
                         </AccordionContent>
                     </AccordionItem>
-
-                    {/* Các AccordionItem khác từ file gốc */}
-                    {/* <AccordionItem value="more-fields">
-                        <AccordionTrigger className="text-sm font-medium">
-                            More fields
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="mt-2 text-sm text-gray-600">
-                                <div className="mb-2">
-                                    <span className="block text-xs font-medium text-gray-700 mb-1">
-                                        Reporter
-                                    </span>
-                                    {task.reporter?.name || task.assignee?.name || "Unknown"}                                </div>
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="automation">
-                        <AccordionTrigger className="text-sm font-medium">
-                            Automation
-                        </AccordionTrigger>
-                        <AccordionContent>
-                            <div className="mt-2 text-sm text-gray-600">
-                                <p className="mb-2">Recent rule runs</p>
-                                <button className="text-xs text-blue-600 hover:text-blue-800">
-                                    Refresh to see recent runs
-                                </button>
-                                <div className="text-xs text-gray-500 mt-2">
-                                    Created September 7, 2025 at 1:34 PM <br />
-                                    Updated September 13, 2025 at 3:36 PM
-                                </div>
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem> */}
                 </Accordion>
             </div>
         </div>

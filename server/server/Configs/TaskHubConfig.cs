@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 
 namespace server.Configs
@@ -9,6 +10,7 @@ namespace server.Configs
         public string UserId { get; set; } = null!;
         public string Name { get; set; } = null!;
         public int TaskId { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 
     public class TaskHubConfig : Hub
@@ -19,11 +21,14 @@ namespace server.Configs
         {
             var userId = Context.UserIdentifier ?? Context.ConnectionId;
             var name = Context.User?.FindFirst(ClaimTypes.Name)?.Value ?? "Unknow";
+            var avatarUrl = Context.User?.FindFirstValue("avatar_url") ?? "";
+
             var user = new ActiveUser
             {
                 UserId = userId,
                 Name = name,
-                TaskId = taskId
+                TaskId = taskId,
+                AvatarUrl = avatarUrl
             };
 
             ActiveUsers[userId] = user;
@@ -75,6 +80,25 @@ namespace server.Configs
         public async static Task DeletedTask(IHubContext<TaskHubConfig> hubContext, DTO.TaskDTO.BasicTask basicTask)
         {
             await hubContext.Clients.All.SendAsync("TaskUpdated", basicTask);
+        }
+
+        public static async Task DeletedTasks(IHubContext<TaskHubConfig> hubContext, List<int> taskIds)
+        {
+            foreach (var id in taskIds)
+            {
+                var usersInTask = ActiveUsers
+                    .Where(u => u.Value.TaskId == id)
+                    .Select(u => u.Value)
+                    .ToList();
+
+                await hubContext.Clients
+                    .Group($"task-{id}")
+                    .SendAsync("TaskDeleted", id);
+
+                // await hubContext.Clients
+                //     .Group($"project-{task.ProjectId}")
+                //     .SendAsync("TaskDeletedTeam", task);
+            }
         }
     }
 }

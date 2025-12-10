@@ -148,9 +148,7 @@ export default function TableWrapper({
         await Promise.all(
             selectedArray.map(async (taskId) => {
                 const res = await axios.get(`/subtasks/byTask/${taskId}`);
-                console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
                 result[taskId] = res.data.map((sub: BasicTask) => mapApiTaskToTask(sub));
-                console.log("Mapped subtasks for TaskId " + taskId + ": ", result[taskId])
             })
         );
         setSubtasksForDelete(result);

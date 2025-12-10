@@ -5,7 +5,7 @@ import {
     Lock,
     Unlock,
     MoreHorizontal,
-    Tag, // Import icon Tag
+    Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,31 +18,27 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; // Import DropdownMenu
+} from "@/components/ui/dropdown-menu";
 import type { ActiveUser } from "@/utils/IUser";
 import ColoredAvatar from "../ColoredAvatar";
 import { useEffect, useState } from "react";
 import axios from "@/config/axiosConfig";
-import { WarningNotify, SuccessNotify } from "@/utils/toastUtils"; // Import SuccessNotify nếu có
 import { getTaskStatusBadge } from "@/utils/statusUtils";
 import { Badge } from "../ui/badge";
 
 interface TaskDetailHeaderProps {
     taskId: number;
     taskStatus: string
-    taskTag: string | null
     projectId: number;
     isActive: boolean;
     onClose: () => void;
     activeUsers: ActiveUser[];
     onToggleActive: (newStatus: boolean) => void;
-    // Props mới cho label sẽ được bạn thêm sau, hiện tại tôi dùng local state
 }
 
 export default function TaskDetailHeader({
     taskId,
     taskStatus,
-    taskTag,
     projectId,
     isActive,
     onClose,
@@ -53,8 +49,8 @@ export default function TaskDetailHeader({
     const [currentLabel, setCurrentLabel] = useState<string | null>(null);
 
     useEffect(() => {
-        if(taskTag) setCurrentLabel(taskTag)
-    }, [taskTag])
+        if (taskStatus) setCurrentLabel(taskStatus)
+    }, [taskStatus])
 
     const handleToggleLock = async () => {
         try {
@@ -68,9 +64,9 @@ export default function TaskDetailHeader({
         }
     };
 
-    // Logic cập nhật Label
     const handleUpdateTag = async (newTag: string | null) => {
         try {
+            console.log(newTag)
             await axios.patch(`/tasks/${projectId}/${taskId}/tag/${newTag}`)
 
             setCurrentLabel(newTag);
@@ -90,62 +86,52 @@ export default function TaskDetailHeader({
                 <span className="text-gray-400">/</span>
 
                 <div className="flex items-center justify-between gap-2">
-                    {/* Status Badge */}
-                    <Badge
-                        className={`${getTaskStatusBadge(taskStatus)} border`}
-                    >
-                        {taskStatus}
-                    </Badge>
-
-                    {/* --- LABEL SECTION START --- */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <div className="cursor-pointer hover:opacity-80 transition-opacity">
-                                {currentLabel === 'bug' ? (
-                                    <Badge variant="destructive" className="flex items-center gap-1 bg-red-500 hover:bg-red-600">
-                                        <Tag className="h-3 w-3" /> Bug
-                                    </Badge>
-                                ) : currentLabel ? (
-                                    <Badge variant="outline" className="flex items-center gap-1">
-                                        <Tag className="h-3 w-3" /> {currentLabel}
-                                    </Badge>
-                                ) : (
-                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-gray-500 hover:text-gray-900">
-                                        <Tag className="h-4 w-4 mr-1" />
-                                        <span className="text-xs">Add Label</span>
-                                    </Button>
-                                )}
+                            <div className="cursor-pointer hover:opacity-80 transition">
+                                <Badge
+                                    className={`${getTaskStatusBadge(currentLabel ?? "")} border`}
+                                >
+                                    <Tag className="h-3 w-3" />
+                                    {currentLabel ?? "Set status"}
+                                </Badge>
                             </div>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                            <DropdownMenuItem onClick={() => handleUpdateTag('bug')}>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-red-500" />
-                                    <span>Bug</span>
-                                </div>
-                            </DropdownMenuItem>
-                            {/* Thêm các loại label khác ở đây nếu cần */}
-                            {currentLabel && (
-                                <>
-                                    <DropdownMenuItem
-                                        onClick={() => handleUpdateTag(null)}
-                                        className="text-gray-500 focus:text-gray-700"
-                                    >
-                                        <X className="h-4 w-4 mr-2" /> Clear label
-                                    </DropdownMenuItem>
-                                </>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    {/* --- LABEL SECTION END --- */}
 
+                        <DropdownMenuContent align="start" className="w-44">
+                            <DropdownMenuItem onClick={() => handleUpdateTag("Todo")}>
+                                <div className="h-2 w-2 rounded-full bg-blue-800 mr-2" /> To do
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleUpdateTag("In Progress")}>
+                                <div className="h-2 w-2 rounded-full bg-yellow-600 mr-2" /> In Progress
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleUpdateTag("Done")}>
+                                <div className="h-2 w-2 rounded-full bg-green-600 mr-2" /> Done
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleUpdateTag("Cancel")}>
+                                <div className="h-2 w-2 rounded-full bg-orange-600 mr-2" /> Cancel
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleUpdateTag("Bug")}>
+                                <div className="h-2 w-2 rounded-full bg-rose-600 mr-2" /> Bug
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleUpdateTag("Expired")}>
+                                <div className="h-2 w-2 rounded-full bg-red-600 mr-2" /> Expired
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+
+                    </DropdownMenu>
                 </div>
 
                 {!isActive && (
                     <>
                         <span className="text-gray-400">/</span>
                         <Badge className="flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200">
-                            <Lock className="h-3 w-3" /> Archived
+                            <Lock className="h-3 w-3" /> Locked
                         </Badge>
                     </>
                 )}
@@ -169,7 +155,6 @@ export default function TaskDetailHeader({
                     </TooltipContent>
                 </Tooltip>
 
-                {/* Active Users Section - Giữ nguyên */}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
@@ -197,6 +182,7 @@ export default function TaskDetailHeader({
                                                 id={user.id}
                                                 name={user.name}
                                                 size="sm"
+                                                src={user.avatarUrl}
                                             />
                                         </div>
                                     ))}
@@ -207,12 +193,6 @@ export default function TaskDetailHeader({
                         </div>
                     </TooltipContent>
                 </Tooltip>
-                <Button variant="ghost" size="sm">
-                    <Share className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                </Button>
                 <Button variant="ghost" size="icon" onClick={onClose}>
                     <X className="h-5 w-5" />
                 </Button>

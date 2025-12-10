@@ -21,6 +21,7 @@ namespace server.Util
                 new Claim(ClaimTypes.Email, user.Email ?? user.Id.ToString()),
                 new Claim("plan_id", user?.Subscription?.PlanId.ToString() ?? "1"),
                 new Claim("plan_name", user?.Subscription?.Plan?.Name ?? "Free"),
+                new Claim("avatar_url", user.AvatarUrl?.ToString() ?? "")
             };
 
             foreach (var role in roles)
@@ -80,6 +81,7 @@ namespace server.Util
             var emailClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email || c.Type == "email");
             var planIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "plan_id");
             var planNameClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "plan_name");
+            var avatarUrlClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "avatar_url");
 
             List<string> roleClaims = jsonToken.Claims
                 .Where(c => c.Type == ClaimTypes.Role || c.Type == "role")
@@ -93,7 +95,8 @@ namespace server.Util
                 roles = roleClaims ?? [],
                 Email = emailClaim?.Value ?? "",
                 PlanId = planIdClaim?.Value ?? "",
-                PlanName = planNameClaim?.Value ?? ""
+                PlanName = planNameClaim?.Value ?? "",
+                AvatarUrl = avatarUrlClaim?.Value ?? ""
             };
         }
     }
