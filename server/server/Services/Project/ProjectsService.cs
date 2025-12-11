@@ -313,6 +313,9 @@ namespace server.Services.Project
 
             var teams = await _context.Teams.Where(t => t.ProjectId == projectId).ToListAsync();
 
+            var logs = _context.ActivityLogs.Where(x => x.ProjectId == projectId);
+
+
             var tasks = await _context.Tasks.Where(t => t.ProjectId == projectId).ToListAsync();
 
             var teamIds = teams.Select(t => t.Id).ToList();
@@ -324,6 +327,7 @@ namespace server.Services.Project
 
             _context.TeamMembers.RemoveRange(members);
             _context.Teams.RemoveRange(teams);
+            _context.ActivityLogs.RemoveRange(logs);
             _context.Tasks.RemoveRange(tasks);
             _context.ProjectMembers.RemoveRange(projectMembers);
             _context.Projects.Remove(project);

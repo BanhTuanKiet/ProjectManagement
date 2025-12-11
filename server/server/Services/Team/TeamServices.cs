@@ -291,5 +291,60 @@ namespace server.Services.Project
             return members;
         }
 
+        public async Task<bool> ChangeTeamForUser(string userId, string newLeaderId, int projectId)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(newLeaderId))
+            {
+                throw new ErrorException(400, "UserId and NewLeaderId must be provided.");
+            }
+
+            var teamMember = await _context.TeamMembers
+                .Include(tm => tm.Team)
+                .FirstOrDefaultAsync(tm => tm.UserId == userId && tm.Team.ProjectId == projectId);
+
+            if (teamMember == null)
+            {
+                // throw new ErrorException(400, "User is not a member of any team in this project.");
+                var addedMembers = await AddMembers(newLeaderId, new List<string> { userId }, projectId);
+                return addedMembers.Count > 0;
+            }
+
+            var newTeam = await _context.Teams
+                .FirstOrDefaultAsync(t => t.LeaderId == newLeaderId && t.ProjectId == projectId);
+
+            if (newTeam == null)
+            {
+                throw new ErrorException(400, "The specified new team leader does not lead any team in this project.");
+            }
+
+            _context.TeamMembers.Remove(teamMember);
+            var newTeamMember = new TeamMembers
+            {
+                TeamId = newTeam.Id,
+                UserId = userId
+            };
+
+            await _context.TeamMembers.AddAsync(newTeamMember);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> RemoveMemberFromTeam(string userId, int projectId)
+        {
+            var teamMember = await _context.TeamMembers
+                .Include(tm => tm.Team)
+                .FirstOrDefaultAsync(tm => tm.UserId == userId && tm.Team.ProjectId == projectId);
+
+            if (teamMember == null)
+            {
+                throw new ErrorException(400, "User is not a member of any team in this project.");
+            }
+
+            _context.TeamMembers.Remove(teamMember);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

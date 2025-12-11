@@ -14,5 +14,7 @@ namespace server.Models
         Task<Teams> DemoGetTeamByLeader(int projectId, string leaderId);
         Task<List<TeamMembers>> FindMembers(string leaderId);
         Task<List<TeamDTO.TeamMembers>> GetMemberByUserId(string userId);
+        Task<bool> ChangeTeamForUser(string userId, string newLeaderId, int projectId);
+        Task<bool> RemoveMemberFromTeam(string userId, int projectId);
     }
 }

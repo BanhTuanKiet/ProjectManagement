@@ -188,7 +188,7 @@ export default function Page() {
                         >
                             <video
                                 src="/videos/WatchDemo.mp4"
-                                className="rounded-xl shadow-lg w-full max-w-3xl"
+                                className="rounded-xl shadow-lg w-full max-w-7xl"
                                 autoPlay
                                 loop
                                 playsInline
