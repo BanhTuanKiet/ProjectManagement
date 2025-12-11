@@ -9,6 +9,7 @@ using server.Configs;
 using server.DTO;
 using server.Models;
 using server.Services.ActivityLog;
+using server.Services.Project;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 
@@ -20,13 +21,15 @@ namespace server.Controllers
     public class TeamsController : ControllerBase
     {
         private readonly ITeams _teamServices;
+        private readonly ProjectManagementContext _context;
         private readonly IProjects _projectServices;
         private readonly IMapper _mapper;
-        public TeamsController(ITeams teamServices, IProjects projectServices, IMapper mapper)
+        public TeamsController(ITeams teamServices, IProjects projectServices, IMapper mapper, ProjectManagementContext context)
         {
             _teamServices = teamServices;
             _projectServices = projectServices;
             _mapper = mapper;
+            _context = context;
         }
 
         [HttpPost("members/{projectId}/{leaderId}")]
@@ -98,6 +101,40 @@ namespace server.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             List<TeamDTO.TeamMembers> allMembers = await _teamServices.GetMemberByUserId(userId);
             return Ok(allMembers);
+        }
+
+        [Authorize(Roles = "PMRequirement")]
+        [HttpPut("change-team/{projectId}")]
+        public async Task<ActionResult> ChangeTeam(int projectId, [FromBody] TeamDTO.ChangeTeamRequest request)
+        {
+            var result = await _teamServices.ChangeTeamForUser(request.UserId, request.NewLeaderId, projectId);
+            if (!result)
+            {
+                throw new ErrorException(400, "Failed to change team for user.");
+            }
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectServices.GetProjectMembers(projectId);
+            return Ok(new
+            {
+                data = projectMembers,
+                message = "Team changed successfully."
+            });
+        }
+
+        [Authorize(Roles = "PMRequirement")]
+        [HttpDelete("remove-member/{projectId}/{userId}")]
+        public async Task<ActionResult> RemoveMember(int projectId, string userId)
+        {
+            var result = await _teamServices.RemoveMemberFromTeam(userId, projectId);
+            if (!result)
+            {
+                throw new ErrorException(400, "Failed to remove member from team.");
+            }
+            List<ProjectDTO.ProjectMembers> projectMembers = await _projectServices.GetProjectMembers(projectId);
+            return Ok(new
+            {
+                data = projectMembers,
+                message = "Member removed successfully."
+            });
         }
     }
 }

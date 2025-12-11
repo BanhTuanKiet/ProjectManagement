@@ -14,6 +14,7 @@ import { WarningNotify } from '@/utils/toastUtils'
 import { useProject } from '@/app/(context)/ProjectContext'
 import ChangeLeaderDialog from '../ChangeLeaderDialog'
 import { Member } from '@/utils/IUser'
+import ChangeTeamDialog from '../ChangeTeamDialog'
 
 const itemsPerPage = 10
 
@@ -30,17 +31,20 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
     const [invitePeopleOpen, setInvitePeopleOpen] = useState(false)
     const [createTeamOpen, setCreateTeamOpen] = useState(false)
     const [changeLeaderDialog, setChangeLeaderDialog] = useState(false)
+    const [changeTeamDialog, setChangeTeamDialog] = useState<{ open: boolean; leaderId: string | null, userId: string }>({ open: false, leaderId: null, userId: "" })
+    const [removeMember, setRemoveMember] = useState(false)
     const [filters, setFilters] = useState({
         role: "all",
         dateRange: "all"
     })
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
-    const { projectRole, project_name, members } = useProject()
+    const { projectRole, project_name, members, setMembers } = useProject()
 
     useEffect(() => {
         if (!members) return
         setSortedMembers(members)
         setFilteredMembers(members)
+        console.log("Members loaded:", members)
     }, [members])
 
     if (!members) return
@@ -126,12 +130,15 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
         await handleRemoveMember([userId])
     }
 
-    const handleChangeTeam = (userId: string) => {
-        console.log("Change team for member:", userId)
-    }
-
     const handleRemoveFromTeam = async (userId: string) => {
         console.log("Remove from team:", userId)
+        try {
+            const response = await axios.delete(`/teams/remove-member/${Number(project_name)}/${userId}`)
+
+            setMembers(response.data.data)
+        } catch (error) {
+            console.error("Failed to remove member from team:", error)
+        }
     }
 
     return (
@@ -336,7 +343,13 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                                         </DropdownMenuTrigger>
 
                                         <DropdownMenuContent align="end" className="w-44">
-                                            <DropdownMenuItem onClick={() => handleChangeTeam(member.userId)}>
+                                            <DropdownMenuItem
+                                                onClick={() => setChangeTeamDialog({
+                                                    open: true,
+                                                    leaderId: member.leaderId,
+                                                    userId: member.userId,
+                                                })}
+                                            >
                                                 <Edit2 className="h-4 w-4 mr-2" />
                                                 Change Team
                                             </DropdownMenuItem>
@@ -419,6 +432,14 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                 open={changeLeaderDialog}
                 onOpenChange={setChangeLeaderDialog}
             />
+
+            <ChangeTeamDialog
+                open={changeTeamDialog.open}
+                onOpenChange={(o) => setChangeTeamDialog({ open: o, leaderId: changeTeamDialog.leaderId, userId: changeTeamDialog.userId })}
+                userId={changeTeamDialog.userId}
+                leaderId={changeTeamDialog.leaderId}
+            />
+
         </div>
     )
 }

@@ -70,7 +70,7 @@ const TeamMembersDisplay: React.FC<TeamMembersDisplayProps> = ({ allMember, sear
                         <ul className="divide-y divide-gray-100">
                             {list.map(m => (
                                 <li key={m.userId} className="p-4 sm:px-6 flex items-center justify-between transition-colors duration-200 hover:bg-gray-50">
-                                    <a href={`http://localhost:3000/test?email=${m.email}`} target="_blank" rel="noopener noreferrer">
+                                    <a href={`http://localhost:3000/profile?email=${m.email}`} target="_blank" rel="noopener noreferrer">
                                         <div className="flex items-center space-x-4">
                                             <ColoredAvatar
                                                 src={m.avatar || ""}

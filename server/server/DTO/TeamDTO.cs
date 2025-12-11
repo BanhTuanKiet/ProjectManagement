@@ -25,5 +25,11 @@ namespace server.DTO
             public bool IsOwner { get; set; }
             public DateTime JoinedAt { get; set; }
         }
+
+        public class ChangeTeamRequest
+        {
+            public string NewLeaderId { get; set; }
+            public string UserId { get; set; }
+        }
     }
 }
