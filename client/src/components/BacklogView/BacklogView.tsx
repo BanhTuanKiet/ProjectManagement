@@ -316,7 +316,7 @@ export default function BacklogView() {
             })
 
             // Giả sử API trả về object sprint vừa tạo (quan trọng!)
-            const newSprint = res.data
+            const newSprint = res.data.sprint;
 
             // CẬP NHẬT STATE LOCAL. Đây là chìa khóa!
             setSprints(prevSprints => [
@@ -324,12 +324,10 @@ export default function BacklogView() {
                 { ...newSprint, workItems: [] } // Thêm sprint mới vào state
             ])
 
-            alert("✅ Sprint created successfully")
             setShowSprintForm(false) // Đóng form
 
         } catch (err) {
             console.error("❌ Create sprint failed:", err)
-            alert("❌ Lỗi tạo sprint")
         }
         // KHÔNG RELOAD TRANG
     }
@@ -345,10 +343,8 @@ export default function BacklogView() {
 
             setSprints((prev) => prev.filter((s) => !selectedSprints.has(s.sprintId)));
             setSelectedSprints(new Set());
-            // alert("✅ Deleted successfully");
         } catch (err) {
             console.error("❌ Bulk delete failed:", err);
-            // alert("❌ Failed to delete selected sprints");
         }
     };
 

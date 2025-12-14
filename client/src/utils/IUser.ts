@@ -19,7 +19,7 @@ export interface Teams {
 }
 
 export interface UserMini {
-    id?: string;
+    id?: string | number;
     name: string;
     avatar: string;
     initials: string;

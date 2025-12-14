@@ -13,7 +13,7 @@ import type { Task } from "@/utils/mapperUtil"
 import type { Column } from "@/config/columsConfig"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import { getTaskStatusBadge, getPriorityBadge, getPriorityIcon } from "@/utils/statusUtils"
-import { Member, UserMini, TaskAssignee } from "@/utils/IUser"
+import { Member } from "@/utils/IUser"
 
 interface SubtaskListProps {
     parentTaskId: number
@@ -42,40 +42,37 @@ export default function SubtaskList({
     isAdding,
     availableUsers = [],
 }: SubtaskListProps) {
+
     const inputRowRef = useRef<HTMLDivElement | null>(null)
     const [newSubSummary, setNewSubSummary] = useState("")
     const [editingCell, setEditingCell] = useState<{ taskId: number; field: string } | null>(null)
 
-    // --- Local state for subtasks (để update tại chỗ)
+    // Danh sách field primitive có thể edit trực tiếp
+    const editablePrimitiveFields = ["summary", "description"] as const
+    type EditablePrimitiveField = typeof editablePrimitiveFields[number]
+
     const [localSubtasks, setLocalSubtasks] = useState<Task[]>(subtasks)
+    useEffect(() => setLocalSubtasks(subtasks), [subtasks])
 
-    useEffect(() => {
-        setLocalSubtasks(subtasks)
-    }, [subtasks])
-
-    // --- Hàm edit riêng cho subtasks ---
     const handleSubtaskEdit = useCallback(
-        async (subtaskId: number, taskId: number, field: string, value: string | undefined) => {
+        async (subtaskId: number, taskId: number, field: string, value: any) => {
             try {
-                // Cập nhật UI trước (optimistic update)
-                setLocalSubtasks((prev) =>
-                    prev.map((s) => (s.id === subtaskId ? { ...s, [field]: value } : s))
+                setLocalSubtasks(prev =>
+                    prev.map(s => (s.id === subtaskId ? { ...s, [field]: value } : s))
                 )
-                console.log("Updating subtask:", { subtaskId, taskId, field, value })
-                // Gửi API với đầy đủ subtaskId, taskId và field update
+
                 const res = await axios.put(`/SubTasks/${subtaskId}/update/project/${projectId}`, {
                     subtaskId,
                     taskId,
                     [field]: value,
                 })
-                console.log("Subtask updated:", res.data)
+
                 const updatedSubtask = mapApiTaskToTask(res.data)
-                console.log("Mapped updated subtask:", updatedSubtask)
                 setLocalSubtasks(prev =>
                     prev.map(s => (s.id === subtaskId ? updatedSubtask : s))
-                );
+                )
             } catch (err) {
-                console.error("Subtask update failed:", err)
+                console.error("Update subtask failed:", err)
             } finally {
                 setEditingCell(null)
             }
@@ -83,6 +80,7 @@ export default function SubtaskList({
         []
     )
 
+    // Click outside cancel create
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (isAdding && inputRowRef.current && !inputRowRef.current.contains(event.target as Node)) {
@@ -96,26 +94,34 @@ export default function SubtaskList({
 
     return (
         <>
-            {localSubtasks?.map((subtask) => (
+            {localSubtasks.map((subtask) => (
                 <div
                     key={subtask.id}
                     className="flex border-b bg-gray-50 pl-10"
                     style={{ width: totalWidth }}
                 >
                     {columns.map((col) => {
-                        const isEditing = editingCell?.taskId === subtask.id && editingCell.field === col.key
+                        const isEditing =
+                            editingCell?.taskId === subtask.id &&
+                            editingCell.field === col.key
+
+                        // ======================================
+                        // FIX QUAN TRỌNG – Chỉ lấy value primitive
+                        // ======================================
+                        const rawValue = editablePrimitiveFields.includes(col.key as any)
+                            ? (subtask[col.key as EditablePrimitiveField] ?? "")
+                            : ""
 
                         switch (col.key) {
                             case "select":
                                 return (
-                                    <div className="flex items-center gap-2 h-10">
+                                    <div key={col.key} className="flex items-center gap-2 h-10">
                                         <Button variant="ghost" size="icon" className="h-6 w-6 cursor-grab flex items-center justify-center">
                                             <GripVertical className="h-4 w-4" />
                                         </Button>
                                         <Checkbox
-                                            checked={selectedTasks.has(subtask.subTaskId)}
-                                            onCheckedChange={() => toggleTaskSelection(subtask.subTaskId)}
-                                        // className="h-5 w-5 rounded-sm border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 data-[state=checked]:text-white data-[state=indeterminate]:bg-blue-600 data-[state=indeterminate]:border-blue-600 data-[state=indeterminate]:text-white flex items-center justify-center"
+                                            checked={selectedTasks.has(subtask.id)}
+                                            onCheckedChange={() => toggleTaskSelection(subtask.id)}
                                         />
                                     </div>
                                 )
@@ -123,10 +129,10 @@ export default function SubtaskList({
                             case "type":
                                 return (
                                     <div
+                                        key={col.key}
                                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                                         style={{ width: col.width, minWidth: col.minWidth }}
                                     >
-                                        {/* Dropdown chọn type */}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="outline" size="sm" className="flex-1 justify-between bg-transparent">
@@ -134,9 +140,13 @@ export default function SubtaskList({
                                                     <ChevronDown className="h-4 w-4 ml-2" />
                                                 </Button>
                                             </DropdownMenuTrigger>
+
                                             <DropdownMenuContent>
                                                 {["Task", "Bug", "Story"].map((t) => (
-                                                    <DropdownMenuItem key={t} onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "type", t)}>
+                                                    <DropdownMenuItem
+                                                        key={t}
+                                                        onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "type", t)}
+                                                    >
                                                         {t}
                                                     </DropdownMenuItem>
                                                 ))}
@@ -144,16 +154,22 @@ export default function SubtaskList({
                                         </DropdownMenu>
                                     </div>
                                 )
+
                             case "key":
                                 return (
-                                    <span className="border-r relative flex items-center px-3 py-2 text-blue-600 hover:underline cursor-pointer" style={{ width: col.width, minWidth: col.minWidth }}>
+                                    <span
+                                        key={col.key}
+                                        className="border-r flex items-center px-3 py-2 text-blue-600 hover:underline cursor-pointer"
+                                        style={{ width: col.width, minWidth: col.minWidth }}
+                                    >
                                         {subtask.key}
                                     </span>
                                 )
+
                             case "summary":
                                 return (
                                     <div
-                                        key={`${subtask.id}-${col.key}`}
+                                        key={col.key}
                                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                                         style={{ width: col.width, minWidth: col.minWidth }}
                                     >
@@ -185,7 +201,7 @@ export default function SubtaskList({
                             case "status":
                                 return (
                                     <div
-                                        key={`${subtask.id}-${col.key}`}
+                                        key={col.key}
                                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                                         style={{ width: col.width, minWidth: col.minWidth }}
                                     >
@@ -195,27 +211,27 @@ export default function SubtaskList({
                                     </div>
                                 )
 
-
                             case "assignee":
                                 return (
-                                    <DropdownMenu>
+                                    <DropdownMenu key={col.key}>
                                         <DropdownMenuTrigger asChild>
                                             <div className="flex items-center gap-2 cursor-pointer">
-                                                {typeof subtask.assignee === "string" ? (
-                                                    <>
-                                                        <ColoredAvatar id={subtask.raw.assigneeId ?? ""} name={subtask.assignee} size="sm" />
-                                                        <span className="text-sm">{subtask.assignee}</span>
-                                                    </>
-                                                ) : subtask.assignee ? (
+                                                {subtask.assignee ? (
                                                     <>
                                                         <ColoredAvatar
                                                             id={subtask.raw.assigneeId ?? ""}
-                                                            name={subtask.assignee.name}
-                                                            src={subtask.assignee.avatar}
-                                                            initials={subtask.assignee.initials}
+                                                            name={
+                                                                typeof subtask.assignee === "string"
+                                                                    ? subtask.assignee
+                                                                    : subtask.assignee.name
+                                                            }
                                                             size="sm"
                                                         />
-                                                        <span className="text-sm">{subtask.assignee.name}</span>
+                                                        <span className="text-sm">
+                                                            {typeof subtask.assignee === "string"
+                                                                ? subtask.assignee
+                                                                : subtask.assignee.name}
+                                                        </span>
                                                     </>
                                                 ) : (
                                                     <Button variant="ghost" size="sm">
@@ -224,47 +240,45 @@ export default function SubtaskList({
                                                 )}
                                             </div>
                                         </DropdownMenuTrigger>
+
                                         <DropdownMenuContent>
-                                            <DropdownMenuItem onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "assignee", undefined)}>
-                                                <div className="flex items-center gap-2">
-                                                    <ColoredAvatar id={subtask.raw.assigneeId ?? ""} name="Unassigned" size="sm" />
-                                                    <span>Unassigned</span>
-                                                </div>
+                                            <DropdownMenuItem
+                                                onClick={() =>
+                                                    handleSubtaskEdit(subtask.id, parentTaskId, "assignee", undefined)
+                                                }
+                                            >
+                                                Unassigned
                                             </DropdownMenuItem>
+
                                             {availableUsers.map((u) => (
-                                                <DropdownMenuItem key={u.name} onClick={() => handleSubtaskEdit(subtask.id, parentTaskId, "AssigneeId", u.userId)}>
-                                                    <div className="flex items-center gap-2">
-                                                        <ColoredAvatar
-                                                            id={subtask.raw.assigneeId ?? ""}
-                                                            name={u.name}
-                                                            size="sm"
-                                                        />
-                                                        <span>{u.name}</span>
-                                                    </div>
+                                                <DropdownMenuItem
+                                                    key={u.userId}
+                                                    onClick={() =>
+                                                        handleSubtaskEdit(subtask.id, parentTaskId, "AssigneeId", u.userId)
+                                                    }
+                                                >
+                                                    {u.name}
                                                 </DropdownMenuItem>
                                             ))}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 )
+
                             case "priority":
-                                // Map priority FE string hợp lệ từ BE number hoặc string
                                 const priorityStr: "Low" | "Medium" | "High" =
                                     typeof subtask.priority === "number"
-                                        ? mapPriorityFromApi(subtask.priority) ?? "Low" // BE number -> FE string
-                                        : typeof subtask.priority === "string"
-                                            ? subtask.priority as "Low" | "Medium" | "High"
-                                            : "Low";
+                                        ? mapPriorityFromApi(subtask.priority) ?? "Low"
+                                        : subtask.priority || "Low"
 
-                                // Màu cho badge/menu item
-                                const priorityColorMap: Record<"Low" | "Medium" | "High", string> = {
-                                    Low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-                                    Medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-                                    High: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-                                };
+                                const priorityColorMap = {
+                                    Low: "bg-green-100 text-green-800",
+                                    Medium: "bg-yellow-100 text-yellow-800",
+                                    High: "bg-red-100 text-red-800",
+                                }
 
                                 return (
                                     <div
-                                        key={`${subtask.id}-${col.key}`}
+                                        key={col.key}
                                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                                         style={{ width: col.width, minWidth: col.minWidth }}
                                     >
@@ -275,14 +289,14 @@ export default function SubtaskList({
                                                     <Badge className={priorityColorMap[priorityStr]}>{priorityStr}</Badge>
                                                 </span>
                                             </DropdownMenuTrigger>
+
                                             <DropdownMenuContent>
                                                 {(["Low", "Medium", "High"] as const).map((p) => (
                                                     <DropdownMenuItem
                                                         key={p}
-                                                        onClick={() => {
-                                                            // Update local state + gửi BE
-                                                            handleSubtaskEdit(subtask.id, parentTaskId, "priority", p);
-                                                        }}
+                                                        onClick={() =>
+                                                            handleSubtaskEdit(subtask.id, parentTaskId, "priority", p)
+                                                        }
                                                         className={`flex items-center gap-2 ${priorityColorMap[p]}`}
                                                     >
                                                         {getPriorityIcon(p)}
@@ -292,51 +306,21 @@ export default function SubtaskList({
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
-                                );
-
-
-
-
-                            // case "key":
-                            //     return (
-                            //         <div
-                            //             key={`${subtask.id}-${col.key}`}
-                            //             className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
-                            //             style={{ width: col.width, minWidth: col.minWidth }}
-                            //         >
-                            //             <span className="text-blue-600">{subtask.key}</span>
-                            //         </div>
-                            //     )
-
-                            // case "select":
-                            //     return (
-                            //         <div
-                            //             key={`${subtask.id}-${col.key}`}
-                            //             className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
-                            //             style={{ width: col.width, minWidth: col.minWidth }}
-                            //         >
-                            //             <div className="flex items-center gap-2">
-                            //                 <div className="w-6 h-6" />
-                            //                 <Checkbox
-                            //                     checked={selectedTasks.has(subtask.id)}
-                            //                     onCheckedChange={() => toggleTaskSelection(subtask.id)}
-                            //                     className="h-5 w-5"
-                            //                 />
-                            //             </div>
-                            //         </div>
-                            //     )
+                                )
 
                             default:
                                 return (
                                     <div
-                                        key={`${subtask.id}-${col.key}`}
+                                        key={col.key}
                                         className="relative flex items-center px-3 py-2 border-r text-sm text-gray-600"
                                         style={{ width: col.width, minWidth: col.minWidth }}
                                     >
                                         {isEditing ? (
                                             <Input
-                                                defaultValue={(subtask as Task)[col.key] || ""}
-                                                onBlur={(e) => handleSubtaskEdit(subtask.id, parentTaskId, col.key, e.target.value)}
+                                                defaultValue={rawValue}
+                                                onBlur={(e) =>
+                                                    handleSubtaskEdit(subtask.id, parentTaskId, col.key, e.target.value)
+                                                }
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Enter")
                                                         handleSubtaskEdit(subtask.id, parentTaskId, col.key, e.currentTarget.value)
@@ -347,10 +331,13 @@ export default function SubtaskList({
                                             />
                                         ) : (
                                             <span
-                                                onClick={() => setEditingCell({ taskId: subtask.id, field: col.key })}
-                                                className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded text-gray-600"
+                                                onClick={() =>
+                                                    editablePrimitiveFields.includes(col.key as any) &&
+                                                    setEditingCell({ taskId: subtask.id, field: col.key })
+                                                }
+                                                className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
                                             >
-                                                {(subtask as Task)[col.key] || "-"}
+                                                {rawValue || "-"}
                                             </span>
                                         )}
                                     </div>

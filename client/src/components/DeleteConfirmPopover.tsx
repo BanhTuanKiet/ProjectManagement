@@ -36,14 +36,14 @@ export default function DeleteConfirmPopover({
                 <div className={`flex items-center gap-2 px-4 py-3 border-b ${isPermanent ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`}>
                     {isPermanent ? <Ban className="h-5 w-5 text-red-600" /> : <AlertTriangle className="h-5 w-5 text-orange-500" />}
                     <span className={`font-bold ${isPermanent ? 'text-red-700' : 'text-gray-800'}`}>
-                        {isPermanent ? "Xóa vĩnh viễn" : "Xác nhận xóa"}
+                        {isPermanent ? "Permanently delete" : "Confirm deletion"}
                     </span>
                 </div>
 
                 {/* Body */}
                 <div className="p-4 space-y-4 text-gray-700 text-sm">
                     <p>
-                        Bạn đang chọn xóa <span className="font-bold text-lg mx-1">{taskCount}</span> task.
+                        You are selecting to delete <span className="font-bold text-lg mx-1">{taskCount}</span> task(s).
                     </p>
 
                     {/* Logic hiển thị cảnh báo dựa trên loại xóa */}
@@ -52,7 +52,7 @@ export default function DeleteConfirmPopover({
                         <div className="bg-red-100 border border-red-200 text-red-800 p-3 rounded-md flex gap-3 items-start text-xs">
                             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                             <span>
-                                <strong>CẢNH BÁO:</strong> Hành động này sẽ xóa dữ liệu khỏi hệ thống hoàn toàn và <strong>KHÔNG THỂ</strong> khôi phục lại. Hãy chắc chắn trước khi thực hiện.
+                                <strong>WARNING:</strong> This action will permanently delete data from the system and <strong>CAN NOT</strong> be recovered. Please be sure before proceeding.
                             </span>
                         </div>
                     ) : (
@@ -62,13 +62,13 @@ export default function DeleteConfirmPopover({
                                 <div className="bg-orange-50 border border-orange-100 text-orange-800 p-3 rounded-md flex gap-3 items-start text-xs">
                                     <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                                     <span>
-                                        Có <strong>{subtaskCount}</strong> subtask con sẽ bị xóa vĩnh viễn. Task cha có thể khôi phục từ thùng rác, nhưng subtask thì không.
+                                        Yes <strong>{subtaskCount}</strong> subtasks will be permanently deleted. The parent task can be restored from the trash, but the subtasks cannot.
                                     </span>
                                 </div>
                             ) : (
                                 <div className="bg-blue-50 border border-blue-100 text-blue-700 p-3 rounded-md flex gap-3 items-start text-xs">
                                     <span className="shrink-0">ℹ️</span>
-                                    <span>Task này sẽ được chuyển vào thùng rác và có thể khôi phục sau.</span>
+                                    <span>This task will be moved to the trash and can be restored later.</span>
                                 </div>
                             )}
                         </>
@@ -83,7 +83,7 @@ export default function DeleteConfirmPopover({
                         onClick={() => setOpen(false)}
                         className="bg-white hover:bg-gray-100"
                     >
-                        Hủy bỏ
+                        Cancel
                     </Button>
                     <Button
                         variant="destructive"
@@ -92,7 +92,7 @@ export default function DeleteConfirmPopover({
                         onClick={handleConfirm}
                     >
                         <Trash2 className="h-4 w-4" />
-                        {isPermanent ? "Xóa vĩnh viễn" : "Xóa ngay"}
+                        {isPermanent ? "Permanently delete" : "Delete now"}
                     </Button>
                 </div>
             </div>

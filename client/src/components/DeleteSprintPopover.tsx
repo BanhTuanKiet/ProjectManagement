@@ -30,13 +30,13 @@ export default function DeleteSprintPopover({
                 {/* Header */}
                 <div className="flex items-center gap-2 px-4 py-3 border-b bg-red-50 border-red-200">
                     <Trash2 className="h-5 w-5 text-red-600" />
-                    <span className="font-bold text-red-700">Xóa Sprint</span>
+                    <span className="font-bold text-red-700">Delete Sprint</span>
                 </div>
 
                 {/* Body */}
                 <div className="p-4 space-y-4 text-gray-700 text-sm">
                     <p>
-                        Bạn đang chọn xóa <span className="font-bold text-lg mx-1">{sprintCount}</span> sprint.
+                        You are selecting to delete <span className="font-bold text-lg mx-1">{sprintCount}</span> sprint(s).
                     </p>
 
                     <div className="space-y-3">
@@ -44,7 +44,7 @@ export default function DeleteSprintPopover({
                         <div className="bg-red-50 border border-red-100 text-red-800 p-3 rounded-md flex gap-3 items-start text-xs">
                             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                             <span>
-                                <strong>Sprint này sẽ bị xóa vĩnh viễn.</strong> Bạn không thể khôi phục lại Sprint sau khi xóa.
+                                <strong>This sprint will be permanently deleted.</strong> You cannot recover the sprint after deletion.
                             </span>
                         </div>
 
@@ -52,7 +52,7 @@ export default function DeleteSprintPopover({
                         <div className="bg-blue-50 border border-blue-100 text-blue-700 p-3 rounded-md flex gap-3 items-start text-xs">
                             <ArrowDownToLine className="h-4 w-4 mt-0.5 shrink-0" />
                             <span>
-                                Các <strong>Work Items (Tasks)</strong> trong Sprint sẽ <strong>KHÔNG</strong> bị xóa. Chúng sẽ được chuyển tự động về <strong>Backlog</strong>.
+                                The <strong>Work Items (Tasks)</strong> in a Sprint will <strong>NOT</strong> be deleted. They will be automatically moved to the <strong>Backlog</strong>.
                             </span>
                         </div>
                     </div>
@@ -66,7 +66,7 @@ export default function DeleteSprintPopover({
                         onClick={() => setOpen(false)}
                         className="bg-white hover:bg-gray-100"
                     >
-                        Hủy bỏ
+                        Cancel
                     </Button>
                     <Button
                         variant="destructive"
@@ -75,7 +75,7 @@ export default function DeleteSprintPopover({
                         onClick={handleConfirm}
                     >
                         <Trash2 className="h-4 w-4" />
-                        Xóa Sprint
+                        Delete Sprint
                     </Button>
                 </div>
             </div>

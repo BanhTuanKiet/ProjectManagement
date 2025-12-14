@@ -39,6 +39,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidateInputFilter>();
+});
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

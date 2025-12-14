@@ -32,15 +32,18 @@ namespace server.DTO
 
         public class CreateNewTask
         {
+            [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters.")]
             public string Title { get; set; } = null!;
             public string? Description { get; set; }
             public string AssigneeId { get; set; }
+            [Range(1, 3, ErrorMessage = "Priority must be between 1 (High) and 3 (Low).")]
             public byte Priority { get; set; }
             public DateTime? Deadline { get; set; }
         }
 
         public class QuickCreate
         {
+            [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters.")]
             public string Title { get; set; } = null!;
             public int? SprintId { get; set; } // null = backlog
         }
@@ -63,7 +66,7 @@ namespace server.DTO
             public int? SprintId { get; set; }
             public int? BacklogId { get; set; }
             public bool IsActive { get; set; }
-            public string? Tag { get; set; } 
+            public string? Tag { get; set; }
             public string? AvatarUrl { get; set; }
         }
 
@@ -74,20 +77,52 @@ namespace server.DTO
             public int? SprintId { get; set; }
             public int? BacklogId { get; set; }
         }
+
         public class BulkDeleteTasksDto
         {
             public int ProjectId { get; set; }
             public List<int> Ids { get; set; } = new List<int>();
         }
 
-        public class UpdateTask
+        public class UpdateTask : IValidatableObject
         {
+            [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters.")]
             public string? Title { get; set; }
             public string? Description { get; set; }
+            [Range(1, 3, ErrorMessage = "Priority must be between 1 and 3.")]
             public byte? Priority { get; set; }
             public DateTime? CreatedAt { get; set; }
             public DateTime? Deadline { get; set; }
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+
+                if (Deadline.HasValue)
+                {
+                    // Convert Deadline từ DateTime sang DateOnly để so sánh
+                    var deadlineDateOnly = DateOnly.FromDateTime(Deadline.Value);
+                    if (deadlineDateOnly < today)
+                    {
+                        yield return new ValidationResult(
+                            "Deadline cannot be in the past.",
+                            new[] { nameof(Deadline) }
+                        );
+                    }
+                }
+                if (CreatedAt.HasValue && Deadline.HasValue)
+                {
+                    if (Deadline.Value < CreatedAt.Value)
+                    {
+                        yield return new ValidationResult(
+                            "The deadline cannot be earlier than the start date.",
+                            new[] { nameof(Deadline) }
+                        );
+                    }
+                }
+            }
         }
+
         public class SupportRequestModel
         {
             public string Content { get; set; } = string.Empty;
