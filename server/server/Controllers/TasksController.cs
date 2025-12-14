@@ -738,7 +738,7 @@ namespace server.Controllers
             return Ok(result);
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("quick-create/{projectId}")]
         public async Task<ActionResult> QuickCreateTask([FromBody] TaskDTO.QuickCreate dto, int projectId)
         {

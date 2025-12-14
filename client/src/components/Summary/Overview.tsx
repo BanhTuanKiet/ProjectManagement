@@ -197,39 +197,59 @@ export default function Overview({
     }, {} as Record<string, Record<string, TaskByDate>>);
 
     const userStats = Object.values(tasksByUser)
-    const { project_name, members } = useProject()
+    const { project_name, members, projectRole } = useProject()
     const COLORS = ["#4ade80", "#60a5fa", "#facc15", "#fb923c", "#f87171"];
     const [selectedUser, setSelectedUser] = React.useState<string>("");
     const [reportUrl, setReportUrl] = React.useState<string>("");
-
+    const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+    const [isSending, setIsSending] = React.useState(false); const fileInputRef = React.useRef<HTMLInputElement>(null);
     const handleExportReport = async () => {
         try {
-            const res = await axios.post("/reports/export", {
-                responseType: "json",
-                projectId: Number(project_name)
-            });
+            const res = await axios.post(
+                "/reports/export",
+                {},
+                {
+                    params: { projectId: Number(project_name) },
+                    responseType: "blob"
+                }
+            );
 
-            setReportUrl(res.data.url);
-            alert("Tạo file & upload lên Cloudinary thành công!");
+            const blob = new Blob([res.data]);
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Project_${project_name}_Report.csv`;
+            a.click();
+
+            window.URL.revokeObjectURL(url);
         } catch (err) {
-            console.error(err);
-            alert("Export thất bại");
+            console.error("Export failed");
         }
     };
 
+
     const handleSendReport = async () => {
-        if (!reportUrl) return alert("Chưa có file report để gửi!");
+        if (isSending) return;
+        if (!selectedFile)
+            return alert("Please select a report file!");
+        setIsSending(true)
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("projectId", String(project_name));
 
         try {
-            await axios.post("/reports/send", {
-                fileUrl: reportUrl,
-                projectId: Number(project_name)
+            await axios.post("/reports/send", formData, {
+                params: { projectId: Number(project_name) },
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
             });
-
-            alert("Gửi email thành công!");
+            setSelectedFile(null);
         } catch (err) {
             console.error(err);
-            alert("Gửi thất bại");
+        } finally {
+            setIsSending(false); // Enable lại nút
         }
     };
 
@@ -244,23 +264,50 @@ export default function Overview({
         <div id="projectOverview" className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
             <div id="taskStatistics" className="lg:col-span-2 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Task Statistics by Priority</h2>
-                <div className="flex gap-3 mb-4">
-                    <button
-                        onClick={handleExportReport}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        Export CSV / Excel
-                    </button>
+                {projectRole === "Project Manager" || projectRole === "Leader" ? (
+                    <div className="flex gap-3 mb-4">
+                        <button
+                            onClick={handleExportReport}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                            Export CSV / Excel
+                        </button>
+                        {projectRole === "Leader" ? (
+                            <div className="flex gap-3">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept=".csv,.xlsx,.pdf"
+                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    className="hidden" // Ẩn input mặc định
+                                />
 
-                    <button
-                        onClick={handleSendReport}
-                        disabled={!reportUrl}
-                        className={`px-4 py-2 text-white rounded-lg ${reportUrl ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
-                            }`}
-                    >
-                        Send Report
-                    </button>
-                </div>
+                                {/* Nút bấm tùy chỉnh hiển thị tiếng Anh */}
+                                <div className="flex items-center gap-2 border p-1.5 rounded bg-white">
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm rounded transition-colors font-medium"
+                                    >
+                                        Choose File
+                                    </button>
+                                    <span className="text-sm text-gray-500 italic px-2">
+                                        {selectedFile ? selectedFile.name : "No file chosen"}
+                                    </span>
+                                </div>
+
+                                <button
+                                    onClick={handleSendReport}
+                                    disabled={!selectedFile}
+                                    className={`px-4 py-2 text-white rounded-lg ${selectedFile ? "bg-green-600 hover:bg-green-700" : "bg-gray-400"
+                                        }`}
+                                >
+                                    Send Report
+                                </button>
+                            </div>
+                        ) : null}
+                    </div>
+                ) : null
+                }
 
 
                 {taskStatistics.map((stat) => {

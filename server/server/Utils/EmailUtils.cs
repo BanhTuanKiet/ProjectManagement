@@ -57,5 +57,58 @@ namespace server.Util
                 throw new Exception($"Không thể gửi email: {ex.Message}", ex);
             }
         }
+        public static async Task SendEmailWithAttachmentAsync(
+            IConfiguration _configuration, 
+            string toEmail, 
+            string subject, 
+            string message, 
+            Stream fileStream, 
+            string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(toEmail))
+                throw new ArgumentException("Email không hợp lệ", nameof(toEmail));
+
+            string smtpServer = _configuration["EmailSettings:SmtpServer"] ?? "smtp.gmail.com";
+            string portStr = _configuration["EmailSettings:Port"] ?? "587";
+            string enableSslStr = _configuration["EmailSettings:EnableSsl"] ?? "true";
+            string senderEmail = _configuration["EmailSettings:SenderEmail"] ?? throw new InvalidOperationException("Email người gửi không được cấu hình");
+            string password = _configuration["EmailSettings:Password"] ?? throw new InvalidOperationException("Mật khẩu email không được cấu hình");
+
+            if (!int.TryParse(portStr, out int port)) port = 587;
+            if (!bool.TryParse(enableSslStr, out bool enableSsl)) enableSsl = true;
+
+            using var smtpClient = new SmtpClient(smtpServer)
+            {
+                Port = port,
+                EnableSsl = enableSsl,
+                Credentials = new NetworkCredential(senderEmail, password)
+            };
+
+            using var mailMessage = new MailMessage
+            {
+                From = new MailAddress(senderEmail, _configuration["EmailSettings:SenderName"] ?? "BookingCare"),
+                Subject = subject,
+                Body = message,
+                IsBodyHtml = true,
+            };
+            mailMessage.To.Add(toEmail);
+
+            if (fileStream != null && fileStream.Length > 0)
+            {
+                fileStream.Position = 0;
+                var attachment = new Attachment(fileStream, fileName);
+                mailMessage.Attachments.Add(attachment);
+            }
+
+            try
+            {
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+            catch (SmtpException ex)
+            {
+                Console.WriteLine($"SMTP Error: {ex.Message}");
+                throw new Exception($"Không thể gửi email: {ex.Message}", ex);
+            }
+        }
     }
 }

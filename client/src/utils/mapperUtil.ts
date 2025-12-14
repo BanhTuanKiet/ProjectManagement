@@ -18,7 +18,6 @@ export interface Task {
   raw: BasicTask // giữ lại data gốc để sau dễ dùng
   // Thêm các trường khác nếu cần
   subtasks?: Task[]
-  [key: string]: any
 }
 
 const priorityMapBEtoFE: Record<number, "Low" | "Medium" | "High"> = {
@@ -77,58 +76,41 @@ export const mapApiTaskToTask = (apiTask: BasicTask): Task => {
     isActive: apiTask.isActive,
     raw: apiTask, // giữ lại data gốc để sau dễ dùng
     subtasks: [],
-    tag: apiTask.tag
   }
 }
 
-export const mapApiUserToUserMini = (apiUser: any): UserMini => ({
-  id: apiUser.userId,
-  name: apiUser.name,
-  avatar: apiUser.avatarUrl || "",
-  initials: (apiUser.name || "?")
-    .split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase(),
-})
+export const mapApiUserToUserMini = (apiUser: Record<string, unknown>): UserMini => {
+  const name = (apiUser["name"] as string) ?? "?";
 
-// FE Task -> BE update payload
-export const mapTaskToApiUpdatePayload = (task: Task): Record<string, any> => {
-  const payload: Record<string, any> = {}
+  return {
+    id: apiUser["userId"] as string | number,
+    name,
+    avatar: (apiUser["avatarUrl"] as string) ?? "",
+    initials: name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase(),
+  };
+};
 
-  if (task.summary !== undefined) {
-    payload.title = task.summary // map summary -> title
-  }
+export const mapTaskToApiUpdatePayload = (task: Task): Record<string, unknown> => {
+  const payload: Record<string, unknown> = {}
 
-  if (task.description !== undefined) {
-    payload.description = task.description
-  }
+  if (task.summary !== undefined) payload.title = task.summary
+  if (task.description !== undefined) payload.description = task.description
+  if (task.status !== undefined) payload.status = task.status
+  if (task.priority !== undefined) payload.priority = mapPriorityToApi(task.priority)
 
-  if (task.status !== undefined) {
-    payload.status = task.status
-  }
-
-  if (task.priority !== undefined) {
-    payload.priority = mapPriorityToApi(task.priority)
-  }
-
-  if (task.assignee && typeof task.assignee === 'object') {
-    const userObj = task.assignee as any; 
-    payload.assigneeId = userObj.id || userObj.userId || userObj.memberId;
+  if (task.assignee && typeof task.assignee === "object") {
+    const userObj = task.assignee as UserMini
+    payload.assigneeId = userObj.id || null
   } else if (task.assignee === null) {
-    payload.assigneeId = null;
+    payload.assigneeId = null
   }
 
-  if (task.dueDate !== undefined) {
-    payload.deadline = task.dueDate
-  }
-
-  if (task.estimateHours !== undefined) {
-    payload.estimateHours = task.estimateHours
-  }
-  if (task.description !== undefined) {
-    payload.description = task.description
-  }
+  if (task.dueDate !== undefined) payload.deadline = task.dueDate
+  if (task.estimateHours !== undefined) payload.estimateHours = task.estimateHours
 
   return payload
 }
