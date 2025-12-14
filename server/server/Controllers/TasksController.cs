@@ -119,6 +119,10 @@ namespace server.Controllers
                     // 3. Lấy task của toàn bộ member trong team
                     tasks = await _tasksService.GetTasksByUserList(projectId, members);
                     break;
+                case "Tester":
+                    var testTasks = await _tasksService.GetBasicTasksById(projectId);
+                    tasks = testTasks.Where(t => t.Status == "In Progress" || t.Status == "Bug").ToList();
+                    break;
 
                 case "Member":
                     // Member -> xem task của chính mình
@@ -364,7 +368,7 @@ namespace server.Controllers
             });
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -780,6 +784,17 @@ namespace server.Controllers
         {
             try
             {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+
+                if (projectMember == null)
+                    return Unauthorized(new { message = "You are not a member of this project" });
+
+                string role = projectMember.RoleInProject;
+                if(role != "Project Manager")
+                {
+                    throw new ErrorException(403,"Only project manager to this projet can perform this operation!");
+                }
                 var newStatus = await _tasksService.ToggleTaskStatus(taskId, projectId);
                 return Ok(new { message = "Success", isActive = newStatus });
             }
