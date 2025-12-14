@@ -15,6 +15,7 @@ namespace server.Models
         public string? Location { get; set; }
         public string? AvatarUrl { get; set; }
         public string? ImageCoverUrl { get; set; }
+        public bool IsActive { get; set; } = true;
         //Subcription
         public virtual Subscriptions Subscription { get; set; }
         public virtual ICollection<ApplicationUserRole> UserRoles { get; set; } = new List<ApplicationUserRole>();

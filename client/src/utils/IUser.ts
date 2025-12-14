@@ -67,6 +67,15 @@ export interface UserProfile {
     subcription: Subcription
 }
 
+export interface AdminUser {
+    id: string
+    avatarUrl: string
+    userName: string
+    email: string
+    isActive: boolean
+    subcription: Subcription
+}
+
 export interface Subcription {
     planId: string
     planName: string

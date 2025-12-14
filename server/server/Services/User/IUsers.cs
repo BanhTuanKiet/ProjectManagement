@@ -4,6 +4,7 @@ namespace server.Models
 {
     public interface IUsers
     {
+        Task<List<UserDTO.User>> GetUsersPaged(int page, UserDTO.UserQuery query);
         Task<List<ApplicationUser>> GetUsers();
         Task<string> GetRefreshToken(string userId);
         Task<bool> SaveRefreshToken(string userId, string token);

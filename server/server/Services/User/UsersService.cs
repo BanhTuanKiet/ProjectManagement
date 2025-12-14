@@ -8,6 +8,7 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using server.Configs;
 using server.DTO;
+using AutoMapper.QueryableExtensions;
 
 namespace server.Services.User
 {
@@ -29,6 +30,54 @@ namespace server.Services.User
         {
             return await _context.ApplicationUsers.ToListAsync();
         }
+
+        public async Task<List<UserDTO.User>> GetUsersPaged(int page, UserDTO.UserQuery query)
+        {
+            const int amount = 10;
+            int skip = (page - 1) * amount;
+
+            var usersQuery = _context.Users
+                .Include(u => u.Subscription)
+                    .ThenInclude(s => s.Plan)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(query.Search))
+            {
+                usersQuery = usersQuery.Where(u =>
+                    (u.UserName != null && u.UserName.Contains(query.Search)) ||
+                    (u.Email != null && u.Email.Contains(query.Search)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Plan) && !query.Plan.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                var plan = query.Plan.ToLower();
+
+                if (plan == "free")
+                {
+                    usersQuery = usersQuery.Where(u => u.Subscription == null || u.Subscription.Plan.Name.ToLower() == "free");
+                }
+                else
+                {
+                    usersQuery = usersQuery.Where(u => u.Subscription != null && u.Subscription.Plan.Name.ToLower() == plan);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.IsActive) && !query.IsActive.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                usersQuery = usersQuery.Where(u => u.IsActive == (query.IsActive.ToLower() == "active"));
+            }
+
+            var users = await usersQuery
+                .OrderBy(u => u.Id)
+                .Skip(skip)
+                .Take(amount)
+                .ToListAsync();
+
+            var usersMapped = _mapper.Map<List<UserDTO.User>>(users);
+
+            return usersMapped;
+        }
+
         public async Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name)
         {
             if (string.IsNullOrEmpty(email))

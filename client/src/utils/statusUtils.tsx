@@ -1,4 +1,4 @@
-import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag, Github, Linkedin, Facebook, LinkIcon } from "lucide-react"
+import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag, Github, Linkedin, Facebook, LinkIcon, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 
 export const taskStatus = [
     { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
@@ -240,3 +240,28 @@ export const ContactIcon = ({ media }: { media: string }) => {
     }
 }
 
+export const getSubscriptionBadge = (plan: string) => {
+    if (!plan) {
+        return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200'
+    }
+
+    switch (plan.toLowerCase()) {
+        case 'pro':
+            return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-300 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+
+        case 'premium':
+            return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-300 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+
+        default:
+            return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-slate-300 text-slate-800 dark:bg-slate-900 dark:text-slate-200'
+    }
+}
+
+export const getActiveAccount = (isActive: boolean) => {
+    console.log(isActive)
+    if (!isActive) {
+        return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    }
+
+    return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-300 text-green-800 dark:bg-green-900 dark:text-green-200'
+}
