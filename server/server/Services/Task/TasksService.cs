@@ -347,6 +347,7 @@ namespace server.Services.Project
         {
             await _context.Tasks.AddAsync(newTask);
             await _context.SaveChangesAsync();
+            await _context.Entry(newTask).Reference(t => t.Assignee).LoadAsync();
             return newTask;
         }
 
@@ -371,7 +372,9 @@ namespace server.Services.Project
 
         public async Task<Models.Task?> UpdateTaskStatus(int taskId, string newStatus)
         {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            var task = await _context.Tasks
+                .Include(t => t.Assignee)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
             if (task == null)
                 return null;
@@ -385,7 +388,9 @@ namespace server.Services.Project
 
         public async Task<Models.Task?> UpdateTask(int taskId, TaskDTO.UpdateTask updatedData)
         {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            var task = await _context.Tasks
+                .Include(t => t.Assignee)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
             if (task == null)
                 return null;
