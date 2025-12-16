@@ -34,7 +34,7 @@ namespace server.Services.User
         public async Task<List<UserDTO.User>> GetUsersPaged(int page, UserDTO.UserQuery query)
         {
             const int amount = 10;
-            int skip = (page - 1) * amount;
+            int skip = page * amount;
 
             var usersQuery = _context.Users
                 .Include(u => u.Subscription)
@@ -67,8 +67,14 @@ namespace server.Services.User
                 usersQuery = usersQuery.Where(u => u.IsActive == (query.IsActive.ToLower() == "active"));
             }
 
+            if (!string.IsNullOrEmpty(query.Direction))
+            {
+                usersQuery = query.Direction == "asc"
+                    ? usersQuery.OrderBy(u => u.UserName)
+                    : usersQuery.OrderByDescending(u => u.UserName);
+            }
+
             var users = await usersQuery
-                .OrderBy(u => u.Id)
                 .Skip(skip)
                 .Take(amount)
                 .ToListAsync();

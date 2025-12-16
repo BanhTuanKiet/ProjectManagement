@@ -34,6 +34,7 @@ export default function User() {
     const [loading, setLoading] = useState(true)
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const [page, setPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(0)
     const [sortConfig, setSortConfig] = useState<SortConfig>(null)
     const [filter, setFiler] = useState<filter>({})
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
@@ -42,7 +43,7 @@ export default function User() {
 
     useEffect(() => {
         setPage(0)
-    }, [filter.isActive, filter.plan])
+    }, [filter.isActive, filter.plan, sortConfig])
 
     useEffect(() => {
         const t = setTimeout(() => {
@@ -60,13 +61,15 @@ export default function User() {
 
                 const response = await axios.get(`/admins/users/${page}`, {
                     params: {
+                        direction: sortConfig?.direction,
                         search: debouncedSearch,
                         isActive: filter.isActive,
                         plan: filter.plan
                     }
                 })
 
-                setUsers(response.data)
+                setUsers(response.data.data)
+                setTotalPages(response.data.totalPages)
             } catch (e) {
                 console.error(e)
             } finally {
@@ -75,7 +78,7 @@ export default function User() {
         }
 
         fetchUsers()
-    }, [page, debouncedSearch, filter.isActive, filter.plan])
+    }, [page, debouncedSearch, filter.isActive, filter.plan, sortConfig?.direction])
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -187,24 +190,37 @@ export default function User() {
                 </div>
                 :
                 <>
-                    <div className="flex items-center justify-between px-6 py-4 border-t">
+                    <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
                         <span className="text-sm text-gray-500">
-                            Page {page + 1}
+                            Page {page + 1} of {totalPages}
                         </span>
 
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
                             <button
                                 disabled={page === 0}
                                 onClick={() => setPage(p => Math.max(0, p - 1))}
-                                className="px-3 py-1.5 border rounded-md disabled:opacity-50"
+                                className="cursor-pointer px-3 py-1.5 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
 
+                            {Array.from({ length: totalPages }, (_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setPage(i)}
+                                    className={`cursor-pointer px-2.5 py-1 border rounded-md text-sm font-medium ${i === page
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        } transition`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
                             <button
-                                disabled={users.length < PAGE_SIZE}
-                                onClick={() => setPage(p => p + 1)}
-                                className="px-3 py-1.5 border rounded-md disabled:opacity-50"
+                                disabled={page >= totalPages - 1}
+                                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                className="cursor-pointer px-3 py-1.5 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition"
                             >
                                 <ChevronRight className="w-4 h-4" />
                             </button>
@@ -226,7 +242,7 @@ export default function User() {
                         </thead>
 
                         <tbody>
-                            {users.map(user => (
+                            {users?.map(user => (
                                 <tr key={user.id} className={`border-b ${!user.isActive ? 'opacity-60 bg-gray-50' : ''}`}>
                                     <td className="px-6 py-4 flex gap-3 items-center">
                                         <ColoredAvatar id={user.id} name={user.userName} src={user.avatarUrl ?? ''} />

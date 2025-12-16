@@ -310,7 +310,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasConstraintName("FK_Subscriptions_Users");
 
             entity.HasOne(s => s.Plan)
-                .WithMany()
+                .WithMany(p => p.Subscriptions)
                 .HasForeignKey(s => s.PlanId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Subscriptions_Plans");

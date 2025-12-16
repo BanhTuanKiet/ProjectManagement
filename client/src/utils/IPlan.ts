@@ -11,6 +11,8 @@ export interface PlanDetail {
     price: string
     badge: boolean
     description: string
+    isActive?: boolean
+    subcriber: number
     features: FeatureDetail[]
 }
 

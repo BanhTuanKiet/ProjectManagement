@@ -258,7 +258,6 @@ export const getSubscriptionBadge = (plan: string) => {
 }
 
 export const getActiveAccount = (isActive: boolean) => {
-    console.log(isActive)
     if (!isActive) {
         return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     }

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Runtime.CompilerServices;
 
 namespace server.Models
 {
@@ -16,12 +13,10 @@ namespace server.Models
 
         [MaxLength(255)]
         public string? Description { get; set; }
-
         public bool Badge { get; set; } = false;
-
         public bool IsActive { get; set; } = true;
-
         // Navigation property
+        public ICollection<Subscriptions> Subscriptions { get; set; } = new List<Subscriptions>();
         public ICollection<PlanFeatures> PlanFeatures { get; set; } = new List<PlanFeatures>();
     }
 }

@@ -86,6 +86,7 @@ public class UserDTO
 
     public class UserQuery
     {
+        public string? Direction { get; set; }
         public string? Search { get; set; }
         public string? IsActive { get; set; }
         public string? Plan { get; set; }

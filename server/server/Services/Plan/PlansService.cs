@@ -22,6 +22,7 @@ namespace server.Services.Project
             var plans = await _context.Plans
                 .Include(p => p.PlanFeatures)
                     .ThenInclude(pf => pf.Features)
+                .Include(p => p.Subscriptions)
                 .ToListAsync();
 
             return _mapper.Map<List<PlanDTO.PlanDetail>>(plans);

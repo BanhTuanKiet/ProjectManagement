@@ -1,22 +1,20 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import {
-    Users, Layers, CreditCard, Search, MoreHorizontal, Check,
-    ArrowUpRight, Folder, Plus, ChevronUp, ChevronDown
-} from 'lucide-react';
-import User from '@/components/admin/User';
-import Plan from '@/components/admin/Plan';
+import React, { useState, useEffect } from 'react'
+import { Users, Layers, CreditCard } from 'lucide-react'
+import User from '@/components/admin/User'
+import Plan from '@/components/admin/Plan'
+import { useHash } from '@/hooks/useHash'
 
-type TabId = 'dashboard' | 'users' | 'plans' | 'payments';
+type TabId = 'dashboard' | 'users' | 'plans' | 'payments'
 
 type Payment = {
-    id: string;
-    user_name: string;
-    amount: number;
-    status: 'success' | 'failed' | 'pending';
-    date: string;
-};
+    id: string
+    user_name: string
+    amount: number
+    status: 'success' | 'failed' | 'pending'
+    date: string
+}
 
 const MOCK_DATA = {
     payments: [
@@ -25,15 +23,15 @@ const MOCK_DATA = {
         { id: 'tx_3', user_name: 'Phạm D', amount: 499000, status: 'pending', date: '24/10/2023' },
         { id: 'tx_4', user_name: 'Trần Thị B', amount: 999000, status: 'success', date: '23/10/2023' },
     ] as Payment[],
-};
+}
 
 const fetchMockData = <T,>(key: keyof typeof MOCK_DATA): Promise<T> => {
     return new Promise((resolve) => {
         setTimeout(() => {
-            resolve(MOCK_DATA[key] as T);
-        }, 500);
-    });
-};
+            resolve(MOCK_DATA[key] as T)
+        }, 500)
+    })
+}
 
 const StatusBadge = ({ status }: { status: string }) => {
     const styles: Record<string, string> = {
@@ -43,73 +41,39 @@ const StatusBadge = ({ status }: { status: string }) => {
         failed: 'bg-red-100 text-red-700',
         pending: 'bg-yellow-100 text-yellow-700',
         default: 'bg-gray-100 text-gray-700',
-    };
+    }
 
-    const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+    const displayStatus = status.charAt(0).toUpperCase() + status.slice(1)
 
     return (
         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status] || styles.default}`}>
             {displayStatus}
         </span>
-    );
-};
+    )
+}
 
 interface MenuItemProps {
-    icon: React.ElementType;
-    label: string;
-    isActive: boolean;
-    onClick: () => void;
+    icon: React.ElementType
+    label: string
+    isActive: boolean
+    onClick: () => void
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({ icon: Icon, label, isActive, onClick }) => (
     <button
         onClick={onClick}
         className={`
-      flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
-      ${isActive
+            flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+            ${isActive
                 ? 'bg-blue-50 text-blue-600'
                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
             }
-    `}
+        `}
     >
         <Icon className="w-5 h-5" />
         <span>{label}</span>
     </button>
-);
-
-interface SidebarProps {
-    activeTab: TabId;
-    setActiveTab: (tab: TabId) => void;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
-    return (
-        <aside className="w-64 flex-shrink-0 border-r border-gray-200 bg-white h-screen p-4 sticky top-0 overflow-y-auto">
-            <div className="space-y-1 mb-6">
-                <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wider px-4 mb-2">Admin Tools</h3>
-
-                <MenuItem
-                    icon={Users}
-                    label="Users"
-                    isActive={activeTab === 'users'}
-                    onClick={() => setActiveTab('users')}
-                />
-                <MenuItem
-                    icon={Layers}
-                    label="Plans"
-                    isActive={activeTab === 'plans'}
-                    onClick={() => setActiveTab('plans')}
-                />
-                <MenuItem
-                    icon={CreditCard}
-                    label="Payments"
-                    isActive={activeTab === 'payments'}
-                    onClick={() => setActiveTab('payments')}
-                />
-            </div>
-        </aside>
-    );
-};
+)
 
 const PaymentsView = () => {
     const [payments, setPayments] = useState<Payment[]>([]);
@@ -177,14 +141,14 @@ const PaymentsView = () => {
             </div>
         </div>
     );
-};
+}
 
 export default function DashboardLayout() {
-    const [activeTab, setActiveTab] = useState<TabId>('users');
+    const { hash: activeTab, setHash: setActiveTab } = useHash()
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'users':
+            case '':
                 return <User />
             case 'plans':
                 return <Plan />
@@ -197,7 +161,30 @@ export default function DashboardLayout() {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <aside className="w-64 flex-shrink-0 border-r border-gray-200 bg-white h-screen p-4 sticky top-0 overflow-y-auto">
+                <div className="space-y-1 mb-6">
+                    <h3 className="text-xs font-semibold uppercase text-gray-400 tracking-wider px-4 mb-2">Admin Tools</h3>
+
+                    <MenuItem
+                        icon={Users}
+                        label="Users"
+                        isActive={activeTab === ''}
+                        onClick={() => setActiveTab('')}
+                    />
+                    <MenuItem
+                        icon={Layers}
+                        label="Plans"
+                        isActive={activeTab === 'plans'}
+                        onClick={() => setActiveTab('plans')}
+                    />
+                    <MenuItem
+                        icon={CreditCard}
+                        label="Payments"
+                        isActive={activeTab === 'payments'}
+                        onClick={() => setActiveTab('payments')}
+                    />
+                </div>
+            </aside>
 
             <main className="flex-1 overflow-x-hidden">
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">

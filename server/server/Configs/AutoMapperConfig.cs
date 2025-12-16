@@ -103,6 +103,7 @@ namespace server.Configs
 
             CreateMap<Plans, PlanDTO.PlanDetail>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PlanId))
+                .ForMember(dest => dest.Subcriber, opt => opt.MapFrom(src => src.Subscriptions.Count()))
                 .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.PlanFeatures));
 
             CreateMap<PlanFeatures, PlanDTO.FeatureDetail>()
