@@ -159,6 +159,7 @@ namespace server.Services.Project
         {
             var token = Guid.NewGuid();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var userName = user?.UserName ?? email;
             var existingInvitation = await _context.ProjectInvitations
                 .Where(i => i.Email == email && i.ProjectId == projectId && i.IsAccepted == false)
                 .ToListAsync();
@@ -201,7 +202,7 @@ namespace server.Services.Project
                     <tr>
                     <td style=""padding:40px 32px; color:#172b4d; font-size:16px; line-height:1.6;"">
                         <p style=""margin:0 0 20px; font-size:18px;"">
-                        Hello {user.UserName},
+                        Hello {userName},
                         </p>
 
                         <p style=""margin:0 0 24px;"">

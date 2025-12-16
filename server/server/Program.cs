@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Evaluation;
 using Microsoft.EntityFrameworkCore;
 using server.Configs;
 
@@ -67,6 +68,7 @@ app.MapControllers();
 app.MapHub<PresenceHubConfig>("/hubs/presence");
 app.MapHub<NotificationHub>("/hubs/notification");
 app.MapHub<TaskHubConfig>("/hubs/task");
+app.MapHub<ProjectHubConfig>("/hubs/project");
 
 app.Run();
 // Make the implicit Program class public so test projects can access it

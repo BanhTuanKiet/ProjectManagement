@@ -57,6 +57,13 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
             setTasks(prevTasks => [addedTask, ...prevTasks])
         })
 
+        connection.on("TasksDeleted", (ids: number[]) => {
+            setTasks(prev => {
+                const next = prev.filter(t => !ids.includes(t.taskId))
+                return next
+            })
+        })
+
         connection.on("TaskUpdated", (updatedTask: BasicTask) => {
             console.log("TaskUpdated received:", updatedTask)
             setTasks(prevTasks => {

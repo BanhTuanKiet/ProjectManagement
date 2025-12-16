@@ -6,6 +6,8 @@ import axios from "../../config/axiosConfig"
 import { Member } from "@/utils/IUser"
 import { useParams } from "next/navigation"
 import type { TaskAssignee } from "@/utils/IUser"
+import * as signalR from "@microsoft/signalr"
+import { useUser } from "./UserContext"
 
 type ProjectContextType = {
     project_name: string
@@ -30,11 +32,27 @@ const ProjectContext = createContext<ProjectContextType>({
 })
 
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
+    const { user } = useUser()
+    const [connection, setConnection] = useState<signalR.HubConnection | null>(null)
     const [projects, setProjects] = useState<ProjectBasic[]>([])
     const [members, setMembers] = useState<Member[]>()
     const [projectRole, setProjectRole] = useState<string>("")
     const { project_name } = useParams<{ project_name: string }>()
     const [availableUsers, setAvailableUsers] = useState<Member[]>([])
+
+    useEffect(() => {
+        if (!user) return
+
+        const conn = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5144/hubs/project", {
+                accessTokenFactory: () => user.token
+            })
+            .withAutomaticReconnect()
+            .build()
+
+        setConnection(conn)
+    }, [user])
+
 
     useEffect(() => {
         if (project_name) {
@@ -108,6 +126,36 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         }
         fetchMembers();
     }, [project_name, projectRole])
+
+    useEffect(() => {
+        if (!connection || !project_name) return
+
+        connection.start().then(async () => {
+            console.log("Connected to ProjectHub")
+
+        }).catch(error => console.log(error))
+
+        connection.on("ProjectUpdated", (updatedProject: ProjectBasic) => {
+            console.log("ProjectUpdated received:", updatedProject)
+            setProjects(prevProjects => {
+                const filtered = prevProjects.filter(p => p.projectId !== updatedProject.projectId)
+                return [...filtered, updatedProject]
+            })
+        })
+
+        connection.on("ProjectDeleted", (ids: number) => {
+            setProjects(prev => {
+                const next = prev.filter(p => p.projectId !== ids)
+                return next
+            })
+        })
+
+        return () => {
+            connection.off("ProjectUpdated")
+            connection?.off("ProjectDeleted")
+            connection?.stop()
+        }
+    }, [connection, project_name])
 
     return (
         <ProjectContext.Provider

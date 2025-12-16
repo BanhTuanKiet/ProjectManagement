@@ -66,9 +66,10 @@ namespace server.Configs
             await Clients.Caller.SendAsync("ActiveUsersInTask", usersInTask);
         }
 
-        public async static Task TaskUpdated(IHubContext<TaskHubConfig> hubContext, DTO.TaskDTO.BasicTask basicTask)
+        public async static Task TaskUpdated(IHubContext<TaskHubConfig> hubContext, DTO.TaskDTO.BasicTask basicTask, int projectId, string userId)
         {
-            await hubContext.Clients.All.SendAsync("TaskUpdated", basicTask);
+            var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
+            await hubContext.Clients.Users(recipients).SendAsync("TaskUpdated", basicTask);
         }
 
         public async static Task AddedTask(IHubContext<TaskHubConfig> hubContext, int projectId, string userId, DTO.TaskDTO.BasicTask basicTask)
@@ -76,29 +77,10 @@ namespace server.Configs
             var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
             await hubContext.Clients.All.SendAsync("AddedTask", basicTask);
         }
-
-        public async static Task DeletedTask(IHubContext<TaskHubConfig> hubContext, DTO.TaskDTO.BasicTask basicTask)
+        public static async Task DeletedTasks(IHubContext<TaskHubConfig> hubContext, int projectId, string userId, List<int> taskIds)
         {
-            await hubContext.Clients.All.SendAsync("TaskUpdated", basicTask);
-        }
-
-        public static async Task DeletedTasks(IHubContext<TaskHubConfig> hubContext, List<int> taskIds)
-        {
-            foreach (var id in taskIds)
-            {
-                var usersInTask = ActiveUsers
-                    .Where(u => u.Value.TaskId == id)
-                    .Select(u => u.Value)
-                    .ToList();
-
-                await hubContext.Clients
-                    .Group($"task-{id}")
-                    .SendAsync("TaskDeleted", id);
-
-                // await hubContext.Clients
-                //     .Group($"project-{task.ProjectId}")
-                //     .SendAsync("TaskDeletedTeam", task);
-            }
+            var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
+            await hubContext.Clients.Users(recipients).SendAsync("TasksDeleted", taskIds);
         }
     }
 }
