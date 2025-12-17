@@ -19,6 +19,7 @@ import SubtaskList from "../SubtaskList"
 import { getPriorityIcon, taskStatus } from "@/utils/statusUtils"
 import { BasicTask } from "@/utils/ITask"
 import DeleteConfirmPopover from "../DeleteConfirmPopover"
+import { useProject } from "@/app/(context)/ProjectContext";
 
 interface TableWrapperProps {
     tasks: Task[]
@@ -77,6 +78,11 @@ export default function TableWrapper({
     const [subTask, setSubTask] = useState<Task[] | null>(null)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [subtasksForDelete, setSubtasksForDelete] = useState<Record<number, Task[]>>({});
+    const { projectRole } = useProject();
+    const statuses = taskStatus(projectRole) ?? [];
+    console.log("ROLE:", projectRole, "STATUSES:", statuses);
+
+
 
 
     useEffect(() => {
@@ -310,8 +316,8 @@ export default function TableWrapper({
                     />
                 ) : (
                     <span
-                        onClick={() => setEditingCell({ taskId: task.id, field: "summary" })}
-                        className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                        onClick={() => projectRole !== 'Member' && projectRole !== 'Tester' && setEditingCell({ taskId: task.id, field: "summary" })}
+                        className={`px-1 py-0.5 rounded ${projectRole === 'Member' || projectRole === 'Tester' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}`}
                     >
                         {task.summary}
                     </span>
@@ -332,15 +338,15 @@ export default function TableWrapper({
                     />
                 ) : (
                     <span
-                        onClick={() => setEditingCell({ taskId: task.id, field: "description" })}
-                        className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                        onClick={() => projectRole !== 'Member' && projectRole !== 'Tester' && setEditingCell({ taskId: task.id, field: "description" })}
+                        className={`px-1 py-0.5 rounded ${projectRole === 'Member' || projectRole === 'Tester' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}`}
                     >
                         {task.description}
                     </span>
                 )
 
             case "status":
-                const currentStatus = taskStatus.find(
+                const currentStatus = statuses.find(
                     (s) => s.name.toLowerCase() === task.status?.toLowerCase()
                 );
 
@@ -351,6 +357,7 @@ export default function TableWrapper({
                                 id="EditList"
                                 variant="outline"
                                 size="sm"
+                                disabled={projectRole === 'Member'}
                                 className="w-full justify-between bg-transparent"
                             >
                                 <Badge
@@ -367,9 +374,10 @@ export default function TableWrapper({
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent>
-                            {taskStatus.map((s) => (
+                            {statuses.map((s) => (
                                 <DropdownMenuItem
                                     key={s.id}
+                                    disabled={projectRole === 'Member'}
                                     onClick={() => handleCellEdit(task.id, "status", s.name)}
                                 >
                                     <Badge

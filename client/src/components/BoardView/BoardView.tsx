@@ -20,11 +20,12 @@ import axios from "@/config/axiosConfig";
 import SortableTaskCard from "@/components/SortableTaskCard";
 import { useParams } from "next/navigation";
 import { BasicTask } from "@/utils/ITask";
-import { taskStatus } from "@/utils/statusUtils";
+import { taskStatus, baseTaskStatus } from "@/utils/statusUtils";
 import TaskDetailModal from "../TaskDetail/TaskDetailModal";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { Input } from "@/components/ui/input";
 import { useTask } from "@/app/(context)/TaskContext"
+import { useProject } from "@/app/(context)/ProjectContext";
 
 function DroppableColumn({
     id,
@@ -58,6 +59,9 @@ export default function BoardView({
     const { project_name } = useParams();
     const projectId = Number(project_name);
     const { tasks } = useTask();
+    const { projectRole } = useProject();
+    const statuses = taskStatus(projectRole) ?? [];
+
 
     useEffect(() => {
         if (tasks && tasks.length > 0) {
@@ -182,7 +186,7 @@ export default function BoardView({
 
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
                 <div id="boardArea" className="grid grid-cols-6 gap-4">
-                    {taskStatus.map((status) => {
+                    {baseTaskStatus.map((status) => {
                         const columnTasks = filteredTasks.filter(
                             (t) => t.status === status.name
                         );

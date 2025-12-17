@@ -18,7 +18,7 @@ import { Search, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import React, { useEffect, useState } from "react"
-import { getPriorityBadge, getRoleBadge, getTaskStatusBadge, getPriorityIcon, taskStatus } from "@/utils/statusUtils"
+import { getPriorityBadge, getRoleBadge, getTaskStatusBadge, getPriorityIcon, baseTaskStatus } from "@/utils/statusUtils"
 import ColoredAvatar from "./ColoredAvatar"
 import { capitalizeFirstLetter } from "@/utils/stringUitls"
 import type { BasicTask } from "@/utils/ITask"
@@ -173,7 +173,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
                             <span className={`flex items-center gap-2 ${getTaskStatusBadge(filters.status)}`}>
                                 <span
                                     className="w-2.5 h-2.5 rounded-full"
-                                    style={{ backgroundColor: taskStatus.find((s) => s.name === filters.status)?.color }}
+                                    style={{ backgroundColor: baseTaskStatus.find((s) => s.name === filters.status)?.color }}
                                 />
                                 {filters.status}
                             </span>
@@ -191,7 +191,7 @@ export default function TaskFilterView({ tasks, onFilterComplete }: TaskFilterVi
 
                     <DropdownMenuSeparator />
 
-                    {taskStatus.map((status) => (
+                    {baseTaskStatus.map((status) => (
                         <DropdownMenuItem
                             key={status.id}
                             className="cursor-pointer"

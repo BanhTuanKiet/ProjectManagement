@@ -18,7 +18,7 @@ public partial class ActivityLog
     public string TargetId { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
-    public string Description { get; set; } = null!;
+    public string? Description { get; set; } = null!;
 
 
     public virtual Project Project { get; set; } = null!;

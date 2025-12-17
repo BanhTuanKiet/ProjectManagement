@@ -267,7 +267,7 @@ namespace server.Controllers
             return Ok(tasks);
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/tasks/{taskId}/update")]
         public async Task<IActionResult> PatchTaskField(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -877,6 +877,18 @@ namespace server.Controllers
             if (taskTagUpdated != newTag) throw new ErrorException(400, $"Task status has been updated to {newTag}");
 
             return Ok(new { message = "Update task successful" });
+        }
+
+        [HttpGet("{projectId}/{taskId}/worklogs")]
+        public async Task<IActionResult> GetTaskWorklogs(
+            int projectId,
+            int taskId,
+            int page,
+            int pageSize
+            )
+        {
+            var result = await _tasksService.GetTaskWorklogsAsync(projectId, taskId, page, pageSize);
+            return Ok(result);
         }
     }
 }

@@ -29,7 +29,7 @@ export default function TaskDetailModal({
     );
     const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
     const { user } = useUser();
-    const { project_name } = useProject();
+    const { project_name, projectRole } = useProject();
     const projectId = Number(project_name);
 
     useEffect(() => {
@@ -162,6 +162,7 @@ export default function TaskDetailModal({
                                 task={task!}
                                 taskId={taskId}
                                 projectId={projectId}
+                                projectRole={projectRole}
                                 connection={connection}
                             />
                             <TaskDetailSidebar

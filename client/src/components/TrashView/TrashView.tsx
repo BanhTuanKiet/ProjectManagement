@@ -52,7 +52,9 @@ export default function TrashView({ projectId }: TrashViewProps) {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isLoading, setIsLoading] = useState(true);
-    const { project_name } = useProject();
+    const { project_name, projectRole } = useProject();
+    const statuses = taskStatus(projectRole) ?? [];
+
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [debouncedSearchQuery] = useDebounce(searchQuery, 500); // Debounce để tránh gọi API liên tục
@@ -119,12 +121,12 @@ export default function TrashView({ projectId }: TrashViewProps) {
                 tasksToDelete.map((taskId) => axios.delete(`/tasks/permanent/${Number(project_name)}/${taskId}`))
             );
 
-            toast.success(`Deleted ${tasksToDelete.length} tasks permanently.`);
+            // toast.success(`Deleted ${tasksToDelete.length} tasks permanently.`);
             setSelectedTasks(new Set());
             fetchDeletedTasks();
         } catch (error) {
             console.error("Failed to delete tasks permanently:", error);
-            toast.error("Failed to delete tasks. Please try again.");
+            // toast.error("Failed to delete tasks. Please try again.");
         }
     };
 
@@ -174,7 +176,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
                                             className="w-2.5 h-2.5 rounded-full"
                                             style={{
                                                 backgroundColor:
-                                                    taskStatus.find((s) => s.name === filters.Status)?.color,
+                                                    statuses.find((s) => s.name === filters.Status)?.color,
                                             }}
                                         />
                                         {filters.Status}
@@ -188,7 +190,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
                         <DropdownMenuContent className="w-44">
                             <DropdownMenuLabel>Status</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            {taskStatus.map((status) => (
+                            {statuses.map((status) => (
                                 <DropdownMenuItem
                                     key={status.id}
                                     onClick={() => setFilters((prev) => ({ ...prev, Status: status.name }))}

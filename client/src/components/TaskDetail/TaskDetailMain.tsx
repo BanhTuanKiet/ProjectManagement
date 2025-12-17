@@ -30,6 +30,7 @@ interface TaskDetailMainProps {
     task: Task;
     taskId: number;
     projectId: number;
+    projectRole: string;
     connection: signalR.HubConnection | null;
 }
 
@@ -37,10 +38,11 @@ export default function TaskDetailMain({
     task,
     taskId,
     projectId,
+    projectRole,
     connection,
 }: TaskDetailMainProps) {
     // --- STATE ---
-    const [title, setTitle] = useState(task?.title || "");
+    const [title, setTitle] = useState(task?.summary || "");
     const [editTitle, setEditTitle] = useState(false);
 
     const [description, setDescription] = useState(task?.description || "");
@@ -51,19 +53,65 @@ export default function TaskDetailMain({
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<Comment[]>([]);
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+    interface Worklog {
+        logId: number;
+        description: string;
+        createdAt: string;
+        userId?: string;
+    }
+
+    const [worklogs, setWorklogs] = useState<Worklog[]>([]);
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(10);
+    const [total, setTotal] = useState(0);
+    const [loadingWorklog, setLoadingWorklog] = useState(false);
 
     // Đồng bộ state từ props
     useEffect(() => {
         setTitle(task.summary || "");
         setDescription(task.description || "");
-    }, [task.title, task.description]);
+        fetchWorklogs(1);
+    }, [task.summary, task.description, projectId, taskId]);
+
+    const fetchWorklogs = async (pageNumber = 1) => {
+        try {
+            setLoadingWorklog(true);
+
+            const res = await axios.get(
+                `/tasks/${projectId}/${taskId}/worklogs`,
+                {
+                    params: {
+                        page: pageNumber,
+                        pageSize
+                    }
+                }
+            );
+
+            console.log("worklog: ", res.data)
+
+            const data = res.data;
+
+            if (pageNumber === 1) {
+                setWorklogs(data.items);
+            } else {
+                setWorklogs(prev => [...prev, ...data.items]);
+            }
+
+            setTotal(data.total);
+            setPage(data.page);
+        } catch (err) {
+            console.error("Fetch worklog error", err);
+        } finally {
+            setLoadingWorklog(false);
+        }
+    };
 
     // --- CORE FUNCTION: UPDATE FIELD ---
     const updateTaskField = async (key: string, value: string) => {
         try {
             // Validate cơ bản
             if (key === "title" && !value.trim()) {
-                setTitle(task?.title || ""); // Revert nếu rỗng
+                setTitle(task?.summary || ""); // Revert nếu rỗng
                 return;
             }
 
@@ -87,7 +135,7 @@ export default function TaskDetailMain({
         } catch (error) {
             console.error(`Failed to update ${key}:`, error);
             // Revert data nếu lỗi
-            if (key === "title") setTitle(task.title || "");
+            if (key === "title") setTitle(task.summary || "");
             if (key === "description") setDescription(task.description || "");
         }
     };
@@ -178,8 +226,8 @@ export default function TaskDetailMain({
                 <div>
                     {!editTitle ? (
                         <div
-                            className="text-2xl text-black-600 min-h-[60px] cursor-pointer hover:bg-gray-100 p-2 rounded"
-                            onClick={() => setEditTitle(true)}
+                            className={`text-2xl text-black-600 min-h-[60px] ${projectRole === "Member" || projectRole == "Tester" ? "cursor-not-allowed" : "cursor-pointer hover:bg-gray-100"} p-2 rounded`}
+                            onClick={() => { if (projectRole === "Member" || projectRole == "Tester") return; setEditTitle(true) }}
                         >
                             <strong>{title}</strong>
                         </div>
@@ -196,7 +244,7 @@ export default function TaskDetailMain({
                                 }
                             }}
                             className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
-                            placeholder={task.title}
+                            placeholder={task.summary}
                         />
                     )}
                 </div>
@@ -206,8 +254,8 @@ export default function TaskDetailMain({
                     <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
                     {!editDescription ? (
                         <div
-                            className="text-sm text-gray-600 bg-gray-50 p-3 rounded border min-h-[60px] cursor-pointer hover:bg-gray-100"
-                            onClick={() => setEditDescription(true)}
+                            className={`text-2xl min-h-[60px] p-2 rounded ${projectRole === "Member" || projectRole == "Tester" ? "cursor-not-allowed" : "cursor-pointer hover:bg-gray-100"}`}
+                            onClick={() => { if (projectRole === "Member" || projectRole == "Tester") return; setEditDescription(true) }}
                         >
                             {description || "Add a description..."}
                         </div>
@@ -367,20 +415,49 @@ export default function TaskDetailMain({
                             </div>
                         </TabsContent>
 
-                        <TabsContent value="history" className="mt-4">
+                        {/* <TabsContent value="history" className="mt-4">
                             <div className="text-sm text-gray-500">
                                 History items will appear here
                             </div>
+                        </TabsContent> */}
+
+                        <TabsContent value="worklog" className="mt-4 space-y-4">
+                            {worklogs.map(w => (
+                                <div key={w.logId} className="flex gap-3">
+                                    <Activity className="h-4 w-4 text-blue-500 mt-1" />
+                                    <div>
+                                        <div className="text-sm text-gray-800">
+                                            {w.description}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                            {new Date(w.createdAt).toLocaleString()}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {worklogs.length < total && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    disabled={loadingWorklog}
+                                    onClick={() => fetchWorklogs(page + 1)}
+                                >
+                                    {loadingWorklog ? "Loading..." : "Load more"}
+                                </Button>
+                            )}
+
+                            {worklogs.length === 0 && !loadingWorklog && (
+                                <div className="text-sm text-gray-500">
+                                    No work logs yet
+                                </div>
+                            )}
                         </TabsContent>
 
-                        <TabsContent value="worklog" className="mt-4">
-                            <div className="text-sm text-gray-500">
-                                Work log entries will appear here
-                            </div>
-                        </TabsContent>
                     </Tabs>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

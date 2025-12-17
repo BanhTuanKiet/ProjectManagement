@@ -358,10 +358,11 @@ namespace server.Services.Project
 
             if (tasks.Count == 0) return 0;
 
+            var count = tasks.Count;
             _context.Tasks.RemoveRange(tasks);
             await _context.SaveChangesAsync();
 
-            return tasks.Count; // trả về số lượng đã xoá
+            return count; // trả về số lượng đã xoá
         }
 
         public async Task<Models.Task> GetTaskById(int taskId)
@@ -1056,5 +1057,39 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return task.Status;
         }
+
+        public async Task<WorklogDTO.PagedResult<WorklogDTO.TaskWorklogDTO>> GetTaskWorklogsAsync( int projectId, int taskId, int page, int pageSize)
+        {
+            var query = _context.ActivityLogs
+                .Where(log =>
+                    log.ProjectId == projectId &&
+                    (log.TargetType == "TASK" || log.TargetType == "Task" || log.TargetType == "File") &&
+                    log.TargetId == taskId.ToString()
+                );
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(log => log.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(log => new WorklogDTO.TaskWorklogDTO
+                {
+                    LogId = log.LogId,
+                    Description = log.Description ?? log.Action,
+                    CreatedAt = log.CreatedAt,
+                    UserId = log.UserId
+                })
+                .ToListAsync();
+
+            return new WorklogDTO.PagedResult<WorklogDTO.TaskWorklogDTO>
+            {
+                Items = items,
+                Total = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
     }
 }

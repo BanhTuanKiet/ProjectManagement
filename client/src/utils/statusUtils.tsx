@@ -1,6 +1,12 @@
 import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag, Github, Linkedin, Facebook, LinkIcon } from "lucide-react"
 
-export const taskStatus = [
+export type TaskStatus = {
+    id: number;
+    name: string;
+    color: string;
+};
+
+export const baseTaskStatus: TaskStatus[] = [
     { id: 1, name: 'Todo', color: '#3B82F6' },      // gray
     { id: 2, name: 'In Progress', color: '#FACC15' }, // yellow
     { id: 3, name: 'Done', color: '#10B981' },       // green
@@ -8,6 +14,31 @@ export const taskStatus = [
     { id: 5, name: 'Expired', color: '#B2BEB5' },    // gray
     { id: 6, name: 'Bug', color: '#EF4444' },        // red
 ]
+export const taskStatus = (projectRole: string): TaskStatus[] => {
+    switch (projectRole) {
+        case 'Project Manager':
+            return baseTaskStatus;
+
+        case 'Leader':
+            return baseTaskStatus.filter((s) =>
+                ['Todo', 'In Progress', 'Done', 'Bug'].includes(s.name)
+            );
+
+        case 'Tester':
+            return baseTaskStatus.filter((s) =>
+                ['Bug', 'In Progress', 'Done'].includes(s.name)
+            );
+
+        case 'Member':
+            return baseTaskStatus.filter((s) =>
+                ['Bug', 'Done', 'Todo', 'In Progress'].includes(s.name)
+            );
+
+        default:
+            return baseTaskStatus;
+    }
+};
+
 
 export const getBorderColor = (status: string) => {
     switch (status) {

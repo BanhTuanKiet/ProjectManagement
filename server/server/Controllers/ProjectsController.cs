@@ -100,7 +100,7 @@ namespace server.Controllers
         }
 
         [HttpPost("inviteMember/{projectId}")]
-        // [Authorize(Policy = "MemberLimitRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         public async Task<ActionResult> InviteMemberToProject([FromBody] UserDTO.InvitePeopleForm invitePeopleForm, int projectId)
         {
             var inviterName = User.FindFirst(ClaimTypes.Name)?.Value;
