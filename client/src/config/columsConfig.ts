@@ -1,6 +1,19 @@
-// src/constants/columnsConfig.ts
+import { Task } from "@/utils/mapperUtil";
+
+// Các key đặc biệt không nằm trong Task
+type ExtraColumnKey =
+  | "select"
+  | "key"
+  | "assignee"
+  | "priority"
+  | "reporter"
+  | "type";
+
+// Ghép với key trong Task
+export type ColumnKey = keyof Task | ExtraColumnKey;
+
 export interface Column {
-  key: string;
+  key: ColumnKey;
   title: string;
   width: number;
   minWidth: number;

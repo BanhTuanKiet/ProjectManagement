@@ -28,6 +28,7 @@ namespace server.Controllers
         private readonly INotifications _notificationsService;
         private readonly IMapper _mapper;
         private readonly IHubContext<NotificationHub> _notificationHubContext;
+        private readonly IHubContext<ProjectHubConfig> _projectHubContext;
 
         public ProjectsController(
             IProjects projectsServices,
@@ -37,7 +38,8 @@ namespace server.Controllers
             INotifications notificationsService,
             IMapper mapper,
             ITeams teams,
-            IHubContext<NotificationHub> notificationHubContext)
+            IHubContext<NotificationHub> notificationHubContext,
+            IHubContext<ProjectHubConfig> projectHubContext)
         {
             _projectsServices = projectsServices;
             _userManager = userManager;
@@ -47,6 +49,7 @@ namespace server.Controllers
             _mapper = mapper;
             _teamServices = teams;
             _notificationHubContext = notificationHubContext;
+            _projectHubContext = projectHubContext;
         }
 
         [HttpGet()]
@@ -234,7 +237,9 @@ namespace server.Controllers
                     };
                     await _notificationsService.SaveNotification(notification);
                     var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+                    var basicProject = _mapper.Map<ProjectDTO.ProjectBasic>(updatedProject);
                     await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
+                    await ProjectHubConfig.ProjectUpdated(_projectHubContext, basicProject, projectId, userId);
                 }
             }
 
@@ -296,6 +301,7 @@ namespace server.Controllers
 
             var projects = await _projectsServices.GetProjects(userId);
             var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+            await ProjectHubConfig.DeletedProject(_projectHubContext, projectId, userId);
             await NotificationHub.SendNotificationProject(_notificationHubContext, projectId, userId, notificationDto);
             return Ok(new { data = projects, message = "Delete project successfull!" });
         }

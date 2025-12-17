@@ -193,6 +193,37 @@ export default function TableWrapper({
         </div>
     )
 
+    const getDisplayValue = (task: Task, key: string) => {
+        const value = task[key as keyof Task];
+
+        if (value == null) return "-";
+
+        if (typeof value === "string" || typeof value === "number") return value;
+
+        if (typeof value === "boolean") return value ? "True" : "False";
+
+        // Nếu là object UserMini
+        if (key === "assignee" || key === "reporter") {
+            if (typeof value === "object" && !Array.isArray(value) && "name" in value) {
+                return value.name ?? "-";
+            }
+            return "-";
+        }
+
+        // Nếu là BasicTask (1 task con)
+        if (typeof value === "object" && !Array.isArray(value) && "title" in value) {
+            return value.title ?? "-";
+        }
+
+        // Nếu là array (Task[])
+        if (Array.isArray(value)) {
+            return `${value.length} items`;
+        }
+
+        return "-";
+    };
+
+
     // ----- Render Cell -----
     const renderCell = (task: Task, col: Column) => {
         const isEditing = editingCell?.taskId === task.id && editingCell?.field === col.key
@@ -486,7 +517,7 @@ export default function TableWrapper({
                 return isEditing ? (
                     <Input
                         id="EditList"
-                        defaultValue={task[col.key] || ""}
+                        defaultValue={String(task[col.key as keyof Task] ?? "")}
                         onBlur={(e) => handleCellEdit(task.id, col.key, e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") handleCellEdit(task.id, col.key, e.currentTarget.value)
@@ -500,9 +531,9 @@ export default function TableWrapper({
                         onClick={() => setEditingCell({ taskId: task.id, field: col.key })}
                         className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded text-gray-600"
                     >
-                        {task[col.key] || "-"}
+                        {getDisplayValue(task, col.key)}
                     </span>
-                )
+                );
         }
     }
 

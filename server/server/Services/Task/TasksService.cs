@@ -178,7 +178,12 @@ namespace server.Services.Project
 
         //     return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         // }
-        public async Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId, string role)
+        public async Task<TaskDTO.BasicTask?> PatchTaskField(
+            int projectId,
+            int taskId,
+            Dictionary<string, object> updates,
+            string userId,
+            string role)
         {
             var task = await _context.Tasks
                 .Include(t => t.Assignee)
@@ -189,44 +194,37 @@ namespace server.Services.Project
 
             bool isPM = role == "Project Manager";
             bool isLeader = role == "Leader";
+            bool isTester = role == "Tester";
             bool isManager = isPM || isLeader;
 
-            // Danh sách các trường cấm Member sửa (trừ assigneeid sẽ check riêng)
+            // Các field chỉ PM / Leader được sửa
             var restrictedFields = new HashSet<string>
             {
-                "priority", "deadline", "sprintid", "backlogid", "estimatehours", "status", "title", "description"
+                "title",
+                "description",
+                "priority",
+                "deadline",
+                "estimatehours",
+                "sprintid",
+                "backlogid"
             };
 
             foreach (var kvp in updates)
             {
                 string key = kvp.Key.ToLower();
 
-                // --- CHECK CÁC TRƯỜNG KHÁC ---
-                if (restrictedFields.Contains(key))
-                {
-                    if (!isManager)
-                    {
-                        throw new ErrorException(403, $"Only PM or Leader can update '{key}'.");
-                    }
-                }
-
-                // --- LOGIC RIÊNG CHO ASSIGNEE (Giao việc) ---
+                // ================== ASSIGNEE ==================
                 if (key == "assigneeid")
                 {
-                    // Member không được phép assign task
                     if (!isManager)
-                    {
                         throw new ErrorException(403, "Only PM or Leader can assign task.");
-                    }
 
                     string? targetUserId = kvp.Value?.ToString();
 
-                    // Nếu targetUserId không null (tức là đang gán cho ai đó)
                     if (!string.IsNullOrEmpty(targetUserId))
                     {
                         if (isPM)
                         {
-                            // Logic PM: Chỉ cần người được gán thuộc Project
                             bool isInProject = await _context.ProjectMembers
                                 .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == targetUserId);
 
@@ -235,30 +233,67 @@ namespace server.Services.Project
                         }
                         else if (isLeader)
                         {
-                            // Logic Leader: Phải tìm Team của Leader này trước
                             var team = await _context.Teams
                                 .AsNoTracking()
-                                .FirstOrDefaultAsync(t => t.LeaderId == userId && t.ProjectId == projectId);
+                                .FirstOrDefaultAsync(t =>
+                                    t.LeaderId == userId && t.ProjectId == projectId);
 
-                            // if (team == null)
-                            //     throw new ErrorException(400, "Bạn là Leader nhưng chưa được gán quản lý Team nào.");
-                            // Kiểm tra người được gán có thuộc Team này không
+                            if (team == null)
+                                throw new ErrorException(403, "Leader chưa được gán team.");
+
                             bool isInTeam = await _context.TeamMembers
                                 .AnyAsync(tm => tm.TeamId == team.Id && tm.UserId == targetUserId);
 
                             if (!isInTeam && targetUserId != userId)
-                            {
-                                throw new ErrorException(403, "Leaders can only assign tasks to members in their team.");
-                            }
+                                throw new ErrorException(
+                                    403,
+                                    "Leader can only assign tasks to members in their team.");
                         }
                     }
 
-                    // Gán giá trị và continue để không chạy vào switch bên dưới
                     task.AssigneeId = targetUserId;
                     continue;
                 }
 
-                // --- SWITCH UPDATE GIÁ TRỊ ---
+                // ================== STATUS ==================
+                if (key == "status")
+                {
+                    string? newStatus = kvp.Value?.ToString();
+
+                    if (string.IsNullOrEmpty(newStatus))
+                        throw new ErrorException(400, "Status is invalid.");
+
+                    if (isManager)
+                    {
+                        task.Status = newStatus;
+                        continue;
+                    }
+
+                    if (isTester)
+                    {
+                        if (newStatus != "Bug" && newStatus != "In Progress" && newStatus != "Done")
+                        {
+                            throw new ErrorException(
+                                403,
+                                "Tester can only update status to 'Bug' or 'In Progress' or 'Done'.");
+                        }
+
+                        task.Status = newStatus;
+                        continue;
+                    }
+
+                    throw new ErrorException(403, "You do not have permission to update status.");
+                }
+
+                // ================== OTHER FIELDS ==================
+                if (restrictedFields.Contains(key))
+                {
+                    if (!isManager)
+                        throw new ErrorException(
+                            403,
+                            $"Only PM or Leader can update '{key}'.");
+                }
+
                 switch (key)
                 {
                     case "title":
@@ -267,10 +302,6 @@ namespace server.Services.Project
 
                     case "description":
                         task.Description = kvp.Value?.ToString();
-                        break;
-
-                    case "status":
-                        task.Status = kvp.Value?.ToString();
                         break;
 
                     case "priority":
@@ -303,10 +334,12 @@ namespace server.Services.Project
             }
 
             await _context.SaveChangesAsync();
-            if (updates.Keys.Any(k => k.ToLower() == "assigneeid"))
+
+            if (updates.Keys.Any(k => k.Equals("assigneeid", StringComparison.OrdinalIgnoreCase)))
             {
                 await _context.Entry(task).Reference(t => t.Assignee).LoadAsync();
             }
+
             return _mapper.Map<TaskDTO.BasicTask>(task);
         }
 
@@ -314,6 +347,7 @@ namespace server.Services.Project
         {
             await _context.Tasks.AddAsync(newTask);
             await _context.SaveChangesAsync();
+            await _context.Entry(newTask).Reference(t => t.Assignee).LoadAsync();
             return newTask;
         }
 
@@ -338,7 +372,9 @@ namespace server.Services.Project
 
         public async Task<Models.Task?> UpdateTaskStatus(int taskId, string newStatus)
         {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            var task = await _context.Tasks
+                .Include(t => t.Assignee)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
             if (task == null)
                 return null;
@@ -352,7 +388,9 @@ namespace server.Services.Project
 
         public async Task<Models.Task?> UpdateTask(int taskId, TaskDTO.UpdateTask updatedData)
         {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == taskId);
+            var task = await _context.Tasks
+                .Include(t => t.Assignee)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
             if (task == null)
                 return null;

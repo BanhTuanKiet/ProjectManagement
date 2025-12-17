@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
-import { Calendar, AlertTriangle, Clock } from "lucide-react"
-import axios from '@/config/axiosConfig'
+import { useEffect, useState } from "react"
+import { Calendar } from "lucide-react"
 import { useProject } from "@/app/(context)/ProjectContext"
 import type { ProjectBasic } from "@/utils/IProject"
 import { formatDate } from "@/utils/dateUtils"
@@ -11,7 +10,6 @@ import type { BasicTask } from "@/utils/ITask"
 import Overview from "./Overview"
 import ChartView from "./ChartView"
 import MemberList from "../MemberList"
-import TaskSupport from "../TaskSupport"
 import MoreHorizontalDropdown from '@/components/MorehorizonalDropdown'
 
 export default function Summary() {
@@ -19,12 +17,6 @@ export default function Summary() {
     const [project, setProject] = useState<ProjectBasic | undefined>()
     const { tasks } = useTask()
     const [mockTasks, setMockTasks] = useState<BasicTask[]>([])
-
-    const [nearTasks, setNearTasks] = useState<BasicTask[]>([])
-    const [isLoadingCritical, setIsLoadingCritical] = useState(false)
-
-    const [isSupportOpen, setIsSupportOpen] = useState(false)
-    const [selectedTask, setSelectedTask] = useState<BasicTask | null>(null)
 
     useEffect(() => {
         if (project_name) {
@@ -39,49 +31,10 @@ export default function Summary() {
         }
     }, [project, tasks])
 
-    const fetchCriticalTasks = async (projectId: number) => {
-        setIsLoadingCritical(true)
-        try {
-            const response = await axios.get(`/tasks/near-deadline/${projectId}`)
-            setNearTasks(response.data)
-        } catch (error) {
-            console.error("Lỗi khi tải task gần hết hạn:", error)
-            setNearTasks([])
-        } finally {
-            setIsLoadingCritical(false)
-        }
-    }
-
-    useEffect(() => {
-        if (project_name) {
-            const projectIdNumber = Number(project_name)
-            if (!isNaN(projectIdNumber)) {
-                fetchCriticalTasks(projectIdNumber)
-            }
-        }
-    }, [project_name])
 
     const totalTasks = mockTasks.length ?? 0
     const doneTasks = mockTasks.filter((t) => t.status.toLocaleLowerCase() === "done").length
     const overallProgress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0
-
-    const { expiredTasks, nearDeadlineTasks } = useMemo(() => {
-        const now = new Date().getTime()
-
-        const deadlineTasks = nearTasks.filter(t => t.deadline)
-
-        const expired = deadlineTasks.filter(t => new Date(t.deadline).getTime() < now)
-
-        const near = deadlineTasks.filter(t => new Date(t.deadline).getTime() >= now)
-
-        return { expiredTasks: expired, nearDeadlineTasks: near }
-    }, [nearTasks])
-
-
-    const handleOpenSupport = (task: BasicTask) => {
-        setSelectedTask(task)
-        setIsSupportOpen(true)
-    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-0 bg-dynamic">
@@ -137,125 +90,7 @@ export default function Summary() {
                         <ChartView projectId={project_name} />
                     </div>
                 )}
-
-                {(isLoadingCritical || expiredTasks.length > 0 || nearDeadlineTasks.length > 0) && (
-                    <div id="criticalTasks" className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <AlertTriangle size={20} className="text-red-500" />
-                            Critical Tasks
-                        </h2>
-
-                        {isLoadingCritical && (
-                            <div className="text-center text-gray-500 py-4">
-                                Loading critical tasks...
-                            </div>
-                        )}
-
-                        {!isLoadingCritical && expiredTasks.length === 0 && nearDeadlineTasks.length === 0 && (
-                            <div className="text-center text-gray-500 py-4 border-t">
-                                There are no expired or near-deadline tasks.
-                            </div>
-                        )}
-
-                        {!isLoadingCritical && (
-                            <div
-                                className={`grid gap-4 ${expiredTasks.length > 0 && nearDeadlineTasks.length > 0
-                                    ? "grid-cols-1 md:grid-cols-2"
-                                    : "grid-cols-1"
-                                    }`}
-                            >
-
-                                {expiredTasks.length > 0 && (
-                                    <div className="border border-red-300 bg-red-50 p-4 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-red-700 mb-3 flex items-center gap-2">
-                                            <Clock size={18} /> Expired Tasks ({expiredTasks.length})
-                                        </h3>
-
-                                        <div className="max-h-64 overflow-y-auto pr-2">
-                                            <ul className="space-y-3">
-                                                {expiredTasks.map((t) => (
-                                                    <li
-                                                        key={t.taskId}
-                                                        className="grid grid-cols-[2fr_1fr_1fr_auto] items-center gap-4 text-sm"
-                                                    >
-                                                        <span className="font-semibold truncate">{t.title}</span>
-
-                                                        <span className="text-gray-600 truncate">
-                                                            {t.assignee ?? "N/A"}
-                                                        </span>
-
-                                                        <span className="font-medium">
-                                                            {t.deadline ? new Date(t.deadline).toLocaleDateString() : "N/A"}
-                                                        </span>
-
-                                                        <button
-                                                            onClick={() => handleOpenSupport(t)}
-                                                            className="px-3 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700 transition"
-                                                        >
-                                                            Support
-                                                        </button>
-                                                    </li>
-
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {nearDeadlineTasks.length > 0 && (
-                                    <div className="border border-yellow-300 bg-yellow-50 p-4 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
-                                            <AlertTriangle size={18} /> Near Deadline ({nearDeadlineTasks.length})
-                                        </h3>
-
-                                        <div className="max-h-64 overflow-y-auto pr-2">
-                                            <ul className="space-y-3">
-                                                {nearDeadlineTasks.map((t) => (
-                                                    <li
-                                                        key={t.taskId}
-                                                        className="grid grid-cols-[2fr_1fr_1fr_auto] items-center gap-4 text-sm text-yellow-800"
-                                                    >
-                                                        <span className="font-semibold truncate">
-                                                            {t.title}
-                                                        </span>
-
-                                                        <span className="truncate">
-                                                            {t.assignee ?? "N/A"}
-                                                        </span>
-
-                                                        <span>
-                                                            {t.deadline
-                                                                ? new Date(t.deadline).toLocaleDateString()
-                                                                : "N/A"}
-                                                        </span>
-
-                                                        <button
-                                                            onClick={() => handleOpenSupport(t)}
-                                                            className="px-3 py-1 bg-yellow-600 text-white rounded-md text-xs hover:bg-yellow-700 transition"
-                                                        >
-                                                            Support
-                                                        </button>
-                                                    </li>
-
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                )}
-
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
-
-            <TaskSupport
-                open={isSupportOpen}
-                onClose={() => setIsSupportOpen(false)}
-                projectId={project_name ?? ""}
-                task={selectedTask}
-            />
         </div>
     )
 }

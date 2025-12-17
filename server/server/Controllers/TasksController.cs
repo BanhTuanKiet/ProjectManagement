@@ -119,6 +119,10 @@ namespace server.Controllers
                     // 3. Lấy task của toàn bộ member trong team
                     tasks = await _tasksService.GetTasksByUserList(projectId, members);
                     break;
+                case "Tester":
+                    var testTasks = await _tasksService.GetBasicTasksById(projectId);
+                    tasks = testTasks.Where(t => t.Status == "In Progress" || t.Status == "Bug").ToList();
+                    break;
 
                 case "Member":
                     // Member -> xem task của chính mình
@@ -272,7 +276,7 @@ namespace server.Controllers
             var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
             if (projectMember == null)
-                 throw new ErrorException(400, "You are not a member of this project");
+                throw new ErrorException(400, "You are not a member of this project");
 
             string role = projectMember.RoleInProject;
 
@@ -323,6 +327,8 @@ namespace server.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var name = User.FindFirst(ClaimTypes.Name)?.Value;
 
+            int projectId = dto.ProjectId;
+
             if (dto.Ids == null || !dto.Ids.Any())
             {
                 return BadRequest(new { message = "No IDs provided." });
@@ -351,7 +357,7 @@ namespace server.Controllers
                         Type = "task"
                     };
                     await _notificationsService.SaveNotification(notification);
-                    await TaskHubConfig.DeletedTasks(_taskHubContext, dto.Ids);
+                    await TaskHubConfig.DeletedTasks(_taskHubContext, projectId, userId, dto.Ids);
                     var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
                     await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, dto.ProjectId, userId, notificationDto);
                 }
@@ -364,7 +370,7 @@ namespace server.Controllers
             });
         }
         //sao co toi 2 ham update status
-        [Authorize(Policy = "PMOrLeaderRequirement")]
+        // [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPut("{projectId}/{taskId}")]
         public async Task<ActionResult> UpdateStatusTask(int projectId, int taskId, [FromBody] Dictionary<string, object> updates)
         {
@@ -413,7 +419,7 @@ namespace server.Controllers
 
             await _notificationsService.SaveNotification(notification);
             var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
-            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask, projectId, userId);
             await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
             return Ok(new { message = "Update task successful!" });
@@ -514,7 +520,7 @@ namespace server.Controllers
             var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
             Models.Task updatedTask = await _tasksService.UpdateTask(taskId, updates);
             TaskDTO.BasicTask basicTask = _mapper.Map<TaskDTO.BasicTask>(updatedTask);
-            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask, projectId, userId);
 
             await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
@@ -563,7 +569,7 @@ namespace server.Controllers
 
                 await _notificationsService.SaveNotification(notification);
                 var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
-                await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask);
+                await TaskHubConfig.TaskUpdated(_taskHubContext, basicTask, projectId, userId);
                 await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
                 return Ok(new { message = "Restore successful", task = restoredTask });
@@ -623,7 +629,7 @@ namespace server.Controllers
                     // Gửi realtime thông báo
                     await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
                 }
-                return Ok(new { message = "Permanently deleted successfully", task = historyTask, rowsAffected } );
+                return Ok(new { message = "Permanently deleted successfully", task = historyTask, rowsAffected });
             }
             catch (Exception ex)
             {
@@ -738,7 +744,7 @@ namespace server.Controllers
             return Ok(result);
         }
 
-        // [Authorize(Policy = "PMOrLeaderRequirement")]
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("quick-create/{projectId}")]
         public async Task<ActionResult> QuickCreateTask([FromBody] TaskDTO.QuickCreate dto, int projectId)
         {
@@ -780,6 +786,17 @@ namespace server.Controllers
         {
             try
             {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+
+                if (projectMember == null)
+                    return Unauthorized(new { message = "You are not a member of this project" });
+
+                string role = projectMember.RoleInProject;
+                if(role != "Project Manager")
+                {
+                    throw new ErrorException(403,"Only project manager to this projet can perform this operation!");
+                }
                 var newStatus = await _tasksService.ToggleTaskStatus(taskId, projectId);
                 return Ok(new { message = "Success", isActive = newStatus });
             }

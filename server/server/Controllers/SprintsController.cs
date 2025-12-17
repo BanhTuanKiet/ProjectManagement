@@ -37,20 +37,21 @@ namespace server.Controllers
             return Ok(sprint);
         }
 
+        [Authorize(Policy = "PMOrLeaderRequirement")]
         [HttpPost("{projectId}")]
         public async Task<IActionResult> Create(int projectId, [FromBody] SprintDTO.Create dto)
         {
-            if (dto.EndDate < dto.StartDate)
-            {
-                ModelState.AddModelError("EndDate", "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
-                return BadRequest(ModelState);
-            }
+            // if (dto.EndDate < dto.StartDate)
+            // {
+            //     ModelState.AddModelError("EndDate", "The end date cannot be earlier than the start date.");
+            //     return BadRequest(ModelState);
+            // }
+
             var sprint = await _service.Create(projectId, dto);
 
             if (sprint == null)
                 throw new ErrorException(400, "Failed to create sprint");
-
-            return Ok(sprint);
+            return Ok(new { message = "Created successfully", sprint });
         }
 
         [HttpPut("{sprintId}")]
@@ -79,6 +80,7 @@ namespace server.Controllers
         public async Task<IActionResult> DeleteSprintBulk(int projectId, [FromBody] List<int> sprintIds)
         {
             Console.WriteLine($"Received sprint IDs for bulk delete: {string.Join(", ", sprintIds)}");
+
             var result = await _service.DeleteBulk(projectId, sprintIds);
 
             if (result == 0)
