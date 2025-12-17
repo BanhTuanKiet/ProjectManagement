@@ -19,7 +19,7 @@ namespace server.Services.Task
 
         Task<List<TaskDTO.BasicTask>> GetAllBasicTasks();
         // Task<List<TaskDTO.BasicTask>> UpdateBasicTasksById(List<TaskDTO.BasicTask> updatedTasks, int projectId);
-        Task<TaskDTO.BasicTask?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId, string role);
+        Task<TaskDTO.TaskPatchResult?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId, string role);
 
         Task<Models.Task> AddNewTask(Models.Task newTask);
 

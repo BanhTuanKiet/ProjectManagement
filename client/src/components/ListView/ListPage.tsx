@@ -22,7 +22,8 @@ import axios from "@/config/axiosConfig";
 import { mapApiTaskToTask } from "@/utils/mapperUtil";
 import ColoredAvatar from "../ColoredAvatar";
 import { useProject } from "@/app/(context)/ProjectContext";
-import { getTaskStatusBadge, getPriorityBadge, taskStatus, getRoleBadge } from "@/utils/statusUtils";
+import { useTask } from "@/app/(context)/TaskContext"
+import { getTaskStatusBadge, getPriorityBadge, taskStatus, getRoleBadge, baseTaskStatus } from "@/utils/statusUtils";
 import { capitalizeFirstLetter } from "@/utils/stringUitls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -39,8 +40,11 @@ export default function ListPage({
 }:
     ListPageProps
 ) {
+    const { tasks } = useTask();
+    const mappedTasks: Task[] = tasks.map((t) => mapApiTaskToTask(t));
+    const currentTasks = tasks.length > 0 ? tasks : tasksNormal;
+
     const {
-        tasks,
         columns,
         selectedTasks,
         searchQuery,
@@ -63,7 +67,7 @@ export default function ListPage({
         addTask,
         copySelectedTasks,
         deleteSelectedTasks,
-    } = useTaskTable(tasksNormal);
+    } = useTaskTable(currentTasks);
 
     const [isCreating, setIsCreating] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -177,7 +181,7 @@ export default function ListPage({
                         <DropdownMenuContent className="w-44">
                             <DropdownMenuLabel>Status</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            {statuses.map((status) => (
+                            {baseTaskStatus.map((status) => (
                                 <DropdownMenuItem
                                     key={status.id}
                                     onClick={() => setFilters((prev) => ({ ...prev, Status: status.name }))}
@@ -317,7 +321,7 @@ export default function ListPage({
             <div id="descriptTaskList" className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex-1 overflow-auto">
                     <TableWrapper
-                        tasks={tasks}
+                        tasks={mappedTasks}
                         projectId={Number(projectId)}
                         columns={columns}
                         totalWidth={totalWidth}

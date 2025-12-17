@@ -129,5 +129,12 @@ namespace server.DTO
             public string AssigneeId { get; set; } = string.Empty;
             public string Assignee { get; set; } = string.Empty;
         }
+
+        public class TaskPatchResult
+        {
+            public TaskDTO.BasicTask Task { get; set; } = null!;
+            public string ChangeSummary { get; set; } = string.Empty;
+        }
+
     }
 }

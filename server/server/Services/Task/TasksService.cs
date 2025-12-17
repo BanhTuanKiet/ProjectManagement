@@ -18,12 +18,14 @@ namespace server.Services.Project
         public readonly ProjectManagementContext _context;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly ISprints _sprints;
 
-        public TaskServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration)
+        public TaskServices(ProjectManagementContext context, IMapper mapper, IConfiguration configuration, ISprints sprints)
         {
             _context = context;
             _mapper = mapper;
             _configuration = configuration;
+            _sprints = sprints;
         }
 
         public async Task<List<TaskDTO.BasicTask>> GetTaskByUserId(string userId, int projectId)
@@ -178,17 +180,16 @@ namespace server.Services.Project
 
         //     return _mapper.Map<List<TaskDTO.BasicTask>>(tasks);
         // }
-        public async Task<TaskDTO.BasicTask?> PatchTaskField(
-            int projectId,
-            int taskId,
-            Dictionary<string, object> updates,
-            string userId,
-            string role)
+        public async Task<TaskDTO.TaskPatchResult?> PatchTaskField(int projectId, int taskId, Dictionary<string, object> updates, string userId, string role)
         {
             var task = await _context.Tasks
                 .Include(t => t.Assignee)
+                .Include(t => t.Sprint)
                 .Include(t => t.CreatedByNavigation)
                 .FirstOrDefaultAsync(t => t.TaskId == taskId && t.ProjectId == projectId);
+
+            string changeSummary = $"Task #{taskId}: ";
+            bool hasChanges = false;
 
             if (task == null) return null;
 
@@ -297,31 +298,74 @@ namespace server.Services.Project
                 switch (key)
                 {
                     case "title":
-                        task.Title = kvp.Value?.ToString();
+
+                        string? newTitle = kvp.Value?.ToString();
+
+                        if (task.Title != newTitle)
+                        {
+                            string oldTitle = task.Title ?? "";
+                            task.Title = newTitle;
+                            changeSummary += $"Title changed from '{oldTitle}' to '{newTitle}'; ";
+                            hasChanges = true;
+                        }
                         break;
 
                     case "description":
+                        string oldDesscription = task.Description.ToString();
+
                         task.Description = kvp.Value?.ToString();
+                        changeSummary += $"description changed from '{oldDesscription}' to '{task.Description}'; ";
+                        hasChanges = true;
                         break;
 
                     case "priority":
+                        string oldP = task.Priority.ToString();
+
                         if (byte.TryParse(kvp.Value?.ToString(), out var prio))
                             task.Priority = prio;
+
+                        string newP = prio.ToString();
+                        changeSummary += $"Priority changed from '{oldP}' to '{newP}'; ";
+                        hasChanges = true;
                         break;
 
                     case "deadline":
+                        string oldDeadline = task.Deadline.ToString();
+
                         if (DateTime.TryParse(kvp.Value?.ToString(), out var date))
                             task.Deadline = date;
+                        changeSummary += $"deadline changed from '{oldDeadline}' to '{task.Deadline}'; ";
                         break;
 
                     case "estimatehours":
+
+                        string oldEstimatehours = task.EstimateHours.ToString();
+
                         if (decimal.TryParse(kvp.Value?.ToString(), out var hrs))
                             task.EstimateHours = hrs;
+                        changeSummary += $"estimatehours changed from '{oldEstimatehours}' to '{task.EstimateHours}'; ";
                         break;
 
                     case "sprintid":
                         if (int.TryParse(kvp.Value?.ToString(), out var sprintId))
-                            task.SprintId = sprintId == -1 ? null : sprintId;
+                        {
+                            var oldSprintName = await _sprints.GetById(task.SprintId ?? 0);
+
+                            if (sprintId == -1)
+                            {
+                                task.SprintId = null;
+                                changeSummary += $"I've moved from sprint '{oldSprintName?.Name}' to backlog ";
+                                hasChanges = true;
+                            }
+                            else
+                            {
+                                task.SprintId = sprintId;
+
+                                var newSprintName = await _sprints.GetById(task.SprintId ?? 0);
+                                changeSummary += $"I've moved from sprint '{oldSprintName?.Name}' to '{newSprintName?.Name}' ";
+                                hasChanges = true;
+                            }
+                        }
                         else
                             task.SprintId = null;
                         break;
@@ -334,13 +378,18 @@ namespace server.Services.Project
             }
 
             await _context.SaveChangesAsync();
+            changeSummary = hasChanges ? changeSummary.TrimEnd(' ', ';') : $"Task #{taskId} updated";
 
             if (updates.Keys.Any(k => k.Equals("assigneeid", StringComparison.OrdinalIgnoreCase)))
             {
                 await _context.Entry(task).Reference(t => t.Assignee).LoadAsync();
             }
 
-            return _mapper.Map<TaskDTO.BasicTask>(task);
+            return new TaskDTO.TaskPatchResult
+            {
+                Task = _mapper.Map<TaskDTO.BasicTask>(task),
+                ChangeSummary = changeSummary
+            };
         }
 
         public async Task<Models.Task> AddNewTask(Models.Task newTask)
@@ -1063,7 +1112,7 @@ namespace server.Services.Project
             return task.Status;
         }
 
-        public async Task<WorklogDTO.PagedResult<WorklogDTO.TaskWorklogDTO>> GetTaskWorklogsAsync( int projectId, int taskId, int page, int pageSize)
+        public async Task<WorklogDTO.PagedResult<WorklogDTO.TaskWorklogDTO>> GetTaskWorklogsAsync(int projectId, int taskId, int page, int pageSize)
         {
             var query = _context.ActivityLogs
                 .Where(log =>
@@ -1095,6 +1144,5 @@ namespace server.Services.Project
                 PageSize = pageSize
             };
         }
-
     }
 }

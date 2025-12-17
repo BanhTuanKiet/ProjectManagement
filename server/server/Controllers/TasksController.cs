@@ -285,18 +285,34 @@ namespace server.Controllers
 
             var result = await _tasksService.PatchTaskField(projectId, taskId, updates, userId, role)
                 ?? throw new ErrorException(404, "Task not found");
+            Notification notification = new Notification
+            {
+                UserId = result.Task.AssigneeId, // Lấy từ biến đã lưu
+                ProjectId = projectId,
+                Message = $"Update Task #{result.ChangeSummary} was updated by {name}",
+                Link = $"tasks={result.Task.TaskId}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedId = userId,
+                Type = "task"
+            };
+
+            await _notificationsService.SaveNotification(notification);
+            var notificationDto = _mapper.Map<NotificationDTO.NotificationBasic>(notification);
+            await TaskHubConfig.TaskUpdated(_taskHubContext, result.Task, projectId, userId);
+            await NotificationHub.SendNotificationToAllExcept(_notificationHubContext, projectId, userId, notificationDto);
 
             var logGenerators = new Dictionary<string, Func<string>>
             {
-                ["title"] = () => $"User {name} updated task #{taskId} with title: '{result.Title}' in project #{projectId}",
-                ["description"] = () => $"User {name} updated task #{taskId} with description: '{result.Description}' in project #{projectId}",
-                ["status"] = () => $"User {name} updated status of task #{taskId} to '{result.Status}' in project #{projectId}",
-                ["priority"] = () => $"User {name} updated priority of task #{taskId} to '{result.Priority}' in project #{projectId}",
-                ["assigneeid"] = () => $"User {name} changed assignee of task #{taskId} to '{result.AssigneeId}' in project #{projectId}",
-                ["deadline"] = () => $"User {name} updated deadline of task #{taskId} to '{result.Deadline}'",
-                ["estimatehours"] = () => $"User {name} updated estimated hours of task #{taskId} to '{result.EstimateHours}'",
-                ["sprintid"] = () => $"User {name} moved task #{taskId} to sprint '{result.SprintId}'",
-                ["backlogid"] = () => $"User {name} moved task #{taskId} to backlog '{result.BacklogId}'",
+                ["title"] = () => $"User {name} updated task #{taskId} with title: '{result.Task.Title}' in project #{projectId}",
+                ["description"] = () => $"User {name} updated task #{taskId} with description: '{result.Task.Description}' in project #{projectId}",
+                ["status"] = () => $"User {name} updated status of task #{taskId} to '{result.Task.Status}' in project #{projectId}",
+                ["priority"] = () => $"User {name} updated priority of task #{taskId} to '{result.Task.Priority}' in project #{projectId}",
+                ["assigneeid"] = () => $"User {name} changed assignee of task #{taskId} to '{result.Task.AssigneeId}' in project #{projectId}",
+                ["deadline"] = () => $"User {name} updated deadline of task #{taskId} to '{result.Task.Deadline}'",
+                ["estimatehours"] = () => $"User {name} updated estimated hours of task #{taskId} to '{result.Task.EstimateHours}'",
+                ["sprintid"] = () => $"User {name} moved task #{taskId} to sprint '{result.Task.SprintId}'",
+                ["backlogid"] = () => $"User {name} moved task #{taskId} to backlog '{result.Task.BacklogId}'",
             };
 
             foreach (var kvp in updates)
@@ -793,10 +809,12 @@ namespace server.Controllers
                     return Unauthorized(new { message = "You are not a member of this project" });
 
                 string role = projectMember.RoleInProject;
-                if(role != "Project Manager")
+
+                if (role != "Project Manager")
                 {
-                    throw new ErrorException(403,"Only project manager to this projet can perform this operation!");
+                    throw new ErrorException(403, "Only project manager to this projet can perform this operation!");
                 }
+
                 var newStatus = await _tasksService.ToggleTaskStatus(taskId, projectId);
                 return Ok(new { message = "Success", isActive = newStatus });
             }
@@ -829,10 +847,12 @@ namespace server.Controllers
         {
             // lấy userId từ claim (JWT)
             var userId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (userId == null)
                 throw new ErrorException(404, "Fetch task failed!");
 
             var tasks = await _tasksService.GetNearDeadlineTasksAsync(projectId, userId);
+
             if (tasks == null)
                 throw new ErrorException(404, "No tasks found!");
             return Ok(tasks);

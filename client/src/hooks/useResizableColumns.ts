@@ -19,7 +19,7 @@ type UpdatePayload = {
 };
 type EditValue = string | number | Member | UserMini | null;
 
-export const useTaskTable = (tasksnomal: BasicTask[]) => {
+export const useTaskTable = (currentTasks: BasicTask[]) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [availableUsers, setAvailableUsers] = useState<Member[]>([]);
     const [columns, setColumns] = useState<Column[]>(initialColumns);
@@ -38,25 +38,29 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
     const debouncedSearch = useDebounce(searchQuery, 400);
     // Fetch users + tasks
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                console.log("Project members from context:", members);
-                if (members) {
-                    // const mappedUsers = members.map(mapApiUserToUserMini);
-                    // console.log("Mapped users:", mappedUsers);
-                    setAvailableUsers(members);
-                }
-                console.log("Raw tasks from props:", tasksnomal);
-                const mappedTasks = tasksnomal.map(mapApiTaskToTask);
-                console.log("Mapped tasks:", mappedTasks);
-                //console.log("Mapped tasks:", mappedTasks);
-                setTasks(mappedTasks);
-            } catch (error) {
-                console.log("Error fetching users:", error);
-            }
-        };
-        fetchUsers();
-    }, [tasksnomal]);
+        if (members) {
+            // const mappedUsers = members.map(mapApiUserToUserMini);
+            // console.log("Mapped users:", mappedUsers);
+            setAvailableUsers(members);
+        }
+    }, [members]);
+
+    useEffect(() => {
+        setTasks(prev => {
+            const map = new Map(prev.map(t => [t.id, t]));
+
+            currentTasks.forEach(apiTask => {
+                const mapped = mapApiTaskToTask(apiTask);
+                map.set(mapped.id, {
+                    ...map.get(mapped.id),
+                    ...mapped,
+                });
+            });
+
+            return Array.from(map.values());
+        });
+    }, [currentTasks]);
+
 
     // Resize columns
     const resizingColumn = useRef<{
@@ -133,7 +137,11 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
                         payload["assigneeId"] = null;
                     }
                 } else if (field === "priority") {
-                    const priorityMap: Record<string, number> = { High: 1, Medium: 2, Low: 3 };
+                    const priorityMap: Record<string, number> = {
+                        High: 1,
+                        Medium: 2,
+                        Low: 3,
+                    };
                     if (typeof value === "string" && value in priorityMap) {
                         payload["priority"] = priorityMap[value];
                     } else if (typeof value === "number") {
@@ -170,7 +178,11 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
 
                 // Fix UI: Giữ object assignee vừa chọn nếu server trả về null (tránh nháy UI)
                 if (field === "assignee") {
-                    if (value && typeof value === "object" && !updatedFromServer.assignee) {
+                    if (
+                        value &&
+                        typeof value === "object" &&
+                        !updatedFromServer.assignee
+                    ) {
                         updatedFromServer = {
                             ...updatedFromServer,
                             assignee: value as UserMini,
@@ -184,7 +196,6 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
                 setTasks((prev) =>
                     prev.map((t) => (t.id === taskId ? updatedFromServer : t))
                 );
-
             } catch (error) {
                 console.error("Update failed:", error);
                 setTasks((prev) =>
@@ -264,9 +275,7 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
                     Object.keys(filters).length === 0 &&
                     debouncedSearch.trim() === ""
                 ) {
-                    const mapped = tasksnomal.map(mapApiTaskToTask);
-                    setTasks(mapped);
-                    return;
+                    return; // giữ state hiện tại
                 }
 
                 // 🔸 Tạo params gửi lên API
@@ -294,7 +303,7 @@ export const useTaskTable = (tasksnomal: BasicTask[]) => {
         };
 
         fetchFilteredAndSearchedTasks();
-    }, [debouncedSearch, filters, project_name]);
+    }, [debouncedSearch, filters, project_name, currentTasks]);
 
     const addTask = useCallback((newTask: Task) => {
         setTasks((prev) => [...prev, newTask]);
