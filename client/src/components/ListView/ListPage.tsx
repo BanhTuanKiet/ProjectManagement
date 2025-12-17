@@ -70,6 +70,7 @@ export default function ListPage({
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const { project_name, projectRole, availableUsers, setAvailableUsers } = useProject();
     const [openFromUrl, setOpenFromUrl] = useState<number | null>(null);
+    const statuses = taskStatus(projectRole) ?? [];
 
     useEffect(() => {
         const rawHash = decodeURIComponent(window.location.hash.replace("#", ""));
@@ -162,7 +163,7 @@ export default function ListPage({
                                             className="w-2.5 h-2.5 rounded-full"
                                             style={{
                                                 backgroundColor:
-                                                    taskStatus.find((s) => s.name === filters.Status)?.color,
+                                                    statuses.find((s) => s.name === filters.Status)?.color,
                                             }}
                                         />
                                         {filters.Status}
@@ -176,7 +177,7 @@ export default function ListPage({
                         <DropdownMenuContent className="w-44">
                             <DropdownMenuLabel>Status</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            {taskStatus.map((status) => (
+                            {statuses.map((status) => (
                                 <DropdownMenuItem
                                     key={status.id}
                                     onClick={() => setFilters((prev) => ({ ...prev, Status: status.name }))}
