@@ -103,6 +103,7 @@ namespace server.Configs
 
             CreateMap<Plans, PlanDTO.PlanDetail>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PlanId))
+                .ForMember(dest => dest.Subcriber, opt => opt.MapFrom(src => src.Subscriptions.Count()))
                 .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.PlanFeatures));
 
             CreateMap<PlanFeatures, PlanDTO.FeatureDetail>()
@@ -123,6 +124,9 @@ namespace server.Configs
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.UserName))
                 .ForMember(dest => dest.Subcription, opt => opt.MapFrom(src => src.Subscription));
 
+            CreateMap<ApplicationUser, UserDTO.User>()
+                .ForMember(dest => dest.Subcription, opt => opt.MapFrom(src => src.Subscription));
+
             CreateMap<Subscriptions, UserDTO.Subcription>()
                 .ForMember(dest => dest.PlanId, opt => opt.MapFrom(src => src.Plan.PlanId))
                 .ForMember(dest => dest.PlanName, opt => opt.MapFrom(src => src.Plan.Name))
@@ -130,6 +134,10 @@ namespace server.Configs
                 .ForMember(dest => dest.ExpiredAt, opt => opt.MapFrom(src => src.ExpiredAt));
 
             CreateMap<Media, MediaDTO.Media>();
+
+            CreateMap<ApplicationUser, UserDTO.PaymentUser>();
+
+            CreateMap<Payments, PaymentDTO.PaymentDetail>();
         }
     }
 }

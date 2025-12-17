@@ -16,6 +16,16 @@ public class UserDTO
         public string ImageCoverUrl { get; set; }
     }
 
+    public class User
+    {
+        public string Id { get; set; }
+        public string AvatarUrl { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public bool IsActive { get; set; }
+        public Subcription Subcription { get; set; }
+    }
+
     public class UserProfile2
     {
         public string Id { get; set; }
@@ -33,7 +43,7 @@ public class UserDTO
         public string PlanId { get; set; }
         public string PlanName { get; set; }
         public DateTime StartedAt { get; set; }
-        public DateTime ExpiredAt { get; set; } 
+        public DateTime ExpiredAt { get; set; }
     }
 
     public class Contact
@@ -72,5 +82,21 @@ public class UserDTO
     {
         public string Id { get; set; }
         public string Name { get; set; }
+    }
+
+    public class UserQuery
+    {
+        public string? Direction { get; set; }
+        public string? Search { get; set; }
+        public string? IsActive { get; set; }
+        public string? Plan { get; set; }
+    }
+
+    public class PaymentUser
+    {
+        public string Id { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public string AvatarUrl { get; set; }
     }
 }

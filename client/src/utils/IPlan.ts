@@ -1,7 +1,9 @@
+import { PaymentUser } from "./IUser"
+
 export interface FeatureDetail {
     featureId: number
     featureName: string
-    valueType: 'string' | 'boolean' | 'number'
+    valueType: 'string'
     value: string
 }
 
@@ -11,9 +13,23 @@ export interface PlanDetail {
     price: string
     badge: boolean
     description: string
+    isActive?: boolean
+    subcriber: number
     features: FeatureDetail[]
 }
 
 export interface PlanLevel {
     [key: string]: number
+}
+
+export interface AdminPayment {
+    id: string
+    amount: number
+    currency: string
+    gateway: string
+    gatewayRef: string
+    status: string
+    description: string
+    createdAt: string
+    user: PaymentUser
 }

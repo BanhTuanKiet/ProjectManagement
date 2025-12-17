@@ -25,6 +25,14 @@ namespace server.Services.Project
 
         public async Task<Payments> SavePaypalPayment(Payments paypalPayment)
         {
+            var existed = await _context.Payments
+                .FirstOrDefaultAsync(p =>
+                    p.Gateway == "Paypal" &&
+                    p.GatewayRef == paypalPayment.GatewayRef);
+
+            if (existed != null)
+                return existed; 
+
             await _context.Payments.AddAsync(paypalPayment);
             await _context.SaveChangesAsync();
             return paypalPayment;
@@ -46,6 +54,13 @@ namespace server.Services.Project
 
             // return await response.Content.ReadAsStringAsync();
             return vndRate > 0 ? vndRate : 1.0m;
+        }
+
+        public async Task<List<Payments>> GetPayments()
+        {
+            return await _context.Payments
+                .Include(p => p.User)
+                .ToListAsync();
         }
     }
 }

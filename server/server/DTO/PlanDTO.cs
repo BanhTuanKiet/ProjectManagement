@@ -9,7 +9,21 @@ namespace server.DTO
             public decimal Price { get; set; }
             public string Description { get; set; }
             public bool Badge { get; set; }
+            public int Subcriber { get; set; }
+            public bool IsActive { get; set; }
             public List<FeatureDetail> Features { get; set; } = new();
+        }
+
+        public class EditPlan
+        {
+            public int? Id { get; set; }
+            public string? Name { get; set; }
+            public decimal? Price { get; set; }
+            public string? Description { get; set; }
+            public bool? Badge { get; set; }
+            public int? Subcriber { get; set; }
+            public bool? IsActive { get; set; }
+            public List<FeatureDetail>? Features { get; set; } = new();
         }
 
         public class FeatureDetail
@@ -18,6 +32,12 @@ namespace server.DTO
             public string FeatureName { get; set; }
             public string ValueType { get; set; }
             public string Value { get; set; }
+        }
+
+        public class PlanQuery
+        {
+            public string? Direction { get; set; }
+            public string? Search { get; set; }
         }
     }
 }
