@@ -33,6 +33,7 @@ namespace server.Configs
 
                     var userService = context.HttpContext.RequestServices.GetRequiredService<IUsers>();
                     var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+                    var subscriptionService = context.HttpContext.RequestServices.GetRequiredService<ISubscriptions>();
                     var db = context.HttpContext.RequestServices.GetRequiredService<ProjectManagementContext>();
 
                     var user = await userService.FindOrCreateUserByEmailAsync(email, name);
@@ -46,6 +47,17 @@ namespace server.Configs
                     CookieUtils.SetCookie(context.Response, "token", accessToken, 24);
                     await userService.SaveRefreshToken(user.Id, refreshToken);
 
+                    // Tạo subscription
+
+                    var subscription = new Subscriptions
+                    {
+                        UserId = user.Id,
+                        PlanId = 1,
+                        PaymentId = null,
+                        ExpiredAt = DateTime.UtcNow.AddYears(1)
+                    };
+
+                    await subscriptionService.AddSubscription(subscription);
                     // Kiểm tra invitation (nếu có)
                     context.Properties.Items.TryGetValue("email", out var token);
                     context.Properties.Items.TryGetValue("projectId", out var projectIdStr);

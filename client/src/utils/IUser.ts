@@ -116,3 +116,11 @@ export interface TeamMembers
     joinedAt : string | null
     avatar: string | null
 }
+
+export interface PaymentUser
+{
+    id: string
+    userName: string
+    email: string
+    avatarUrl: string
+}

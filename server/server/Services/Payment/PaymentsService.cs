@@ -55,5 +55,12 @@ namespace server.Services.Project
             // return await response.Content.ReadAsStringAsync();
             return vndRate > 0 ? vndRate : 1.0m;
         }
+
+        public async Task<List<Payments>> GetPayments()
+        {
+            return await _context.Payments
+                .Include(p => p.User)
+                .ToListAsync();
+        }
     }
 }

@@ -135,6 +135,9 @@ namespace server.Configs
 
             CreateMap<Media, MediaDTO.Media>();
 
+            CreateMap<ApplicationUser, UserDTO.PaymentUser>();
+
+            CreateMap<Payments, PaymentDTO.PaymentDetail>();
         }
     }
 }

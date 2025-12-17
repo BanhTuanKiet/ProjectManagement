@@ -27,8 +27,6 @@ interface filter {
     plan?: string
 }
 
-const PAGE_SIZE = 10
-
 export default function User() {
     const [users, setUsers] = useState<AdminUser[]>([])
     const [loading, setLoading] = useState(true)

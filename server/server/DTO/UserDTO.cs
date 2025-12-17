@@ -91,4 +91,12 @@ public class UserDTO
         public string? IsActive { get; set; }
         public string? Plan { get; set; }
     }
+
+    public class PaymentUser
+    {
+        public string Id { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public string AvatarUrl { get; set; }
+    }
 }

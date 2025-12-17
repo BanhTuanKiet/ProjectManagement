@@ -1,3 +1,5 @@
+import { PaymentUser } from "./IUser"
+
 export interface FeatureDetail {
     featureId: number
     featureName: string
@@ -18,4 +20,16 @@ export interface PlanDetail {
 
 export interface PlanLevel {
     [key: string]: number
+}
+
+export interface AdminPayment {
+    id: string
+    amount: number
+    currency: string
+    gateway: string
+    gatewayRef: string
+    status: string
+    description: string
+    createdAt: string
+    user: PaymentUser
 }

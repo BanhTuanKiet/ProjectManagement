@@ -295,7 +295,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
             entity.Property(s => s.PaymentId)
                 .HasColumnType("uniqueidentifier")
-                .IsRequired();
+                .IsRequired(false);
 
             entity.Property(s => s.StartedAt)
                 .HasColumnType("datetime");
@@ -309,17 +309,17 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Subscriptions_Users");
 
+            entity.HasOne(s => s.Payment)
+                .WithMany()
+                .HasForeignKey(s => s.PaymentId)
+                .OnDelete(DeleteBehavior.SetNull)  
+                .HasConstraintName("FK_Subscriptions_Payments");
+
             entity.HasOne(s => s.Plan)
                 .WithMany(p => p.Subscriptions)
                 .HasForeignKey(s => s.PlanId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Subscriptions_Plans");
-
-            entity.HasOne(s => s.Payment)
-                .WithMany()
-                .HasForeignKey(s => s.PaymentId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_Subscriptions_Payments");
         });
 
         modelBuilder.Entity<Payments>(entity =>
