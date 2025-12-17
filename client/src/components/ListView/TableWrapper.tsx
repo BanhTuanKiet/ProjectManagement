@@ -16,7 +16,7 @@ import axios from "@/config/axiosConfig"
 import DueDateCell from "../DueDateCell"
 import { mapApiTaskToTask, mapPriorityFromApi } from "@/utils/mapperUtil"
 import SubtaskList from "../SubtaskList"
-import { getPriorityIcon, taskStatus } from "@/utils/statusUtils"
+import { baseTaskStatus, getPriorityIcon, taskStatus } from "@/utils/statusUtils"
 import { BasicTask } from "@/utils/ITask"
 import DeleteConfirmPopover from "../DeleteConfirmPopover"
 import { useProject } from "@/app/(context)/ProjectContext";
@@ -76,14 +76,12 @@ export default function TableWrapper({
     const [newSubSummary, setNewSubSummary] = useState("")
     const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set())
     const [subTask, setSubTask] = useState<Task[] | null>(null)
+    const [subtasksMap, setSubtasksMap] = useState<Record<number, Task[]>>({})
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [subtasksForDelete, setSubtasksForDelete] = useState<Record<number, Task[]>>({});
     const { projectRole } = useProject();
     const statuses = taskStatus(projectRole) ?? [];
     console.log("ROLE:", projectRole, "STATUSES:", statuses);
-
-
-
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -128,6 +126,10 @@ export default function TableWrapper({
             const created = mapApiTaskToTask(res.data)
             setSubTask(prev => (prev ? [...prev, created] : [created]));
             setNewSubSummary("")
+            setSubtasksMap(prev => ({
+                ...prev,
+                [parentId]: [...(prev[parentId] || []), created]
+            }))
             setAddingSubtaskFor(null)
         } catch (err) {
             console.error("Error creating task", err)
@@ -140,6 +142,10 @@ export default function TableWrapper({
             console.log("Fetched subtasks for TaskId " + taskId + ": ", res.data)
             const mapped = res.data.map((sub: BasicTask) => mapApiTaskToTask(sub))
             setSubTask(mapped)
+            setSubtasksMap(prev => ({
+                ...prev,
+                [taskId]: mapped
+            }))
             return mapped
         } catch (err) {
             console.error("Error fetching subtasks", err)
@@ -346,7 +352,7 @@ export default function TableWrapper({
                 )
 
             case "status":
-                const currentStatus = statuses.find(
+                const currentStatus = baseTaskStatus.find(
                     (s) => s.name.toLowerCase() === task.status?.toLowerCase()
                 );
 
@@ -402,7 +408,7 @@ export default function TableWrapper({
                             <div id="EditList" className="flex items-center gap-2 cursor-pointer">
                                 {typeof task.assignee === "string" ? (
                                     <>
-                                        <ColoredAvatar id={task.raw.assigneeId ?? ""} name={task.assignee} size="sm" />
+                                        <ColoredAvatar src={task.raw.avatarUrl} id={task.raw.assigneeId ?? ""} name={task.assignee} size="sm" />
                                         <span className="text-sm">{task.assignee}</span>
                                     </>
                                 ) : task.assignee ? (
@@ -411,7 +417,7 @@ export default function TableWrapper({
                                             id={task.raw.assigneeId ?? ""}
                                             name={task.assignee.name}
                                             src={task.assignee.avatar}
-                                            initials={task.assignee.initials}
+                                            // initials={task.assignee.initials}
                                             size="sm"
                                         />
                                         <span className="text-sm">{task.assignee.name}</span>
@@ -426,7 +432,7 @@ export default function TableWrapper({
                         <DropdownMenuContent>
                             <DropdownMenuItem onClick={() => handleCellEdit(task.id, "assignee", null)}>
                                 <div className="flex items-center gap-2">
-                                    <ColoredAvatar id={task.raw.assigneeId ?? ""} name="Unassigned" size="sm" />
+                                    <ColoredAvatar src={task.raw.avatarUrl} id={task.raw.assigneeId ?? ""} name="Unassigned" size="sm" />
                                     <span>Unassigned</span>
                                 </div>
                             </DropdownMenuItem>
@@ -434,6 +440,7 @@ export default function TableWrapper({
                                 <DropdownMenuItem key={u.name} onClick={() => handleCellEdit(task.id, "assignee", u)}>
                                     <div className="flex items-center gap-2">
                                         <ColoredAvatar
+                                            src={task.raw.avatarUrl}
                                             id={task.raw.assigneeId ?? ""}
                                             name={u.name}
                                             size="sm"
@@ -576,8 +583,7 @@ export default function TableWrapper({
                         <SubtaskList
                             parentTaskId={task.id}
                             projectId={projectId}
-                            subtasks={subTask || []}
-                            columns={columns}
+                            subtasks={subtasksMap[task.id] || []} columns={columns}
                             totalWidth={totalWidth}
                             selectedTasks={selectedTasks}
                             toggleTaskSelection={toggleTaskSelection}

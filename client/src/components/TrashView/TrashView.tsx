@@ -100,9 +100,7 @@ export default function TrashView({ projectId }: TrashViewProps) {
             await Promise.all(
                 tasksToRestore.map((taskId) => axios.post(`/tasks/restore/${Number(project_name)}/${taskId}`))
             );
-
-            toast.success(`${tasksToRestore.length} task(s) restored successfully!`);
-
+            // toast.success(`${tasksToRestore.length} task(s) restored successfully!`);
             setSelectedTasks(new Set());
             fetchDeletedTasks();
         } catch (error) {

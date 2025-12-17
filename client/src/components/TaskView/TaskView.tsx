@@ -5,7 +5,7 @@ import axios from "@/config/axiosConfig";
 import { useProject } from "@/app/(context)/ProjectContext";
 import type { BasicTask } from "@/utils/ITask";
 import TaskSupport from "../TaskSupport";
-import { taskStatus } from "@/utils/statusUtils";
+import { taskStatus, baseTaskStatus } from "@/utils/statusUtils";
 import ColoredAvatar from "../ColoredAvatar";
 import React from "react";
 import {
@@ -32,7 +32,7 @@ const TaskView = ({ projectId }: { projectId: number }) => {
     const [role, setRole] = useState(true);
 
     const getStatusColor = (status: string) => {
-        const s = taskStatus.find(
+        const s = baseTaskStatus.find(
             x => x.name.toLowerCase() === status.toLowerCase()
         );
         return s?.color ?? "#6B7280";
