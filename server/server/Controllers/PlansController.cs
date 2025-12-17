@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using CloudinaryDotNet;
 using server.Models;
+using server.DTO;
+using server.Configs;
+using AutoMapper;
 
 namespace server.Controllers
 {
@@ -11,12 +14,13 @@ namespace server.Controllers
         private readonly Cloudinary _cloudinary;
         private readonly ProjectManagementContext _context;
         private readonly IPlans _planService;
-
-        public PlansController(Cloudinary cloudinary, ProjectManagementContext context, IPlans planService)
+        private readonly IMapper _mapper;
+        public PlansController(Cloudinary cloudinary, ProjectManagementContext context, IPlans planService, IMapper mapper)
         {
             _cloudinary = cloudinary;
             _context = context;
             _planService = planService;
+            _mapper = mapper;
         }
 
         [HttpGet()]

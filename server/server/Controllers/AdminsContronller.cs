@@ -1,17 +1,10 @@
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using server.Models;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using server.Configs;
-using server.Util;
 using server.DTO;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using server.Services.Task;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace server.Controllers
 {
@@ -25,17 +18,19 @@ namespace server.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPlans _planServices;
         private readonly IConfiguration _configuration;
-
+        private readonly IMapper _mapper;
         public AdminsController(
             IUsers userServices,
             UserManager<ApplicationUser> userManager,
             IPlans planServices,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _userServices = userServices;
             _userManager = userManager;
             _planServices = planServices;
             _configuration = configuration;
+            _mapper = mapper;
         }
 
         [HttpGet("users/{page}")]
@@ -95,6 +90,23 @@ namespace server.Controllers
             }
 
             return Ok(plans);
+        }
+
+        [HttpPut("plans/{planId}")]
+        public async Task<ActionResult> PutPlan(int planId, [FromBody] PlanDTO.EditPlan editedFields)
+        {
+            var plan = await _planServices.FindPlanById(planId)
+                ?? throw new ErrorException(404, "Plan not found");
+
+            var editedPlan = await _planServices.PutPlan(plan, editedFields);
+
+            var mappedPlan = _mapper.Map<PlanDTO.PlanDetail>(editedPlan);
+
+            return Ok(new
+            {
+                message = "Plan updated successfully",
+                data = mappedPlan
+            });
         }
     }
 }

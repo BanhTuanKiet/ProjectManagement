@@ -32,5 +32,74 @@ namespace server.Services.Project
         {
             return await _context.PlanFeatures.FirstOrDefaultAsync(p => p.PlanId == planId && p.FeatureId == featureId);
         }
+
+        public async Task<Plans> FindPlanById(int planId)
+        {
+            return await _context.Plans
+                .Include(p => p.PlanFeatures)
+                    .ThenInclude(pf => pf.Features)
+                .Include(p => p.Subscriptions)
+                .FirstOrDefaultAsync(p => p.PlanId == planId);
+        }
+
+        public async Task<Plans> PutPlan(Plans plan, PlanDTO.EditPlan editPlan)
+        {
+            if (editPlan.Name != null && editPlan.Name != plan.Name)
+            {
+                plan.Name = editPlan.Name;
+            }
+
+            if (editPlan.Price.HasValue && editPlan.Price.Value != plan.Price)
+            {
+                plan.Price = editPlan.Price.Value;
+            }
+
+            if (editPlan.Description != null && editPlan.Description != plan.Description)
+            {
+                plan.Description = editPlan.Description;
+            }
+
+            if (editPlan.Badge.HasValue && editPlan.Badge.Value != plan.Badge)
+            {
+                plan.Badge = editPlan.Badge.Value;
+            }
+
+            if (editPlan.IsActive.HasValue && editPlan.IsActive.Value != plan.IsActive)
+            {
+                plan.IsActive = editPlan.IsActive.Value;
+            }
+
+            if (editPlan.Features != null && editPlan.Features.Any())
+            {
+                foreach (var editFeature in editPlan.Features)
+                {
+                    var feature = plan.PlanFeatures
+                        .FirstOrDefault(f => f.FeatureId == editFeature.FeatureId);
+
+                    if (feature != null)
+                    {
+                        if (feature.Value != editFeature.Value ||
+                            feature.ValueType != editFeature.ValueType)
+                        {
+                            feature.Value = editFeature.Value;
+                            feature.ValueType = editFeature.ValueType;
+                        }
+                    }
+                    else
+                    {
+                        plan.PlanFeatures.Add(new PlanFeatures
+                        {
+                            PlanId = plan.PlanId,
+                            FeatureId = editFeature.FeatureId,
+                            ValueType = editFeature.ValueType,
+                            Value = editFeature.Value
+                        });
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return plan;
+        }
     }
 }

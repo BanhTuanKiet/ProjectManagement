@@ -14,6 +14,18 @@ namespace server.DTO
             public List<FeatureDetail> Features { get; set; } = new();
         }
 
+        public class EditPlan
+        {
+            public int? Id { get; set; }
+            public string? Name { get; set; }
+            public decimal? Price { get; set; }
+            public string? Description { get; set; }
+            public bool? Badge { get; set; }
+            public int? Subcriber { get; set; }
+            public bool? IsActive { get; set; }
+            public List<FeatureDetail>? Features { get; set; } = new();
+        }
+
         public class FeatureDetail
         {
             public int FeatureId { get; set; }
@@ -24,8 +36,8 @@ namespace server.DTO
 
         public class PlanQuery
         {
-            public string Direction { get; set; }
-            public string Search { get; set; }
+            public string? Direction { get; set; }
+            public string? Search { get; set; }
         }
     }
 }

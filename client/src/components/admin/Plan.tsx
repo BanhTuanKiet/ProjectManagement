@@ -41,10 +41,10 @@ export default function Plan() {
                 const response = await axios.get(`/admins/plans`, {
                     params: {
                         direction: sortConfig?.direction,
-                        search: debouncedSearch,
+                        search: "",
                     }
                 })
-
+                console.log(response.data)
                 setPlans(response.data)
             } catch (error) {
                 console.log(error)
@@ -302,9 +302,15 @@ export default function Plan() {
                 </div>
             )}
 
-            {openEditPlan &&
-                <PlanEditor plan={openEditPlan} />
-            }
+            {openEditPlan && (
+                <div className="fixed inset-0 z-50">
+                    <PlanEditor
+                        plan={openEditPlan}
+                        setPlans={setPlans}
+                        onClose={() => setOpenEditPlan(null)}
+                    />
+                </div>
+            )}
         </div>
     )
 }

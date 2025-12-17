@@ -25,6 +25,14 @@ namespace server.Services.Project
 
         public async Task<Payments> SavePaypalPayment(Payments paypalPayment)
         {
+            var existed = await _context.Payments
+                .FirstOrDefaultAsync(p =>
+                    p.Gateway == "Paypal" &&
+                    p.GatewayRef == paypalPayment.GatewayRef);
+
+            if (existed != null)
+                return existed; 
+
             await _context.Payments.AddAsync(paypalPayment);
             await _context.SaveChangesAsync();
             return paypalPayment;

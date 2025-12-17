@@ -138,14 +138,6 @@ export default function User() {
 
     return (
         <div className="bg-white">
-            {loading && (
-                <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center">
-                    <span className="text-sm text-gray-500 animate-pulse">
-                        Loading users...
-                    </span>
-                </div>
-            )}
-
             <div className="p-4 border-b flex flex-wrap gap-4 justify-between">
                 <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -209,8 +201,8 @@ export default function User() {
                                     key={i}
                                     onClick={() => setPage(i)}
                                     className={`cursor-pointer px-2.5 py-1 border rounded-md text-sm font-medium ${i === page
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100'
                                         } transition`}
                                 >
                                     {i + 1}
@@ -279,23 +271,15 @@ export default function User() {
                                             >
                                                 <button
                                                     onClick={() => toggleActive(user)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+                                                    className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-yellow-50 text-yellow-600"
                                                 >
                                                     <Ban className="w-4 h-4" />
                                                     {user.isActive ? 'Ban account' : 'Unban account'}
                                                 </button>
 
                                                 <button
-                                                    onClick={() => warnUser(user)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 text-yellow-600"
-                                                >
-                                                    <AlertTriangle className="w-4 h-4" />
-                                                    Warn user
-                                                </button>
-
-                                                <button
                                                     onClick={() => deleteUser(user)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-red-50 text-red-600"
+                                                    className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-red-50 text-red-600"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                     Delete account
