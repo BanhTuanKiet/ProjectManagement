@@ -130,11 +130,6 @@ export default function Plan() {
                             className="pl-9 pr-3 py-1.5 text-sm border rounded-lg"
                         />
                     </div>
-
-                    <button className="cursor-pointer flex items-center gap-1 text-sm text-blue-600 hover:underline">
-                        <Plus className="w-4 h-4" />
-                        Add plan
-                    </button>
                 </div>
             </div>
 
@@ -194,8 +189,7 @@ export default function Plan() {
                                             return (
                                                 <ul className="space-y-2.5">
                                                     {visibleFeatures.map((f, i) => {
-                                                        const isDisabled =
-                                                            f.valueType === 'boolean' && f.value === 'false'
+                                                        const isDisabled = f.value === 'false'
 
                                                         return (
                                                             <li
@@ -285,7 +279,7 @@ export default function Plan() {
 
                                                 <button
                                                     onClick={() => editPlan(plan)}
-                                                    className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-red-50 text-red-600"
+                                                    className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-yellow-50 text-yellow-600"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                     Edit plan
@@ -308,8 +302,8 @@ export default function Plan() {
                 </div>
             )}
 
-            {openEditPlan && 
-                <PlanEditor />
+            {openEditPlan &&
+                <PlanEditor plan={openEditPlan} />
             }
         </div>
     )

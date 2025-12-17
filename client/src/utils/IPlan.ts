@@ -1,7 +1,7 @@
 export interface FeatureDetail {
     featureId: number
     featureName: string
-    valueType: 'string' | 'boolean' | 'number'
+    valueType: 'string'
     value: string
 }
 
