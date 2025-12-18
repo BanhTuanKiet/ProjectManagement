@@ -9,6 +9,7 @@ namespace server.Models
         Task<string> GetRefreshToken(string userId);
         Task<bool> SaveRefreshToken(string userId, string token);
         Task<ApplicationUser> FindOrCreateUserByEmailAsync(string email, string name);
+        Task<(ApplicationUser user, bool isNewUser)> FindOrCreateUserByEmail(string email, string name);
         Task<bool> CheckLogin(string email, string password);
         Task<List<ProjectInvitations>> GetUserNotRespondedInvitations();
         Task<ApplicationUser> FindUserById(string id);

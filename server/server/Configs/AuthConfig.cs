@@ -36,7 +36,20 @@ namespace server.Configs
                     var subscriptionService = context.HttpContext.RequestServices.GetRequiredService<ISubscriptions>();
                     var db = context.HttpContext.RequestServices.GetRequiredService<ProjectManagementContext>();
 
-                    var user = await userService.FindOrCreateUserByEmailAsync(email, name);
+                    var (user, isNewUser) = await userService.FindOrCreateUserByEmail(email, name);
+
+                    if (isNewUser)
+                    {
+                        var subscription = new Subscriptions
+                        {
+                            UserId = user.Id,
+                            PlanId = 1,
+                            PaymentId = null,
+                            ExpiredAt = DateTime.UtcNow.AddYears(1)
+                        };
+
+                        await subscriptionService.AddSubscription(subscription);
+                    }
                     var roles = await userManager.GetRolesAsync(user);
 
                     // Tạo token
@@ -47,17 +60,6 @@ namespace server.Configs
                     CookieUtils.SetCookie(context.Response, "token", accessToken, 24);
                     await userService.SaveRefreshToken(user.Id, refreshToken);
 
-                    // Tạo subscription
-
-                    var subscription = new Subscriptions
-                    {
-                        UserId = user.Id,
-                        PlanId = 1,
-                        PaymentId = null,
-                        ExpiredAt = DateTime.UtcNow.AddYears(1)
-                    };
-
-                    await subscriptionService.AddSubscription(subscription);
                     // Kiểm tra invitation (nếu có)
                     context.Properties.Items.TryGetValue("email", out var token);
                     context.Properties.Items.TryGetValue("projectId", out var projectIdStr);

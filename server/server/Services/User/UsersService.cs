@@ -327,5 +327,61 @@ namespace server.Services.User
             await _context.SaveChangesAsync();
             return user;
         }
+
+        public async Task<(ApplicationUser user, bool isNewUser)> FindOrCreateUserByEmail(string email, string name)
+        {
+            if (string.IsNullOrEmpty(email))
+                throw new ErrorException(400, "Email is required");
+
+            var user = await _context.ApplicationUsers
+                .Include(u => u.Subscription)
+                .ThenInclude(s => s.Plan)
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user != null)
+            {
+                return (user, false);
+            }
+
+            string baseUserName = Regex
+                .Replace(name ?? email.Split('@')[0], @"[^a-zA-Z0-9]", "")
+                .ToLower();
+
+            string finalUserName = baseUserName;
+            int suffix = 1;
+
+            while (await _userManager.FindByNameAsync(finalUserName) != null)
+            {
+                finalUserName = $"{baseUserName}{suffix}";
+                suffix++;
+            }
+
+            user = new ApplicationUser
+            {
+                Email = email,
+                UserName = finalUserName,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                var messages = string.Join(" | ",
+                    result.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                throw new ErrorException(400, "Failed to create user: " + messages);
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "User");
+            if (!roleResult.Succeeded)
+            {
+                var messages = string.Join(" | ",
+                    roleResult.Errors.Select(e => $"{e.Code}: {e.Description}"));
+                throw new ErrorException(400, "Failed to add role: " + messages);
+            }
+
+            return (user, true);
+        }
+
     }
 }
