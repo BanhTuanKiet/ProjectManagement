@@ -86,9 +86,7 @@ export default function PricingTable({
                                         f => f.featureName === featureName
                                     )
                                     const value = feature ? feature.value : "-"
-                                    const isBoolean =
-                                        feature?.valueType === "boolean" &&
-                                        (value === "true" || value === "false")
+                                    const isBoolean = feature?.valueType === "boolean" && (value === "true" || value === "false")
 
                                     return (
                                         <td

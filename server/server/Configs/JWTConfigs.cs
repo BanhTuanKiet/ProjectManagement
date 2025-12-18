@@ -47,22 +47,30 @@ namespace server.Configs
                         }
                         return System.Threading.Tasks.Task.CompletedTask;
                     },
-                    OnTokenValidated = context =>
+                    OnTokenValidated = async context =>
                     {
                         Console.WriteLine("✅ OnTokenValidated triggered");
 
-                        var principal = context.Principal;
-                        var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-                        var name = principal.FindFirstValue(ClaimTypes.Name);
-                        var roles = principal.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                        var userManager = context.HttpContext.RequestServices
+                            .GetRequiredService<UserManager<ApplicationUser>>();
 
-                        Console.WriteLine($"UserId: {userId}, Roles: {string.Join(",", roles)}");
+                        var principal = context.Principal;
+                        var userId = principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                        var user = await userManager.FindByIdAsync(userId);
+
+                        if (user == null || !user.IsActive)
+                        {
+                            context.Response.Cookies.Delete("token");
+                            context.Fail("Account disabled");
+                            return;
+                        }
 
                         context.HttpContext.Items["UserId"] = userId;
-                        context.HttpContext.Items["Roles"] = roles;
-                        context.HttpContext.Items["name"] = name;
-
-                        return System.Threading.Tasks.Task.CompletedTask;
+                        context.HttpContext.Items["Roles"] =
+                            principal.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList();
+                        context.HttpContext.Items["Name"] =
+                            principal.FindFirstValue(ClaimTypes.Name);
                     },
                     OnForbidden = async context =>
                     {
@@ -77,7 +85,7 @@ namespace server.Configs
                             message = messageObj?.ToString();
                             response = new { ErrorMessage = message };
                         }
-                        
+
                         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
                     },
                     OnChallenge = async context =>

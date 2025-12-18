@@ -3,7 +3,7 @@ import { PaymentUser } from "./IUser"
 export interface FeatureDetail {
     featureId: number
     featureName: string
-    valueType: 'string'
+    valueType: 'string' | 'boolean'
     value: string
 }
 

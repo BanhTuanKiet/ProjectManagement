@@ -18,6 +18,7 @@ namespace server.Controllers
         private readonly IConfiguration _config;
         private readonly HttpClient _httpClient;
         private readonly IPayments _paymentsService;
+        private readonly IPlans _planServices;
         private readonly ISubscriptions _subscriptionsService;
         public readonly ProjectManagementContext _context;
         static int recordId = 1;
@@ -26,12 +27,14 @@ namespace server.Controllers
             IConfiguration config,
             IHttpClientFactory httpClientFactory,
             IPayments paymentsService,
+            IPlans planServices,
             ISubscriptions subscriptionsService,
             ProjectManagementContext context)
         {
             _config = config;
             _httpClient = httpClientFactory.CreateClient();
             _paymentsService = paymentsService;
+            _planServices = planServices
             _subscriptionsService = subscriptionsService;
             _context = context;
         }
@@ -39,6 +42,12 @@ namespace server.Controllers
         [HttpPost("checkout/paypal")]
         public async Task<ActionResult> CheckoutPaypal([FromBody] OrderDTO.PaypalOrder order)
         {
+            var plan = await _planServices.FindPlanById(order.PlanId)
+                ?? throw new ErrorException(404, "Plan not found");
+
+            if (plan.isActive == false) 
+                throw new ErrorException(400, "This plan is currently suspended or unavailable for new subscriptions. Please select another plan.")
+
             var clientId = _config["PaypalSettings:ClientId"];
             var secret = _config["PaypalSettings:Secret"];
             var baseUrl = _config["PaypalSettings:BaseUrl"];

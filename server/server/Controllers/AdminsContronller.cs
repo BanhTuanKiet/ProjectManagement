@@ -17,6 +17,7 @@ namespace server.Controllers
     {
         private readonly IUsers _userServices;
         private readonly UserManager<ApplicationUser> _userManager;
+        public readonly ProjectManagementContext _context;
         private readonly IPlans _planServices;
         private readonly IPayments _paymentService;
         private readonly IConfiguration _configuration;
@@ -24,6 +25,7 @@ namespace server.Controllers
         public AdminsController(
             IUsers userServices,
             UserManager<ApplicationUser> userManager,
+            ProjectManagementContext context,
             IPlans planServices,
             IPayments paymentServices,
             IConfiguration configuration,
@@ -31,6 +33,7 @@ namespace server.Controllers
         {
             _userServices = userServices;
             _userManager = userManager;
+            _context = context;
             _planServices = planServices;
             _paymentService = paymentServices;
             _configuration = configuration;
@@ -168,6 +171,21 @@ namespace server.Controllers
             {
                 data = payments,
                 totalPages
+            });
+        }
+
+        [HttpPut("{userId}/toggle-active")]
+        public async Task<ActionResult> ToggleActive(string userId)
+        {
+            var user = await _userServices.FindUserById(userId)
+                ?? throw new ErrorException(404, "User not found");
+
+
+            return Ok(new
+            {
+                message = user.IsActive
+                    ? "User account has been activated"
+                    : "User account has been deactivated",
             });
         }
     }

@@ -103,6 +103,7 @@ export default function User() {
 
     const toggleActive = async (user: AdminUser) => {
         if (!confirm(`Are you sure you want to ${user.isActive ? 'ban' : 'unban'} this account?`)) return
+
         try {
             setActionLoading(user.id)
             await axios.put(`/admins/users/${user.id}/toggle-active`)
@@ -113,13 +114,6 @@ export default function User() {
             setActionLoading(null)
             setOpenMenuId(null)
         }
-    }
-
-    const warnUser = async (user: AdminUser) => {
-        if (!confirm('Send warning to this user?')) return
-        await axios.post(`/admins/users/${user.id}/warn`)
-        alert('Warning sent')
-        setOpenMenuId(null)
     }
 
     const deleteUser = async (user: AdminUser) => {
