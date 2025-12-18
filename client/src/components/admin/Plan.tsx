@@ -92,7 +92,17 @@ export default function Plan() {
                 ? <ArrowUp className="h-3 w-3" />
                 : <ArrowDown className="h-3 w-3" />
 
-    const toggleActive = (plan: PlanDetail) => {
+    const toggleActive = async (plan: PlanDetail) => {
+        if (!confirm(`Are you sure you want to ${plan.isActive ? 'ban' : 'unban'} this plan?`)) return
+
+        try {
+            await axios.put(`/admins/plans/${plan.id}/toggle-active`)
+            setPlans(prev => 
+                prev.map(p => p.id === plan.id ? { ...p, isActive: !p.isActive } : p)
+            )
+        } finally {
+            setOpenMenuId(null)
+        }
         // if (!confirm(`Are you sure you want to ${plan.isActive ? 'deactivate' : 'activate'} this plan?`)) return
         // setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, isActive: !p.isActive } : p))
         // setOpenMenuId(null)

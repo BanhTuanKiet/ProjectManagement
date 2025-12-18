@@ -36,7 +36,6 @@ export default function User() {
     const [sortConfig, setSortConfig] = useState<SortConfig>(null)
     const [filter, setFiler] = useState<filter>({})
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-    const [actionLoading, setActionLoading] = useState<string | null>(null)
     const menuRef = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
@@ -105,13 +104,11 @@ export default function User() {
         if (!confirm(`Are you sure you want to ${user.isActive ? 'ban' : 'unban'} this account?`)) return
 
         try {
-            setActionLoading(user.id)
             await axios.put(`/admins/users/${user.id}/toggle-active`)
             setUsers(prev =>
                 prev.map(u => u.id === user.id ? { ...u, isActive: !u.isActive } : u)
             )
         } finally {
-            setActionLoading(null)
             setOpenMenuId(null)
         }
     }
@@ -119,11 +116,9 @@ export default function User() {
     const deleteUser = async (user: AdminUser) => {
         if (!confirm('⚠️ Delete this account permanently?')) return
         try {
-            setActionLoading(user.id)
             await axios.delete(`/admins/users/${user.id}`)
             setUsers(prev => prev.filter(u => u.id !== user.id))
         } finally {
-            setActionLoading(null)
             setOpenMenuId(null)
         }
     }

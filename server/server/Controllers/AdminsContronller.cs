@@ -174,18 +174,43 @@ namespace server.Controllers
             });
         }
 
-        [HttpPut("{userId}/toggle-active")]
-        public async Task<ActionResult> ToggleActive(string userId)
+        [HttpPut("users/{userId}/toggle-active")]
+        public async Task<ActionResult> ToggleUserActive(string userId)
         {
             var user = await _userServices.FindUserById(userId)
                 ?? throw new ErrorException(404, "User not found");
 
+            bool previousState = user.IsActive;
+            var toggledActiveUser = await _userServices.ToggleActive(user);
+
+            if (toggledActiveUser.IsActive == previousState)
+                throw new ErrorException(400, "Failed to toggle user status");
 
             return Ok(new
             {
                 message = user.IsActive
                     ? "User account has been activated"
                     : "User account has been deactivated",
+            });
+        }
+
+        [HttpPut("plans/{planId}/toggle-active")]
+        public async Task<ActionResult> TogglePlanActive(int planId)
+        {
+            var plan = await _planServices.FindPlanById(planId)
+                ?? throw new ErrorException(404, "Plan not found");
+
+            bool previousState = plan.IsActive;
+            var toggledActiveUPlan = await _planServices.ToggleActive(plan);
+
+            if (toggledActiveUPlan.IsActive == previousState)
+                throw new ErrorException(400, "Failed to toggle plan status");
+
+            return Ok(new
+            {
+                message = plan.IsActive
+                    ? "This plan has been activated"
+                    : "This plan has been deactivated",
             });
         }
     }
