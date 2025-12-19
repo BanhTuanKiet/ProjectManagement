@@ -70,6 +70,7 @@ namespace server.Configs
         {
             var recipients = PresenceHubConfig.GetUserOnline(projectId, userId);
             await hubContext.Clients.Users(recipients).SendAsync("TaskUpdated", basicTask);
+            // await hubContext.Clients.All.SendAsync("TaskUpdated", basicTask);
         }
 
         public async static Task AddedTask(IHubContext<TaskHubConfig> hubContext, int projectId, string userId, DTO.TaskDTO.BasicTask basicTask)
