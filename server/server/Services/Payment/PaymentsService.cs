@@ -31,7 +31,7 @@ namespace server.Services.Project
                     p.GatewayRef == paypalPayment.GatewayRef);
 
             if (existed != null)
-                return existed; 
+                return existed;
 
             await _context.Payments.AddAsync(paypalPayment);
             await _context.SaveChangesAsync();
@@ -60,6 +60,23 @@ namespace server.Services.Project
         {
             return await _context.Payments
                 .Include(p => p.User)
+                .ToListAsync();
+        }
+
+        public async Task<List<PaymentDTO.Revenue>> GetRevenue(int month, int year)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == "Paid"
+                    && p.CreatedAt.Month == month
+                    && p.CreatedAt.Year == year)
+                .GroupBy(p => p.CreatedAt.Day)
+                .Select(g => new PaymentDTO.Revenue
+                {
+                    Day = g.Key,
+                    Total = g.Sum(p => p.Amount),
+                    TransactionCount = g.Count()
+                })
+                .OrderBy(r => r.Day)
                 .ToListAsync();
         }
     }
