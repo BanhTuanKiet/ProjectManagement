@@ -213,5 +213,14 @@ namespace server.Controllers
                     : "This plan has been deactivated",
             });
         }
+    
+        [HttpGet("payments/revenue/{month}/{year}")]
+        public async Task<ActionResult> GetRevenue(int month, int year)
+        {
+            var revenue = await _paymentService.GetRevenue(month, year);
+
+            if (revenue.Count() <= 0) return Ok();
+            return Ok(revenue);
+        }
     }
 }
