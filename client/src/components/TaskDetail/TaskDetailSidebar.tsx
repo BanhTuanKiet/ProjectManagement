@@ -24,9 +24,10 @@ import { Button } from "@/components/ui/button"; // Giả sử bạn có compone
 import { Task } from "@/utils/mapperUtil";
 import ColoredAvatar from "../ColoredAvatar";
 import { cn } from "@/lib/utils"; // Giả sử bạn có cn utility từ shadcn
+import { BasicTask } from "@/utils/ITask";
 
 interface TaskDetailSidebarProps {
-    task: Task;
+    task: BasicTask;
     taskId: number;
     projectId: number;
 }
@@ -95,8 +96,8 @@ export default function TaskDetailSidebar({
             });
             switch (key) {
                 case 'priority': setPriority(value); break;
-                case 'deadline': setDueDate(value); break;
-                case 'createdAt': setStartDate(value); break;
+                case 'deadline': setDueDate(String(value)); break;
+                case 'createdAt': setStartDate(String(value)); break;
             }
         } catch (error) {
             console.error(`Failed to update ${key}:`, error);
@@ -113,7 +114,7 @@ export default function TaskDetailSidebar({
                         </AccordionTrigger>
                         <AccordionContent className="p-0">
                             <div className="p-4 space-y-6">
-                                
+
                                 {/* --- ASSIGNEE --- */}
                                 <div className="group">
                                     <div className="flex items-center justify-between mb-1.5">
@@ -124,15 +125,15 @@ export default function TaskDetailSidebar({
                                     </div>
                                     <div className="flex items-center gap-2 p-1.5 -ml-1.5 rounded-md hover:bg-gray-100 transition-colors cursor-pointer">
                                         <ColoredAvatar
-                                            id={task.assignee?.id ?? ""}
-                                            name={task.assignee?.name}
+                                            id={task.assigneeId ?? ""}
+                                            name={task.assignee}
                                             size="sm"
-                                            src={task.assignee?.avatar}
+                                            src={task.avatarUrl}
                                         />
                                         <span className="text-sm text-gray-700 font-medium truncate">
                                             {typeof task.assignee === "string"
                                                 ? task.assignee
-                                                : task.assignee?.name || "Unassigned"}
+                                                : task.assignee || "Unassigned"}
                                         </span>
                                     </div>
                                 </div>
@@ -145,8 +146,8 @@ export default function TaskDetailSidebar({
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button 
-                                                variant="ghost" 
+                                            <Button
+                                                variant="ghost"
                                                 className="h-8 px-2 -ml-2 w-full justify-start font-normal hover:bg-gray-100"
                                             >
                                                 <Badge variant="outline" className={`${priorityColorMap[currentPriorityLabel]} mr-2 px-2 py-0.5 rounded-md border`}>
@@ -176,7 +177,7 @@ export default function TaskDetailSidebar({
 
                                 {/* --- DATES SECTION --- */}
                                 <div className="space-y-4 pt-2 border-t border-gray-100">
-                                    
+
                                     {/* Start Date */}
                                     <div className="relative">
                                         <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mb-1.5">
@@ -237,7 +238,7 @@ export default function TaskDetailSidebar({
                                         )}
                                     </div>
                                 </div>
-                                
+
                             </div>
                         </AccordionContent>
                     </AccordionItem>

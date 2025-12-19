@@ -12,6 +12,7 @@ import TaskDetailMain from "./TaskDetailMain";
 import TaskDetailSidebar from "./TaskDetailSidebar";
 import { mapApiTaskToTask, Task } from "@/utils/mapperUtil";
 import { Trash2, X } from "lucide-react";
+import { BasicTask } from "@/utils/ITask";
 
 export default function TaskDetailModal({
     setActiveTab,
@@ -22,7 +23,7 @@ export default function TaskDetailModal({
     taskId: number;
     onClose: () => void;
 }) {
-    const [task, setTask] = useState<Task | null>(null);
+    const [task, setTask] = useState<BasicTask | null>(null);
     const [isTaskDeleted, setIsTaskDeleted] = useState(false);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(
         null
@@ -38,7 +39,7 @@ export default function TaskDetailModal({
                 const response = await axios.get(
                     `/tasks/detail/${projectId}/${taskId}`
                 );
-                setTask(mapApiTaskToTask(response.data));
+                setTask(response.data);
                 setIsTaskDeleted(false);
             } catch (error) {
                 console.error("Fetch task detail error:", error);
