@@ -81,7 +81,6 @@ export default function TableWrapper({
     const [subtasksForDelete, setSubtasksForDelete] = useState<Record<number, Task[]>>({});
     const { projectRole } = useProject();
     const statuses = taskStatus(projectRole) ?? [];
-    console.log("ROLE:", projectRole, "STATUSES:", statuses);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -323,7 +322,7 @@ export default function TableWrapper({
                 ) : (
                     <span
                         onClick={() => projectRole !== 'Member' && projectRole !== 'Tester' && setEditingCell({ taskId: task.id, field: "summary" })}
-                        className={`px-1 py-0.5 rounded ${projectRole === 'Member' || projectRole === 'Tester' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}`}
+                        className={`px-1 py-0.5 rounded text-left ${projectRole === 'Member' || projectRole === 'Tester' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}`}
                     >
                         {task.summary}
                     </span>
@@ -415,8 +414,8 @@ export default function TableWrapper({
                                     <>
                                         <ColoredAvatar
                                             id={task.raw.assigneeId ?? ""}
-                                            name={task.assignee.name}
-                                            src={task.assignee.avatar}
+                                            name={task.raw.assignee}
+                                            src={task.raw.avatarUrl}
                                             // initials={task.assignee.initials}
                                             size="sm"
                                         />
@@ -431,17 +430,17 @@ export default function TableWrapper({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                             <DropdownMenuItem onClick={() => handleCellEdit(task.id, "assignee", null)}>
-                                <div className="flex items-center gap-2">
+                                {/* <div className="flex items-center gap-2">
                                     <ColoredAvatar src={task.raw.avatarUrl} id={task.raw.assigneeId ?? ""} name="Unassigned" size="sm" />
                                     <span>Unassigned</span>
-                                </div>
+                                </div> */}
                             </DropdownMenuItem>
                             {availableUsers.map((u) => (
                                 <DropdownMenuItem key={u.name} onClick={() => handleCellEdit(task.id, "assignee", u)}>
                                     <div className="flex items-center gap-2">
                                         <ColoredAvatar
-                                            src={task.raw.avatarUrl}
-                                            id={task.raw.assigneeId ?? ""}
+                                            src={u.avatarUrl}
+                                            id={u.userId ?? ""}
                                             name={u.name}
                                             size="sm"
                                         />
@@ -498,7 +497,7 @@ export default function TableWrapper({
                     >
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <span className="flex items-center gap-1 cursor-pointer">
+                                <span className="flex text-left cursor-pointer">
                                     {/* {getPriorityIcon(priorityStr)} */}
                                     <Badge className={priorityColorMap[priorityStr]}>{priorityStr}</Badge>
                                 </span>
@@ -511,7 +510,7 @@ export default function TableWrapper({
                                             // Update local state + gửi BE
                                             handleCellEdit(task.id, "priority", p)
                                         }}
-                                        className={`flex items-center gap-2 ${priorityColorMap[p]}`}
+                                        className={`flex text-left ${priorityColorMap[p]}`}
                                     >
                                         {getPriorityIcon(p)}
                                         <span>{p}</span>
@@ -571,7 +570,7 @@ export default function TableWrapper({
                         {columns.map((col) => (
                             <div
                                 key={`${task.id}-${col.key}`}
-                                className="relative flex items-center justify-center px-3 py-2 border-r text-sm"
+                                className="relative flex px-3 py-2 border-r text-sm"
                                 style={{ width: col.width, minWidth: col.minWidth }}
                             >
                                 {renderCell(task, col)}

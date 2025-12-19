@@ -27,8 +27,8 @@ export const initialColumns: Column[] = [
   {
     key: "summary",
     title: "Summary",
-    width: 400,
-    minWidth: 200,
+    width: 250,
+    minWidth: 250,
     resizable: true,
   },
   {
@@ -55,15 +55,15 @@ export const initialColumns: Column[] = [
   {
     key: "priority",
     title: "Priority",
-    width: 120,
-    minWidth: 100,
+    width: 118,
+    minWidth: 118,
     resizable: true,
   },
   {
     key: "description",
     title: "Description",
-    width: 145,
-    minWidth: 120,
+    width: 300,
+    minWidth: 300,
     resizable: true,
   },
   // {
