@@ -6,13 +6,15 @@ using server.DTO;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    // [Authorize(Roles = "admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles = "admin")]
     public class AdminsController : ControllerBase
     {
         private readonly IUsers _userServices;
@@ -213,7 +215,7 @@ namespace server.Controllers
                     : "This plan has been deactivated",
             });
         }
-    
+
         [HttpGet("payments/revenue/{month}/{year}")]
         public async Task<ActionResult> GetRevenue(int month, int year)
         {
