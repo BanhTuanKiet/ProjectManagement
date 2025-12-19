@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, Lock, ArrowRight, AlertCircle, RefreshCcw, ArrowLeft } from "lucide-react"
+import { Check, Lock, ArrowRight, AlertCircle, RefreshCcw, ArrowLeft, Ban } from "lucide-react"
 import PricingTable from "@/components/pricing-table"
 import type { PlanDetail } from "@/utils/IPlan"
 import { useRouter } from "next/navigation"
@@ -25,7 +25,7 @@ interface FxRate {
 
 interface Price {
     displayPrice: number
-    originalPrice: number // Giá gốc USD để thanh toán
+    originalPrice: number
 }
 
 export default function PlanPaymentPage() {
@@ -34,11 +34,12 @@ export default function PlanPaymentPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [price, setPrice] = useState<Price | null>(null)
     const [fxRates, setFxRates] = useState<FxRate | null>(null)
-    const [currency, setCurrency] = useState<"USD" | "VND">("USD") // State quản lý đơn vị tiền tệ
+    const [currency, setCurrency] = useState<"USD" | "VND">("USD")
     const { user, signinGG } = useUser()
     const router = useRouter()
 
-    // Hàm format tiền tệ linh hoạt
+    const isPlanInactive = selectedPlan?.isActive === false
+
     const formatCurrency = (amount: number, currencyType: "USD" | "VND") => {
         if (currencyType === "USD") {
             return new Intl.NumberFormat('en-US', {
@@ -47,7 +48,6 @@ export default function PlanPaymentPage() {
                 minimumFractionDigits: 2
             }).format(amount)
         } else {
-            // Làm tròn số tiền VND cho đẹp (ví dụ: 253450 -> 253.450)
             return new Intl.NumberFormat('vi-VN', {
                 style: 'currency',
                 currency: 'VND',
@@ -56,13 +56,11 @@ export default function PlanPaymentPage() {
         }
     }
 
-    // Effect lấy tỷ giá
     useEffect(() => {
         const fetchLatestFxRates = async () => {
             try {
                 const response = await axios.get("https://api.fxratesapi.com/latest")
                 const rates = response.data.rates
-                // Lấy tỷ giá VND và USD từ API (Base có thể là EUR hoặc USD tùy API, nên lấy tỉ lệ an toàn)
                 const vndRate = rates['VND']
                 const usdRate = rates['USD']
                 setFxRates({
@@ -77,13 +75,11 @@ export default function PlanPaymentPage() {
         fetchLatestFxRates()
     }, [])
 
-    // Effect tính toán giá hiển thị khi Plan, Currency hoặc Tỷ giá thay đổi
     useEffect(() => {
         const originalUsdPrice = Number(selectedPlan?.price) || 0
         let displayAmount = originalUsdPrice
 
         if (currency === "VND" && fxRates) {
-            // Tính tỷ giá quy đổi: 1 USD = (VND_Rate / USD_Rate)
             const conversionRate = fxRates.vndRate / fxRates.usdRate
             displayAmount = originalUsdPrice * conversionRate
         }
@@ -95,7 +91,8 @@ export default function PlanPaymentPage() {
     }, [selectedMethod, selectedPlan?.price, currency, fxRates])
 
     const handlePayment = async () => {
-        if (!selectedPlan) return
+        if (!selectedPlan || isPlanInactive) return
+
         if (selectedPlan.id === 1) {
             if (user) {
                 return router.push("/project")
@@ -121,14 +118,11 @@ export default function PlanPaymentPage() {
         }
 
         try {
-            console.log(order)
-            // if (selectedMethod === "paypal") {
-                const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
-                const links = response.data.links ?? []
-                if (links[1]?.href) {
-                    window.open(links[1].href)
-                }
-            // }
+            const response = await axiosConfig.post(`/payments/checkout/paypal`, order)
+            const links = response.data.links ?? []
+            if (links[1]?.href) {
+                window.open(links[1].href)
+            }
         } catch (error) {
             console.log(error)
         } finally {
@@ -251,17 +245,35 @@ export default function PlanPaymentPage() {
                                     </div>
                                 </div>
                             </div>
+                            
+                            {isPlanInactive && (
+                                <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-in fade-in slide-in-from-top-2">
+                                    <div className="flex items-start gap-3">
+                                        <Ban className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="font-semibold text-red-900 text-sm">Plan Unavailable</p>
+                                            <p className="text-xs text-red-700 mt-1">
+                                                This plan is currently suspended or unavailable for new subscriptions. Please select another plan.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex flex-col md:flex-row md:gap-4 gap-3">
                                 <button
                                     onClick={handlePayment}
-                                    disabled={isLoading}
+                                    disabled={isLoading || isPlanInactive}
                                     className={`
                                         w-full md:flex-1
-                                        cursor-pointer bg-blue-600 hover:from-blue-700 hover:to-blue-700
-                                        text-white font-semibold py-3 px-4 rounded-xl
-                                        transition-all duration-200 shadow-lg hover:shadow-xl
-                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                        cursor-pointer 
+                                        ${isPlanInactive
+                                            ? "bg-slate-300 cursor-not-allowed text-slate-500" 
+                                            : "bg-blue-600 hover:from-blue-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl"
+                                        }
+                                        font-semibold py-3 px-4 rounded-xl
+                                        transition-all duration-200 
+                                        disabled:opacity-70 disabled:cursor-not-allowed
                                         flex items-center justify-center gap-2 group
                                     `}
                                 >
@@ -272,14 +284,16 @@ export default function PlanPaymentPage() {
                                         </>
                                     ) : (
                                         <>
-                                            {selectedPlan && user ? (
+                                            {isPlanInactive ? (
+                                                "Unavailable"
+                                            ) : selectedPlan && user ? (
                                                 selectedPlan.id <= Number(user.planId)
                                                     ? "Go to your Projects"
                                                     : "Upgrade"
                                             ) : (
                                                 "Continue to Payment"
                                             )}
-                                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                            {!isPlanInactive && <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />}
                                         </>
                                     )}
                                 </button>

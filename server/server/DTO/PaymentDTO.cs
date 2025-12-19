@@ -22,5 +22,12 @@ namespace server.DTO
             public string? SortKey { get; set; }
             public string? SortDirection { get; set; }
         }
+
+        public class Revenue
+        {
+            public int Day { get; set; }   
+            public decimal Total { get; set; }  
+            public int TransactionCount { get; set; }
+        }
     }
 }

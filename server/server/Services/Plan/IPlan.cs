@@ -8,5 +8,6 @@ namespace server.Models
         Task<PlanFeatures> FindPlanFeature(int planId, int feature);
         Task<Plans> FindPlanById(int planId);
         Task<Plans> PutPlan(Plans plan, PlanDTO.EditPlan editPlan);
+        Task<Plans> ToggleActive(Plans plan);
     }
 }

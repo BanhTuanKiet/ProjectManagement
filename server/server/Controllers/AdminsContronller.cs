@@ -17,6 +17,7 @@ namespace server.Controllers
     {
         private readonly IUsers _userServices;
         private readonly UserManager<ApplicationUser> _userManager;
+        public readonly ProjectManagementContext _context;
         private readonly IPlans _planServices;
         private readonly IPayments _paymentService;
         private readonly IConfiguration _configuration;
@@ -24,6 +25,7 @@ namespace server.Controllers
         public AdminsController(
             IUsers userServices,
             UserManager<ApplicationUser> userManager,
+            ProjectManagementContext context,
             IPlans planServices,
             IPayments paymentServices,
             IConfiguration configuration,
@@ -31,6 +33,7 @@ namespace server.Controllers
         {
             _userServices = userServices;
             _userManager = userManager;
+            _context = context;
             _planServices = planServices;
             _paymentService = paymentServices;
             _configuration = configuration;
@@ -169,6 +172,55 @@ namespace server.Controllers
                 data = payments,
                 totalPages
             });
+        }
+
+        [HttpPut("users/{userId}/toggle-active")]
+        public async Task<ActionResult> ToggleUserActive(string userId)
+        {
+            var user = await _userServices.FindUserById(userId)
+                ?? throw new ErrorException(404, "User not found");
+
+            bool previousState = user.IsActive;
+            var toggledActiveUser = await _userServices.ToggleActive(user);
+
+            if (toggledActiveUser.IsActive == previousState)
+                throw new ErrorException(400, "Failed to toggle user status");
+
+            return Ok(new
+            {
+                message = user.IsActive
+                    ? "User account has been activated"
+                    : "User account has been deactivated",
+            });
+        }
+
+        [HttpPut("plans/{planId}/toggle-active")]
+        public async Task<ActionResult> TogglePlanActive(int planId)
+        {
+            var plan = await _planServices.FindPlanById(planId)
+                ?? throw new ErrorException(404, "Plan not found");
+
+            bool previousState = plan.IsActive;
+            var toggledActiveUPlan = await _planServices.ToggleActive(plan);
+
+            if (toggledActiveUPlan.IsActive == previousState)
+                throw new ErrorException(400, "Failed to toggle plan status");
+
+            return Ok(new
+            {
+                message = plan.IsActive
+                    ? "This plan has been activated"
+                    : "This plan has been deactivated",
+            });
+        }
+    
+        [HttpGet("payments/revenue/{month}/{year}")]
+        public async Task<ActionResult> GetRevenue(int month, int year)
+        {
+            var revenue = await _paymentService.GetRevenue(month, year);
+
+            if (revenue.Count() <= 0) return Ok();
+            return Ok(revenue);
         }
     }
 }

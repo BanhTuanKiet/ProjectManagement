@@ -619,6 +619,12 @@ namespace server.Controllers
 
                 var rowsAffected = await _tasksService.DeleteTaskForeverAsync(taskId);
 
+                var log = await _context.ActivityLogs.Where(x => x.ProjectId == projectId && x.TargetId == taskId.ToString()).ToListAsync();
+                _context.ActivityLogs.RemoveRange(log);
+                string taskLink = "tasks=" + taskId;
+                var notifications = await _context.Notifications.Where(x => x.Link == taskLink).ToListAsync();
+                _context.Notifications.RemoveRange(notifications);
+
                 var historyTask = await _context.TaskHistories
                                         .OrderByDescending(t => t.ChangedAt)
                                         .ToListAsync();

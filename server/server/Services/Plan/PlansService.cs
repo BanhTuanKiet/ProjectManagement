@@ -101,5 +101,13 @@ namespace server.Services.Project
             await _context.SaveChangesAsync();
             return plan;
         }
+
+        public async Task<Plans> ToggleActive(Plans plan)
+        {
+            bool isActive = !plan.IsActive;
+            plan.IsActive = isActive;
+            await _context.SaveChangesAsync();
+            return plan;
+        }
     }
 }
