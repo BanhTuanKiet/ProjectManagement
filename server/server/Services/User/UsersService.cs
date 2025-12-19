@@ -290,7 +290,6 @@ namespace server.Services.User
             var user = await _context.ApplicationUsers
                 .Include(u => u.Subscription)
                     .ThenInclude(s => s.Plan)
-                .Where(u => u.Subscription.UserId == userId)
                 .Include(u => u.Contacts)
                     .ThenInclude(c => c.Media)
                 .FirstOrDefaultAsync(u => u.Id == userId);

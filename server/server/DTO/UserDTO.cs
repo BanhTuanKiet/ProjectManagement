@@ -35,7 +35,7 @@ public class UserDTO
         public string Location { get; set; }
         public List<Contact> Contacts { get; set; }
         public List<ProjectDTO.ProjectBasic> Projects { get; set; }
-        public Subcription Subcription { get; set; }
+        public Subcription? Subcription { get; set; }
     }
 
     public class Subcription
