@@ -38,7 +38,9 @@ namespace server.Configs
 
                     var (user, isNewUser) = await userService.FindOrCreateUserByEmail(email, name);
 
-                    if (isNewUser)
+                    var subscrip = await db.Subscriptions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+
+                    if (isNewUser || subscrip == null)
                     {
                         var subscription = new Subscriptions
                         {
