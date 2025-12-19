@@ -15,6 +15,7 @@ import * as signalR from "@microsoft/signalr";
 import ColoredAvatar from "../ColoredAvatar";
 import TaskAttachments from "./TaskAttachments";
 import { Task } from "@/utils/mapperUtil";
+import { BasicTask } from "@/utils/ITask";
 
 interface Comment {
     commentId: number;
@@ -27,7 +28,7 @@ interface Comment {
 }
 
 interface TaskDetailMainProps {
-    task: Task;
+    task: BasicTask;
     taskId: number;
     projectId: number;
     projectRole: string;
@@ -42,7 +43,7 @@ export default function TaskDetailMain({
     connection,
 }: TaskDetailMainProps) {
     // --- STATE ---
-    const [title, setTitle] = useState(task?.summary || "");
+    const [title, setTitle] = useState(task?.title || "");
     const [editTitle, setEditTitle] = useState(false);
 
     const [description, setDescription] = useState(task?.description || "");
@@ -68,10 +69,10 @@ export default function TaskDetailMain({
 
     // Đồng bộ state từ props
     useEffect(() => {
-        setTitle(task.summary || "");
+        setTitle(task.title || "");
         setDescription(task.description || "");
         fetchWorklogs(1);
-    }, [task.summary, task.description, projectId, taskId]);
+    }, [task.title, task.description, projectId, taskId]);
 
     const fetchWorklogs = async (pageNumber = 1) => {
         try {
@@ -111,7 +112,7 @@ export default function TaskDetailMain({
         try {
             // Validate cơ bản
             if (key === "title" && !value.trim()) {
-                setTitle(task?.summary || ""); // Revert nếu rỗng
+                setTitle(task?.title || ""); // Revert nếu rỗng
                 return;
             }
 
@@ -135,7 +136,7 @@ export default function TaskDetailMain({
         } catch (error) {
             console.error(`Failed to update ${key}:`, error);
             // Revert data nếu lỗi
-            if (key === "title") setTitle(task.summary || "");
+            if (key === "title") setTitle(task.title || "");
             if (key === "description") setDescription(task.description || "");
         }
     };
@@ -244,7 +245,7 @@ export default function TaskDetailMain({
                                 }
                             }}
                             className="w-full text-sm text-gray-700 bg-white border border-gray-300 p-3 rounded min-h-[80px] focus:outline-none focus:ring focus:ring-blue-200"
-                            placeholder={task.summary}
+                            placeholder={task.title}
                         />
                     )}
                 </div>
@@ -293,10 +294,11 @@ export default function TaskDetailMain({
                         onValueChange={setActiveTab}
                         className="w-full"
                     >
-                        <TabsList className="grid w-full grid-cols-4 bg-gray-100">
+                        (projectRole !="Member" ? (
+                        <TabsList className="grid w-full grid-cols-3 bg-gray-100">
                             <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
                             <TabsTrigger value="comments" className="text-xs">Comments</TabsTrigger>
-                            <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+                            {/* <TabsTrigger value="history" className="text-xs">History</TabsTrigger> */}
                             <TabsTrigger value="worklog" className="text-xs">Work log</TabsTrigger>
                         </TabsList>
 
@@ -454,7 +456,130 @@ export default function TaskDetailMain({
                                 </div>
                             )}
                         </TabsContent>
+                        ):(
+                        <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+                            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+                            <TabsTrigger value="comments" className="text-xs">Comments</TabsTrigger>
+                            {/* <TabsTrigger value="history" className="text-xs">History</TabsTrigger> */}
+                            <TabsTrigger value="worklog" className="text-xs">Work log</TabsTrigger>
+                        </TabsList>
 
+                        <TabsContent value="all" className="mt-4 space-y-4">
+                            {/* Mục History (hardcoded từ file gốc) */}
+                            <div className="flex gap-3">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="bg-red-500 text-white text-xs">
+                                        TB
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="font-medium">Thái Bảo</span>
+                                        <span className="text-gray-500">updated the</span>
+                                        <span className="font-medium">Reporter</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        September 13, 2025 at 3:36 PM
+                                    </div>
+                                    <Badge variant="outline" className="mt-2 text-xs">
+                                        HISTORY
+                                    </Badge>
+                                    <div className="text-sm text-gray-600 mt-2">
+                                        Thái Bảo → None
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Danh sách Comments (hiển thị trong tab "All") */}
+                            {comments && comments?.map((c) => (
+                                <div key={c.commentId} className="flex gap-3 pb-3">
+                                    <ColoredAvatar
+                                        id={c.userId}
+                                        name={c.userName ?? "User"}
+                                        size="md"
+                                        showOnlineStatus={true}
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <span className="font-medium">
+                                                {c.userName ?? "User"}
+                                            </span>
+                                            <span className="text-gray-500">commented</span>
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-0.5">
+                                            {new Date(c.createdAt).toLocaleString()}
+                                        </div>
+                                        <div className="text-sm text-gray-700 mt-1">
+                                            {c.content}
+                                        </div>
+                                        {c.isEdited && (
+                                            <span className="text-xs text-gray-400">
+                                                (edited)
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </TabsContent>
+
+                        <TabsContent value="comments" className="mt-4">
+                            {/* Input Comment */}
+                            <div className="flex gap-3">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="bg-red-500 text-white text-xs">ME</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <Textarea
+                                        placeholder="Add a comment..."
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        className="min-h-[80px] resize-none"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleAddComment();
+                                            }
+                                        }}
+                                    />
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className="flex gap-1">
+                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => setComment("🎉 Looks good!")}>🎉 Looks good!</Button>
+                                            <Button variant="ghost" size="sm" className="text-xs px-2 py-1 h-auto" onClick={() => setComment("👋 Need help?")}>👋 Need help?</Button>
+                                        </div>
+                                        <div className="ml-auto flex items-center gap-2">
+                                            {editingCommentId && (
+                                                <Button size="sm" variant="ghost" onClick={() => { setEditingCommentId(null); setComment(""); }}>Cancel</Button>
+                                            )}
+                                            <Button size="sm" onClick={handleAddComment}>{editingCommentId ? "Update" : "Comment"}</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Render Comments List */}
+                            <div className="mt-4 space-y-3">
+                                {comments.map((c) => (
+                                    <div key={c.commentId} className="flex gap-3 border-b pb-3">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarFallback className="bg-gray-500 text-white text-xs">{c.userName?.[0] ?? "U"}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium">{c.userName ?? "User"}</span>
+                                                <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleString()}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-700 mt-1">{c.content}</div>
+                                            <div className="flex gap-2 text-xs text-blue-600 mt-1">
+                                                <button onClick={() => handleEditClick(c)}>Edit</button>
+                                                <button onClick={() => handleDeleteComment(c.commentId)}>Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </TabsContent>
+                        )
+                        )
                     </Tabs>
                 </div>
             </div>
