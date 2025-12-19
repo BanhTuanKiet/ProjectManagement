@@ -3,7 +3,7 @@ import { PaymentUser } from "./IUser"
 export interface FeatureDetail {
     featureId: number
     featureName: string
-    valueType: 'string'
+    valueType: 'string' | 'boolean'
     value: string
 }
 
@@ -32,4 +32,10 @@ export interface AdminPayment {
     description: string
     createdAt: string
     user: PaymentUser
+}
+
+export interface Revenue {
+    day: number
+    total: number
+    transactionCount: number
 }

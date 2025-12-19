@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Models;
 using System.Text.RegularExpressions;
@@ -8,7 +7,6 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using server.Configs;
 using server.DTO;
-using AutoMapper.QueryableExtensions;
 
 namespace server.Services.User
 {
@@ -26,6 +24,20 @@ namespace server.Services.User
             _userManager = userManager;
             _cloudinary = cloudinary;
         }
+
+        public async Task<ApplicationUser> ToggleActive(ApplicationUser user)
+        {
+            user.IsActive = !user.IsActive;
+
+            if (!user.IsActive)
+            {
+                user.RefreshToken = null;
+            }
+
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
         public async Task<List<ApplicationUser>> GetUsers()
         {
             return await _context.ApplicationUsers.ToListAsync();

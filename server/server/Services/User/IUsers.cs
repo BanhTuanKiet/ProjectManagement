@@ -23,5 +23,6 @@ namespace server.Models
         Task<Subscriptions> GetSubscriptions(string userId);
         Task<UserDTO.UserProfile2> GetUserProfile(string userId);
         Task<ApplicationUser> PutInfoProfile(ApplicationUser user, UserDTO.InfoProfile infoProfile);
+        Task<ApplicationUser> ToggleActive(ApplicationUser user);
     }
 }
