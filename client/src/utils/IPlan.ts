@@ -33,3 +33,9 @@ export interface AdminPayment {
     createdAt: string
     user: PaymentUser
 }
+
+export interface Revenue {
+    day: number
+    total: number
+    transactionCount: number
+}

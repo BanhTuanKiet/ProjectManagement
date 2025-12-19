@@ -1,4 +1,5 @@
 import { Bell, Check, MessageCircle, Users, Shrink as Sprint, Flag, Github, Linkedin, Facebook, LinkIcon, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { AdminPayment } from "./IPlan";
 
 export type TaskStatus = {
     id: number;
@@ -294,4 +295,12 @@ export const getActiveAccount = (isActive: boolean) => {
     }
 
     return 'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-300 text-green-800 dark:bg-green-900 dark:text-green-200'
+}
+
+export const paymentStatusBadge = (status: AdminPayment['status']) => {
+    switch (status) {
+        case 'Paid': return 'bg-green-100 text-green-700'
+        case 'Failed': return 'bg-red-100 text-red-700'
+        default: return 'bg-yellow-100 text-yellow-700'
+    }
 }
