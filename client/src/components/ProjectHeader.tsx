@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, User, LogOut, Sun, Moon, CheckCircle2, ArrowRight } from "lucide-react"
+import { Bell, User, LogOut, Sun, Moon, CheckCircle2, ArrowRight, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useRef, useState } from "react"
@@ -244,6 +244,19 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                                 </div>
                             </div>
 
+                            {/* Kiểm tra quyền Admin */}
+                            {user && user.roles?.includes("Admin") && (
+                                <div className="p-1 pb-0"> {/* Thêm padding để đồng bộ */}
+                                    <button
+                                        onClick={() => router.push("/dashboard")}
+                                        className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors"
+                                    >
+                                        <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                                        <span className="font-medium text-blue-600">Admin Dashboard</span>
+                                    </button>
+                                    <div className="h-px bg-border my-1" /> {/* Dòng kẻ ngăn cách nếu muốn */}
+                                </div>
+                            )}
                             <div className="p-1">
                                 <button
                                     onClick={() => router.push("/profile")}
