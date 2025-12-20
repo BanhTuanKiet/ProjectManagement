@@ -146,6 +146,8 @@ export default function BacklogView() {
     // Khi thả vào Sprint
     const handleDropToSprint = async (e: React.DragEvent, sprintId: number) => {
         const taskId = parseInt(e.dataTransfer.getData("taskId"));
+        const targetSprintId = parseInt(e.dataTransfer.getData("sprintId"));
+
         if (!taskId) return;
 
         const movedTask =
@@ -170,12 +172,13 @@ export default function BacklogView() {
             const deadline = new Date(movedTask.deadline as string);
             const start = new Date(targetSprint.startDate!);
             const end = new Date(targetSprint.endDate!);
-
-            if (deadline < start || deadline > end) {
-                alert(
-                    `⚠️ Deadline của task (${deadline.toLocaleDateString()}) không nằm trong thời gian sprint (${start.toLocaleDateString()} → ${end.toLocaleDateString()})`
-                );
-                return;
+            if (targetSprintId > 0 && targetSprintId !== movedTask.sprintId) {
+                if (deadline < start || deadline > end) {
+                    alert(
+                        `⚠️ Deadline của task (${deadline.toLocaleDateString()}) không nằm trong thời gian sprint (${start.toLocaleDateString()} → ${end.toLocaleDateString()})`
+                    );
+                    return;
+                }
             }
         }
 

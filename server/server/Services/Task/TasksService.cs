@@ -359,11 +359,33 @@ namespace server.Services.Project
                             }
                             else
                             {
-                                task.SprintId = sprintId;
+                                var sprint = await _sprints.GetById(sprintId);
 
-                                var newSprintName = await _sprints.GetById(task.SprintId ?? 0);
-                                changeSummary += $"I've moved from sprint '{oldSprintName?.Name}' to '{newSprintName?.Name}' ";
-                                hasChanges = true;
+                                if (task.SprintId != null)
+                                {
+                                    if (task.Deadline.HasValue && sprint?.StartDate != null && sprint?.EndDate != null)
+                                    {
+                                        var taskDeadlineAsDateOnly = DateOnly.FromDateTime(task.Deadline.Value);
+
+                                        if (taskDeadlineAsDateOnly <= sprint.EndDate && taskDeadlineAsDateOnly >= sprint.StartDate)
+                                        {
+                                            task.SprintId = sprintId;
+
+                                            var newSprintName = await _sprints.GetById(task.SprintId ?? 0);
+                                            changeSummary += $"I've moved from sprint '{oldSprintName?.Name}' to '{newSprintName?.Name}' ";
+                                            hasChanges = true;
+                                        }
+                                        else
+                                        {
+                                            throw new ErrorException(400, "Deadline of task is not within sprint duration.");
+                                        }
+                                    }
+                                }else{
+                                    task.SprintId = sprintId;
+                                    var newSprintName = await _sprints.GetById(task.SprintId ?? 0);
+                                    changeSummary += $"I've moved from sprint '{oldSprintName?.Name}' to '{newSprintName?.Name}' ";
+                                    hasChanges = true;
+                                }
                             }
                         }
                         else
