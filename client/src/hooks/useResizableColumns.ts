@@ -45,6 +45,16 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
         }
     }, [members]);
 
+    const isFiltering = useMemo(() => {
+        return Object.keys(filters).length > 0 || debouncedSearch.trim() !== "";
+    }, [filters, debouncedSearch]);
+
+    useEffect(() => {
+        if (!isFiltering) {
+            setTasks(currentTasks.map(mapApiTaskToTask));
+        }
+    }, [currentTasks, isFiltering]);
+
     useEffect(() => {
         setTasks(prev => {
             const map = new Map(prev.map(t => [t.id, t]));
@@ -175,14 +185,14 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
                 const serverData = response.data.task || response.data;
                 let updatedFromServer = mapApiTaskToTask(serverData);
 
-                if (field === "assignee") {
-                    if (value && typeof value === "object" && !updatedFromServer.assignee) {
-                        updatedFromServer = { ...updatedFromServer, assignee: value as UserMini };
-                    }
-                    if (value === null) {
-                        updatedFromServer = { ...updatedFromServer, assignee: undefined };
-                    }
-                }
+                // if (field === "assignee") {
+                //     if (value && typeof value === "object" && !updatedFromServer.assignee) {
+                //         updatedFromServer = { ...updatedFromServer, assignee: value as UserMini };
+                //     }
+                //     if (value === null) {
+                //         updatedFromServer = { ...updatedFromServer, assignee: undefined };
+                //     }
+                // }
 
                 setTasks((prev) =>
                     prev.map((t) => (t.id === taskId ? updatedFromServer : t))
@@ -260,8 +270,12 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
 
     useEffect(() => {
         const fetchFilteredAndSearchedTasks = async () => {
+            if (!isFiltering) {
+                setTasks(currentTasks.map(mapApiTaskToTask));
+                return;
+            }
             try {
-                if (Object.keys(filters).length === 0 && debouncedSearch.trim() === "") return;
+                // if (Object.keys(filters).length === 0 && debouncedSearch.trim() === "") return;
 
                 // 🔸 Tạo params gửi lên API
                 const params = {
@@ -286,7 +300,7 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
         };
 
         fetchFilteredAndSearchedTasks();
-    }, [debouncedSearch, filters, project_name]);
+    }, [debouncedSearch, filters, project_name, currentTasks, isFiltering]);
 
     const addTask = useCallback((newTask: Task) => {
         setTasks((prev) => [...prev, newTask]);
