@@ -41,7 +41,7 @@ export default function ListPage({
     ListPageProps
 ) {
     const { tasks } = useTask();
-    const mappedTasks: Task[] = tasks.map((t) => mapApiTaskToTask(t));
+    // const mappedTasks: Task[] = tasks.map((t) => mapApiTaskToTask(t));
     const currentTasks = tasks.length > 0 ? tasks : tasksNormal;
 
     const {
