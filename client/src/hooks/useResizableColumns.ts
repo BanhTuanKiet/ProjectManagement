@@ -159,34 +159,25 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
 
                 console.log(`Payload [Task ${taskId}]:`, payload);
 
-                // 2. Optimistic Update: Cập nhật UI ngay để tạo cảm giác mượt
-                // @ts-ignore: Ignore type check tạm thời để spread object nhanh
-                const optimisticTask = { ...currentTask, [field]: value };
+                const optimisticTask: Task = {
+                    ...currentTask,
+                    [field]: value
+                } as unknown as Task;
+
                 setTasks((prev) =>
                     prev.map((t) => (t.id === taskId ? optimisticTask : t))
                 );
-
-                // 3. Gọi API
                 const response = await axios.put(
                     `/tasks/${Number(project_name)}/tasks/${taskId}/update`,
                     payload
                 );
 
-                // 4. Sync dữ liệu chuẩn từ Server (nếu thành công)
                 const serverData = response.data.task || response.data;
                 let updatedFromServer = mapApiTaskToTask(serverData);
 
-                // Fix UI: Giữ object assignee vừa chọn nếu server trả về null (tránh nháy UI)
                 if (field === "assignee") {
-                    if (
-                        value &&
-                        typeof value === "object" &&
-                        !updatedFromServer.assignee
-                    ) {
-                        updatedFromServer = {
-                            ...updatedFromServer,
-                            assignee: value as UserMini,
-                        };
+                    if (value && typeof value === "object" && !updatedFromServer.assignee) {
+                        updatedFromServer = { ...updatedFromServer, assignee: value as UserMini };
                     }
                     if (value === null) {
                         updatedFromServer = { ...updatedFromServer, assignee: undefined };
@@ -270,13 +261,7 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
     useEffect(() => {
         const fetchFilteredAndSearchedTasks = async () => {
             try {
-                // Nếu không có lọc và không có search → trả lại danh sách gốc
-                if (
-                    Object.keys(filters).length === 0 &&
-                    debouncedSearch.trim() === ""
-                ) {
-                    return; // giữ state hiện tại
-                }
+                if (Object.keys(filters).length === 0 && debouncedSearch.trim() === "") return;
 
                 // 🔸 Tạo params gửi lên API
                 const params = {
@@ -286,7 +271,6 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
 
                 console.log("🧭 Gửi request filter/search với params:", params);
 
-                // 🔸 Gọi API duy nhất
                 const res = await axios.get(
                     `/tasks/${Number(project_name)}/filter-by`,
                     { params }
@@ -294,7 +278,6 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
 
                 console.log("✅ API response:", res.data);
 
-                // 🔸 Map dữ liệu sang format hiển thị FE
                 const mapped = res.data.map(mapApiTaskToTask);
                 setTasks(mapped);
             } catch (err) {
@@ -303,7 +286,7 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
         };
 
         fetchFilteredAndSearchedTasks();
-    }, [debouncedSearch, filters, project_name, currentTasks]);
+    }, [debouncedSearch, filters, project_name]);
 
     const addTask = useCallback((newTask: Task) => {
         setTasks((prev) => [...prev, newTask]);
