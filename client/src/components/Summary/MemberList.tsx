@@ -237,7 +237,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                         </Button>
                     </div>
 
-                    <div className="flex gap-2">
+                    {/* <div className="flex gap-2">
                         <Button
                             size="sm"
                             variant="outline"
@@ -247,7 +247,7 @@ export default function MemberList({ project }: { project: ProjectBasic }) {
                             <Edit2 size={16} />
                             Change Leader
                         </Button>
-                    </div>
+                    </div> */}
 
                     <div className="ml-auto">
                         <Button
