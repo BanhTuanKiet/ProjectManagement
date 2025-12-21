@@ -5,8 +5,15 @@ import { Calendar } from "@/components/ui/calendar"
 import { getDeadlineStyle } from "@/utils/dateUtils";
 import { format } from "date-fns"
 import type { Task } from "@/utils/mapperUtil"
+import { Member, UserMini } from "@/utils/IUser";
 
-function DueDateCell({ task, handleCellEdit }: { task: Task; handleCellEdit: Function }) {
+type EditValue = string | number | Member | UserMini | null;
+interface DueDateCellProps {
+    task: Task;
+    handleCellEdit: (taskId: number, field: string, value: EditValue) => void;
+}
+
+function DueDateCell({ task, handleCellEdit }: DueDateCellProps) {
     const style = getDeadlineStyle(task)
     const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
         task.dueDate ? new Date(task.dueDate) : undefined

@@ -5,18 +5,13 @@ import axios from "@/config/axiosConfig";
 import { Member, UserMini } from "@/utils/IUser";
 import {
     mapApiTaskToTask,
-    mapApiUserToUserMini,
     Task,
-    mapTaskToApiUpdatePayload,
 } from "@/utils/mapperUtil";
 import { BasicTask } from "@/utils/ITask";
 import { Column, initialColumns } from "@/config/columsConfig";
 import { useProject } from "@/app/(context)/ProjectContext";
 import { useDebounce } from "@/hooks/useDebounce";
 
-type UpdatePayload = {
-    [key: string]: string | number | null | undefined;
-};
 type EditValue = string | number | Member | UserMini | null;
 
 export const useTaskTable = (currentTasks: BasicTask[]) => {
@@ -30,79 +25,131 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
         field: string;
     } | null>(null);
     const [draggedTask, setDraggedTask] = useState<number | null>(null);
-    const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(
-        null
-    );
+    const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null);
+    
     const { project_name, members } = useProject();
     const [filters, setFilters] = useState<Record<string, string>>({});
     const debouncedSearch = useDebounce(searchQuery, 400);
-    // Fetch users + tasks
+
+    // 1. Đồng bộ Members từ Project Context
     useEffect(() => {
         if (members) {
-            // const mappedUsers = members.map(mapApiUserToUserMini);
-            // console.log("Mapped users:", mappedUsers);
             setAvailableUsers(members);
         }
     }, [members]);
 
+    // 2. Logic Filter/Search Mode
+    const isFiltering = useMemo(() => {
+        return Object.keys(filters).length > 0 || debouncedSearch.trim() !== "";
+    }, [filters, debouncedSearch]);
+
+    // 3. DUY NHẤT 1 Effect để quản lý việc đồng bộ hóa danh sách Task
     useEffect(() => {
-        setTasks(prev => {
-            const map = new Map(prev.map(t => [t.id, t]));
+        const syncTasks = async () => {
+            if (isFiltering) {
+                try {
+                    const params = {
+                        ...filters,
+                        keyword: debouncedSearch.trim() || undefined,
+                    };
+                    const res = await axios.get(`/tasks/${Number(project_name)}/filter-by`, { params });
+                    const mapped = res.data.map(mapApiTaskToTask);
+                    setTasks(mapped);
+                } catch (err) {
+                    console.error("Filter error:", err);
+                }
+            } else {
+                // Khi không filter, lấy trực tiếp từ currentTasks (SignalR/Context)
+                setTasks(currentTasks.map(mapApiTaskToTask));
+            }
+        };
 
-            currentTasks.forEach(apiTask => {
-                const mapped = mapApiTaskToTask(apiTask);
-                map.set(mapped.id, {
-                    ...map.get(mapped.id),
-                    ...mapped,
-                });
-            });
+        syncTasks();
+    }, [currentTasks, isFiltering, filters, debouncedSearch, project_name]);
 
-            return Array.from(map.values());
-        });
-    }, [currentTasks]);
-
-
-    // Resize columns
+    // 4. Cập nhật Resize Columns
     const resizingColumn = useRef<{
         index: number;
         startX: number;
         startWidth: number;
     } | null>(null);
 
-    const handleMouseDown = useCallback(
-        (e: React.MouseEvent, columnIndex: number) => {
-            e.preventDefault();
-            const startX = e.clientX;
-            const startWidth = columns[columnIndex].width;
+    const handleMouseDown = useCallback((e: React.MouseEvent, columnIndex: number) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = columns[columnIndex].width;
+        resizingColumn.current = { index: columnIndex, startX, startWidth };
 
-            resizingColumn.current = { index: columnIndex, startX, startWidth };
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!resizingColumn.current) return;
+            const deltaX = e.clientX - resizingColumn.current.startX;
+            const newWidth = Math.max(columns[resizingColumn.current.index].minWidth, resizingColumn.current.startWidth + deltaX);
+            setColumns((prev) => prev.map((col, i) => i === resizingColumn.current?.index ? { ...col, width: newWidth } : col));
+        };
 
-            const handleMouseMove = (e: MouseEvent) => {
-                if (!resizingColumn.current) return;
-                const { index, startX, startWidth } = resizingColumn.current;
-                const deltaX = e.clientX - startX;
-                const newWidth = Math.max(columns[index].minWidth, startWidth + deltaX);
+        const handleMouseUp = () => {
+            resizingColumn.current = null;
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
 
-                setColumns((prev) =>
-                    prev.map((col, i) =>
-                        i === index ? { ...col, width: newWidth } : col
-                    )
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+    }, [columns]);
+
+    // 5. Cập nhật Cell Edit với cơ chế Rollback
+    const handleCellEdit = useCallback(
+        async (taskId: number, field: string, value: EditValue) => {
+            const currentTask = tasks.find((t) => t.id === taskId);
+            if (!currentTask) return;
+            if (currentTask[field as keyof Task] === value) {
+                setEditingCell(null);
+                return;
+            }
+
+            // Backup dữ liệu cũ để rollback nếu API lỗi
+            const originalTasks = [...tasks];
+
+            try {
+                const payload: Record<string, string | number | null | undefined> = {};
+                if (field === "assignee") {
+                    payload["assigneeId"] = (value && typeof value === "object" && "userId" in value) ? (value as Member).userId : null;
+                } else if (field === "priority") {
+                    const priorityMap: Record<string, number> = { High: 1, Medium: 2, Low: 3 };
+                    payload["priority"] = typeof value === "string" ? priorityMap[value] : (value as number);
+                } else if (field === "dueDate") {
+                    payload["deadline"] = value as string;
+                } else if (field === "summary") {
+                    payload["title"] = value as string;
+                } else {
+                    payload[field] = value ? String(value) : null;
+                }
+
+                setTasks((prev) =>
+                    prev.map((t) => t.id === taskId ? { ...t, [field]: value } : t)
                 );
-            };
 
-            const handleMouseUp = () => {
-                resizingColumn.current = null;
-                document.removeEventListener("mousemove", handleMouseMove);
-                document.removeEventListener("mouseup", handleMouseUp);
-            };
+                const response = await axios.put(`/tasks/${Number(project_name)}/tasks/${taskId}/update`, payload);
 
-            document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("mouseup", handleMouseUp);
+                const serverData = response.data.task.task || response.data.task;
+                console.log("Server data:", serverData);
+                const updatedTask = mapApiTaskToTask(serverData);
+                console.log("Updated task:", updatedTask);
+
+                setTasks((prev) =>
+                    prev.map((t) => (t.id === taskId ? updatedTask : t))
+                );
+            } catch (error) {
+                console.error("Update failed:", error);
+                setTasks(originalTasks);
+            } finally {
+                setEditingCell(null);
+            }
         },
-        [columns]
+        [tasks, project_name]
     );
 
-    // Select tasks
+    // 6. Các hàm Drag & Drop và tính năng bổ trợ (Giữ nguyên)
     const toggleTaskSelection = useCallback((taskId: number) => {
         setSelectedTasks((prev) => {
             const newSet = new Set(prev);
@@ -113,93 +160,9 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
     }, []);
 
     const toggleAllTasks = useCallback(() => {
-        setSelectedTasks((prev) => {
-            if (prev.size === tasks.length) return new Set();
-            return new Set(tasks.map((t) => t.id));
-        });
+        setSelectedTasks((prev) => (prev.size === tasks.length ? new Set() : new Set(tasks.map((t) => t.id))));
     }, [tasks]);
 
-    // Edit cell
-    const handleCellEdit = useCallback(
-        async (taskId: number, field: string, value: EditValue) => {
-            // 1. Backup dữ liệu cũ để revert nếu lỗi
-            const currentTask = tasks.find((t) => t.id === taskId);
-            if (!currentTask) return;
-
-            try {
-                // Tạo payload an toàn kiểu dữ liệu
-                const payload: Record<string, string | number | null | undefined> = {};
-
-                if (field === "assignee") {
-                    if (value && typeof value === "object" && "userId" in value) {
-                        payload["assigneeId"] = (value as Member).userId;
-                    } else {
-                        payload["assigneeId"] = null;
-                    }
-                } else if (field === "priority") {
-                    const priorityMap: Record<string, number> = {
-                        High: 1,
-                        Medium: 2,
-                        Low: 3,
-                    };
-                    if (typeof value === "string" && value in priorityMap) {
-                        payload["priority"] = priorityMap[value];
-                    } else if (typeof value === "number") {
-                        payload["priority"] = value;
-                    }
-                } else if (field === "dueDate") {
-                    payload["deadline"] = value as string;
-                } else if (field === "summary") {
-                    payload["title"] = value as string;
-                } else {
-                    if (value !== undefined && value !== null) {
-                        payload[field] = String(value);
-                    }
-                }
-
-                console.log(`Payload [Task ${taskId}]:`, payload);
-
-                const optimisticTask: Task = {
-                    ...currentTask,
-                    [field]: value
-                } as unknown as Task;
-
-                setTasks((prev) =>
-                    prev.map((t) => (t.id === taskId ? optimisticTask : t))
-                );
-                const response = await axios.put(
-                    `/tasks/${Number(project_name)}/tasks/${taskId}/update`,
-                    payload
-                );
-
-                const serverData = response.data.task || response.data;
-                let updatedFromServer = mapApiTaskToTask(serverData);
-
-                if (field === "assignee") {
-                    if (value && typeof value === "object" && !updatedFromServer.assignee) {
-                        updatedFromServer = { ...updatedFromServer, assignee: value as UserMini };
-                    }
-                    if (value === null) {
-                        updatedFromServer = { ...updatedFromServer, assignee: undefined };
-                    }
-                }
-
-                setTasks((prev) =>
-                    prev.map((t) => (t.id === taskId ? updatedFromServer : t))
-                );
-            } catch (error) {
-                console.error("Update failed:", error);
-                setTasks((prev) =>
-                    prev.map((t) => (t.id === taskId ? currentTask : t))
-                );
-            } finally {
-                setEditingCell(null);
-            }
-        },
-        [tasks, project_name]
-    );
-
-    // Drag & Drop
     const handleDragStart = useCallback((e: React.DragEvent, taskId: number) => {
         setDraggedTask(taskId);
         e.dataTransfer.effectAllowed = "move";
@@ -210,151 +173,69 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
         e.dataTransfer.dropEffect = "move";
     }, []);
 
-    const handleDrop = useCallback(
-        (e: React.DragEvent, targetTaskId: number) => {
-            e.preventDefault();
-            if (!draggedTask || draggedTask === targetTaskId) return;
-
-            const draggedIndex = tasks.findIndex((t) => t.id === draggedTask);
-            const targetIndex = tasks.findIndex((t) => t.id === targetTaskId);
-
-            const newTasks = [...tasks];
-            const [draggedItem] = newTasks.splice(draggedIndex, 1);
-            newTasks.splice(targetIndex, 0, draggedItem);
-
-            setTasks(newTasks);
-            setDraggedTask(null);
-        },
-        [draggedTask, tasks]
-    );
-
-    // Column Drag & Drop
-    const handleColumnDragStart = useCallback(
-        (e: React.DragEvent, index: number) => {
-            setDraggedColumnIndex(index);
-            e.dataTransfer.effectAllowed = "move";
-        },
-        []
-    );
-
-    const handleColumnDragOver = useCallback((e: React.DragEvent) => {
+    const handleDrop = useCallback((e: React.DragEvent, targetTaskId: number) => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
+        if (!draggedTask || draggedTask === targetTaskId) return;
+        const newTasks = [...tasks];
+        const draggedIndex = newTasks.findIndex((t) => t.id === draggedTask);
+        const targetIndex = newTasks.findIndex((t) => t.id === targetTaskId);
+        const [draggedItem] = newTasks.splice(draggedIndex, 1);
+        newTasks.splice(targetIndex, 0, draggedItem);
+        setTasks(newTasks);
+        setDraggedTask(null);
+    }, [draggedTask, tasks]);
+
+    const handleColumnDragStart = useCallback((e: React.DragEvent, index: number) => {
+        setDraggedColumnIndex(index);
+        e.dataTransfer.effectAllowed = "move";
     }, []);
 
-    const handleColumnDrop = useCallback(
-        (e: React.DragEvent, targetIndex: number) => {
-            e.preventDefault();
-            if (draggedColumnIndex === null || draggedColumnIndex === targetIndex)
-                return;
-
-            const newColumns = [...columns];
-            const [moved] = newColumns.splice(draggedColumnIndex, 1);
-            newColumns.splice(targetIndex, 0, moved);
-
-            setColumns(newColumns);
-            setDraggedColumnIndex(null);
-        },
-        [draggedColumnIndex, columns]
-    );
-
-    useEffect(() => {
-        const fetchFilteredAndSearchedTasks = async () => {
-            try {
-                if (Object.keys(filters).length === 0 && debouncedSearch.trim() === "") return;
-
-                // 🔸 Tạo params gửi lên API
-                const params = {
-                    ...filters,
-                    keyword: debouncedSearch.trim() || undefined,
-                };
-
-                console.log("🧭 Gửi request filter/search với params:", params);
-
-                const res = await axios.get(
-                    `/tasks/${Number(project_name)}/filter-by`,
-                    { params }
-                );
-
-                console.log("✅ API response:", res.data);
-
-                const mapped = res.data.map(mapApiTaskToTask);
-                setTasks(mapped);
-            } catch (err) {
-                console.error("❌ Lỗi khi filter/search tasks:", err);
-            }
-        };
-
-        fetchFilteredAndSearchedTasks();
-    }, [debouncedSearch, filters, project_name]);
+    const handleColumnDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
+        e.preventDefault();
+        if (draggedColumnIndex === null || draggedColumnIndex === targetIndex) return;
+        const newColumns = [...columns];
+        const [moved] = newColumns.splice(draggedColumnIndex, 1);
+        newColumns.splice(targetIndex, 0, moved);
+        setColumns(newColumns);
+        setDraggedColumnIndex(null);
+    }, [draggedColumnIndex, columns]);
 
     const addTask = useCallback((newTask: Task) => {
         setTasks((prev) => [...prev, newTask]);
     }, []);
 
-    // Copy các task được chọn
     const copySelectedTasks = useCallback(() => {
         const tasksToCopy = tasks.filter((t) => selectedTasks.has(t.id));
         if (tasksToCopy.length === 0) return;
-
-        // Clone task với id mới (FE giả lập hoặc gọi BE tạo task mới)
         const clonedTasks = tasksToCopy.map((t) => ({
             ...t,
-            id: -Math.floor(Math.random() * 1000000), // tạo id tạm, hoặc gọi API BE để add mới
+            id: -Math.floor(Math.random() * 1000000),
             key: `${t.key}-COPY`,
         }));
-
         setTasks((prev) => [...prev, ...clonedTasks]);
     }, [tasks, selectedTasks]);
 
-    // Delete các task được chọn
     const deleteSelectedTasks = useCallback(async () => {
         const toDelete = Array.from(selectedTasks);
         if (toDelete.length === 0) return;
-
         try {
-            // Gọi API BE xóa nhiều task (nếu có)
             await axios.delete(`/tasks/bulk-delete/${project_name}`, {
                 data: { projectId: Number(project_name), ids: toDelete },
             });
-
-            // Xóa trên FE
             setTasks((prev) => prev.filter((t) => !selectedTasks.has(t.id)));
-            setSelectedTasks(new Set()); // clear selection
+            setSelectedTasks(new Set());
         } catch (err) {
             console.error("Delete error:", err);
         }
-    }, [selectedTasks, tasks]);
+    }, [selectedTasks, project_name]);
 
-    const totalWidth = useMemo(
-        () => columns.reduce((s, c) => s + c.width, 0),
-        [columns]
-    );
+    const totalWidth = useMemo(() => columns.reduce((s, c) => s + c.width, 0), [columns]);
 
     return {
-        tasks,
-        availableUsers,
-        columns,
-        selectedTasks,
-        searchQuery,
-        filters,
-        setFilters,
-        setSearchQuery,
-        editingCell,
-        totalWidth,
-        setEditingCell,
-        handleMouseDown,
-        toggleTaskSelection,
-        toggleAllTasks,
-        handleCellEdit,
-        handleDragStart,
-        handleDragOver,
-        handleDrop,
-        handleColumnDragStart,
-        handleColumnDragOver,
-        handleColumnDrop,
-        addTask,
-        copySelectedTasks,
-        deleteSelectedTasks,
+        tasks, availableUsers, columns, selectedTasks, searchQuery, filters, setFilters, setSearchQuery,
+        editingCell, totalWidth, setEditingCell, handleMouseDown, toggleTaskSelection, toggleAllTasks,
+        handleCellEdit, handleDragStart, handleDragOver, handleDrop, handleColumnDragStart,
+        handleColumnDragOver: (e: React.DragEvent) => e.preventDefault(), handleColumnDrop,
+        addTask, copySelectedTasks, deleteSelectedTasks,
     };
 };

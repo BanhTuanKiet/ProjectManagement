@@ -41,10 +41,11 @@ export default function ListPage({
     ListPageProps
 ) {
     const { tasks } = useTask();
-    const mappedTasks: Task[] = tasks.map((t) => mapApiTaskToTask(t));
+    // const mappedTasks: Task[] = tasks.map((t) => mapApiTaskToTask(t));
     const currentTasks = tasks.length > 0 ? tasks : tasksNormal;
 
     const {
+        tasks: displayTasks,
         columns,
         selectedTasks,
         searchQuery,
@@ -321,7 +322,7 @@ export default function ListPage({
             <div id="descriptTaskList" className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex-1 overflow-auto">
                     <TableWrapper
-                        tasks={mappedTasks}
+                        tasks={displayTasks}
                         projectId={Number(projectId)}
                         columns={columns}
                         totalWidth={totalWidth}

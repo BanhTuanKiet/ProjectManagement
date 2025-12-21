@@ -55,7 +55,7 @@ export default function SubtaskList({
     useEffect(() => setLocalSubtasks(subtasks), [subtasks])
 
     const handleSubtaskEdit = useCallback(
-        async (subtaskId: number, taskId: number, field: string, value: any) => {
+        async (subtaskId: number, taskId: number, field: string, value: string | undefined) => {
             try {
                 setLocalSubtasks(prev =>
                     prev.map(s => (s.id === subtaskId ? { ...s, [field]: value } : s))
@@ -108,7 +108,7 @@ export default function SubtaskList({
                         // ======================================
                         // FIX QUAN TRỌNG – Chỉ lấy value primitive
                         // ======================================
-                        const rawValue = editablePrimitiveFields.includes(col.key as any)
+                        const rawValue = editablePrimitiveFields.includes(col.key as EditablePrimitiveField)
                             ? (subtask[col.key as EditablePrimitiveField] ?? "")
                             : ""
 
@@ -332,7 +332,7 @@ export default function SubtaskList({
                                         ) : (
                                             <span
                                                 onClick={() =>
-                                                    editablePrimitiveFields.includes(col.key as any) &&
+                                                    editablePrimitiveFields.includes(col.key as EditablePrimitiveField) &&
                                                     setEditingCell({ taskId: subtask.id, field: col.key })
                                                 }
                                                 className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
