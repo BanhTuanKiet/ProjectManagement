@@ -96,11 +96,13 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         modelBuilder.Entity<TeamMembers>()
             .HasOne(tm => tm.Team)
             .WithMany(t => t.Members)
-            .HasForeignKey(tm => tm.TeamId);
+            .HasForeignKey(tm => tm.TeamId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<TeamMembers>()
             .HasOne(tm => tm.User)
-            .WithMany(u => u.TeamMembers);
+            .WithMany(u => u.TeamMembers)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Media>(entity =>
         {
@@ -145,7 +147,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.TargetId).HasMaxLength(100);
             entity.Property(e => e.TargetType).HasMaxLength(50);
-            entity.Property(e => e.UserId).HasMaxLength(128);
+            entity.Property(e => e.UserId).HasMaxLength(450);
             entity.Property(e => e.Description).HasMaxLength(255);
 
             entity.HasOne(d => d.Project).WithMany(p => p.ActivityLogs)
@@ -164,7 +166,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasKey(e => e.CommentId).HasName("PK__Comments__C3B4DFCAB03B4A37");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.UserId).HasMaxLength(128);
+            entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.Task).WithMany(p => p.Comments)
                 .HasForeignKey(d => d.TaskId)
@@ -185,7 +187,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.FileType).HasMaxLength(50);
             entity.Property(e => e.IsLatest).HasDefaultValue(true);
             entity.Property(e => e.UploadedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.UploadedBy).HasMaxLength(128);
+            entity.Property(e => e.UploadedBy).HasMaxLength(450);
             entity.Property(e => e.Version).HasDefaultValue(1);
 
             entity.HasOne(d => d.Folder).WithMany(p => p.Files)
@@ -209,7 +211,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasKey(e => e.FolderId).HasName("PK__Folders__ACD7107F37788C12");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.Name).HasMaxLength(300);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Folders)
@@ -234,7 +236,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.ToTable("FolderSnapshot");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.SnapshotName).HasMaxLength(300);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.FolderSnapshots)
@@ -255,8 +257,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Link).HasMaxLength(1000);
             entity.Property(e => e.Message).HasMaxLength(1000);
-            entity.Property(e => e.UserId).HasMaxLength(128);
-            entity.Property(e => e.CreatedId).HasMaxLength(128);
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.CreatedId).HasMaxLength(450);
             entity.Property(e => e.Type).HasMaxLength(20);
 
             entity.HasOne(d => d.Project).WithMany(p => p.Notifications)
@@ -286,7 +288,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                 .HasDefaultValueSql("NEWID()");
 
             entity.Property(s => s.UserId)
-                .HasMaxLength(128)
+                .HasMaxLength(450)
                 .IsRequired();
 
             entity.Property(s => s.PlanId)
@@ -332,7 +334,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
                   .HasDefaultValueSql("NEWID()");
 
             entity.Property(p => p.UserId)
-                  .HasMaxLength(128)
+                  .HasMaxLength(450)
                   .IsRequired();
 
             entity.Property(p => p.Amount)
@@ -373,7 +375,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.HasKey(e => e.ProjectId).HasName("PK__Projects__761ABEF02F26C1DE");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.Name).HasMaxLength(300);
             entity.Property(e => e.IsStarred)
                 .HasColumnType("bit")
@@ -392,7 +394,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.ToTable("ProjectFileSnapshot");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.SnapshotName).HasMaxLength(300);
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.ProjectFileSnapshots)
@@ -413,8 +415,8 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
             entity.ToTable("ProjectHistory");
 
             entity.Property(e => e.ChangedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.ChangedBy).HasMaxLength(128);
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.ChangedBy).HasMaxLength(450);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.Name).HasMaxLength(300);
 
             entity.Ignore(e => e.ChangedByNavigation);
@@ -425,7 +427,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         {
             entity.HasKey(e => new { e.ProjectId, e.UserId }).HasName("PK__ProjectM__A76232348CAD0E4E");
 
-            entity.Property(e => e.UserId).HasMaxLength(128);
+            entity.Property(e => e.UserId).HasMaxLength(450);
             entity.Property(e => e.JoinedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.RoleInProject).HasMaxLength(50);
 
@@ -453,7 +455,7 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         {
             entity.HasKey(e => e.SubTaskId).HasName("PK__SubTasks__869FF1824E07358A");
 
-            entity.Property(e => e.AssigneeId).HasMaxLength(128);
+            entity.Property(e => e.AssigneeId).HasMaxLength(450);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
@@ -487,9 +489,9 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
         {
             entity.HasKey(e => e.TaskId).HasName("PK__Tasks__7C6949B13B1F1EE9");
 
-            entity.Property(e => e.AssigneeId).HasMaxLength(128);
+            entity.Property(e => e.AssigneeId).HasMaxLength(450);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.EstimateHours).HasColumnType("decimal(6, 2)");
             entity.Property(e => e.Priority).HasDefaultValue((byte)2);
             entity.Property(e => e.Status).HasMaxLength(50);
@@ -540,10 +542,10 @@ public partial class ProjectManagementContext : IdentityDbContext<ApplicationUse
 
             entity.ToTable("TaskHistory");
 
-            entity.Property(e => e.AssigneeId).HasMaxLength(128);
+            entity.Property(e => e.AssigneeId).HasMaxLength(450);
             entity.Property(e => e.ChangedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.ChangedBy).HasMaxLength(128);
-            entity.Property(e => e.CreatedBy).HasMaxLength(128);
+            entity.Property(e => e.ChangedBy).HasMaxLength(450);
+            entity.Property(e => e.CreatedBy).HasMaxLength(450);
             entity.Property(e => e.EstimateHours).HasColumnType("decimal(6, 2)");
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.Title).HasMaxLength(300);
