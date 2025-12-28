@@ -294,7 +294,7 @@ export default function TaskDetailMain({
                         onValueChange={setActiveTab}
                         className="w-full"
                     >
-                        {projectRole !== "Member" ? (
+                        {projectRole === "Leader" || projectRole === "Project Manager" ? (
                             <>
                                 <TabsList className="grid w-full grid-cols-3 bg-gray-100">
                                     <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
@@ -454,11 +454,11 @@ export default function TaskDetailMain({
                             </>
                         ) : (
                             <>
-                                <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+                                <TabsList className="grid w-full grid-cols-2  bg-gray-100">
                                     <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
                                     <TabsTrigger value="comments" className="text-xs">Comments</TabsTrigger>
                                     {/* <TabsTrigger value="history" className="text-xs">History</TabsTrigger> */}
-                                    <TabsTrigger value="worklog" className="text-xs">Work log</TabsTrigger>
+                                    {/* <TabsTrigger value="worklog" className="text-xs">Work log</TabsTrigger> */}
                                 </TabsList>
 
                                 <TabsContent value="all" className="mt-4 space-y-4">
