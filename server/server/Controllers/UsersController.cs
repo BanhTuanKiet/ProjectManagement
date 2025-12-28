@@ -214,9 +214,7 @@ namespace server.Controllers
             if (subscription == null)
                 return Ok();
 
-
-
-            return Ok(subscription.Plan.Name);
+            return Ok(new { planId = subscription.PlanId, planName = subscription.Plan.Name });
         }
 
         [HttpGet("profile/{email}")]

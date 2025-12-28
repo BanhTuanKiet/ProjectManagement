@@ -13,17 +13,22 @@ import axios from "@/config/axiosConfig"
 import { cn } from "@/lib/utils"
 import { UserProfile } from "@/utils/IUser"
 
+type PlanInfo = {
+    planId: keyof typeof planGradients
+    planName: string
+}
+
 const planGradients = {
-    Free: "from-slate-400 to-slate-600",
-    Pro: "from-blue-500 via-indigo-500 to-blue-600",
-    Premium: "from-violet-500 via-purple-500 to-fuchsia-600",
+    "1": "from-slate-400 to-slate-600",
+    "2": "from-blue-500 via-indigo-500 to-blue-600",
+    "3": "from-violet-500 via-purple-500 to-fuchsia-600",
 }
 
 export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactNode }) {
     const [isUserOpen, setIsUserOpen] = useState(false)
     const [isNotificationOpen, setIsNotificationOpen] = useState(false)
     const [theme, setTheme] = useState(false)
-    const [plan, setPlan] = useState<keyof typeof planGradients | null>(null)
+    const [plan, setPlan] = useState<PlanInfo | null>(null)
     const { handleSignout, user } = useUser()
     const { connection, setData, notifications } = useNotification()
     const router = useRouter()
@@ -100,13 +105,23 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
         const fetchSubscription = async () => {
             try {
                 const response = await axios.get(`/users/subscription`)
-                console.log(response.data)
-                if (response.data === "") setPlan("Free")
-                else setPlan(response.data)
+
+                if (!response.data) {
+                    setPlan({
+                        planId: "1",
+                        planName: "Free",
+                    })
+                } else {
+                    setPlan({
+                        planId: response.data.planId,
+                        planName: response.data.planName,
+                    })
+                }
             } catch (error) {
                 console.log(error)
             }
         }
+
         fetchSubscription()
     }, [])
 
@@ -225,14 +240,16 @@ export function ProjectHeader({ sidebarTrigger }: { sidebarTrigger: React.ReactN
                             </div>
 
                             <div className="p-2">
-                                <div className={cn(
-                                    "relative overflow-hidden rounded-lg bg-gradient-to-r p-3 text-white shadow-sm transition-all",
-                                    planGradients[(plan ?? "Free") as keyof typeof planGradients]
-                                )}>
+                                <div
+                                    className={cn(
+                                        "relative overflow-hidden rounded-lg bg-gradient-to-r p-3 text-white shadow-sm transition-all",
+                                        planGradients[(plan?.planId ?? "1")]
+                                    )}
+                                >
                                     <div className="relative z-10 flex items-center justify-between">
                                         <div>
                                             <p className="text-xs font-medium text-white/80 uppercase tracking-wider">Current Plan</p>
-                                            <p className="font-bold text-sm">{plan ?? "Free"} Plan</p>
+                                            <p className="font-bold text-sm">{plan?.planName ?? "Free"} Plan</p>
                                         </div>
                                         <Button size="sm" variant="secondary" className="h-7 text-xs bg-white/20 hover:bg-white/30 text-white border-0"
                                             onClick={() => router.push("/plan")}>

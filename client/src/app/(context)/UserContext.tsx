@@ -24,7 +24,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
     const searchParams = useSearchParams()
     const router = useRouter()
-
+console.log(user)
     useEffect(() => {
         const success = searchParams.get("success")
 
