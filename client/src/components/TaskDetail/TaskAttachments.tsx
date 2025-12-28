@@ -98,10 +98,8 @@ export default function TaskAttachments({
                 params: { taskId: taskId, projectId: projectId }
             });
             setFiles((prev) => prev.filter((f) => f.fileId !== fileId));
-            alert("Đã xóa file thành công!");
         } catch (err) {
             console.error("Delete file error:", err);
-            alert("Lỗi khi xóa file!");
         }
     };
 

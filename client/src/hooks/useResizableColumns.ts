@@ -43,6 +43,8 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
         return Object.keys(filters).length > 0 || debouncedSearch.trim() !== "";
     }, [filters, debouncedSearch]);
 
+// Trong file: useTaskTable.ts
+
     // 3. DUY NHẤT 1 Effect để quản lý việc đồng bộ hóa danh sách Task
     useEffect(() => {
         const syncTasks = async () => {
@@ -54,19 +56,29 @@ export const useTaskTable = (currentTasks: BasicTask[]) => {
                     };
                     const res = await axios.get(`/tasks/${Number(project_name)}/filter-by`, { params });
                     const mapped = res.data.map(mapApiTaskToTask);
+                    
+                    // THÊM: Sắp xếp kết quả filter (ví dụ theo ID giảm dần - mới nhất lên đầu)
+                    mapped.sort((a: Task, b: Task) => b.id - a.id); 
+                    
                     setTasks(mapped);
                 } catch (err) {
                     console.error("Filter error:", err);
                 }
             } else {
                 // Khi không filter, lấy trực tiếp từ currentTasks (SignalR/Context)
-                setTasks(currentTasks.map(mapApiTaskToTask));
+                const mapped = currentTasks.map(mapApiTaskToTask);
+
+                // --- SỬA LẠI ĐOẠN NÀY ---
+                // Sắp xếp cố định để tránh việc task bị nhảy lung tung khi data từ server thay đổi
+                // Ví dụ: Sắp xếp theo ID tăng dần (a.id - b.id) hoặc giảm dần (b.id - a.id)
+                mapped.sort((a, b) => a.id - b.id); 
+                
+                setTasks(mapped);
             }
         };
 
         syncTasks();
     }, [currentTasks, isFiltering, filters, debouncedSearch, project_name]);
-
     // 4. Cập nhật Resize Columns
     const resizingColumn = useRef<{
         index: number;

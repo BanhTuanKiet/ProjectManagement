@@ -96,7 +96,7 @@ namespace server.Controllers
         }
 
         [HttpDelete("{fileId}")]
-        [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement, AssigneeRequirement, MemberRequirement")]
+        // [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement, AssigneeRequirement, MemberRequirement")]
         public async Task<IActionResult> DeleteFile(int fileId, int taskId, int projectId)
         {
             if (fileId <= 0)

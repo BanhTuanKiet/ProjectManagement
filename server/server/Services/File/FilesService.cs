@@ -181,38 +181,58 @@ namespace server.Services.File
             if (file == null)
                 return (false, "File not found");
 
+            string cloudinaryMessage = "";
+
             try
             {
                 var fileUrl = file.FilePath;
 
-                // ✅ Lấy publicId và resourceType
+                // 1. Cố gắng xóa trên Cloudinary (nhưng không để nó chặn việc xóa DB)
                 var (publicId, resourceType) = ExtractCloudinaryInfo(fileUrl);
-                if (publicId == null)
-                    return (false, "Invalid Cloudinary URL");
 
-                Console.WriteLine($"Deleting file on Cloudinary: publicId={publicId}, resourceType={resourceType}");
-
-                var delParams = new DeletionParams(publicId)
+                if (!string.IsNullOrEmpty(publicId))
                 {
-                    ResourceType = resourceType
-                };
+                    // Xử lý publicId cho Image/Video: Cloudinary lưu ID không có đuôi mở rộng (.jpg, .png)
+                    // Nếu là Raw (PDF, Doc, v.v) thì cần giữ nguyên đuôi.
+                    if (resourceType == ResourceType.Image || resourceType == ResourceType.Video)
+                    {
+                        // Loại bỏ đuôi file (extension) khỏi publicId nếu có
+                        if (Path.HasExtension(publicId))
+                        {
+                            publicId = Path.ChangeExtension(publicId, null);
+                        }
+                    }
 
-                var result = await _cloudinary.DestroyAsync(delParams);
-                Console.WriteLine($"Cloudinary delete result: {result.Result}, error={result.Error?.Message}");
+                    var delParams = new DeletionParams(publicId)
+                    {
+                        ResourceType = resourceType
+                    };
 
-                if (result.Result == "ok" || result.Result == "not found")
-                {
-                    _context.Files.Remove(file);
-                    await _context.SaveChangesAsync();
-                    return (true, "File deleted successfully");
+                    var result = await _cloudinary.DestroyAsync(delParams);
+                    cloudinaryMessage = $"Cloudinary result: {result.Result}";
+
+                    // Log kết quả để debug nhưng không return false ở đây
+                    Console.WriteLine(cloudinaryMessage);
                 }
-
-                return (false, $"Failed to delete on Cloudinary: {result.Result}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-                return (false, $"Error deleting file: {ex.Message}");
+                // Chỉ log lỗi Cloudinary, không chặn luồng xóa DB
+                Console.WriteLine($"Error deleting from Cloudinary: {ex.Message}");
+                cloudinaryMessage = "Cloudinary deletion failed or skipped.";
+            }
+
+            // 2. QUAN TRỌNG: Luôn thực hiện xóa trong Database
+            try
+            {
+                _context.Files.Remove(file);
+                await _context.SaveChangesAsync();
+
+                return (true, "File deleted successfully. " + cloudinaryMessage);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Database delete failed: {ex.Message}");
             }
         }
 
@@ -221,26 +241,35 @@ namespace server.Services.File
             if (string.IsNullOrWhiteSpace(fileUrl))
                 return (null, ResourceType.Raw);
 
-            // ✅ Xác định loại tài nguyên
+            // Xác định ResourceType (Giữ nguyên logic của bạn)
             var resourceType = ResourceType.Raw;
             if (fileUrl.Contains("/image/upload/")) resourceType = ResourceType.Image;
             else if (fileUrl.Contains("/video/upload/")) resourceType = ResourceType.Video;
             else if (fileUrl.Contains("/raw/upload/")) resourceType = ResourceType.Raw;
 
-            // ✅ Tìm phần sau "/upload/"
+            // Tìm vị trí bắt đầu publicId
             var uploadIndex = fileUrl.IndexOf("/upload/");
-            if (uploadIndex == -1)
-                return (null, resourceType);
+            if (uploadIndex == -1) return (null, resourceType);
 
+            // Cắt bỏ phần domain và /upload/
             var afterUpload = fileUrl.Substring(uploadIndex + "/upload/".Length);
 
-            // ✅ Bỏ "v12345/" nếu có
-            var parts = afterUpload.Split('/');
-            if (parts.Length > 0 && parts[0].StartsWith("v") && long.TryParse(parts[0].Substring(1), out _))
-                afterUpload = string.Join("/", parts.Skip(1));
+            // Lọc bỏ query string nếu có (?)
+            var queryIndex = afterUpload.IndexOf('?');
+            if (queryIndex != -1)
+            {
+                afterUpload = afterUpload.Substring(0, queryIndex);
+            }
 
-            // ✅ Chính là publicId đầy đủ mà Cloudinary cần
-            var publicId = afterUpload;
+            // Xử lý version (v123456/)
+            var parts = afterUpload.Split('/');
+            if (parts.Length > 0 && parts[0].StartsWith("v") && parts[0].Length > 1 && char.IsDigit(parts[0][1]))
+            {
+                afterUpload = string.Join("/", parts.Skip(1));
+            }
+
+            // Decode URL (phòng trường hợp tên file có dấu cách %20)
+            var publicId = System.Net.WebUtility.UrlDecode(afterUpload);
 
             return (publicId, resourceType);
         }

@@ -71,7 +71,8 @@ export default function BoardView({
 
     const updateTask = async (taskId: number, newStatus: string) => {
         try {
-            await axios.put(`/tasks/${projectId}/${taskId}`, { status: newStatus });
+            const payload = { status: newStatus };
+            const response = await axios.put(`/tasks/${Number(project_name)}/tasks/${taskId}/update`, payload);
             return true;
         } catch (error) {
             console.error(error);
