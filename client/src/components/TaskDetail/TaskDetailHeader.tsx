@@ -1,10 +1,8 @@
 import {
     X,
     Eye,
-    Share,
     Lock,
     Unlock,
-    MoreHorizontal,
     Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,13 +19,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ActiveUser } from "@/utils/IUser";
 import ColoredAvatar from "../ColoredAvatar";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "@/config/axiosConfig";
 import { getTaskStatusBadge } from "@/utils/statusUtils";
 import { Badge } from "../ui/badge";
 
 interface TaskDetailHeaderProps {
     taskId: number;
+    projectRole: string; // Đảm bảo role được truyền vào đây
     taskStatus: string
     projectId: number;
     isActive: boolean;
@@ -36,8 +35,19 @@ interface TaskDetailHeaderProps {
     onToggleActive: (newStatus: boolean) => void;
 }
 
+// 1. Định nghĩa danh sách các status và màu sắc tương ứng
+const STATUS_OPTIONS = [
+    { value: "Todo", label: "To do", color: "bg-blue-800" },
+    { value: "In Progress", label: "In Progress", color: "bg-yellow-600" },
+    { value: "Done", label: "Done", color: "bg-green-600" },
+    { value: "Cancel", label: "Cancel", color: "bg-orange-600" },
+    { value: "Bug", label: "Bug", color: "bg-rose-600" },
+    { value: "Expired", label: "Expired", color: "bg-red-600" },
+];
+
 export default function TaskDetailHeader({
     taskId,
+    projectRole,
     taskStatus,
     projectId,
     isActive,
@@ -50,7 +60,26 @@ export default function TaskDetailHeader({
 
     useEffect(() => {
         if (taskStatus) setCurrentLabel(taskStatus)
+        console.log("Task status updated:", taskStatus);
+        console.log(projectRole)
     }, [taskStatus])
+
+    // 2. Logic kiểm tra quyền hạn
+    const canChangeStatus = projectRole !== "Member"; // Member không được đổi
+
+    // 3. Logic lọc status hiển thị trong menu
+    const filteredStatuses = useMemo(() => {
+        if (projectRole === "Tester") {
+            // Tester chỉ thấy: In Progress, Bug, Done
+            return STATUS_OPTIONS.filter(s => ["In Progress", "Bug", "Done"].includes(s.value));
+        }
+        if (["Project Manager", "Leader"].includes(projectRole)) {
+            // PM và Leader thấy tất cả
+            return STATUS_OPTIONS;
+        }
+        // Trường hợp khác (ví dụ Member) trả về rỗng hoặc mặc định
+        return [];
+    }, [projectRole]);
 
     const handleToggleLock = async () => {
         try {
@@ -66,9 +95,9 @@ export default function TaskDetailHeader({
 
     const handleUpdateTag = async (newTag: string | null) => {
         try {
+            const payload = { status: newTag };
             console.log(newTag)
-            await axios.patch(`/tasks/${projectId}/${taskId}/tag/${newTag}`)
-
+            await axios.put(`/tasks/${projectId}/tasks/${taskId}/update`, payload);
             setCurrentLabel(newTag);
         } catch (error) {
             console.log(error)
@@ -78,17 +107,21 @@ export default function TaskDetailHeader({
     return (
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
             <div className="flex items-center gap-3">
-                <span
-                    className="text-blue-600 hover:bg-blue-50 size-sm cursor-pointer font-medium"
-                >
+                <span className="text-blue-600 hover:bg-blue-50 size-sm cursor-pointer font-medium">
                     TASK-{taskId}
                 </span>
                 <span className="text-gray-400">/</span>
 
                 <div className="flex items-center justify-between gap-2">
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <div className="cursor-pointer hover:opacity-80 transition">
+                        {/* 4. Disable trigger nếu là Member */}
+                        <DropdownMenuTrigger asChild disabled={!canChangeStatus}>
+                            <div
+                                className={`transition ${canChangeStatus
+                                    ? "cursor-pointer hover:opacity-80"
+                                    : "cursor-not-allowed opacity-50"
+                                    }`}
+                            >
                                 <Badge
                                     className={`${getTaskStatusBadge(currentLabel ?? "")} border`}
                                 >
@@ -98,32 +131,20 @@ export default function TaskDetailHeader({
                             </div>
                         </DropdownMenuTrigger>
 
-                        <DropdownMenuContent align="start" className="w-44">
-                            <DropdownMenuItem onClick={() => handleUpdateTag("Todo")}>
-                                <div className="h-2 w-2 rounded-full bg-blue-800 mr-2" /> To do
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => handleUpdateTag("In Progress")}>
-                                <div className="h-2 w-2 rounded-full bg-yellow-600 mr-2" /> In Progress
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => handleUpdateTag("Done")}>
-                                <div className="h-2 w-2 rounded-full bg-green-600 mr-2" /> Done
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => handleUpdateTag("Cancel")}>
-                                <div className="h-2 w-2 rounded-full bg-orange-600 mr-2" /> Cancel
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => handleUpdateTag("Bug")}>
-                                <div className="h-2 w-2 rounded-full bg-rose-600 mr-2" /> Bug
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => handleUpdateTag("Expired")}>
-                                <div className="h-2 w-2 rounded-full bg-red-600 mr-2" /> Expired
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-
+                        {/* Chỉ hiển thị nội dung nếu có quyền (phòng hờ) */}
+                        {canChangeStatus && (
+                            <DropdownMenuContent align="start" className="w-44">
+                                {filteredStatuses.map((status) => (
+                                    <DropdownMenuItem
+                                        key={status.value}
+                                        onClick={() => handleUpdateTag(status.value)}
+                                    >
+                                        <div className={`h-2 w-2 rounded-full ${status.color} mr-2`} />
+                                        {status.label}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        )}
                     </DropdownMenu>
                 </div>
 
