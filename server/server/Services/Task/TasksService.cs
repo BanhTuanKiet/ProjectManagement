@@ -835,6 +835,7 @@ namespace server.Services.Project
                 string lowerKeyword = keyword.Trim().ToLower();
 
                 query = query.Where(t =>
+                    (t.TaskId.ToString().Contains(lowerKeyword)) ||
                     (t.Title != null && t.Title.ToLower().Contains(lowerKeyword)) ||
                     (t.Description != null && t.Description.ToLower().Contains(lowerKeyword)) ||
                     (t.Assignee != null && t.Assignee.UserName.ToLower().Contains(lowerKeyword)) ||
@@ -854,6 +855,10 @@ namespace server.Services.Project
 
                 switch (key)
                 {
+                    case "TaskId":
+                        if (int.TryParse(value, out var taskId))
+                            query = query.Where(t => t.TaskId == taskId);
+                        break;
                     case "Status":
                         query = query.Where(t => t.Status == value);
                         break;
