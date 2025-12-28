@@ -150,6 +150,7 @@ export default function TaskDetailModal({
                     <div className="relative bg-white w-[1000px] h-[90vh] rounded-lg shadow-xl flex flex-col">
                         <TaskDetailHeader
                             taskId={taskId}
+                            projectRole={projectRole}
                             taskStatus={task!.status}
                             projectId={projectId}
                             isActive={task!.isActive}
