@@ -62,6 +62,7 @@ export default function TaskAttachments({
         const fetchFiles = async () => {
             try {
                 const res = await axios.get(`/files/task/${taskId}`);
+                console.log("Fetched files:", res.data);
                 setFiles(res.data);
             } catch (err) {
                 console.error("Fetch files error:", err);
@@ -82,7 +83,8 @@ export default function TaskAttachments({
 
         try {
             const res = await axios.post(`/files/upload/${projectId}`, formData);
-            setFiles((prev) => [...prev, res.data]);
+            console.log("Uploaded file:", res.data);
+            setFiles((prev) => [...prev, res.data.uploadedFile]);
         } catch (err) {
             console.error("Upload error:", err);
         }
