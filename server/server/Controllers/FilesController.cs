@@ -36,7 +36,7 @@ namespace server.Controllers
         }
 
         [HttpPost("upload/{projectId}")]
-        [Authorize]
+        // [Authorize]
         // [Authorize(Policy = "AssigneeRequirement", Roles = "LeaderRequirement, PMRequirement, AssigneeRequirement, MemberRequirement")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] int taskId, [FromRoute] int projectId)
         {

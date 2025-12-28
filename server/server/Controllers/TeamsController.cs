@@ -103,7 +103,7 @@ namespace server.Controllers
             return Ok(allMembers);
         }
 
-        [Authorize(Roles = "PMRequirement")]
+        [Authorize(Policy = "PMRequirement")]
         [HttpPut("change-team/{projectId}")]
         public async Task<ActionResult> ChangeTeam(int projectId, [FromBody] TeamDTO.ChangeTeamRequest request)
         {
@@ -120,7 +120,7 @@ namespace server.Controllers
             });
         }
 
-        [Authorize(Roles = "PMRequirement")]
+        [Authorize(Policy = "PMRequirement")]
         [HttpDelete("remove-member/{projectId}/{userId}")]
         public async Task<ActionResult> RemoveMember(int projectId, string userId)
         {
