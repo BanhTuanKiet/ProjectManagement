@@ -806,28 +806,22 @@ namespace server.Controllers
         [HttpPatch("{projectId}/tasks/{taskId}/toggle-active")]
         public async Task<IActionResult> ToggleTaskActive(int projectId, int taskId)
         {
-            try
-            {
-                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var projectMember = await _projectMemberService.GetMemberAsync(projectId, userId);
 
-                if (projectMember == null)
-                    return Unauthorized(new { message = "You are not a member of this project" });
+            if (projectMember == null)
+                return Unauthorized(new { message = "You are not a member of this project" });
 
-                string role = projectMember.RoleInProject;
+            string role = projectMember.RoleInProject;
 
-                if (role != "Project Manager")
-                {
-                    throw new ErrorException(403, "Only project manager to this projet can perform this operation!");
-                }
+            // if (role != "Project Manager")
+            // {
+            //     throw new ErrorException(403, "Only project manager to this projet can perform this operation!");
+            // }
 
-                var newStatus = await _tasksService.ToggleTaskStatus(taskId, projectId);
-                return Ok(new { message = "Success", isActive = newStatus });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            var newStatus = await _tasksService.ToggleTaskStatus(taskId, projectId);
+            return Ok(new { message = "Success", isActive = newStatus });
+
         }
 
         [HttpGet("upcoming/{type}")]
